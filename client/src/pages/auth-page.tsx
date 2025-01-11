@@ -44,7 +44,7 @@ export default function AuthPage() {
       firstName: "",
       lastName: "",
       email: "",
-      phone: undefined,
+      phone: null,
       isParent: false,
     },
   });
@@ -52,8 +52,14 @@ export default function AuthPage() {
   async function onSubmit(data: RegisterFormData) {
     try {
       const { confirmPassword, ...userData } = data;
+      // Ensure proper typing by removing potential undefined values
       const submitData: InsertUser = {
-        ...userData,
+        username: userData.username,
+        password: userData.password,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        phone: userData.phone || null,
         isParent: userType === "parent",
       };
 

@@ -62,28 +62,31 @@ export function useUser() {
   const { data: user, error, isLoading } = useQuery<SelectUser | null, Error>({
     queryKey: ['user'],
     queryFn: fetchUser,
-    staleTime: Infinity,
+    staleTime: 300000, // Consider data fresh for 5 minutes
+    cacheTime: 3600000, // Keep data in cache for 1 hour
+    refetchOnWindowFocus: false, // Disable refetch on window focus
+    refetchInterval: 300000, // Only refetch every 5 minutes
     retry: false
   });
 
   const loginMutation = useMutation<RequestResult, Error, InsertUser>({
     mutationFn: (userData) => handleRequest('/api/login', 'POST', userData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['user'] });
     },
   });
 
   const logoutMutation = useMutation<RequestResult, Error>({
     mutationFn: () => handleRequest('/api/logout', 'POST'),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user'] });
+      queryClient.setQueryData(['user'], null);
     },
   });
 
   const registerMutation = useMutation<RequestResult, Error, InsertUser>({
     mutationFn: (userData) => handleRequest('/api/register', 'POST', userData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['user'] });
     },
   });
 
