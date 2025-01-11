@@ -11,6 +11,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -138,6 +139,9 @@ export default function AuthPage() {
                       <FormControl>
                         <Input type="password" {...field} />
                       </FormControl>
+                      <FormDescription>
+                        Password must be at least 8 characters with at least 1 number and 1 special character
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
