@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { db } from "@db";
 import { users } from "@db/schema";
+import { createAdmin } from "./create-admin";
 
 const app = express();
 
@@ -60,6 +61,10 @@ async function testDbConnection() {
     if (!dbConnected) {
       throw new Error("Could not connect to database");
     }
+
+    // Create admin user if it doesn't exist
+    await createAdmin();
+    log("Admin user setup completed");
 
     // Register routes first to ensure all middleware is set up
     const server = registerRoutes(app);

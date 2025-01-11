@@ -1,4 +1,4 @@
-import type { Express, Request, Response, NextFunction } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { log } from "./vite";
@@ -6,11 +6,11 @@ import { db } from "@db";
 import { users } from "@db/schema";
 import { eq } from "drizzle-orm";
 
-// Simple rate limiting middleware with IP fallback
+// Simple rate limiting middleware
 const rateLimit = (windowMs: number, maxRequests: number) => {
   const requests = new Map<string, { count: number; resetTime: number }>();
 
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: Function) => {
     const ip = req.ip || req.socket.remoteAddress || 'unknown';
     const now = Date.now();
 
@@ -30,6 +30,14 @@ const rateLimit = (windowMs: number, maxRequests: number) => {
 
     next();
   };
+};
+
+// Admin middleware
+const isAdmin = (req: Request, res: Response, next: Function) => {
+  if (!req.isAuthenticated() || !req.user?.isAdmin) {
+    return res.status(403).send("Unauthorized");
+  }
+  next();
 };
 
 export function registerRoutes(app: Express): Server {
@@ -63,6 +71,23 @@ export function registerRoutes(app: Express): Server {
       } catch (error) {
         console.error('Error checking email availability:', error);
         return res.status(500).json({ available: false, message: "Internal server error" });
+      }
+    });
+
+    // Admin routes
+    app.get('/api/admin/users', isAdmin, async (req, res) => {
+      try {
+        const allUsers = await db
+          .select()
+          .from(users)
+          .orderBy(users.createdAt);
+
+        // Remove password field from response
+        const sanitizedUsers = allUsers.map(({ password, ...user }) => user);
+        res.json(sanitizedUsers);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).send("Internal server error");
       }
     });
 

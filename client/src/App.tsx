@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import Profile from "@/pages/profile";
+import AdminDashboard from "@/pages/admin-dashboard";
 import ForgotPassword from "@/pages/forgot-password";
 import { useUser } from "@/hooks/use-user";
 
@@ -24,7 +25,8 @@ function Router() {
     <Switch>
       {user ? (
         <>
-          <Route path="/" component={Profile} />
+          <Route path="/" component={user.isAdmin ? AdminDashboard : Profile} />
+          <Route path="/admin" component={AdminDashboard} />
           <Route component={NotFound} />
         </>
       ) : (

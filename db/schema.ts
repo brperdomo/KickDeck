@@ -11,6 +11,7 @@ export const users = pgTable("users", {
   lastName: text("lastName").notNull(),
   phone: text("phone"),
   isParent: boolean("isParent").default(false).notNull(),
+  isAdmin: boolean("isAdmin").default(false).notNull(),
   createdAt: text("createdAt").notNull().default(new Date().toISOString()),
 });
 
@@ -27,6 +28,7 @@ export const insertUserSchema = createInsertSchema(users, {
   lastName: z.string().min(1, "Last name is required").max(50),
   phone: z.string().optional(),
   isParent: z.boolean(),
+  isAdmin: z.boolean().optional(),
 });
 
 export const selectUserSchema = createSelectSchema(users);
