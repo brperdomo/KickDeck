@@ -110,16 +110,18 @@ export default function AuthPage() {
 
   // Handle email validation
   const handleEmailValidation = async (email: string) => {
-    if (email === lastCheckedEmail || !isRegistering) return;
+    if (!email || email === lastCheckedEmail || !isRegistering) return;
 
     try {
-      // Only check if email is valid
       const emailValidation = z.string().email().safeParse(email);
       if (emailValidation.success) {
-        // Add a small delay to prevent too frequent API calls
-        await new Promise(resolve => setTimeout(resolve, 300));
-        setLastCheckedEmail(email);
-        await emailCheckMutation.mutateAsync(email);
+        // Debounce the API call
+        const timeoutId = setTimeout(async () => {
+          setLastCheckedEmail(email);
+          await emailCheckMutation.mutateAsync(email);
+        }, 500);
+
+        return () => clearTimeout(timeoutId);
       }
     } catch (error) {
       console.error("Email validation error:", error);
@@ -266,7 +268,7 @@ export default function AuthPage() {
                               onChange={(e) => {
                                 field.onChange(e);
                                 const value = e.target.value;
-                                if (value && value !== lastCheckedEmail) {
+                                if (value) {
                                   handleEmailValidation(value);
                                 }
                               }}
