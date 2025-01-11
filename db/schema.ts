@@ -19,11 +19,11 @@ const passwordSchema = z.string()
   .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character");
 
 export const insertUserSchema = createInsertSchema(users, {
-  username: z.string().min(3).max(50),
+  username: z.string().min(3, "Username must be at least 3 characters").max(50),
   password: passwordSchema,
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
-  email: z.string().email(),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
   phone: z.string().optional(),
   isParent: z.boolean(),
 });

@@ -106,7 +106,7 @@ export function setupAuth(app: Express) {
           .send("Invalid input: " + result.error.issues.map(i => i.message).join(", "));
       }
 
-      const { username, password, ...rest } = result.data;
+      const { username, password, firstName, lastName, email, phone, isParent } = result.data;
 
       const [existingUser] = await db
         .select()
@@ -125,7 +125,11 @@ export function setupAuth(app: Express) {
         .values({
           username,
           password: hashedPassword,
-          ...rest,
+          firstName,
+          lastName,
+          email,
+          phone,
+          isParent,
         })
         .returning();
 

@@ -51,11 +51,14 @@ export default function AuthPage() {
   async function onSubmit(data: RegisterFormData) {
     try {
       const { confirmPassword, ...userData } = data;
-      userData.isParent = userType === "parent";
+      const submitData: InsertUser = {
+        ...userData,
+        isParent: userType === "parent",
+      };
 
       const result = isRegistering 
-        ? await registerUser(userData)
-        : await login(userData);
+        ? await registerUser(submitData)
+        : await login(submitData);
 
       if (!result.ok) {
         toast({
@@ -141,23 +144,21 @@ export default function AuthPage() {
                 />
 
                 {isRegistering && (
-                  <FormField
-                    control={form.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Confirm Password</FormLabel>
-                        <FormControl>
-                          <Input type="password" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-
-                {isRegistering && (
                   <>
+                    <FormField
+                      control={form.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <FormField
                       control={form.control}
                       name="firstName"
