@@ -21,6 +21,11 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy } from "lucide-react";
 import { z } from "zod";
 
+const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
 const registerSchema = insertUserSchema.extend({
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -29,6 +34,7 @@ const registerSchema = insertUserSchema.extend({
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
+type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function AuthPage() {
   const { toast } = useToast();
@@ -36,8 +42,16 @@ export default function AuthPage() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [userType, setUserType] = useState<"player" | "parent">("player");
 
-  const form = useForm<RegisterFormData>({
-    resolver: zodResolver(isRegistering ? registerSchema : insertUserSchema),
+  const loginForm = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const registerForm = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
       email: "",
@@ -50,31 +64,42 @@ export default function AuthPage() {
     },
   });
 
-  async function onSubmit(data: RegisterFormData) {
+  const form = isRegistering ? registerForm : loginForm;
+
+  async function onSubmit(data: LoginFormData | RegisterFormData) {
     try {
-      const { confirmPassword, ...userData } = data;
-      const submitData: InsertUser = {
-        username: userData.username,
-        email: userData.email,
-        password: userData.password,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        phone: userData.phone || null,
-        isParent: userType === "parent",
-        createdAt: new Date().toISOString(),
-      };
-
-      const result = isRegistering
-        ? await registerUser(submitData)
-        : await login(submitData);
-
-      if (!result.ok) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.message,
+      if (isRegistering) {
+        const registerData = data as RegisterFormData;
+        const { confirmPassword, ...userData } = registerData;
+        const submitData: InsertUser = {
+          ...userData,
+          phone: userData.phone || null,
+          isParent: userType === "parent",
+          createdAt: new Date().toISOString(),
+        };
+        const result = await registerUser(submitData);
+        if (!result.ok) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: result.message,
+          });
+          return;
+        }
+      } else {
+        const loginData = data as LoginFormData;
+        const result = await login({
+          ...loginData,
+          username: loginData.email, // Use email as username for login
         });
-        return;
+        if (!result.ok) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: result.message,
+          });
+          return;
+        }
       }
 
       toast({
@@ -140,19 +165,21 @@ export default function AuthPage() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Username</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {isRegistering && (
+                  <FormField
+                    control={form.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Username</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <FormField
                   control={form.control}
@@ -163,9 +190,11 @@ export default function AuthPage() {
                       <FormControl>
                         <Input type="password" {...field} />
                       </FormControl>
-                      <FormDescription>
-                        Must be at least 8 characters with a number and special character
-                      </FormDescription>
+                      {isRegistering && (
+                        <FormDescription>
+                          Must be at least 8 characters with a number and special character
+                        </FormDescription>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -238,6 +267,14 @@ export default function AuthPage() {
                 <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
                   {isRegistering ? "Register" : "Login"}
                 </Button>
+
+                {!isRegistering && (
+                  <div className="text-center mt-4">
+                    <Button variant="link" className="text-sm text-green-600">
+                      Forgot Password?
+                    </Button>
+                  </div>
+                )}
               </form>
             </Form>
           </Tabs>
