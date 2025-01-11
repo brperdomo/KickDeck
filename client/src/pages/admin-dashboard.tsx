@@ -13,31 +13,51 @@ import {
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { SelectUser } from "@db/schema";
+import { Loader2 } from "lucide-react";
+
+// Type guard function to check if user is admin
+function isAdminUser(user: SelectUser | null): user is SelectUser & { isAdmin: boolean } {
+  return user !== null && 'isAdmin' in user && user.isAdmin === true;
+}
 
 export default function AdminDashboard() {
   const { user } = useUser();
   const [, navigate] = useLocation();
 
   useEffect(() => {
-    if (!user?.isAdmin) {
+    if (!isAdminUser(user)) {
       navigate("/");
     }
   }, [user, navigate]);
 
-  const { data: users = [], isLoading } = useQuery<SelectUser[]>({
+  const { data: users, isLoading, error } = useQuery<SelectUser[]>({
     queryKey: ["/api/admin/users"],
-    enabled: !!user?.isAdmin,
+    enabled: isAdminUser(user),
   });
 
-  if (!user?.isAdmin) {
+  // Return null during initial load or if user is not admin
+  if (!isAdminUser(user)) {
     return null;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background p-8">
+        <Card className="max-w-6xl mx-auto">
+          <CardContent className="p-6">
+            <p className="text-destructive">Error loading users: {error instanceof Error ? error.message : 'Unknown error'}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-background p-8">
       <Card className="max-w-6xl mx-auto">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Admin Dashboard</CardTitle>
+          <Button onClick={() => navigate("/")} variant="outline">Back to Profile</Button>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
@@ -55,13 +75,13 @@ export default function AdminDashboard() {
                 <TableBody>
                   {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center">
-                        Loading...
+                      <TableCell colSpan={5} className="h-24 text-center">
+                        <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                       </TableCell>
                     </TableRow>
-                  ) : users.length === 0 ? (
+                  ) : !users || users.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center">
+                      <TableCell colSpan={5} className="h-24 text-center">
                         No users found
                       </TableCell>
                     </TableRow>
