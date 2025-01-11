@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type InsertUser } from "@db/schema";
@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, CheckCircle2, XCircle } from "lucide-react";
+import { Trophy, CheckCircle2, XCircle, Lock } from "lucide-react";
 import { z } from "zod";
 import { Link } from "wouter";
 import { useMutation } from "@tanstack/react-query";
@@ -75,6 +75,7 @@ export default function AuthPage() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [userType, setUserType] = useState<"player" | "parent">("player");
   const [lastCheckedEmail, setLastCheckedEmail] = useState<string>("");
+  const [passwordMatch, setPasswordMatch] = useState<boolean | null>(null);
 
   // Email availability check mutation
   const emailCheckMutation = useMutation({
@@ -122,6 +123,20 @@ export default function AuthPage() {
       console.error("Email validation error:", error);
     }
   };
+
+  // Add password match check effect
+  useEffect(() => {
+    if (isRegistering) {
+      const password = registerForm.watch("password");
+      const confirmPassword = registerForm.watch("confirmPassword");
+
+      if (password && confirmPassword) {
+        setPasswordMatch(password === confirmPassword);
+      } else {
+        setPasswordMatch(null);
+      }
+    }
+  }, [isRegistering, registerForm.watch("password"), registerForm.watch("confirmPassword")]);
 
   async function onSubmit(data: LoginFormData | RegisterFormData) {
     try {
@@ -285,9 +300,24 @@ export default function AuthPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" {...field} />
-                      </FormControl>
+                      <div className="relative">
+                        <FormControl>
+                          <Input 
+                            type="password" 
+                            {...field}
+                            className={cn(
+                              "pr-10",
+                              isRegistering && passwordMatch && "border-green-500 focus-visible:ring-green-500",
+                              isRegistering && passwordMatch === false && "border-red-500 focus-visible:ring-red-500"
+                            )}
+                          />
+                        </FormControl>
+                        {isRegistering && field.value && (
+                          <div className="absolute right-3 top-2.5 transition-opacity duration-200">
+                            <Lock className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
                       {isRegistering && (
                         <FormDescription>
                           Must be at least 8 characters with a number and special character
@@ -306,14 +336,35 @@ export default function AuthPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Confirm Password</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="password" 
-                              {...field}
-                              onPaste={(e) => e.preventDefault()} // Prevent pasting for security
-                            />
-                          </FormControl>
+                          <div className="relative">
+                            <FormControl>
+                              <Input 
+                                type="password" 
+                                {...field}
+                                className={cn(
+                                  "pr-10",
+                                  passwordMatch && "border-green-500 focus-visible:ring-green-500",
+                                  passwordMatch === false && "border-red-500 focus-visible:ring-red-500"
+                                )}
+                                onPaste={(e) => e.preventDefault()} // Prevent pasting for security
+                              />
+                            </FormControl>
+                            {field.value && (
+                              <div className="absolute right-3 top-2.5 transition-transform duration-200 ease-in-out">
+                                {passwordMatch ? (
+                                  <CheckCircle2 className="h-5 w-5 text-green-500 animate-in fade-in-0 zoom-in-95" />
+                                ) : (
+                                  <XCircle className="h-5 w-5 text-red-500 animate-in fade-in-0 zoom-in-95" />
+                                )}
+                              </div>
+                            )}
+                          </div>
                           <FormMessage />
+                          {passwordMatch === false && (
+                            <p className="text-sm text-red-500 mt-1 animate-in fade-in-0 slide-in-from-right-1">
+                              Passwords do not match
+                            </p>
+                          )}
                         </FormItem>
                       )}
                     />
