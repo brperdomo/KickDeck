@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Trophy } from "lucide-react";
 import { z } from "zod";
 
 const registerSchema = insertUserSchema.extend({
@@ -39,12 +40,12 @@ export default function AuthPage() {
     resolver: zodResolver(isRegistering ? registerSchema : insertUserSchema),
     defaultValues: {
       username: "",
+      email: "",
       password: "",
       confirmPassword: "",
       firstName: "",
       lastName: "",
-      email: "",
-      phone: null,
+      phone: "",
       isParent: false,
     },
   });
@@ -52,18 +53,18 @@ export default function AuthPage() {
   async function onSubmit(data: RegisterFormData) {
     try {
       const { confirmPassword, ...userData } = data;
-      // Ensure proper typing by removing potential undefined values
       const submitData: InsertUser = {
         username: userData.username,
+        email: userData.email,
         password: userData.password,
         firstName: userData.firstName,
         lastName: userData.lastName,
-        email: userData.email,
         phone: userData.phone || null,
         isParent: userType === "parent",
+        createdAt: new Date().toISOString(),
       };
 
-      const result = isRegistering 
+      const result = isRegistering
         ? await registerUser(submitData)
         : await login(submitData);
 
@@ -93,6 +94,9 @@ export default function AuthPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-600 to-green-800 p-4">
       <Card className="w-full max-w-md bg-white/95 backdrop-blur">
         <CardHeader className="text-center">
+          <div className="flex justify-center mb-2">
+            <Trophy className="h-12 w-12 text-green-600" />
+          </div>
           <CardTitle className="text-2xl font-bold">Soccer Registration System</CardTitle>
         </CardHeader>
         <CardContent>
@@ -124,6 +128,20 @@ export default function AuthPage() {
 
                 <FormField
                   control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="username"
                   render={({ field }) => (
                     <FormItem>
@@ -146,7 +164,7 @@ export default function AuthPage() {
                         <Input type="password" {...field} />
                       </FormControl>
                       <FormDescription>
-                        Password must be at least 8 characters with at least 1 number and 1 special character
+                        Must be at least 8 characters with a number and special character
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -174,7 +192,7 @@ export default function AuthPage() {
                       name="firstName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{userType === "parent" ? "Parent First Name" : "Player First Name"}</FormLabel>
+                          <FormLabel>First Name</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -188,23 +206,9 @@ export default function AuthPage() {
                       name="lastName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{userType === "parent" ? "Parent Last Name" : "Player Last Name"}</FormLabel>
+                          <FormLabel>Last Name</FormLabel>
                           <FormControl>
                             <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{userType === "parent" ? "Parent Email" : "Player Email"}</FormLabel>
-                          <FormControl>
-                            <Input type="email" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -216,12 +220,12 @@ export default function AuthPage() {
                       name="phone"
                       render={({ field: { value, ...fieldProps } }) => (
                         <FormItem>
-                          <FormLabel>{userType === "parent" ? "Parent Phone (Optional)" : "Player Phone (Optional)"}</FormLabel>
+                          <FormLabel>Phone Number (Optional)</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="tel" 
+                            <Input
+                              type="tel"
                               {...fieldProps}
-                              value={value ?? ''} 
+                              value={value ?? ""}
                             />
                           </FormControl>
                           <FormMessage />

@@ -4,13 +4,14 @@ import { z } from "zod";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
+  email: text("email").unique().notNull(),
   username: text("username").unique().notNull(),
   password: text("password").notNull(),
   firstName: text("firstName").notNull(),
   lastName: text("lastName").notNull(),
-  email: text("email").notNull(),
   phone: text("phone"),
   isParent: boolean("isParent").default(false).notNull(),
+  createdAt: text("createdAt").notNull().default(new Date().toISOString()),
 });
 
 const passwordSchema = z.string()
@@ -19,11 +20,11 @@ const passwordSchema = z.string()
   .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character");
 
 export const insertUserSchema = createInsertSchema(users, {
+  email: z.string().email("Invalid email address"),
   username: z.string().min(3, "Username must be at least 3 characters").max(50),
   password: passwordSchema,
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Invalid email address"),
+  firstName: z.string().min(1, "First name is required").max(50),
+  lastName: z.string().min(1, "Last name is required").max(50),
   phone: z.string().optional(),
   isParent: z.boolean(),
 });
