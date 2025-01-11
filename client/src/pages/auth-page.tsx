@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AuthPage() {
   const { toast } = useToast();
@@ -31,7 +31,7 @@ export default function AuthPage() {
       firstName: "",
       lastName: "",
       email: "",
-      phone: "",
+      phone: undefined, 
       isParent: false,
     },
   });
@@ -65,25 +65,20 @@ export default function AuthPage() {
   }
 
   return (
-    <div 
-      className="min-h-screen flex items-center justify-center bg-cover bg-center py-12 px-4 sm:px-6 lg:px-8"
-      style={{
-        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(https://images.unsplash.com/photo-1528200465331-fd30f8ee3afc)`,
-      }}
-    >
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center">Soccer Registration System</CardTitle>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-600 to-green-800 p-4">
+      <Card className="w-full max-w-md bg-white/95 backdrop-blur">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold">Soccer Registration System</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs value={isRegistering ? "register" : "login"} onValueChange={(v) => setIsRegistering(v === "register")}>
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="register">Register</TabsTrigger>
             </TabsList>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
                   name="username"
@@ -159,11 +154,15 @@ export default function AuthPage() {
                     <FormField
                       control={form.control}
                       name="phone"
-                      render={({ field }) => (
+                      render={({ field: { value, ...fieldProps } }) => (
                         <FormItem>
                           <FormLabel>Phone (Optional)</FormLabel>
                           <FormControl>
-                            <Input type="tel" {...field} />
+                            <Input 
+                              type="tel" 
+                              {...fieldProps}
+                              value={value ?? ''} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -189,7 +188,7 @@ export default function AuthPage() {
                   </>
                 )}
 
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
                   {isRegistering ? "Register" : "Login"}
                 </Button>
               </form>
