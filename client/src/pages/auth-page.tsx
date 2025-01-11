@@ -127,16 +127,22 @@ export default function AuthPage() {
   // Add password match check effect
   useEffect(() => {
     if (isRegistering) {
-      const password = registerForm.watch("password");
-      const confirmPassword = registerForm.watch("confirmPassword");
+      const subscription = registerForm.watch((value, { name, type }) => {
+        if (name === "password" || name === "confirmPassword" || type === "change") {
+          const password = registerForm.getValues("password");
+          const confirmPassword = registerForm.getValues("confirmPassword");
 
-      if (password && confirmPassword) {
-        setPasswordMatch(password === confirmPassword);
-      } else {
-        setPasswordMatch(null);
-      }
+          if (password && confirmPassword) {
+            setPasswordMatch(password === confirmPassword);
+          } else {
+            setPasswordMatch(null);
+          }
+        }
+      });
+
+      return () => subscription.unsubscribe();
     }
-  }, [isRegistering, registerForm.watch("password"), registerForm.watch("confirmPassword")]);
+  }, [isRegistering, registerForm]);
 
   async function onSubmit(data: LoginFormData | RegisterFormData) {
     try {
@@ -205,8 +211,8 @@ export default function AuthPage() {
           <CardTitle className="text-2xl font-bold">Soccer Registration System</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs 
-            value={isRegistering ? "register" : "login"} 
+          <Tabs
+            value={isRegistering ? "register" : "login"}
             onValueChange={(v) => setIsRegistering(v === "register")}
           >
             <TabsList className="grid w-full grid-cols-2 mb-4">
@@ -302,8 +308,8 @@ export default function AuthPage() {
                       <FormLabel>Password</FormLabel>
                       <div className="relative">
                         <FormControl>
-                          <Input 
-                            type="password" 
+                          <Input
+                            type="password"
                             {...field}
                             className={cn(
                               "pr-10",
@@ -338,8 +344,8 @@ export default function AuthPage() {
                           <FormLabel>Confirm Password</FormLabel>
                           <div className="relative">
                             <FormControl>
-                              <Input 
-                                type="password" 
+                              <Input
+                                type="password"
                                 {...field}
                                 className={cn(
                                   "pr-10",
