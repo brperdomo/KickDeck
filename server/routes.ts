@@ -1,13 +1,14 @@
 import type { Express, Request, Response, NextFunction } from "express";
+import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { log } from "./vite";
 
-// Simple rate limiting middleware
+// Simple rate limiting middleware with IP fallback
 const rateLimit = (windowMs: number, maxRequests: number) => {
   const requests = new Map<string, { count: number; resetTime: number }>();
 
   return (req: Request, res: Response, next: NextFunction) => {
-    const ip = req.ip;
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
     const now = Date.now();
 
     const userRequests = requests.get(ip) || { count: 0, resetTime: now + windowMs };
@@ -28,7 +29,9 @@ const rateLimit = (windowMs: number, maxRequests: number) => {
   };
 };
 
-export function registerRoutes(app: Express): void {
+export function registerRoutes(app: Express): Server {
+  const httpServer = createServer(app);
+
   try {
     // Apply rate limiting to auth routes
     app.use('/api/login', rateLimit(60 * 1000, 5)); // 5 requests per minute
@@ -38,6 +41,7 @@ export function registerRoutes(app: Express): void {
     setupAuth(app);
     log("Authentication routes registered successfully");
 
+    return httpServer;
   } catch (error) {
     log("Error registering routes: " + (error as Error).message);
     throw error;

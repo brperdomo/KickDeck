@@ -1,5 +1,4 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { createServer } from "http";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { db } from "@db";
@@ -62,18 +61,17 @@ async function testDbConnection() {
       throw new Error("Could not connect to database");
     }
 
-    // Create HTTP server
-    const server = createServer(app);
+    // Register routes first to ensure all middleware is set up
+    const server = registerRoutes(app);
 
-    // Setup development middleware first
     if (app.get("env") === "development") {
+      // Setup Vite middleware
       await setupVite(app, server);
       log("Vite middleware setup complete");
+    } else {
+      // Static file serving in production
+      serveStatic(app);
     }
-
-    // Register API routes after Vite setup
-    registerRoutes(app);
-    log("API routes registered");
 
     // Error handling middleware
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -83,11 +81,7 @@ async function testDbConnection() {
       res.status(status).json({ message });
     });
 
-    // Static file serving in production
-    if (app.get("env") !== "development") {
-      serveStatic(app);
-    }
-
+    // Start the server
     const PORT = 5000;
     server.listen(PORT, "0.0.0.0", () => {
       log(`Server started successfully on port ${PORT}`);
