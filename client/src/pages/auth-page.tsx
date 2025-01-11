@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema, type InsertUser } from "@db/schema";
 import { useUser } from "@/hooks/use-user";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 import {
   Form,
   FormControl,
@@ -59,7 +60,7 @@ export default function AuthPage() {
         password: userData.password,
         firstName: userData.firstName,
         lastName: userData.lastName,
-        phone: userData.phone || null,
+        phone: userData.phone || undefined,
         isParent: userType === "parent",
         createdAt: new Date().toISOString(),
       };
@@ -163,9 +164,13 @@ export default function AuthPage() {
                       <FormControl>
                         <Input type="password" {...field} />
                       </FormControl>
-                      <FormDescription>
-                        Must be at least 8 characters with a number and special character
-                      </FormDescription>
+                      {!isRegistering && (
+                        <div className="text-right">
+                          <Link href="/forgot-password" className="text-sm text-green-600 hover:text-green-700">
+                            Forgot Password?
+                          </Link>
+                        </div>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
