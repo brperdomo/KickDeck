@@ -50,15 +50,41 @@ async function handleRequest(
   }
 }
 
-async function fetchUser(): Promise<SelectUser> {
-  // Temporarily return mock admin user instead of making API call
-  return mockAdminUser;
+async function fetchUser(): Promise<SelectUser | null> {
+  // Check if we're in development mode and bypass is enabled
+  const isDev = import.meta.env.DEV;
+  const bypassAuth = isDev && import.meta.env.VITE_BYPASS_AUTH === 'true';
+
+  if (bypassAuth) {
+    // Log that we're using bypass mode
+    console.log('🔓 Auth bypass enabled - Using mock admin user');
+    return mockAdminUser;
+  }
+
+  try {
+    const response = await fetch('/api/user', {
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        return null;
+      }
+
+      throw new Error(`${response.status}: ${await response.text()}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    return null;
+  }
 }
 
 export function useUser() {
   const queryClient = useQueryClient();
 
-  const { data: user, error, isLoading } = useQuery<SelectUser, Error>({
+  const { data: user, error, isLoading } = useQuery<SelectUser | null, Error>({
     queryKey: ['user'],
     queryFn: fetchUser,
     staleTime: Infinity, // Data never goes stale
@@ -88,7 +114,7 @@ export function useUser() {
   });
 
   return {
-    user: user ?? mockAdminUser, // Ensure we always return the mock admin user
+    user,
     isLoading,
     error,
     login: loginMutation.mutateAsync,
