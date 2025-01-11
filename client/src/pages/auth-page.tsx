@@ -20,6 +20,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy } from "lucide-react";
 import { z } from "zod";
+import { Link } from "wouter";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -271,9 +272,11 @@ export default function AuthPage() {
             </Form>
             {!isRegistering && (
               <div className="text-center mt-4">
-                <Button variant="link" className="text-sm text-green-600" type="button">
-                  Forgot Password?
-                </Button>
+                <Link href="/forgot-password">
+                  <Button variant="link" className="text-sm text-green-600" type="button">
+                    Forgot Password?
+                  </Button>
+                </Link>
               </div>
             )}
           </Tabs>

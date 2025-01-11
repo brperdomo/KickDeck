@@ -30,7 +30,7 @@ const crypto = {
 
 declare global {
   namespace Express {
-    interface User extends SelectUser { }
+    interface User extends SelectUser {}
   }
 }
 
@@ -103,7 +103,7 @@ export function setupAuth(app: Express) {
       if (!result.success) {
         return res
           .status(400)
-          .send("Invalid input: " + result.error.issues.map(i => i.message).join(", "));
+          .send("Invalid input: " + result.error.issues.map((i) => i.message).join(", "));
       }
 
       const { username, password, firstName, lastName, email, phone, isParent } = result.data;
@@ -164,7 +164,7 @@ export function setupAuth(app: Express) {
 
         return res.json({
           message: "Login successful",
-          user
+          user,
         });
       });
     })(req, res, next);
@@ -179,7 +179,40 @@ export function setupAuth(app: Express) {
       res.json({ message: "Logout successful" });
     });
   });
+  app.post("/api/reset-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email || typeof email !== 'string' || !email.includes('@')) {
+        return res.status(400).send("Invalid email address");
+      }
 
+      // Check if user exists
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+
+      // Always return success, even if the email doesn't exist
+      // This prevents email enumeration attacks
+      res.json({ 
+        message: "If an account exists with this email, you will receive password reset instructions shortly." 
+      });
+
+      // TODO: If user exists, send password reset email
+      // This would be implemented with your email service
+      if (user) {
+        // Here you would:
+        // 1. Generate a reset token
+        // 2. Save it to the database with an expiration
+        // 3. Send an email with the reset link
+        console.log(`Password reset requested for user: ${user.email}`);
+      }
+    } catch (error) {
+      console.error('Password reset error:', error);
+      res.status(500).send("An error occurred while processing your request");
+    }
+  });
   app.get("/api/user", (req, res) => {
     if (req.isAuthenticated()) {
       return res.json(req.user);
