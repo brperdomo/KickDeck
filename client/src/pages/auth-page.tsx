@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertUserSchema, type InsertUser } from "@db/schema";
+import { type InsertUser } from "@db/schema";
 import { useUser } from "@/hooks/use-user";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -22,27 +22,35 @@ import { Trophy } from "lucide-react";
 import { z } from "zod";
 import { Link } from "wouter";
 
-// Define the login schema separately from the registration schema
+// Shared password schema
+const passwordSchema = z.string()
+  .min(8, "Password must be at least 8 characters")
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character");
+
+// Login schema
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(1, "Password is required"),
+  password: passwordSchema,
 });
 
-// Create a registration schema that extends the insertUserSchema
+// Registration schema
 const registerSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   username: z.string().min(3, "Username must be at least 3 characters").max(50),
-  password: z.string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[0-9]/, "Password must contain at least one number")
-    .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character"),
+  password: passwordSchema,
   confirmPassword: z.string(),
   firstName: z.string().min(1, "First name is required").max(50),
   lastName: z.string().min(1, "Last name is required").max(50),
   phone: z.string().optional(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
+}).superRefine((data, ctx) => {
+  if (data.password !== data.confirmPassword) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Passwords must match",
+      path: ["confirmPassword"],
+    });
+  }
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -60,7 +68,7 @@ export default function AuthPage() {
       email: "",
       password: "",
     },
-    mode: "onChange", // Enable real-time validation
+    mode: "all",
   });
 
   const registerForm = useForm<RegisterFormData>({
@@ -74,14 +82,13 @@ export default function AuthPage() {
       lastName: "",
       phone: "",
     },
-    mode: "onChange", // Enable real-time validation
+    mode: "all",
   });
 
   async function onSubmit(data: LoginFormData | RegisterFormData) {
     try {
       if (isRegistering) {
         const { confirmPassword, ...registerData } = data as RegisterFormData;
-        // Prepare the data for registration
         const submitData: InsertUser = {
           ...registerData,
           phone: registerData.phone || null,
@@ -103,7 +110,7 @@ export default function AuthPage() {
         const result = await login({
           username: loginData.email,
           password: loginData.password,
-          firstName: "", // Add required fields for InsertUser type
+          firstName: "",
           lastName: "",
           email: loginData.email,
           isParent: false,
@@ -133,7 +140,7 @@ export default function AuthPage() {
     }
   }
 
-  const form = isRegistering ? registerForm : loginForm;
+  const activeForm = isRegistering ? registerForm : loginForm;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-600 to-green-800 p-4">
@@ -154,8 +161,8 @@ export default function AuthPage() {
               <TabsTrigger value="register">Register</TabsTrigger>
             </TabsList>
 
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <Form {...activeForm}>
+              <form onSubmit={activeForm.handleSubmit(onSubmit)} className="space-y-4">
                 {isRegistering && (
                   <RadioGroup
                     defaultValue="player"
@@ -175,7 +182,7 @@ export default function AuthPage() {
                 )}
 
                 <FormField
-                  control={form.control}
+                  control={activeForm.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
@@ -190,7 +197,7 @@ export default function AuthPage() {
 
                 {isRegistering && (
                   <FormField
-                    control={form.control}
+                    control={registerForm.control}
                     name="username"
                     render={({ field }) => (
                       <FormItem>
@@ -205,7 +212,7 @@ export default function AuthPage() {
                 )}
 
                 <FormField
-                  control={form.control}
+                  control={activeForm.control}
                   name="password"
                   render={({ field }) => (
                     <FormItem>
@@ -226,13 +233,17 @@ export default function AuthPage() {
                 {isRegistering && (
                   <>
                     <FormField
-                      control={form.control}
+                      control={registerForm.control}
                       name="confirmPassword"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Confirm Password</FormLabel>
                           <FormControl>
-                            <Input type="password" {...field} />
+                            <Input 
+                              type="password" 
+                              {...field}
+                              onPaste={(e) => e.preventDefault()} // Prevent pasting for security
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -240,7 +251,7 @@ export default function AuthPage() {
                     />
 
                     <FormField
-                      control={form.control}
+                      control={registerForm.control}
                       name="firstName"
                       render={({ field }) => (
                         <FormItem>
@@ -256,7 +267,7 @@ export default function AuthPage() {
                     />
 
                     <FormField
-                      control={form.control}
+                      control={registerForm.control}
                       name="lastName"
                       render={({ field }) => (
                         <FormItem>
@@ -272,7 +283,7 @@ export default function AuthPage() {
                     />
 
                     <FormField
-                      control={form.control}
+                      control={registerForm.control}
                       name="phone"
                       render={({ field: { value, ...fieldProps } }) => (
                         <FormItem>
@@ -296,6 +307,7 @@ export default function AuthPage() {
                 </Button>
               </form>
             </Form>
+
             {!isRegistering && (
               <div className="text-center mt-4">
                 <Link href="/forgot-password">
