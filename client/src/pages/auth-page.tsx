@@ -222,7 +222,9 @@ export default function AuthPage() {
                       name="firstName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>First Name</FormLabel>
+                          <FormLabel>
+                            {userType === "player" ? "Player First Name" : "Parent First Name"}
+                          </FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -236,7 +238,9 @@ export default function AuthPage() {
                       name="lastName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Last Name</FormLabel>
+                          <FormLabel>
+                            {userType === "player" ? "Player Last Name" : "Parent Last Name"}
+                          </FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
