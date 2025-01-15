@@ -5,29 +5,21 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useUser } from "@/hooks/use-user";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "@/hooks/use-theme";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { SelectUser } from "@db/schema";
 import {
-  Loader2,
+  Calendar,
   Search,
   Plus,
   Settings,
   Users,
-  Calendar,
   ChevronUp,
   ChevronDown,
   Edit,
@@ -39,25 +31,26 @@ import {
   Home,
   LogOut,
   FileText,
-  FileSpreadsheet,
   User,
   Palette,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { useOrganizationSettings } from "@/hooks/use-organization-settings";
 import { BrandingPreviewProvider, useBrandingPreview } from "@/hooks/use-branding-preview";
-import { useExportProcess } from "@/hooks/use-export-process"; // Added import
-import React from 'react';
+import { useExportProcess } from "@/hooks/use-export-process";
+import { lazy, Suspense } from "react";
 
+const MyAccount = lazy(() => import("./my-account"));
 
 // Type guard function to check if user is admin
 function isAdminUser(user: SelectUser | null): user is SelectUser & { isAdmin: true } {
@@ -573,7 +566,7 @@ function OrganizationSettingsForm() {
   );
 }
 
-function AdminDashboard() {
+export default function AdminDashboard() {
   const { user, logout } = useUser();
   const [, navigate] = useLocation();
   const [currentView, setCurrentView] = useState<View>('events');
@@ -907,15 +900,16 @@ function AdminDashboard() {
       case 'reports':
         return <ReportsView />;
       case 'account':
-        const MyAccount = React.lazy(() => import('./my-account'));
         return (
-          <React.Suspense fallback={
+          <Suspense fallback={
             <div className="flex items-center justify-center h-full">
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
           }>
-            <MyAccount />
-          </React.Suspense>
+            <div className="max-w-4xl mx-auto">
+              <MyAccount />
+            </div>
+          </Suspense>
         );
       default:
         return null;
@@ -927,94 +921,109 @@ function AdminDashboard() {
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
-      <div className="w-64 bg-card border-r p-4 space-y-2 overflow-y-auto">
-        <div className="space-y-2">
-          <Button
-            variant={currentView === 'events' ? 'secondary' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => setCurrentView('events')}
-          >
-            <Calendar className="mr-2 h-4 w-4" />
-            Events
-          </Button>
-          <Button
-            variant={currentView === 'teams' ? 'secondary' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => setCurrentView('teams')}
-          >
-            <Users className="mr-2 h-4 w-4" />
-            Teams
-          </Button>
-          <Button
-            variant={currentView ==='households' ? 'secondary' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => setCurrentView('households')}
-          >
-            <Home className="mr-2 h-4 w-4" />
-            Households
-          </Button>
-          <Button
-            variant={currentView === 'administrators' ? 'secondary' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => setCurrentView('administrators')}
-          >
-            <Shield className="mr-2 h-4 w-4" />
-            Administrators
-          </Button>
-          <Button
-            variant={currentView === 'account' ? 'secondary' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => setCurrentView('account')}
-          >
-            <User className="mr-2 h-4 w-4" />
-            My Account
-          </Button>
-          <Collapsible
-            open={isSettingsOpen}
-            onOpenChange={setIsSettingsOpen}
-          >
-            <CollapsibleTrigger asChild>
-              <Button
-                variant={currentView === 'settings' ? 'secondary' : 'ghost'}
-                className="w-full justify-between"
-                onClick={() => setCurrentView('settings')}
-              >
-                <span className="flex items-center">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </span>
-                <ChevronRight
-                  className={`h-4 w-4 transition-transform ${
-                    isSettingsOpen ? 'transform rotate-90' : ''
-                  }`}
-                />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pl-4 space-y-1">
-              <Button
-                variant={currentSettingsView === 'branding' ? 'secondary' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => {
-                  setCurrentView('settings');
-                  setCurrentSettingsView('branding');
-                }}
-              >
-                <Palette className="mr-2 h-4 w-4" />
-                Branding
-              </Button>
-              {/* Add more settings options here */}
-            </CollapsibleContent>
-          </Collapsible>
-          <Button
-            variant={currentView === 'reports' ? 'secondary' : 'ghost'}
-            className="w-full justify-start"
-            onClick={() => setCurrentView('reports')}
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            Reports
-          </Button>
+      <div className="w-64 bg-card border-r flex flex-col h-full">
+        <div className="p-4 flex flex-col h-full">
+          {/* Header */}
+          <div className="flex items-center gap-2 mb-6">
+            <Calendar className="h-6 w-6 text-primary" />
+            <h1 className="font-semibold text-xl">Admin Dashboard</h1>
+          </div>
+
+          {/* Navigation */}
+          <div className="flex-1 space-y-2 overflow-y-auto">
+            <Button
+              variant={currentView === 'events' ? 'secondary' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => setCurrentView('events')}
+            >
+              <Calendar className="mr-2 h-4 w-4" />
+              Events
+            </Button>
+            <Button
+              variant={currentView === 'teams' ? 'secondary' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => setCurrentView('teams')}
+            >
+              <Users className="mr-2 h-4 w-4" />
+              Teams
+            </Button>
+            <Button
+              variant={currentView === 'households' ? 'secondary' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => setCurrentView('households')}
+            >
+              <Home className="mr-2 h-4 w-4" />
+              Households
+            </Button>
+            <Button
+              variant={currentView === 'administrators' ? 'secondary' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => setCurrentView('administrators')}
+            >
+              <Shield className="mr-2 h-4 w-4" />
+              Administrators
+            </Button>
+            <Button
+              variant={currentView === 'account' ? 'secondary' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => setCurrentView('account')}
+            >
+              <User className="mr-2 h-4 w-4" />
+              My Account
+            </Button>
+            <Collapsible
+              open={isSettingsOpen}
+              onOpenChange={setIsSettingsOpen}
+            >
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant={currentView === 'settings' ? 'secondary' : 'ghost'}
+                  className="w-full justify-between"
+                  onClick={() => setCurrentView('settings')}
+                >
+                  <span className="flex items-center">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </span>
+                  <ChevronRight
+                    className={`h-4 w-4 transition-transform ${
+                      isSettingsOpen ? 'transform rotate-90' : ''
+                    }`}
+                  />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pl-4 space-y-1">
+                <Button
+                  variant={currentSettingsView === 'branding' ? 'secondary' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => {
+                    setCurrentView('settings');
+                    setCurrentSettingsView('branding');
+                  }}
+                >
+                  <Palette className="mr-2 h-4 w-4" />
+                  Branding
+                </Button>
+              </CollapsibleContent>
+            </Collapsible>
+            <Button
+              variant={currentView === 'reports' ? 'secondary' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => setCurrentView('reports')}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Reports
+            </Button>
+          </div>
+
+          {/* Powered by MatchPro */}
+          <div className="mt-4 pt-4 border-t border-border">
+            <p className="text-sm text-muted-foreground text-center">
+              Powered by MatchPro
+            </p>
+          </div>
         </div>
       </div>
 
@@ -1023,7 +1032,6 @@ function AdminDashboard() {
         {/* Top Bar */}
         <div className="h-16 border-b border-border px-8 flex items-center justify-between bg-card">
           <div className="flex items-center gap-2">
-            <Calendar className="h-6 w-6" />
             <h1 className="font-semibold text-lg">Admin Dashboard</h1>
           </div>
           <Button
@@ -1050,5 +1058,3 @@ function AdminDashboard() {
     </div>
   );
 }
-
-export default AdminDashboard;
