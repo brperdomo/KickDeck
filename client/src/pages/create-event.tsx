@@ -69,8 +69,8 @@ export default function CreateEvent() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
+    <div className="container mx-auto px-4 py-6 max-w-7xl">
+      <div className="flex items-center gap-4 mb-6">
         <Button
           variant="ghost"
           size="icon"
@@ -81,12 +81,12 @@ export default function CreateEvent() {
         <h2 className="text-2xl font-bold">Create Event</h2>
       </div>
 
-      <Card>
+      <Card className="mx-auto">
         <CardContent className="p-6">
           <Tabs
             value={activeTab}
             onValueChange={(value) => setActiveTab(value as EventTab)}
-            className="space-y-4"
+            className="space-y-6"
           >
             <TabsList className="grid grid-cols-6 gap-4">
               <TabsTrigger value="information">Event Information</TabsTrigger>
@@ -99,7 +99,7 @@ export default function CreateEvent() {
 
             <TabsContent value="information">
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-4xl mx-auto">
                   <FormField
                     control={form.control}
                     name="name"
@@ -114,7 +114,7 @@ export default function CreateEvent() {
                     )}
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
                       name="startDate"
