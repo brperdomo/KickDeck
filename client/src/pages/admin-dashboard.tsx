@@ -644,7 +644,7 @@ function PaymentsSettingsView() {
   );
 }
 
-export default function AdminDashboard() {
+function AdminDashboard() {
   const { user, logout } = useUser();
   const [, navigate] = useLocation();
   const [currentView, setCurrentView] = useState<View>('events');
@@ -861,7 +861,7 @@ export default function AdminDashboard() {
                   className="pl-9 w-[300px]"
                 />
               </div>
-              <Button>
+              <Button onClick={() => navigate("/create-event")}>
                 <Plus className="mr-2 h-4 w-4" />
                 Create Event
               </Button>
@@ -969,7 +969,8 @@ export default function AdminDashboard() {
                         ))
                       )}
                     </TableBody>
-                  </Table>                </div>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           </>
@@ -1145,3 +1146,5 @@ export default function AdminDashboard() {
     </div>
   );
 }
+
+export default AdminDashboard;
