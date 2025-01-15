@@ -347,29 +347,14 @@ export default function CreateEvent() {
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor="projected-teams">Projected # of Teams</Label>
-                            <div className="flex items-center space-x-2">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                type="button"
-                              >
-                                <Minus className="h-4 w-4" />
-                              </Button>
-                              <Input
-                                type="number"
-                                id="projected-teams"
-                                min="0"
-                                max="200"
-                                className="w-20 text-center"
-                              />
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                type="button"
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </div>
+                            <Input
+                              type="number"
+                              id="projected-teams"
+                              min="0"
+                              max="200"
+                              className="w-32"
+                              placeholder="0"
+                            />
                           </div>
                         </div>
 
