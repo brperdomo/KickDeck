@@ -23,6 +23,7 @@ import { z } from "zod";
 import { Link } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { HelpButton } from "@/components/ui/help-button";
 
 // Shared password schema
 const passwordSchema = z.string()
@@ -210,10 +211,39 @@ export default function AuthPage() {
       <div className="container max-w-lg mx-auto">
         <Card className="w-full bg-white/95 shadow-xl">
           <CardHeader className="text-center">
-            <div className="flex justify-center mb-2">
-              <Trophy className="h-12 w-12 text-green-600" />
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <div className="flex justify-center mb-2">
+                  <Trophy className="h-12 w-12 text-green-600" />
+                </div>
+                <CardTitle className="text-2xl font-bold">Soccer Registration System</CardTitle>
+              </div>
+              <HelpButton
+                title={isRegistering ? "Registration Help" : "Login Help"}
+                content={
+                  isRegistering ? (
+                    <div className="space-y-2">
+                      <p>To register for the soccer system:</p>
+                      <ul className="list-disc pl-4 space-y-1">
+                        <li>Choose between Player or Parent registration</li>
+                        <li>Fill in all required fields marked with *</li>
+                        <li>Password must be at least 8 characters with numbers and special characters</li>
+                        <li>Your email will be used for account verification</li>
+                      </ul>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p>To log in to your account:</p>
+                      <ul className="list-disc pl-4 space-y-1">
+                        <li>Enter your registered email address</li>
+                        <li>Enter your password</li>
+                        <li>Click "Forgot Password?" if you need to reset</li>
+                      </ul>
+                    </div>
+                  )
+                }
+              />
             </div>
-            <CardTitle className="text-2xl font-bold">Soccer Registration System</CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs
