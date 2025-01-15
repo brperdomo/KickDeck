@@ -55,9 +55,9 @@ const eventInformationSchema = z.object({
   endDate: z.string().min(1, "End date is required"),
   timezone: z.string().min(1, "Time zone is required"),
   applicationDeadline: z.string().min(1, "Application deadline is required"),
-  details: z.string().min(1, "Event details are required"),
-  agreement: z.string().min(1, "Agreement is required"),
-  refundPolicy: z.string().min(1, "Refund policy is required"),
+  details: z.string().optional(),
+  agreement: z.string().optional(),
+  refundPolicy: z.string().optional(),
 });
 
 const ageGroupSchema = z.object({
