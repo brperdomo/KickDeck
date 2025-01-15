@@ -210,298 +210,301 @@ export default function AuthPage() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center relative"
+      className="min-h-screen flex items-center justify-center relative bg-gray-100"
       style={{
         backgroundImage: `url(${bgImageUrl})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
+        backgroundAttachment: "fixed",
       }}
     >
       {/* Add a dark overlay to improve readability */}
       <div className="absolute inset-0 bg-black/40" />
 
-      <Card className="w-full max-w-md relative bg-white/80 backdrop-blur-md p-4">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-2">
-            <Trophy className="h-12 w-12 text-green-600" />
-          </div>
-          <CardTitle className="text-2xl font-bold">Soccer Registration System</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs
-            value={isRegistering ? "register" : "login"}
-            onValueChange={(v) => {
-              setIsRegistering(v === "register");
-              // Reset forms when switching between login and register
-              loginForm.reset();
-              registerForm.reset();
-              setPasswordMatch(null);
-              setLastCheckedEmail("");
-              emailCheckMutation.reset();
-            }}
-          >
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
-            </TabsList>
+      <div className="container mx-auto px-4 relative">
+        <Card className="w-full max-w-md mx-auto bg-white/80 backdrop-blur-md p-4">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-2">
+              <Trophy className="h-12 w-12 text-green-600" />
+            </div>
+            <CardTitle className="text-2xl font-bold">Soccer Registration System</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs
+              value={isRegistering ? "register" : "login"}
+              onValueChange={(v) => {
+                setIsRegistering(v === "register");
+                // Reset forms when switching between login and register
+                loginForm.reset();
+                registerForm.reset();
+                setPasswordMatch(null);
+                setLastCheckedEmail("");
+                emailCheckMutation.reset();
+              }}
+            >
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="login">Login</TabsTrigger>
+                <TabsTrigger value="register">Register</TabsTrigger>
+              </TabsList>
 
-            {isRegistering ? (
-              <Form {...registerForm}>
-                <form onSubmit={registerForm.handleSubmit(onSubmit)} className="space-y-4">
-                  <RadioGroup
-                    defaultValue="player"
-                    value={userType}
-                    onValueChange={(v) => setUserType(v as "player" | "parent")}
-                    className="flex justify-center space-x-4 mb-6"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="player" id="player" />
-                      <label htmlFor="player">Register as Player</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="parent" id="parent" />
-                      <label htmlFor="parent">Register as Parent</label>
-                    </div>
-                  </RadioGroup>
+              {isRegistering ? (
+                <Form {...registerForm}>
+                  <form onSubmit={registerForm.handleSubmit(onSubmit)} className="space-y-4">
+                    <RadioGroup
+                      defaultValue="player"
+                      value={userType}
+                      onValueChange={(v) => setUserType(v as "player" | "parent")}
+                      className="flex justify-center space-x-4 mb-6"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="player" id="player" />
+                        <label htmlFor="player">Register as Player</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="parent" id="parent" />
+                        <label htmlFor="parent">Register as Parent</label>
+                      </div>
+                    </RadioGroup>
 
-                  <FormField
-                    control={registerForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <div className="relative">
+                    <FormField
+                      control={registerForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <div className="relative">
+                            <FormControl>
+                              <Input
+                                type="email"
+                                {...field}
+                                className={cn(
+                                  "pr-10",
+                                  emailCheckMutation.data?.available && "border-green-500 focus-visible:ring-green-500",
+                                  emailCheckMutation.data?.available === false && "border-red-500 focus-visible:ring-red-500"
+                                )}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  const value = e.target.value;
+                                  if (value) {
+                                    handleEmailValidation(value);
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                            {field.value && (
+                              <div className="absolute right-3 top-2.5">
+                                {emailCheckMutation.isPending ? (
+                                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-primary" />
+                                ) : emailCheckMutation.data?.available ? (
+                                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                ) : emailCheckMutation.data?.available === false ? (
+                                  <XCircle className="h-5 w-5 text-red-500" />
+                                ) : null}
+                              </div>
+                            )}
+                          </div>
+                          <FormMessage />
+                          {emailCheckMutation.data?.available === false && (
+                            <p className="text-sm text-red-500 mt-1">
+                              This email is already registered
+                            </p>
+                          )}
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={registerForm.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Username</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={registerForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <div className="relative">
+                            <FormControl>
+                              <Input
+                                type="password"
+                                {...field}
+                                className={cn(
+                                  "pr-10",
+                                  passwordMatch && "border-green-500 focus-visible:ring-green-500",
+                                  passwordMatch === false && "border-red-500 focus-visible:ring-red-500"
+                                )}
+                              />
+                            </FormControl>
+                            {field.value && (
+                              <div className="absolute right-3 top-2.5 transition-opacity duration-200">
+                                <Lock className="h-5 w-5 text-muted-foreground" />
+                              </div>
+                            )}
+                          </div>
+                          <FormDescription>
+                            Must be at least 8 characters with a number and special character
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={registerForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm Password</FormLabel>
+                          <div className="relative">
+                            <FormControl>
+                              <Input
+                                type="password"
+                                {...field}
+                                className={cn(
+                                  "pr-10",
+                                  passwordMatch && "border-green-500 focus-visible:ring-green-500",
+                                  passwordMatch === false && "border-red-500 focus-visible:ring-red-500"
+                                )}
+                                onPaste={(e) => e.preventDefault()} // Prevent pasting for security
+                              />
+                            </FormControl>
+                            {field.value && (
+                              <div className="absolute right-3 top-2.5 transition-transform duration-200 ease-in-out">
+                                {passwordMatch ? (
+                                  <CheckCircle2 className="h-5 w-5 text-green-500 animate-in fade-in-0 zoom-in-95" />
+                                ) : (
+                                  <XCircle className="h-5 w-5 text-red-500 animate-in fade-in-0 zoom-in-95" />
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <FormMessage />
+                          {passwordMatch === false && (
+                            <p className="text-sm text-red-500 mt-1 animate-in fade-in-0 slide-in-from-right-1">
+                              Passwords do not match
+                            </p>
+                          )}
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={registerForm.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            {userType === "player" ? "Player First Name" : "Parent First Name"}
+                          </FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={registerForm.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            {userType === "player" ? "Player Last Name" : "Parent Last Name"}
+                          </FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={registerForm.control}
+                      name="phone"
+                      render={({ field: { value, ...fieldProps } }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number (Optional)</FormLabel>
                           <FormControl>
                             <Input
-                              type="email"
-                              {...field}
-                              className={cn(
-                                "pr-10",
-                                emailCheckMutation.data?.available && "border-green-500 focus-visible:ring-green-500",
-                                emailCheckMutation.data?.available === false && "border-red-500 focus-visible:ring-red-500"
-                              )}
-                              onChange={(e) => {
-                                field.onChange(e);
-                                const value = e.target.value;
-                                if (value) {
-                                  handleEmailValidation(value);
-                                }
-                              }}
+                              type="tel"
+                              {...fieldProps}
+                              value={value ?? ""}
                             />
                           </FormControl>
-                          {field.value && (
-                            <div className="absolute right-3 top-2.5">
-                              {emailCheckMutation.isPending ? (
-                                <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-primary" />
-                              ) : emailCheckMutation.data?.available ? (
-                                <CheckCircle2 className="h-5 w-5 text-green-500" />
-                              ) : emailCheckMutation.data?.available === false ? (
-                                <XCircle className="h-5 w-5 text-red-500" />
-                              ) : null}
-                            </div>
-                          )}
-                        </div>
-                        <FormMessage />
-                        {emailCheckMutation.data?.available === false && (
-                          <p className="text-sm text-red-500 mt-1">
-                            This email is already registered
-                          </p>
-                        )}
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={registerForm.control}
-                    name="username"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Username</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={registerForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <div className="relative">
+                    <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
+                      Register
+                    </Button>
+                  </form>
+                </Form>
+              ) : (
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={loginForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input
-                              type="password"
-                              {...field}
-                              className={cn(
-                                "pr-10",
-                                passwordMatch && "border-green-500 focus-visible:ring-green-500",
-                                passwordMatch === false && "border-red-500 focus-visible:ring-red-500"
-                              )}
-                            />
+                            <Input type="email" {...field} />
                           </FormControl>
-                          {field.value && (
-                            <div className="absolute right-3 top-2.5 transition-opacity duration-200">
-                              <Lock className="h-5 w-5 text-muted-foreground" />
-                            </div>
-                          )}
-                        </div>
-                        <FormDescription>
-                          Must be at least 8 characters with a number and special character
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={registerForm.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Confirm Password</FormLabel>
-                        <div className="relative">
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
                           <FormControl>
-                            <Input
-                              type="password"
-                              {...field}
-                              className={cn(
-                                "pr-10",
-                                passwordMatch && "border-green-500 focus-visible:ring-green-500",
-                                passwordMatch === false && "border-red-500 focus-visible:ring-red-500"
-                              )}
-                              onPaste={(e) => e.preventDefault()} // Prevent pasting for security
-                            />
+                            <Input type="password" {...field} />
                           </FormControl>
-                          {field.value && (
-                            <div className="absolute right-3 top-2.5 transition-transform duration-200 ease-in-out">
-                              {passwordMatch ? (
-                                <CheckCircle2 className="h-5 w-5 text-green-500 animate-in fade-in-0 zoom-in-95" />
-                              ) : (
-                                <XCircle className="h-5 w-5 text-red-500 animate-in fade-in-0 zoom-in-95" />
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        <FormMessage />
-                        {passwordMatch === false && (
-                          <p className="text-sm text-red-500 mt-1 animate-in fade-in-0 slide-in-from-right-1">
-                            Passwords do not match
-                          </p>
-                        )}
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={registerForm.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          {userType === "player" ? "Player First Name" : "Parent First Name"}
-                        </FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
+                      Login
+                    </Button>
+                  </form>
+                </Form>
+              )}
 
-                  <FormField
-                    control={registerForm.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          {userType === "player" ? "Player Last Name" : "Parent Last Name"}
-                        </FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={registerForm.control}
-                    name="phone"
-                    render={({ field: { value, ...fieldProps } }) => (
-                      <FormItem>
-                        <FormLabel>Phone Number (Optional)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="tel"
-                            {...fieldProps}
-                            value={value ?? ""}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
-                    Register
-                  </Button>
-                </form>
-              </Form>
-            ) : (
-              <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={loginForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={loginForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input type="password" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
-                    Login
-                  </Button>
-                </form>
-              </Form>
-            )}
-
-            {!isRegistering && (
-              <div className="text-center mt-4">
-                <Link href="/forgot-password">
-                  <Button variant="link" className="text-sm text-green-600" type="button">
-                    Forgot Password?
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </Tabs>
-        </CardContent>
-      </Card>
+              {!isRegistering && (
+                <div className="text-center mt-4">
+                  <Link href="/forgot-password">
+                    <Button variant="link" className="text-sm text-green-600" type="button">
+                      Forgot Password?
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
