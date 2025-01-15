@@ -43,6 +43,7 @@ import {
   Printer,
   Flag,
   MoreHorizontal,
+  Building2,
 } from "lucide-react";
 import {
   Table,
@@ -65,6 +66,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 const MyAccount = lazy(() => import("./my-account"));
 
@@ -73,7 +83,7 @@ function isAdminUser(user: SelectUser | null): user is SelectUser & { isAdmin: t
   return user !== null && user.isAdmin === true;
 }
 
-type View = 'events' | 'teams' | 'administrators' | 'settings' | 'households' | 'reports' | 'account';
+type View = 'events' | 'teams' | 'administrators' | 'settings' | 'households' | 'reports' | 'account' | 'complexes';
 type SettingsView = 'branding' | 'general' | 'payments';
 type ReportType = 'financial' | 'manager' | 'player' | 'schedule' | 'guest-player';
 
@@ -644,6 +654,133 @@ function PaymentsSettingsView() {
   );
 }
 
+function ComplexesView() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  return (
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Field Complexes</h2>
+        <Button onClick={() => setIsModalOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add New Complex
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center py-8">
+            <Building2 className="mx-auto h-12 w-12 text-muted-foreground/50" />
+            <h3 className="mt-4 text-lg font-semibold">No complexes found</h3>
+            <p className="text-muted-foreground">
+              Click 'Add New Complex' to see it here
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add New Complex</DialogTitle>
+          </DialogHeader>
+          <form className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <Label htmlFor="name">Complex Name</Label>
+                <Input id="name" placeholder="Enter complex name" required />
+              </div>
+
+              <div>
+                <Label htmlFor="openTime">Open Time (Local Time)</Label>
+                <Input id="openTime" type="time" required />
+              </div>
+
+              <div>
+                <Label htmlFor="closeTime">Close Time (Local Time)</Label>
+                <Input id="closeTime" type="time" required />
+              </div>
+
+              <div className="col-span-2">
+                <Label htmlFor="addressSearch">Search Address</Label>
+                <Input id="addressSearch" placeholder="Search for address..." />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Google Maps integration will be implemented here
+                </p>
+              </div>
+
+              <div className="col-span-2">
+                <Label htmlFor="address">Address</Label>
+                <Input id="address" placeholder="Street address" />
+              </div>
+
+              <div>
+                <Label htmlFor="city">City</Label>
+                <Input id="city" placeholder="City" />
+              </div>
+
+              <div>
+                <Label htmlFor="state">State</Label>
+                <Select>
+                  <SelectTrigger id="state">
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="AL">Alabama</SelectItem>
+                    <SelectItem value="AK">Alaska</SelectItem>
+                    <SelectItem value="AZ">Arizona</SelectItem>
+                    <SelectItem value="AR">Arkansas</SelectItem>
+                    <SelectItem value="CA">California</SelectItem>
+                    {/* Add more states as needed */}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="col-span-2">
+                <Label htmlFor="country">Country</Label>
+                <Select>
+                  <SelectTrigger id="country">
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="US">United States</SelectItem>
+                    {/* Add more countries as needed */}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="col-span-2">
+                <Label htmlFor="rules">General Complex Rules</Label>
+                <Textarea
+                  id="rules"
+                  placeholder="Enter complex rules and guidelines..."
+                  className="h-24"
+                />
+              </div>
+
+              <div className="col-span-2">
+                <Label htmlFor="directions">Directions</Label>
+                <Textarea
+                  id="directions"
+                  placeholder="Enter directions to the complex..."
+                  className="h-24"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Create Complex</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 function AdminDashboard() {
   const { user, logout } = useUser();
   const [, navigate] = useLocation();
@@ -682,6 +819,8 @@ function AdminDashboard() {
 
   const renderContent = () => {
     switch (currentView) {
+      case 'complexes':
+        return <ComplexesView />;
       case 'households':
         return (
           <>
@@ -835,7 +974,7 @@ function AdminDashboard() {
                                   <Edit className="h-4 w-4" />
                                 </Button>
                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                                  <Trash className="h-4 w-4" />
+                                  <<Trash className="h-4 w-4" />
                                 </Button>
                               </div>
                             </TableCell>
@@ -1064,7 +1203,14 @@ function AdminDashboard() {
               <FileText className="mr-2 h-4 w-4" />
               Reports
             </Button>
-
+            <Button
+              variant={currentView === 'complexes' ? 'secondary' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => setCurrentView('complexes')}
+            >
+              <Building2 className="mr-2 h-4 w-4" />
+              Field Complexes
+            </Button>
             <Collapsible
               open={isSettingsOpen}
               onOpenChange={setIsSettingsOpen}
