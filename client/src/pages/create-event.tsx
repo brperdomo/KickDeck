@@ -38,6 +38,8 @@ import { Badge } from "@/components/ui/badge";
 
 type EventTab = 'information' | 'age-groups' | 'scoring' | 'complexes' | 'settings' | 'administrators';
 
+const TAB_ORDER: EventTab[] = ['information', 'age-groups', 'scoring', 'complexes', 'settings', 'administrators'];
+
 // USA Timezones
 const USA_TIMEZONES = [
   { value: 'America/New_York', label: 'Eastern Time (ET)' },
@@ -87,6 +89,15 @@ export default function CreateEvent() {
   const [ageGroups, setAgeGroups] = useState<AgeGroup[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAgeGroup, setEditingAgeGroup] = useState<AgeGroup | null>(null);
+
+  const navigateTab = (direction: 'next' | 'prev') => {
+    const currentIndex = TAB_ORDER.indexOf(activeTab);
+    if (direction === 'next' && currentIndex < TAB_ORDER.length - 1) {
+      setActiveTab(TAB_ORDER[currentIndex + 1]);
+    } else if (direction === 'prev' && currentIndex > 0) {
+      setActiveTab(TAB_ORDER[currentIndex - 1]);
+    }
+  };
 
   const ageGroupForm = useForm<AgeGroupValues>({
     resolver: zodResolver(ageGroupSchema),
@@ -141,7 +152,7 @@ export default function CreateEvent() {
 
   const onSubmit = (data: EventInformationValues) => {
     console.log(data);
-    // TODO: Handle form submission
+    navigateTab('next');
   };
 
   return (
@@ -362,7 +373,13 @@ export default function CreateEvent() {
             <TabsContent value="age-groups">
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Age Groups</h3>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={() => navigateTab('prev')}>
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Back
+                    </Button>
+                    <h3 className="text-lg font-semibold">Age Groups</h3>
+                  </div>
                   <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                       <Button onClick={() => {
@@ -649,34 +666,73 @@ export default function CreateEvent() {
                     </Table>
                   </CardContent>
                 </Card>
+                <div className="flex justify-end mt-4">
+                  <Button onClick={() => navigateTab('next')}>Save & Continue</Button>
+                </div>
               </div>
             </TabsContent>
 
             <TabsContent value="scoring">
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Scoring Settings</h3>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" onClick={() => navigateTab('prev')}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
+                  </Button>
+                  <h3 className="text-lg font-semibold">Scoring Settings</h3>
+                </div>
                 {/* Scoring settings form will be implemented here */}
+                <div className="flex justify-end mt-4">
+                  <Button onClick={() => navigateTab('next')}>Save & Continue</Button>
+                </div>
               </div>
             </TabsContent>
 
             <TabsContent value="complexes">
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Complexes and Fields</h3>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" onClick={() => navigateTab('prev')}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
+                  </Button>
+                  <h3 className="text-lg font-semibold">Complexes and Fields</h3>
+                </div>
                 {/* Complexes and fields management will be implemented here */}
+                <div className="flex justify-end mt-4">
+                  <Button onClick={() => navigateTab('next')}>Save & Continue</Button>
+                </div>
               </div>
             </TabsContent>
 
             <TabsContent value="settings">
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Event Settings</h3>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" onClick={() => navigateTab('prev')}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
+                  </Button>
+                  <h3 className="text-lg font-semibold">Event Settings</h3>
+                </div>
                 {/* Event settings form will be implemented here */}
+                <div className="flex justify-end mt-4">
+                  <Button onClick={() => navigateTab('next')}>Save & Continue</Button>
+                </div>
               </div>
             </TabsContent>
 
             <TabsContent value="administrators">
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Event Administrators</h3>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" onClick={() => navigateTab('prev')}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
+                  </Button>
+                  <h3 className="text-lg font-semibold">Event Administrators</h3>
+                </div>
                 {/* Administrators management will be implemented here */}
+                <div className="flex justify-end mt-4">
+                  <Button onClick={() => navigate("/admin")}>Finish</Button>
+                </div>
               </div>
             </TabsContent>
           </Tabs>
