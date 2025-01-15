@@ -6,39 +6,63 @@ import { Label } from "@/components/ui/label";
 import { useUser } from "@/hooks/use-user";
 import { Loader2, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+// Form validation schemas
+const profileFormSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string()
+    .regex(/^(\+1|1)?[-.\s]?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})$/, "Invalid US phone number format")
+    .optional()
+    .or(z.literal('')),
+});
+
+const passwordFormSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string()
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type ProfileFormData = z.infer<typeof profileFormSchema>;
+type PasswordFormData = z.infer<typeof passwordFormSchema>;
 
 export default function MyAccount() {
   const { user } = useUser();
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  
-  // Profile form state
-  const [formData, setFormData] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
+
+  const { register: profileRegister, handleSubmit: handleProfileSubmit, formState: { errors: profileErrors } } = useForm<ProfileFormData>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+    }
   });
 
-  // Password form state
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
+  const { register: passwordRegister, handleSubmit: handlePasswordSubmit, formState: { errors: passwordErrors }, reset: resetPasswordForm } = useForm<PasswordFormData>({
+    resolver: zodResolver(passwordFormSchema)
   });
 
-  const handleProfileUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onProfileSubmit = async (data: ProfileFormData) => {
     setIsUpdating(true);
-    
+
     try {
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(data),
         credentials: 'include',
       });
 
@@ -61,19 +85,9 @@ export default function MyAccount() {
     }
   };
 
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast({
-        title: "Password Mismatch",
-        description: "New password and confirmation do not match",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const onPasswordSubmit = async (data: PasswordFormData) => {
     setIsChangingPassword(true);
-    
+
     try {
       const response = await fetch('/api/user/password', {
         method: 'PUT',
@@ -81,8 +95,8 @@ export default function MyAccount() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword,
+          currentPassword: data.currentPassword,
+          newPassword: data.newPassword,
         }),
         credentials: 'include',
       });
@@ -95,13 +109,8 @@ export default function MyAccount() {
         title: "Password Updated",
         description: "Your password has been changed successfully.",
       });
-      
-      // Clear password fields
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
+
+      resetPasswordForm();
     } catch (error) {
       toast({
         title: "Update Failed",
@@ -123,45 +132,56 @@ export default function MyAccount() {
           <CardTitle>Profile Information</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleProfileUpdate} className="space-y-4">
+          <form onSubmit={handleProfileSubmit(onProfileSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="firstName">First Name *</Label>
                 <Input
                   id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                  required
+                  {...profileRegister("firstName")}
+                  aria-invalid={!!profileErrors.firstName}
                 />
+                {profileErrors.firstName && (
+                  <p className="text-sm text-destructive">{profileErrors.firstName.message}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="lastName">Last Name *</Label>
                 <Input
                   id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                  required
+                  {...profileRegister("lastName")}
+                  aria-invalid={!!profileErrors.lastName}
                 />
+                {profileErrors.lastName && (
+                  <p className="text-sm text-destructive">{profileErrors.lastName.message}</p>
+                )}
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email">Email Address *</Label>
               <Input
                 id="email"
                 type="email"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                required
+                {...profileRegister("email")}
+                aria-invalid={!!profileErrors.email}
               />
+              {profileErrors.email && (
+                <p className="text-sm text-destructive">{profileErrors.email.message}</p>
+              )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
+              <Label htmlFor="phone">Phone Number (Optional)</Label>
               <Input
                 id="phone"
                 type="tel"
-                value={formData.phone || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="(123) 456-7890"
+                {...profileRegister("phone")}
+                aria-invalid={!!profileErrors.phone}
               />
+              {profileErrors.phone && (
+                <p className="text-sm text-destructive">{profileErrors.phone.message}</p>
+              )}
+              <p className="text-sm text-muted-foreground">Format: (123) 456-7890 or 123-456-7890</p>
             </div>
             <Button type="submit" disabled={isUpdating}>
               {isUpdating ? (
@@ -186,36 +206,42 @@ export default function MyAccount() {
           <CardTitle>Change Password</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handlePasswordChange} className="space-y-4">
+          <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="currentPassword">Current Password</Label>
+              <Label htmlFor="currentPassword">Current Password *</Label>
               <Input
                 id="currentPassword"
                 type="password"
-                value={passwordData.currentPassword}
-                onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                required
+                {...passwordRegister("currentPassword")}
+                aria-invalid={!!passwordErrors.currentPassword}
               />
+              {passwordErrors.currentPassword && (
+                <p className="text-sm text-destructive">{passwordErrors.currentPassword.message}</p>
+              )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="newPassword">New Password</Label>
+              <Label htmlFor="newPassword">New Password *</Label>
               <Input
                 id="newPassword"
                 type="password"
-                value={passwordData.newPassword}
-                onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                required
+                {...passwordRegister("newPassword")}
+                aria-invalid={!!passwordErrors.newPassword}
               />
+              {passwordErrors.newPassword && (
+                <p className="text-sm text-destructive">{passwordErrors.newPassword.message}</p>
+              )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Label htmlFor="confirmPassword">Confirm New Password *</Label>
               <Input
                 id="confirmPassword"
                 type="password"
-                value={passwordData.confirmPassword}
-                onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                required
+                {...passwordRegister("confirmPassword")}
+                aria-invalid={!!passwordErrors.confirmPassword}
               />
+              {passwordErrors.confirmPassword && (
+                <p className="text-sm text-destructive">{passwordErrors.confirmPassword.message}</p>
+              )}
             </div>
             <Button type="submit" disabled={isChangingPassword}>
               {isChangingPassword ? (
