@@ -38,6 +38,53 @@ import { useQuery } from '@tanstack/react-query';
 import { Checkbox } from "@/components/ui/checkbox"; // Import Checkbox
 import { useToast } from "@/hooks/use-toast"; // Import useToast
 
+// Add these types near the top of the file, after existing imports
+interface EventData {
+  // Event Information
+  name: string;
+  startDate: string;
+  endDate: string;
+  timezone: string;
+  applicationDeadline: string;
+  details?: string;
+  agreement?: string;
+  refundPolicy?: string;
+
+  // Age Groups
+  ageGroups: AgeGroup[];
+
+  // Complex and Field Configuration
+  complexFieldSizes: Record<number, FieldSize>;
+  selectedComplexIds: number[];
+}
+
+// Add this validation function before the CreateEvent component
+function validateEventData(data: Partial<EventData>): { isValid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  // Event Information validation
+  if (!data.name) errors.push("Event name is required");
+  if (!data.startDate) errors.push("Event start date is required");
+  if (!data.endDate) errors.push("Event end date is required");
+  if (!data.timezone) errors.push("Time zone is required");
+  if (!data.applicationDeadline) errors.push("Application deadline is required");
+
+  // Age Groups validation
+  if (!data.ageGroups?.length) {
+    errors.push("At least one age group is required");
+  }
+
+  // Complex and Field validation
+  if (!data.selectedComplexIds?.length) {
+    errors.push("At least one complex must be selected");
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
 
 // Helper function to generate unique IDs
 const generateId = () => {
@@ -300,6 +347,71 @@ export default function CreateEvent() {
       selected: true
     })) || [];
     setSelectedComplexes(updatedComplexes);
+  };
+
+  // Add new function to handle event creation
+  const handleCreateEvent = async () => {
+    // Collect all event data
+    const eventData: EventData = {
+      name: form.getValues().name,
+      startDate: form.getValues().startDate,
+      endDate: form.getValues().endDate,
+      timezone: form.getValues().timezone,
+      applicationDeadline: form.getValues().applicationDeadline,
+      details: form.getValues().details,
+      agreement: form.getValues().agreement,
+      refundPolicy: form.getValues().refundPolicy,
+      ageGroups,
+      complexFieldSizes: eventFieldSizes,
+      selectedComplexIds: selectedComplexes.map(complex => complex.id)
+    };
+
+    // Validate all required fields
+    const { isValid, errors } = validateEventData(eventData);
+
+    if (!isValid) {
+      toast({
+        title: "Missing Required Fields",
+        description: (
+          <ul className="list-disc pl-4">
+            {errors.map((error, index) => (
+              <li key={index}>{error}</li>
+            ))}
+          </ul>
+        ),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(eventData),
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      toast({
+        title: "Success",
+        description: "Event created successfully!",
+      });
+
+      // Navigate back to events list
+      navigate("/admin/events");
+    } catch (error) {
+      console.error('Error creating event:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create event. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -1220,17 +1332,26 @@ export default function CreateEvent() {
             </TabsContent>
 
             <TabsContent value="administrators">
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" onClick={() => navigateTab('prev')}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                  </Button>
-                  <h3 className="text-lg font-semibold">Event Administrators</h3>
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={() => navigateTab('prev')}>
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Back
+                    </Button>
+                    <h3 className="text-lg font-semibold">Event Administrators</h3>
+                  </div>
                 </div>
-                {/* Administrators management will be implemented here */}
-                <div className="flex justify-end mt-4">
-                  <Button onClick={() => navigate("/admin")}>Finish</Button>
+
+                {/* Add your administrators management UI here */}
+
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={() => navigate("/admin/events")}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreateEvent}>
+                    Finish & Create Event
+                  </Button>
                 </div>
               </div>
             </TabsContent>

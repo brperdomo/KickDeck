@@ -3,13 +3,14 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { log } from "./vite";
 import { db } from "@db";
-import { users, organizationSettings, complexes, fields } from "@db/schema";
+import { users, organizationSettings, complexes, fields, events, eventAgeGroups, eventComplexes, eventFieldSizes } from "@db/schema";
 import { eq, sql, count } from "drizzle-orm";
 import fs from "fs/promises";
 import path from "path";
 import { crypto } from "./crypto";
 import session from "express-session";
 import passport from "passport";
+import { insertEventSchema } from "@db/schema";
 
 // Simple rate limiting middleware
 const rateLimit = (windowMs: number, maxRequests: number) => {
@@ -381,7 +382,6 @@ export function registerRoutes(app: Express): Server {
       }
     });
 
-
     // Add field creation endpoint
     app.post('/api/admin/fields', isAdmin, async (req, res) => {
       try {
@@ -563,6 +563,75 @@ export function registerRoutes(app: Express): Server {
         res.status(500).send("Failed to update password");
       }
     });
+
+    // Add this new event creation endpoint
+    app.post('/api/admin/events', isAdmin, async (req, res) => {
+      try {
+        const eventData = req.body;
+
+        // Start a transaction to create event and related records
+        await db.transaction(async (tx) => {
+          // Create the event
+          const [event] = await tx
+            .insert(events)
+            .values({
+              name: eventData.name,
+              startDate: eventData.startDate,
+              endDate: eventData.endDate,
+              timezone: eventData.timezone,
+              applicationDeadline: eventData.applicationDeadline,
+              details: eventData.details,
+              agreement: eventData.agreement,
+              refundPolicy: eventData.refundPolicy,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            })
+            .returning();
+
+          // Create age groups
+          await Promise.all(
+            eventData.ageGroups.map(async (group) => {
+              await tx
+                .insert(eventAgeGroups)
+                .values({
+                  ...group,
+                  eventId: event.id,
+                  createdAt: new Date().toISOString(),
+                });
+            })
+          );
+
+          // Create complex assignments with field sizes
+          for (const complexId of eventData.selectedComplexIds) {
+            await tx
+              .insert(eventComplexes)
+              .values({
+                eventId: event.id,
+                complexId,
+                createdAt: new Date().toISOString(),
+              });
+          }
+
+          // Create field size assignments
+          for (const [fieldId, fieldSize] of Object.entries(eventData.complexFieldSizes)) {
+            await tx
+              .insert(eventFieldSizes)
+              .values({
+                eventId: event.id,
+                fieldId: parseInt(fieldId),
+                fieldSize,
+                createdAt: new Date().toISOString(),
+              });
+          }
+        });
+
+        res.json({ message: "Event created successfully" });
+      } catch (error) {
+        console.error('Error creating event:', error);
+        res.status(500).send("Failed to create event");
+      }
+    });
+
 
     return httpServer;
   } catch (error) {

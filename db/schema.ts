@@ -1,4 +1,4 @@
-import { pgTable, text, serial, boolean, jsonb, time } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, boolean, jsonb, time, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -139,3 +139,64 @@ export type InsertComplex = typeof complexes.$inferInsert;
 export type SelectComplex = typeof complexes.$inferSelect;
 export type InsertField = typeof fields.$inferInsert;
 export type SelectField = typeof fields.$inferSelect;
+
+
+// Add these new table definitions after the existing tables
+
+export const events = pgTable("events", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  startDate: text("start_date").notNull(),
+  endDate: text("end_date").notNull(),
+  timezone: text("timezone").notNull(),
+  applicationDeadline: text("application_deadline").notNull(),
+  details: text("details"),
+  agreement: text("agreement"),
+  refundPolicy: text("refund_policy"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
+export const eventAgeGroups = pgTable("event_age_groups", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull().references(() => events.id),
+  gender: text("gender").notNull(),
+  projectedTeams: integer("projected_teams").notNull(),
+  birthDateStart: text("birth_date_start").notNull(),
+  birthDateEnd: text("birth_date_end").notNull(),
+  scoringRule: text("scoring_rule"),
+  ageGroup: text("age_group").notNull(),
+  fieldSize: text("field_size").notNull(),
+  amountDue: integer("amount_due"),
+  createdAt: text("created_at").notNull(),
+});
+
+export const eventComplexes = pgTable("event_complexes", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull().references(() => events.id),
+  complexId: integer("complex_id").notNull().references(() => complexes.id),
+  createdAt: text("created_at").notNull(),
+});
+
+export const eventFieldSizes = pgTable("event_field_sizes", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull().references(() => events.id),
+  fieldId: integer("field_id").notNull().references(() => fields.id),
+  fieldSize: text("field_size").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
+// Add Zod schemas for the new tables
+export const insertEventSchema = createInsertSchema(events, {
+  name: z.string().min(1, "Event name is required"),
+  startDate: z.string().min(1, "Start date is required"),
+  endDate: z.string().min(1, "End date is required"),
+  timezone: z.string().min(1, "Time zone is required"),
+  applicationDeadline: z.string().min(1, "Application deadline is required"),
+  details: z.string().optional(),
+  agreement: z.string().optional(),
+  refundPolicy: z.string().optional(),
+});
+
+export type InsertEvent = typeof events.$inferInsert;
+export type SelectEvent = typeof events.$inferSelect;
