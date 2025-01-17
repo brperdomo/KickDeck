@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Plus, Minus, Edit, Trash } from "lucide-react";
+import { ArrowLeft, Plus, Minus, Edit, Trash, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -34,6 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { useQuery } from '@tanstack/react-query';
 
 // Helper function to generate unique IDs
 const generateId = () => {
@@ -114,6 +115,17 @@ const scoringRuleSchema = z.object({
 
 type ScoringRuleValues = z.infer<typeof scoringRuleSchema>;
 
+interface Complex {
+  id: number;
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  openFields: number;
+  closedFields: number;
+  isOpen: boolean; // Added isOpen property
+}
+
 export default function CreateEvent() {
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<EventTab>('information');
@@ -123,6 +135,13 @@ export default function CreateEvent() {
   const [scoringRules, setScoringRules] = useState<ScoringRule[]>([]);
   const [isScoringModalOpen, setIsScoringModalOpen] = useState(false);
   const [editingScoringRule, setEditingScoringRule] = useState<ScoringRule | null>(null);
+
+  // Add the complexes query
+  const complexesQuery = useQuery({
+    queryKey: ['/api/admin/complexes'],
+    enabled: activeTab === 'complexes', // Only fetch when on complexes tab
+    queryFn: () => fetch('/api/admin/complexes').then(res => res.json()) as Promise<Complex[]>,
+  });
 
   const navigateTab = (direction: 'next' | 'prev') => {
     const currentIndex = TAB_ORDER.indexOf(activeTab);
@@ -922,8 +941,7 @@ export default function CreateEvent() {
                                       <SelectValue placeholder="Select tie breaker rule" />
                                     </SelectTrigger>
                                   </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="head_to_head">Head to Head</SelectItem>
+                                  <SelectContent>                                    <SelectItem value="head_to_head">Head to Head</SelectItem>
                                     <SelectItem value="goal_difference">Goal Difference</SelectItem>
                                     <SelectItem value="goals_scored">Goals Scored</SelectItem>
                                     <SelectItem value="fair_play">Fair Play Points</SelectItem>
@@ -1076,14 +1094,92 @@ export default function CreateEvent() {
 
             <TabsContent value="complexes">
               <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" onClick={() => navigateTab('prev')}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                  </Button>
-                  <h3 className="text-lg font-semibold">Complexes and Fields</h3>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={() => navigateTab('prev')}>
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Back
+                    </Button>
+                    <h3 className="text-lg font-semibold">Complexes & Fields</h3>
+                  </div>
                 </div>
-                {/* Complexes and fields management will be implemented here */}
+
+                <Card>
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Complex Name</TableHead>
+                          <TableHead className="text-center"># of Fields</TableHead>
+                          <TableHead>Address</TableHead>
+                          <TableHead className="text-center">Status</TableHead>
+                          <TableHead className="text-center">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {complexesQuery.isLoading ? (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-4">
+                              Loading complexes...
+                            </TableCell>
+                          </TableRow>
+                        ) : complexesQuery.data?.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-4">
+                              No complexes available
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          complexesQuery.data?.map((complex) => (
+                            <TableRow key={complex.id}>
+                              <TableCell className="font-medium">
+                                {complex.name}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <Badge variant={complex.openFields > 0 ? "success" : "secondary"}>
+                                  {complex.openFields + complex.closedFields} Fields
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {complex.address}, {complex.city}, {complex.state}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <Badge variant={complex.isOpen ? "success" : "destructive"}>
+                                  {complex.isOpen ? "Open" : "Closed"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <div className="flex items-center justify-center gap-2">
+                                  <Button
+                                    variant={complex.isOpen ? "destructive" : "default"}
+                                    size="sm"
+                                    onClick={() => {
+                                      fetch(`/api/admin/complexes/${complex.id}/status`, {
+                                        method: 'PATCH',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({ isOpen: !complex.isOpen }),
+                                      }).then(() => {
+                                        complexesQuery.refetch();
+                                      });
+                                    }}
+                                  >
+                                    {complex.isOpen ? 'Close Complex' : 'Open Complex'}
+                                  </Button>
+                                  <Button variant="outline" size="sm">
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    View Fields
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
                 <div className="flex justify-end mt-4">
                   <Button onClick={() => navigateTab('next')}>Save & Continue</Button>
                 </div>
