@@ -210,14 +210,12 @@ export default function AuthPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-700 to-green-900 p-4">
       <div className="container max-w-lg mx-auto">
         <Card className="w-full bg-white/95 shadow-xl">
-          <CardHeader className="text-center">
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <div className="flex justify-center mb-2">
-                  <Trophy className="h-12 w-12 text-green-600" />
-                </div>
-                <CardTitle className="text-2xl font-bold">Soccer Registration System</CardTitle>
-              </div>
+          <CardHeader>
+            <div className="flex flex-col items-center text-center">
+              <Trophy className="h-16 w-16 text-green-600 mb-4" />
+              <CardTitle className="text-3xl font-bold">Sign In to MatchPro</CardTitle>
+            </div>
+            <div className="absolute top-4 right-4">
               <HelpButton
                 title={isRegistering ? "Registration Help" : "Login Help"}
                 content={
