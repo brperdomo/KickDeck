@@ -280,6 +280,52 @@ export function registerRoutes(app: Express): Server {
       }
     });
 
+    // Add field deletion endpoint
+    app.delete('/api/admin/fields/:id', isAdmin, async (req, res) => {
+      try {
+        const fieldId = parseInt(req.params.id);
+        const [deletedField] = await db
+          .delete(fields)
+          .where(eq(fields.id, fieldId))
+          .returning();
+
+        if (!deletedField) {
+          return res.status(404).send("Field not found");
+        }
+
+        res.json(deletedField);
+      } catch (error) {
+        console.error('Error deleting field:', error);
+        res.status(500).send("Failed to delete field");
+      }
+    });
+
+    // Add field status update endpoint
+    app.patch('/api/admin/fields/:id/status', isAdmin, async (req, res) => {
+      try {
+        const fieldId = parseInt(req.params.id);
+        const { isOpen } = req.body;
+
+        const [updatedField] = await db
+          .update(fields)
+          .set({
+            isOpen,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(fields.id, fieldId))
+          .returning();
+
+        if (!updatedField) {
+          return res.status(404).send("Field not found");
+        }
+
+        res.json(updatedField);
+      } catch (error) {
+        console.error('Error updating field status:', error);
+        res.status(500).send("Failed to update field status");
+      }
+    });
+
     // Add these new routes for profile management
     app.put('/api/user/profile', async (req, res) => {
       if (!req.isAuthenticated()) {

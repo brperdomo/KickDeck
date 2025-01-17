@@ -57,6 +57,7 @@ export const fields = pgTable("fields", {
   name: text("name").notNull(),
   hasLights: boolean("has_lights").default(false).notNull(),
   hasParking: boolean("has_parking").default(false).notNull(),
+  isOpen: boolean("is_open").default(true).notNull(),
   specialInstructions: text("special_instructions"),
   complexId: serial("complex_id").references(() => complexes.id),
   createdAt: text("created_at").notNull().default(new Date().toISOString()),
@@ -119,6 +120,7 @@ export const insertFieldSchema = createInsertSchema(fields, {
   name: z.string().min(1, "Field name is required"),
   hasLights: z.boolean(),
   hasParking: z.boolean(),
+  isOpen: z.boolean(),
   specialInstructions: z.string().optional(),
   complexId: z.number(),
 });

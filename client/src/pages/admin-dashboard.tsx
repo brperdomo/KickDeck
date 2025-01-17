@@ -77,6 +77,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch"; // Added import
 
 const MyAccount = lazy(() => import("./my-account"));
 
@@ -798,6 +799,38 @@ function ComplexesView() {
     setIsViewFieldsModalOpen(true);
   };
 
+  // Add field deletion mutation
+  const deleteFieldMutation = useMutation({
+    mutationFn: async (fieldId: number) => {
+      const response = await fetch(`/api/admin/fields/${fieldId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete field');
+      return response.json();
+    },
+    onSuccess: () => {
+      // Refetch fields after deletion
+      fieldsQuery.refetch();
+    }
+  });
+
+  // Add field status toggle mutation
+  const toggleFieldStatusMutation = useMutation({
+    mutationFn: async ({ fieldId, isOpen }: { fieldId: number, isOpen: boolean }) => {
+      const response = await fetch(`/api/admin/fields/${fieldId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isOpen })
+      });
+      if (!response.ok) throw new Error('Failed to update field status');
+      return response.json();
+    },
+    onSuccess: () => {
+      // Refetch fields after status update
+      fieldsQuery.refetch();
+    }
+  });
+
   // In the table actions cell, update to include Add Field button
   const renderActionButtons = (complex: any) => (
     <div className="flex items-center gap-2">
@@ -854,7 +887,7 @@ function ComplexesView() {
     </div>
   );
 
-  // Add the fields view modal
+  // Add the fields view modal with updated controls
   const renderFieldsModal = () => (
     <Dialog open={isViewFieldsModalOpen} onOpenChange={setIsViewFieldsModalOpen}>
       <DialogContent className="sm:max-w-2xl">
@@ -891,7 +924,9 @@ function ComplexesView() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Features</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Special Instructions</TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -908,7 +943,37 @@ function ComplexesView() {
                           )}
                         </div>
                       </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={field.isOpen}
+                            onCheckedChange={(checked) => 
+                              toggleFieldStatusMutation.mutate({ 
+                                fieldId: field.id, 
+                                isOpen: checked 
+                              })
+                            }
+                          />
+                          <span className={field.isOpen ? "text-green-600" : "text-red-600"}>
+                            {field.isOpen ? "Open" : "Closed"}
+                          </span>
+                        </div>
+                      </TableCell>
                       <TableCell>{field.specialInstructions || "—"}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive"
+                          onClick={() => {
+                            if (window.confirm('Are you sure you want to delete this field?')) {
+                              deleteFieldMutation.mutate(field.id);
+                            }
+                          }}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
