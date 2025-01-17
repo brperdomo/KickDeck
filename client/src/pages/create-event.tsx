@@ -914,7 +914,7 @@ export default function CreateEvent() {
                           {ageGroups.length === 0 ? (
                             <TableRow>
                               <TableCell colSpan={5} className="text-center py-4">
-                                No age groups created yet. Create agegroups first to assign scoring rules.
+                                No age groups created yet. Create age groups first to assign scoring rules.
                               </TableCell>
                             </TableRow>
                           ) : (
@@ -926,17 +926,14 @@ export default function CreateEvent() {
                                 </TableCell>
                                 <TableCell>{group.fieldSize}</TableCell>
                                 <TableCell>
-                                  {scoringRules.find(rule => rule.id === group.scoringRule)?.title || 'Not assigned'}
-                                </TableCell>
-                                <TableCell>
                                   <div className="flex items-center justify-center">
                                     <Select
-                                      value={group.scoringRule || ""}
+                                      value={group.scoringRule || "none"}
                                       onValueChange={(value) => {
                                         setAgeGroups(groups =>
                                           groups.map(g =>
                                             g.id === group.id
-                                              ? { ...g, scoringRule: value }
+                                              ? { ...g, scoringRule: value === "none" ? null : value }
                                               : g
                                           )
                                         );
@@ -946,7 +943,7 @@ export default function CreateEvent() {
                                         <SelectValue placeholder="Select a rule" />
                                       </SelectTrigger>
                                       <SelectContent>
-                                        <SelectItem value="">No Rule</SelectItem>
+                                        <SelectItem value="none">No Rule</SelectItem>
                                         {scoringRules.map((rule) => (
                                           <SelectItem key={rule.id} value={rule.id}>
                                             {rule.title}
