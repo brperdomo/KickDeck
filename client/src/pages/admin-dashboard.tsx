@@ -75,6 +75,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const MyAccount = lazy(() => import("./my-account"));
 
@@ -874,15 +875,36 @@ function ComplexesView() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                            <Trash className="h-4 w-4" />
-                          </Button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>View complex details</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Edit complex information</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                                <Trash className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Delete this complex</p>
+                            </TooltipContent>
+                          </Tooltip>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -903,74 +925,74 @@ function ComplexesView() {
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <Label htmlFor="name">Complex Name</Label>
-                <Input 
-                  id="name" 
+                <Input
+                  id="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  placeholder="Enter complex name" 
-                  required 
+                  placeholder="Enter complex name"
+                  required
                 />
               </div>
 
               <div>
                 <Label htmlFor="openTime">Open Time (Local Time)</Label>
-                <Input 
-                  id="openTime" 
-                  type="time" 
+                <Input
+                  id="openTime"
+                  type="time"
                   value={formData.openTime}
                   onChange={handleInputChange}
-                  required 
+                  required
                 />
               </div>
 
               <div>
                 <Label htmlFor="closeTime">Close Time (Local Time)</Label>
-                <Input 
-                  id="closeTime" 
-                  type="time" 
+                <Input
+                  id="closeTime"
+                  type="time"
                   value={formData.closeTime}
                   onChange={handleInputChange}
-                  required 
+                  required
                 />
               </div>
 
               <div className="col-span-2">
                 <Label htmlFor="address">Address</Label>
-                <Input 
-                  id="address" 
+                <Input
+                  id="address"
                   value={formData.address}
                   onChange={handleInputChange}
-                  placeholder="Street address" 
+                  placeholder="Street address"
                   required
                 />
               </div>
 
               <div>
                 <Label htmlFor="city">City</Label>
-                <Input 
-                  id="city" 
+                <Input
+                  id="city"
                   value={formData.city}
                   onChange={handleInputChange}
-                  placeholder="City" 
+                  placeholder="City"
                   required
                 />
               </div>
 
               <div>
                 <Label htmlFor="state">State</Label>
-                <Input 
-                  id="state" 
+                <Input
+                  id="state"
                   value={formData.state}
                   onChange={handleInputChange}
-                  placeholder="State" 
+                  placeholder="State"
                   required
                 />
               </div>
 
               <div className="col-span-2">
                 <Label htmlFor="country">Country</Label>
-                <Select 
-                  value={formData.country} 
+                <Select
+                  value={formData.country}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, country: value }))}
                 >
                   <SelectTrigger id="country">
@@ -978,8 +1000,7 @@ function ComplexesView() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="US">United States</SelectItem>
-                    <SelectItem value="CA">Canada</SelectItem>
-                    <SelectItem value="MX">Mexico</SelectItem>
+                    <SelectItem value="CA">Canada</SelectItem>                    <SelectItem value="MX">Mexico</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1009,8 +1030,8 @@ function ComplexesView() {
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={createComplexMutation.isPending}
               >
                 {createComplexMutation.isPending ? (
