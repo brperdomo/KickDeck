@@ -137,6 +137,15 @@ const complexSelectionSchema = z.object({
 
 type ComplexSelectionValues = z.infer<typeof complexSelectionSchema>;
 
+interface Field {
+  id: number;
+  name: string;
+  hasLights: boolean;
+  hasParking: boolean;
+  isOpen: boolean;
+  specialInstructions: string | null;
+}
+
 export default function CreateEvent() {
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<EventTab>('information');
@@ -147,12 +156,20 @@ export default function CreateEvent() {
   const [isScoringModalOpen, setIsScoringModalOpen] = useState(false);
   const [editingScoringRule, setEditingScoringRule] = useState<ScoringRule | null>(null);
   const [selectedComplexes, setSelectedComplexes] = useState<SelectedComplex[]>([]);
+  const [viewingComplexId, setViewingComplexId] = useState<number | null>(null);
 
   const complexesQuery = useQuery({
     queryKey: ['/api/admin/complexes'],
     enabled: activeTab === 'complexes',
     queryFn: () => fetch('/api/admin/complexes').then(res => res.json()) as Promise<Complex[]>,
   });
+
+  const fieldsQuery = useQuery({
+    queryKey: [`/api/admin/complexes/${viewingComplexId}/fields`, viewingComplexId],
+    enabled: !!viewingComplexId,
+    queryFn: () => fetch(`/api/admin/complexes/${viewingComplexId}/fields`).then(res => res.json()) as Promise<Field[]>,
+  });
+
 
   const navigateTab = (direction: 'next' | 'prev') => {
     const currentIndex = TAB_ORDER.indexOf(activeTab);
@@ -284,7 +301,6 @@ export default function CreateEvent() {
     })) || [];
     setSelectedComplexes(updatedComplexes);
   };
-
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -911,8 +927,7 @@ export default function CreateEvent() {
                                   <FormLabel>Goal Cap</FormLabel>
                                   <FormControl>
                                     <Input
-                                      type="number"
-                                      {...field}
+                                      type="number"                                      {...field}
                                       onChange={e => field.onChange(Number(e.target.value))}
                                     />
                                   </FormControl>
@@ -943,19 +958,19 @@ export default function CreateEvent() {
                               control={scoringForm.control}
                               name="redCard"
                               render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Red Card Points</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type="number"
-                                    {...field}
-                                    onChange={e => field.onChange(Number(e.target.value))}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                                <FormItem>
+                                  <FormLabel>Red Card Points</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      {...field}
+                                      onChange={e => field.onChange(Number(e.target.value))}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
                           </div>
 
                           <FormField
@@ -1179,69 +1194,113 @@ export default function CreateEvent() {
                   </Form>
 
                   {selectedComplexes.length > 0 && (
-                    <Card>
-                      <CardContent className="p-0">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Complex Name</TableHead>
-                              <TableHead className="text-center"># of Fields</TableHead>
-                              <TableHead>Address</TableHead>
-                              <TableHead className="text-center">Status</TableHead>
-                              <TableHead className="text-center">Actions</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {selectedComplexes.map((complex) => (
-                              <TableRow key={complex.id}>
-                                <TableCell className="font-medium">
-                                  {complex.name}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  <Badge variant="secondary">
-                                    {complex.openFields + complex.closedFields} Fields
-                                  </Badge>
-                                </TableCell>
-                                <TableCell>
-                                  {complex.address}, {complex.city}, {complex.state}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  <Badge variant={complex.isOpen ? "success" : "destructive"}>
-                                    {complex.isOpen ? "Open" : "Closed"}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  <div className="flex items-center justify-center gap-2">
-                                    <Button
-                                      variant={complex.isOpen ? "destructive" : "default"}
+                    <>
+                      <Card>
+                        <CardContent className="p-0">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Complex Name</TableHead>
+                                <TableHead className="text-center"># of Fields</TableHead>
+                                <TableHead>Address</TableHead>
+                                <TableHead className="text-center">Status</TableHead>
+                                <TableHead className="text-center">Actions</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {selectedComplexes.map((complex) => (
+                                <TableRow key={complex.id}>
+                                  <TableCell className="font-medium">
+                                    {complex.name}
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    <Badge variant="secondary">
+                                      {complex.openFields + complex.closedFields} Fields
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    {complex.address}, {complex.city}, {complex.state}
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    <Badge variant={complex.isOpen ? "success" : "destructive"}>
+                                      {complex.isOpen ? "Open" : "Closed"}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    <Button 
+                                      variant="outline" 
                                       size="sm"
-                                      onClick={() => {
-                                        fetch(`/api/admin/complexes/${complex.id}/status`, {
-                                          method: 'PATCH',
-                                          headers: {
-                                            'Content-Type': 'application/json',
-                                          },
-                                          body: JSON.stringify({ isOpen: !complex.isOpen }),
-                                        }).then(() => {
-                                          complexesQuery.refetch();
-                                        });
-                                      }}
+                                      onClick={() => setViewingComplexId(complex.id)}
                                     >
-                                      {complex.isOpen ? 'Close Complex' : 'Open Complex'}
-                                    </Button>
-                                    <Button variant="outline" size="sm">
                                       <Eye className="mr-2 h-4 w-4" />
                                       View Fields
                                     </Button>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </CardContent>
-                    </Card>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </CardContent>
+                      </Card>
+
+                      <Dialog open={!!viewingComplexId} onOpenChange={(open) => !open && setViewingComplexId(null)}>
+                        <DialogContent className="max-w-3xl">
+                          <DialogHeader>
+                            <DialogTitle>
+                              Fields in {selectedComplexes.find(c => c.id === viewingComplexId)?.name}
+                            </DialogTitle>
+                          </DialogHeader>
+
+                          <div className="mt-4">
+                            {fieldsQuery.isLoading ? (
+                              <div className="text-center py-4">Loading fields...</div>
+                            ) : !fieldsQuery.data?.length ? (
+                              <div className="text-center py-4">No fields available in this complex</div>
+                            ) : (
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead>Field Name</TableHead>
+                                    <TableHead className="text-center">Features</TableHead>
+                                    <TableHead>Special Instructions</TableHead>
+                                    <TableHead className="text-center">Status</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {fieldsQuery.data.map((field) => (
+                                    <TableRow key={field.id}>
+                                      <TableCell className="font-medium">
+                                        {field.name}
+                                      </TableCell>
+                                      <TableCell className="text-center">
+                                        <div className="flex gap-2 justify-center">
+                                          {field.hasLights && (
+                                            <Badge variant="secondary">Lights</Badge>
+                                          )}
+                                          {field.hasParking && (
+                                            <Badge variant="secondary">Parking</Badge>
+                                          )}
+                                        </div>
+                                      </TableCell>
+                                      <TableCell>
+                                        {field.specialInstructions || 'N/A'}
+                                      </TableCell>
+                                      <TableCell className="text-center">
+                                        <Badge variant={field.isOpen ? "success" : "destructive"}>
+                                          {field.isOpen ? "Open" : "Closed"}
+                                        </Badge>
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            )}
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </>
                   )}
+
                 </div>
 
                 <div className="flex justify-end mt-4">
