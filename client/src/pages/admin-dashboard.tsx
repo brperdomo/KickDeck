@@ -659,7 +659,9 @@ function PaymentsSettingsView() {
 function ComplexesView() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFieldModalOpen, setIsFieldModalOpen] = useState(false);
+  const [isViewFieldsModalOpen, setIsViewFieldsModalOpen] = useState(false);
   const [selectedComplexId, setSelectedComplexId] = useState<number | null>(null);
+  const [selectedComplex, setSelectedComplex] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: '',
     openTime: '',
@@ -777,6 +779,24 @@ function ComplexesView() {
     setIsFieldModalOpen(true);
   };
 
+  // Add query for fetching fields
+  const fieldsQuery = useQuery({
+    queryKey: ['/api/admin/complexes', selectedComplexId, 'fields'],
+    queryFn: async () => {
+      if (!selectedComplexId) return null;
+      const response = await fetch(`/api/admin/complexes/${selectedComplexId}/fields`);
+      if (!response.ok) throw new Error('Failed to fetch fields');
+      return response.json();
+    },
+    enabled: !!selectedComplexId && isViewFieldsModalOpen
+  });
+
+  const handleViewFields = (complex: any) => {
+    setSelectedComplexId(complex.id);
+    setSelectedComplex(complex);
+    setIsViewFieldsModalOpen(true);
+  };
+
   // In the table actions cell, update to include Add Field button
   const renderActionButtons = (complex: any) => (
     <div className="flex items-center gap-2">
@@ -797,12 +817,17 @@ function ComplexesView() {
       </Tooltip>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8"
+            onClick={() => handleViewFields(complex)}
+          >
             <Eye className="h-4 w-4" />
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>View complex details</p>
+          <p>View fields in this complex</p>
         </TooltipContent>
       </Tooltip>
       <Tooltip>
@@ -826,6 +851,85 @@ function ComplexesView() {
         </TooltipContent>
       </Tooltip>
     </div>
+  );
+
+  // Add the fields view modal
+  const renderFieldsModal = () => (
+    <Dialog open={isViewFieldsModalOpen} onOpenChange={setIsViewFieldsModalOpen}>
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>
+            Fields in {selectedComplex?.name}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="py-4">
+          {fieldsQuery.isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : fieldsQuery.data?.length === 0 ? (
+            <div className="text-center py-8">
+              <Flag className="mx-auto h-12 w-12 text-muted-foreground/50" />
+              <h3 className="mt-4 text-lg font-semibold">No fields found</h3>
+              <p className="text-muted-foreground mb-4">
+                This complex doesn't have any fields yet
+              </p>
+              <Button onClick={() => {
+                setIsViewFieldsModalOpen(false);
+                handleFieldModalOpen(selectedComplexId!);
+              }}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add New Field
+              </Button>
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Features</TableHead>
+                    <TableHead>Special Instructions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {fieldsQuery.data?.map((field: any) => (
+                    <TableRow key={field.id}>
+                      <TableCell className="font-medium">{field.name}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          {field.hasLights && (
+                            <Badge variant="outline">Lights</Badge>
+                          )}
+                          {field.hasParking && (
+                            <Badge variant="outline">Parking</Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>{field.specialInstructions || "—"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsViewFieldsModalOpen(false)}>
+            Close
+          </Button>
+          <Button onClick={() => {
+            setIsViewFieldsModalOpen(false);
+            handleFieldModalOpen(selectedComplexId!);
+          }}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Field
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 
   return (
@@ -880,7 +984,7 @@ function ComplexesView() {
           <CardContent className="pt-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Events Today</p>
+                <p className="textsm font-medium text-muted-foreground">Events Today</p>
                 <h3 className="text-2xl font-bold mt-2">
                   {analyticsQuery.isLoading ? (
                     <Loader2 className="h-6 w-6 animate-spin" />
@@ -1195,6 +1299,7 @@ function ComplexesView() {
           </form>
         </DialogContent>
       </Dialog>
+      {renderFieldsModal()}
     </>
   );
 }

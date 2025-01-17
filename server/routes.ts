@@ -263,6 +263,23 @@ export function registerRoutes(app: Express): Server {
       }
     });
 
+    // Add field listing endpoint
+    app.get('/api/admin/complexes/:id/fields', isAdmin, async (req, res) => {
+      try {
+        const complexId = parseInt(req.params.id);
+        const complexFields = await db
+          .select()
+          .from(fields)
+          .where(eq(fields.complexId, complexId))
+          .orderBy(fields.name);
+
+        res.json(complexFields);
+      } catch (error) {
+        console.error('Error fetching fields:', error);
+        res.status(500).send("Failed to fetch fields");
+      }
+    });
+
     // Add these new routes for profile management
     app.put('/api/user/profile', async (req, res) => {
       if (!req.isAuthenticated()) {
