@@ -84,7 +84,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
+import type { SelectComplex, SelectField, InsertField } from "@db/schema";
 
 const MyAccount = lazy(() => import("./my-account"));
 
@@ -665,23 +665,31 @@ function PaymentsSettingsView() {
 }
 
 // Add Fields Management Dialog
+type FieldFormData = {
+  name: string;
+  type: 'soccer' | 'football' | 'baseball' | 'multipurpose';
+  surfaceType: 'grass' | 'turf' | 'indoor';
+  dimensions?: string;
+  notes?: string;
+};
+
 function FieldsManagementDialog({ complex, isOpen, onClose }: {
-  complex: any;
+  complex: SelectComplex;
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const [fields, setFields] = useState<any[]>([]);
+  const [fields, setFields] = useState<SelectField[]>([]);
   const [isAddFieldModalOpen, setIsAddFieldModalOpen] = useState(false);
-  const [newFieldData, setNewFieldData] = useState({
+  const [newFieldData, setNewFieldData] = useState<FieldFormData>({
     name: '',
-    type: 'soccer' as const,
-    surfaceType: 'grass' as const,
+    type: 'soccer',
+    surfaceType: 'grass',
     dimensions: '',
     notes: ''
   });
 
   // Fetch fields data
-  const { data: complexFields, refetch: refetchFields } = useQuery({
+  const { data: complexFields, refetch: refetchFields } = useQuery<SelectField[]>({
     queryKey: [`/api/admin/complexes/${complex?.id}/fields`],
     enabled: isOpen && !!complex?.id,
   });
@@ -694,7 +702,7 @@ function FieldsManagementDialog({ complex, isOpen, onClose }: {
 
   // Add field mutation
   const addFieldMutation = useMutation({
-    mutationFn: async (data: typeof newFieldData) => {
+    mutationFn: async (data: FieldFormData): Promise<SelectField> => {
       const response = await fetch(`/api/admin/complexes/${complex.id}/fields`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -898,14 +906,27 @@ function FieldsManagementDialog({ complex, isOpen, onClose }: {
   );
 }
 
+// Update ComplexesView component types
+type ComplexFormData = {
+  name: string;
+  openTime: string;
+  closeTime: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  rules?: string;
+  directions?: string;
+};
+
 function ComplexesView() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isFieldsModalOpen, setIsFieldsModalOpen] = useState(false);
-  const [selectedComplex, setSelectedComplex] = useState<any>(null);
-  const [formData, setFormData] = useState({
+  const [selectedComplex, setSelectedComplex] = useState<SelectComplex | null>(null);
+  const [formData, setFormData] = useState<ComplexFormData>({
     name: '',
     openTime: '',
     closeTime: '',
@@ -918,7 +939,7 @@ function ComplexesView() {
   });
 
   // Query for complexes data
-  const complexesQuery = useQuery({
+  const complexesQuery = useQuery<SelectComplex[]>({
     queryKey: ['/api/admin/complexes'],
     queryFn: async () => {
       const response = await fetch('/api/admin/complexes');
@@ -938,7 +959,7 @@ function ComplexesView() {
   });
 
   const createComplexMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
+    mutationFn: async (data: ComplexFormData): Promise<SelectComplex> => {
       const response = await fetch('/api/admin/complexes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -970,7 +991,7 @@ function ComplexesView() {
   });
 
   const updateComplexMutation = useMutation({
-    mutationFn: async (data: typeof formData & { id: number }) => {
+    mutationFn: async (data: ComplexFormData & { id: number }) => {
       const response = await fetch(`/api/admin/complexes/${data.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -1009,7 +1030,7 @@ function ComplexesView() {
     }
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -1043,23 +1064,23 @@ function ComplexesView() {
     }
   };
 
-  const handleViewComplex = (complex: any) => {
+  const handleViewComplex = (complex: SelectComplex) => {
     setSelectedComplex(complex);
     setIsViewModalOpen(true);
   };
 
-  const handleEditComplex = (complex: any) => {
+  const handleEditComplex = (complex: SelectComplex) => {
     setSelectedComplex(complex);
     setFormData(complex);
     setIsEditModalOpen(true);
   };
 
-  const handleDeleteComplex = (complex: any) => {
+  const handleDeleteComplex = (complex: SelectComplex) => {
     setSelectedComplex(complex);
     setIsDeleteDialogOpen(true);
   };
 
-  const handleManageFields = (complex: any) => {
+  const handleManageFields = (complex: SelectComplex) => {
     setSelectedComplex(complex);
     setIsFieldsModalOpen(true);
   };
@@ -1161,7 +1182,7 @@ function ComplexesView() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {complexesQuery.data?.map((complex: any) => (
+                  {complexesQuery.data?.map((complex: SelectComplex) => (
                     <TableRow key={complex.id}>
                       <TableCell>{complex.name}</TableCell>
                       <TableCell>
@@ -1499,7 +1520,7 @@ function AdminDashboard() {
       case 'complexes':
         return <ComplexesView />;
       case 'scheduling':
-        return <div>Scheduling view will be implemented here</div>;
+        return <SchedulingView/>;
       default:
         return <div>Select a view from the sidebar</div>;
     }
