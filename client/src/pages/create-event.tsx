@@ -826,7 +826,7 @@ export default function CreateEvent() {
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back
                       </Button>
-                      <h3 className="text-lg font-semibold">Age Group Scoring Rules</h3>
+                      <h3 className="text-lg font-semibold">Scoring Rules</h3>
                     </div>
                     <Button onClick={() => {
                       scoringForm.reset();
@@ -882,6 +882,7 @@ export default function CreateEvent() {
                                         <SelectValue placeholder="Select a rule" />
                                       </SelectTrigger>
                                       <SelectContent>
+                                        <SelectItem value="default">Default Scoring</SelectItem>
                                         {scoringRules.map((rule) => (
                                           <SelectItem key={rule.id} value={rule.id}>
                                             {rule.title}
