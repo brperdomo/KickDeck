@@ -122,6 +122,7 @@ export default function CreateEvent() {
   const [editingAgeGroup, setEditingAgeGroup] = useState<AgeGroup | null>(null);
   const [scoringRules, setScoringRules] = useState<ScoringRule[]>([]);
   const [isScoringModalOpen, setIsScoringModalOpen] = useState(false);
+  const [editingScoringRule, setEditingScoringRule] = useState<ScoringRule | null>(null);
 
   const navigateTab = (direction: 'next' | 'prev') => {
     const currentIndex = TAB_ORDER.indexOf(activeTab);
@@ -203,10 +204,37 @@ export default function CreateEvent() {
     },
   });
 
-  const handleAddScoringRule = (data: ScoringRuleValues) => {
-    setScoringRules([...scoringRules, { ...data, id: generateId() }]);
+  const handleScoringRuleSubmit = (data: ScoringRuleValues) => {
+    if (editingScoringRule) {
+      setScoringRules(rules => rules.map(rule =>
+        rule.id === editingScoringRule.id ? { ...data, id: rule.id } : rule
+      ));
+      setEditingScoringRule(null);
+    } else {
+      setScoringRules([...scoringRules, { ...data, id: generateId() }]);
+    }
     setIsScoringModalOpen(false);
     scoringForm.reset();
+  };
+
+  const handleEditScoringRule = (rule: ScoringRule) => {
+    setEditingScoringRule(rule);
+    scoringForm.reset({
+      title: rule.title,
+      win: rule.win,
+      loss: rule.loss,
+      tie: rule.tie,
+      goalCapped: rule.goalCapped,
+      shutout: rule.shutout,
+      redCard: rule.redCard,
+      tieBreaker: rule.tieBreaker,
+      ageGroups: rule.ageGroups,
+    });
+    setIsScoringModalOpen(true);
+  };
+
+  const handleDeleteScoringRule = (id: string) => {
+    setScoringRules(scoringRules.filter(rule => rule.id !== id));
   };
 
 
@@ -742,6 +770,7 @@ export default function CreateEvent() {
                       <Button onClick={() => {
                         scoringForm.reset();
                         setIsScoringModalOpen(true);
+                        setEditingScoringRule(null); // added to clear editing state on new rule creation.
                       }}>
                         <Plus className="mr-2 h-4 w-4" />
                         Create New Rule
@@ -749,10 +778,12 @@ export default function CreateEvent() {
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl">
                       <DialogHeader>
-                        <DialogTitle>Create New Scoring Rule</DialogTitle>
+                        <DialogTitle>
+                          {editingScoringRule ? 'Edit Scoring Rule' : 'Create New Scoring Rule'}
+                        </DialogTitle>
                       </DialogHeader>
                       <Form {...scoringForm}>
-                        <form onSubmit={scoringForm.handleSubmit(handleAddScoringRule)} className="space-y-4">
+                        <form onSubmit={scoringForm.handleSubmit(handleScoringRuleSubmit)} className="space-y-4">
                           <FormField
                             control={scoringForm.control}
                             name="title"
@@ -940,19 +971,20 @@ export default function CreateEvent() {
                             )}
                           />
 
-                          <div className="flex justify-end space-x2 pt-4">
+                          <div className="flex justify-end space-x-2 pt-4">
                             <Button
                               type="button"
                               variant="outline"
                               onClick={() => {
                                 setIsScoringModalOpen(false);
+                                setEditingScoringRule(null);
                                 scoringForm.reset();
                               }}
                             >
                               Cancel
                             </Button>
                             <Button type="submit">
-                              Create Rule
+                              {editingScoringRule ? 'Update Rule' : 'Create Rule'}
                             </Button>
                           </div>
                         </form>
@@ -1007,16 +1039,26 @@ export default function CreateEvent() {
                                   .join(', ')}
                               </TableCell>
                               <TableCell className="text-right">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-destructive"
-                                  onClick={() => setScoringRules(rules =>
-                                    rules.filter(r => r.id !== rule.id)
-                                  )}
-                                >
-                                  <Trash className="h-4 w-4" />
-                                </Button>
+                                <div className="flex items-center justify-end gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={() => handleEditScoringRule(rule)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-destructive"
+                                    onClick={() => setScoringRules(rules =>
+                                      rules.filter(r => r.id !== rule.id)
+                                    )}
+                                  >
+                                    <Trash className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </TableCell>
                             </TableRow>
                           ))
