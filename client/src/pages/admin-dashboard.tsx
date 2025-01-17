@@ -974,7 +974,7 @@ function ComplexesView() {
 
   // Add query for fetching fields
   const fieldsQuery = useQuery({
-    queryKey: ['/api/admin/complexes', selectedComplexId, 'fields'],
+    queryKey: ['/api/admin/complexes', selectedComplexId, 'fields', isViewFieldsModalOpen],
     queryFn: async () => {
       if (!selectedComplexId) return null;
       const response = await fetch(`/api/admin/complexes/${selectedComplexId}/fields`);
@@ -990,11 +990,11 @@ function ComplexesView() {
     setIsViewFieldsModalOpen(true);
   };
 
-  // Add field deletion mutation
+  // Delete field mutation
   const deleteFieldMutation = useMutation({
     mutationFn: async (fieldId: number) => {
       const response = await fetch(`/api/admin/fields/${fieldId}`, {
-        method: 'DELETE',
+        method: 'DELETE'
       });
       if (!response.ok) throw new Error('Failed to delete field');
       return response.json();
@@ -1002,41 +1002,45 @@ function ComplexesView() {
     onSuccess: () => {
       // Refetch fields after deletion
       fieldsQuery.refetch();
+      // Also refetch complex data since field count changes
+      complexesQuery.refetch();
     }
   });
 
+  //<replit_final_file>
   // Add field status toggle mutation
   const toggleFieldStatusMutation = useMutation({
     mutationFn: async ({ fieldId, isOpen }: { fieldId: number, isOpen: boolean }) => {
-      constresponse = await fetch(`/api/admin/fields/${fieldId}/status`, {
+      const response = await fetch(`/api/admin/fields/${fieldId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isOpen })
       });
-      if (!response.ok) throw new Error('Failed to update field status');
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error);
+      }
       return response.json();
     },
     onSuccess: () => {
-      // Refetch fields after status update      fieldsQuery.refetch();
-    }
-  });
-
-  // Add delete complex mutation
-  const deleteComplexMutation = useMutation({
-    mutationFn: async (complexId: number) => {
-      const response = await fetch(`/api/admin/complexes/${complexId}`, {
-        method: 'DELETE'
-      });
-      if (!response.ok) throw new Error('Failed to delete complex');
-      return response.json();
-    },
-    onSuccess: () => {
-      // Refetch both queries after deletion
+      // Refetch both field data and complex data to update counts
+      fieldsQuery.refetch();
       complexesQuery.refetch();
-      analyticsQuery.refetch();
+      toast({
+        title: "Field status updated",
+        description: "The field status has been updated successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to update field status",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   });
 
+  // Add complex status toggle mutation with enhanced error handling
   const toggleComplexStatusMutation = useMutation({
     mutationFn: async ({ complexId, isOpen }: { complexId: number; isOpen: boolean }) => {
       const response = await fetch(`/api/admin/complexes/${complexId}/status`, {
@@ -1051,12 +1055,18 @@ function ComplexesView() {
       return response.json();
     },
     onSuccess: () => {
-      // Refetch both queries after status update
+      // Refetch all relevant data
       complexesQuery.refetch();
       analyticsQuery.refetch();
+      // If viewing fields modal is open, refetch fields
+      if (isViewFieldsModalOpen && selectedComplexId) {
+        fieldsQuery.refetch();
+      }
       toast({
         title: "Complex status updated",
-        description: "All fields have been updated accordingly.",
+        description: isOpen ? 
+          "Complex has been opened. You can now manage individual field statuses." : 
+          "Complex has been closed. All fields have been automatically closed.",
       });
     },
     onError: (error) => {
@@ -1215,7 +1225,7 @@ function ComplexesView() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 textdestructive"
+                          className="h-8 w-8 text-destructive"
                           onClick={() => {
                             if (window.confirm('Are you sure you want to delete this field?')) {
                               deleteFieldMutation.mutate(field.id);
