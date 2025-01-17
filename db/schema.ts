@@ -1,4 +1,4 @@
-import { pgTable, text, serial, boolean, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, boolean, jsonb, time } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -37,6 +37,21 @@ export const households = pgTable("households", {
   createdAt: text("createdAt").notNull().default(new Date().toISOString()),
 });
 
+export const complexes = pgTable("complexes", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  address: text("address").notNull(),
+  city: text("city").notNull(),
+  state: text("state").notNull(),
+  country: text("country").notNull(),
+  openTime: text("open_time").notNull(),
+  closeTime: text("close_time").notNull(),
+  rules: text("rules"),
+  directions: text("directions"),
+  createdAt: text("created_at").notNull().default(new Date().toISOString()),
+  updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
+});
+
 const passwordSchema = z.string()
   .min(8, "Password must be at least 8 characters")
   .regex(/[0-9]/, "Password must contain at least one number")
@@ -72,6 +87,20 @@ export const insertHouseholdSchema = createInsertSchema(households, {
   primaryEmail: z.string().email("Please enter a valid email address"),
 });
 
+export const insertComplexSchema = createInsertSchema(complexes, {
+  name: z.string().min(1, "Complex name is required"),
+  address: z.string().min(1, "Address is required"),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(2, "State is required"),
+  country: z.string().min(2, "Country is required"),
+  openTime: z.string().min(1, "Open time is required"),
+  closeTime: z.string().min(1, "Close time is required"),
+  rules: z.string().optional(),
+  directions: z.string().optional(),
+});
+
+export const selectComplexSchema = createSelectSchema(complexes);
+
 export const selectUserSchema = createSelectSchema(users);
 export const selectHouseholdSchema = createSelectSchema(households);
 
@@ -81,3 +110,5 @@ export type InsertHousehold = typeof households.$inferInsert;
 export type SelectHousehold = typeof households.$inferSelect;
 export type InsertOrganizationSettings = typeof organizationSettings.$inferInsert;
 export type SelectOrganizationSettings = typeof organizationSettings.$inferSelect;
+export type InsertComplex = typeof complexes.$inferInsert;
+export type SelectComplex = typeof complexes.$inferSelect;

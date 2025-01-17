@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { log } from "./vite";
 import { db } from "@db";
-import { users, organizationSettings } from "@db/schema";
+import { users, organizationSettings, complexes } from "@db/schema";
 import { eq } from "drizzle-orm";
 import fs from "fs/promises";
 import path from "path";
@@ -51,6 +51,74 @@ export function registerRoutes(app: Express): Server {
     app.use('/api/login', rateLimit(60 * 1000, 5)); // 5 requests per minute
     app.use('/api/register', rateLimit(60 * 1000, 3)); // 3 requests per minute
     app.use('/api/check-email', rateLimit(60 * 1000, 10)); // 10 requests per minute
+
+    // Complex management routes
+    app.get('/api/admin/complexes', isAdmin, async (req, res) => {
+      try {
+        const allComplexes = await db
+          .select()
+          .from(complexes)
+          .orderBy(complexes.name);
+
+        res.json(allComplexes);
+      } catch (error) {
+        console.error('Error fetching complexes:', error);
+        res.status(500).send("Internal server error");
+      }
+    });
+
+    app.post('/api/admin/complexes', isAdmin, async (req, res) => {
+      try {
+        const [newComplex] = await db
+          .insert(complexes)
+          .values({
+            name: req.body.name,
+            address: req.body.address,
+            city: req.body.city,
+            state: req.body.state,
+            country: req.body.country,
+            openTime: req.body.openTime,
+            closeTime: req.body.closeTime,
+            rules: req.body.rules || null,
+            directions: req.body.directions || null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })
+          .returning();
+
+        res.json(newComplex);
+      } catch (error) {
+        console.error('Error creating complex:', error);
+        res.status(500).send("Failed to create complex");
+      }
+    });
+
+    // Analytics endpoint for complexes
+    app.get('/api/admin/complexes/analytics', isAdmin, async (req, res) => {
+      try {
+        const complexCount = await db
+          .select({ count: complexes.id })
+          .from(complexes)
+          .limit(1);
+
+        // For now, return mock analytics data
+        // In a real application, you would calculate these from actual usage data
+        res.json({
+          totalComplexes: complexCount.length > 0 ? complexCount[0].count : 0,
+          totalFields: 24, // This would come from a fields table
+          eventsToday: 8, // This would be calculated from events table
+          averageUsage: 75, // This would be calculated from bookings/usage data
+          mostActiveComplex: {
+            name: "Main Soccer Complex",
+            address: "123 Sports Ave",
+            eventsCount: 45
+          }
+        });
+      } catch (error) {
+        console.error('Error fetching complex analytics:', error);
+        res.status(500).send("Failed to fetch analytics");
+      }
+    });
 
     // Organization settings endpoints
     app.get('/api/admin/organization-settings', isAdmin, async (req, res) => {

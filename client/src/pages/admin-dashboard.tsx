@@ -723,7 +723,7 @@ function ComplexesView() {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createComplexMutation.mutate(formData);
   };
@@ -935,20 +935,13 @@ function ComplexesView() {
               </div>
 
               <div className="col-span-2">
-                <Label htmlFor="addressSearch">Search Address</Label>
-                <Input id="addressSearch" placeholder="Search for address..." />
-                <p className="text-sm text-muted-foreground mt-1">
-                  Google Maps integration will be implemented here
-                </p>
-              </div>
-
-              <div className="col-span-2">
                 <Label htmlFor="address">Address</Label>
                 <Input 
                   id="address" 
                   value={formData.address}
                   onChange={handleInputChange}
                   placeholder="Street address" 
+                  required
                 />
               </div>
 
@@ -959,45 +952,45 @@ function ComplexesView() {
                   value={formData.city}
                   onChange={handleInputChange}
                   placeholder="City" 
+                  required
                 />
               </div>
 
               <div>
                 <Label htmlFor="state">State</Label>
-                <Select value={formData.state} onValueChange={(value) => setFormData(prev => ({ ...prev, state: value }))}>
-                  <SelectTrigger id="state">
-                    <SelectValue placeholder="Select state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="AL">Alabama</SelectItem>
-                    <SelectItem value="AK">Alaska</SelectItem>
-                    <SelectItem value="AZ">Arizona</SelectItem>
-                    <SelectItem value="AR">Arkansas</SelectItem>
-                    <SelectItem value="CA">California</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input 
+                  id="state" 
+                  value={formData.state}
+                  onChange={handleInputChange}
+                  placeholder="State" 
+                  required
+                />
               </div>
 
               <div className="col-span-2">
                 <Label htmlFor="country">Country</Label>
-                <Select value={formData.country} onValueChange={(value) => setFormData(prev => ({ ...prev, country: value}))}>
+                <Select 
+                  value={formData.country} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, country: value }))}
+                >
                   <SelectTrigger id="country">
                     <SelectValue placeholder="Select country" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="US">United States</SelectItem>
+                    <SelectItem value="CA">Canada</SelectItem>
+                    <SelectItem value="MX">Mexico</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="col-span-2">
-                <Label htmlFor="rules">General Complex Rules</Label>
+                <Label htmlFor="rules">Complex Rules</Label>
                 <Textarea
                   id="rules"
                   value={formData.rules}
                   onChange={handleInputChange}
-                  placeholder="Enter complex rules and guidelines..."
-                  className="h-24"
+                  placeholder="Enter complex rules and regulations..."
                 />
               </div>
 
@@ -1008,7 +1001,6 @@ function ComplexesView() {
                   value={formData.directions}
                   onChange={handleInputChange}
                   placeholder="Enter directions to the complex..."
-                  className="h-24"
                 />
               </div>
             </div>
@@ -1017,7 +1009,10 @@ function ComplexesView() {
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={createComplexMutation.isPending}>
+              <Button 
+                type="submit" 
+                disabled={createComplexMutation.isPending}
+              >
                 {createComplexMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
