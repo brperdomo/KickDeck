@@ -739,7 +739,9 @@ function ComplexesView() {
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate both the complexes list and the fields for this complex
       complexesQuery.refetch();
+      fieldsQuery.refetch();
       setIsFieldModalOpen(false);
       setFieldFormData({
         name: '',
@@ -747,7 +749,6 @@ function ComplexesView() {
         hasParking: false,
         specialInstructions: ''
       });
-      setSelectedComplexId(null);
     }
   });
 
