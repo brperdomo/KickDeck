@@ -10,7 +10,6 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import CreateEvent from "@/pages/create-event";
 import ForgotPassword from "@/pages/forgot-password";
 import { useUser } from "@/hooks/use-user";
-import { OrganizationSettingsProvider } from "@/hooks/use-organization-settings";
 
 function Router() {
   const { user, isLoading } = useUser();
@@ -60,16 +59,14 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <OrganizationSettingsProvider>
-        <Router />
-        <Toaster />
-        {bypassAuth && (
-          <div className="fixed bottom-4 right-4 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-md shadow-lg flex items-center gap-2 border border-yellow-200">
-            <Lock className="h-4 w-4" />
-            <span className="text-sm font-medium">Auth Bypass Active</span>
-          </div>
-        )}
-      </OrganizationSettingsProvider>
+      <Router />
+      <Toaster />
+      {bypassAuth && (
+        <div className="fixed bottom-4 right-4 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-md shadow-lg flex items-center gap-2 border border-yellow-200">
+          <Lock className="h-4 w-4" />
+          <span className="text-sm font-medium">Auth Bypass Active</span>
+        </div>
+      )}
     </QueryClientProvider>
   );
 }

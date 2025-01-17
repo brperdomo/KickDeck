@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, useEffect } from "react";
+import { useState } from "react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -10,9 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useUser } from "@/hooks/use-user";
 import { useLocation } from "wouter";
+import { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTheme } from "@/hooks/use-theme";
-import { SelectUser, SelectComplex, SelectField, InsertField } from "@db/schema";
+import { SelectUser } from "@db/schema";
 import {
   Calendar,
   Search,
@@ -43,7 +44,6 @@ import {
   Flag,
   MoreHorizontal,
   Building2,
-  Activity,
 } from "lucide-react";
 import {
   Table,
@@ -54,9 +54,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { useOrganizationSettings } from "@/hooks/use-organization-settings";
 import { BrandingPreviewProvider, useBrandingPreview } from "@/hooks/use-branding-preview";
-import { OrganizationSettingsProvider, useOrganizationSettings } from "@/hooks/use-organization-settings";
 import { useExportProcess } from "@/hooks/use-export-process";
+import { lazy, Suspense } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,16 +75,6 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 const MyAccount = lazy(() => import("./my-account"));
 
@@ -663,269 +654,9 @@ function PaymentsSettingsView() {
   );
 }
 
-// Add Fields Management Dialog
-type FieldFormData = {
-  name: string;
-  type: 'soccer' | 'football' | 'baseball' | 'multipurpose';
-  surfaceType: 'grass' | 'turf' | 'indoor';
-  dimensions?: string;
-  notes?: string;
-};
-
-function FieldsManagementDialog({ complex, isOpen, onClose }: {
-  complex: SelectComplex;
-  isOpen: boolean;
-  onClose: () => void;
-}) {
-  const [fields, setFields] = useState<SelectField[]>([]);
-  const [isAddFieldModalOpen, setIsAddFieldModalOpen] = useState(false);
-  const [newFieldData, setNewFieldData] = useState<FieldFormData>({
-    name: '',
-    type: 'soccer',
-    surfaceType: 'grass',
-    dimensions: '',
-    notes: ''
-  });
-
-  // Fetch fields data
-  const { data: complexFields, refetch: refetchFields } = useQuery<SelectField[]>({
-    queryKey: [`/api/admin/complexes/${complex?.id}/fields`],
-    enabled: isOpen && !!complex?.id,
-  });
-
-  useEffect(() => {
-    if (complexFields) {
-      setFields(complexFields);
-    }
-  }, [complexFields]);
-
-  // Add field mutation
-  const addFieldMutation = useMutation({
-    mutationFn: async (data: FieldFormData): Promise<SelectField> => {
-      const response = await fetch(`/api/admin/complexes/${complex.id}/fields`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          complexId: complex.id
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Failed to create field');
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      refetchFields();
-      setIsAddFieldModalOpen(false);
-      setNewFieldData({
-        name: '',
-        type: 'soccer',
-        surfaceType: 'grass',
-        dimensions: '',
-        notes: ''
-      });
-    }
-  });
-
-  const handleAddField = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newFieldData.name || !newFieldData.type || !newFieldData.surfaceType) {
-      return;
-    }
-    addFieldMutation.mutate(newFieldData);
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>Manage Fields - {complex?.name}</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Fields</h3>
-            <Button onClick={() => setIsAddFieldModalOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add New Field
-            </Button>
-          </div>
-
-          {fields.length === 0 ? (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <Building2 className="mx-auto h-12 w-12 text-muted-foreground/50" />
-                <h3 className="mt-4 text-lg font-semibold">No fields added yet</h3>
-                <p className="text-muted-foreground">
-                  Click 'Add New Field' to add fields to this complex
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {fields.map((field) => (
-                <Card key={field.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-semibold">{field.name}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {field.type} - {field.surfaceType}
-                        </p>
-                        {field.dimensions && (
-                          <p className="text-sm text-muted-foreground">
-                            Dimensions: {field.dimensions}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive">
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <Dialog open={isAddFieldModalOpen} onOpenChange={setIsAddFieldModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Field</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleAddField}>
-              <div className="space-y-4 py-4">
-                <div>
-                  <Label htmlFor="fieldName" className="flex items-center gap-2">
-                    Field Name <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="fieldName"
-                    value={newFieldData.name}
-                    onChange={(e) => setNewFieldData({ ...newFieldData, name: e.target.value })}
-                    placeholder="e.g., Field 1"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="fieldType" className="flex items-center gap-2">
-                    Field Type <span className="text-destructive">*</span>
-                  </Label>
-                  <Select
-                    value={newFieldData.type}
-                    onValueChange={(value: 'soccer' | 'football' | 'baseball' | 'multipurpose') =>
-                      setNewFieldData({ ...newFieldData, type: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select field type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="soccer">Soccer</SelectItem>
-                      <SelectItem value="football">Football</SelectItem>
-                      <SelectItem value="baseball">Baseball</SelectItem>
-                      <SelectItem value="multipurpose">Multipurpose</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="surfaceType" className="flex items-center gap-2">
-                    Surface Type <span className="text-destructive">*</span>
-                  </Label>
-                  <Select
-                    value={newFieldData.surfaceType}
-                    onValueChange={(value: 'grass' | 'turf' | 'indoor') =>
-                      setNewFieldData({ ...newFieldData, surfaceType: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select surface type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="grass">Natural Grass</SelectItem>
-                      <SelectItem value="turf">Artificial Turf</SelectItem>
-                      <SelectItem value="indoor">Indoor</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="dimensions">Dimensions</Label>
-                  <Input
-                    id="dimensions"
-                    value={newFieldData.dimensions}
-                    onChange={(e) => setNewFieldData({ ...newFieldData, dimensions: e.target.value })}
-                    placeholder="e.g., 100x60 yards"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    value={newFieldData.notes}
-                    onChange={(e) => setNewFieldData({ ...newFieldData, notes: e.target.value })}
-                    placeholder="Additional information about the field"
-                  />
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsAddFieldModalOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={addFieldMutation.isPending}>
-                  {addFieldMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    'Add Field'
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// Update ComplexesView component types
-type ComplexFormData = {
-  name: string;
-  openTime: string;
-  closeTime: string;
-  address: string;
-  city: string;
-  state: string;
-  country: string;
-  rules?: string;
-  directions?: string;
-};
-
 function ComplexesView() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isFieldsModalOpen, setIsFieldsModalOpen] = useState(false);
-  const [selectedComplex, setSelectedComplex] = useState<SelectComplex | null>(null);
-  const [formData, setFormData] = useState<ComplexFormData>({
+  const [formData, setFormData] = useState({
     name: '',
     openTime: '',
     closeTime: '',
@@ -938,7 +669,7 @@ function ComplexesView() {
   });
 
   // Query for complexes data
-  const complexesQuery = useQuery<SelectComplex[]>({
+  const complexesQuery = useQuery({
     queryKey: ['/api/admin/complexes'],
     queryFn: async () => {
       const response = await fetch('/api/admin/complexes');
@@ -948,20 +679,7 @@ function ComplexesView() {
   });
 
   // Query for complex analytics
-  type ComplexAnalytics = {
-    totalComplexes: number;
-    totalFields: number;
-    eventsToday: number;
-    averageUsage: number;
-    mostActiveComplex: {
-      id: number;
-      name: string;
-      address: string;
-      fieldsCount: number;
-    } | null;
-  };
-
-  const analyticsQuery = useQuery<ComplexAnalytics>({
+  const analyticsQuery = useQuery({
     queryKey: ['/api/admin/complexes/analytics'],
     queryFn: async () => {
       const response = await fetch('/api/admin/complexes/analytics');
@@ -971,23 +689,18 @@ function ComplexesView() {
   });
 
   const createComplexMutation = useMutation({
-    mutationFn: async (data: ComplexFormData): Promise<SelectComplex> => {
+    mutationFn: async (data: typeof formData) => {
       const response = await fetch('/api/admin/complexes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Failed to create complex');
-      }
+      if (!response.ok) throw new Error('Failed to create complex');
       return response.json();
     },
     onSuccess: () => {
       complexesQuery.refetch();
-      analyticsQuery.refetch();
       setIsModalOpen(false);
-      // Reset form data after successful creation
       setFormData({
         name: '',
         openTime: '',
@@ -1002,47 +715,7 @@ function ComplexesView() {
     }
   });
 
-  const updateComplexMutation = useMutation({
-    mutationFn: async (data: ComplexFormData & { id: number }) => {
-      const response = await fetch(`/api/admin/complexes/${data.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Failed to update complex');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      complexesQuery.refetch();
-      analyticsQuery.refetch();
-      setIsEditModalOpen(false);
-      setSelectedComplex(null);
-    }
-  });
-
-  const deleteComplexMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await fetch(`/api/admin/complexes/${id}`, {
-        method: 'DELETE'
-      });
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Failed to delete complex');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      complexesQuery.refetch();
-      analyticsQuery.refetch();
-      setIsDeleteDialogOpen(false);
-      setSelectedComplex(null);
-    }
-  });
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { id, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -1050,128 +723,118 @@ function ComplexesView() {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      if (selectedComplex) {
-        // Handle edit
-        await updateComplexMutation.mutateAsync({
-          id: selectedComplex.id,
-          ...formData
-        });
-        setIsEditModalOpen(false);
-      } else {
-        // Handle create
-        await createComplexMutation.mutateAsync(formData);
-        setIsModalOpen(false);
-      }
-
-      // Reset form
-      setFormData({
-        name: '',
-        openTime: '',
-        closeTime: '',
-        address: '',
-        city: '',
-        state: '',
-        country: 'US',
-        rules: '',
-        directions: ''
-      });
-
-      // Refetch complexes and analytics
-      await Promise.all([
-        complexesQuery.refetch(),
-        analyticsQuery.refetch()
-      ]);
-    } catch (error) {
-      console.error('Error submitting complex:', error);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!selectedComplex) return;
-
-    try {
-      await deleteComplexMutation.mutateAsync(selectedComplex.id);
-      setIsDeleteDialogOpen(false);
-      setSelectedComplex(null);
-
-      // Refetch complexes and analytics after deletion
-      await Promise.all([
-        complexesQuery.refetch(),
-        analyticsQuery.refetch()
-      ]);
-    } catch (error) {
-      console.error('Error deleting complex:', error);
-    }
-  };
-
-  const handleViewComplex = (complex: SelectComplex) => {
-    setSelectedComplex(complex);
-    setIsViewModalOpen(true);
-  };
-
-  const handleEditComplex = (complex: SelectComplex) => {
-    setSelectedComplex(complex);
-    setFormData(complex);
-    setIsEditModalOpen(true);
-  };
-
-  const handleDeleteComplex = (complex: SelectComplex) => {
-    setSelectedComplex(complex);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleManageFields = (complex: SelectComplex) => {
-    setSelectedComplex(complex);
-    setIsFieldsModalOpen(true);
+    createComplexMutation.mutate(formData);
   };
 
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Field Complexes</h2>
+        <Button onClick={() => setIsModalOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add New Complex
+        </Button>
+      </div>
+
+      {/* Analytics Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Complexes</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {analyticsQuery.data?.totalComplexes ?? 0}
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Complexes</p>
+                <h3 className="text-2xl font-bold mt-2">
+                  {analyticsQuery.isLoading ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    analyticsQuery.data?.totalComplexes || 0
+                  )}
+                </h3>
+              </div>
+              <Building2 className="h-8 w-8 text-muted-foreground/50" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Fields</CardTitle>
-            <Flag className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {analyticsQuery.data?.totalFields ?? 0}
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Fields</p>
+                <h3 className="text-2xl font-bold mt-2">
+                  {analyticsQuery.isLoading ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    analyticsQuery.data?.totalFields || 0
+                  )}
+                </h3>
+              </div>
+              <Flag className="h-8 w-8 text-muted-foreground/50" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Most Active Complex</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {analyticsQuery.data?.mostActiveComplex?.name ?? 'N/A'}
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Events Today</p>
+                <h3 className="text-2xl font-bold mt-2">
+                  {analyticsQuery.isLoading ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    analyticsQuery.data?.eventsToday || 0
+                  )}
+                </h3>
+              </div>
+              <Calendar className="h-8 w-8 text-muted-foreground/50" />
             </div>
-            {analyticsQuery.data?.mostActiveComplex && (
-              <p className="text-xs text-muted-foreground mt-1">
-                {analyticsQuery.data.mostActiveComplex.fieldsCount} fields
-              </p>
-            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Average Usage</p>
+                <h3 className="text-2xl font-bold mt-2">
+                  {analyticsQuery.isLoading ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    `${analyticsQuery.data?.averageUsage || 0}%`
+                  )}
+                </h3>
+              </div>
+              <Percent className="h-8 w-8 text-muted-foreground/50" />
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Most Active Complex */}
+      {analyticsQuery.data?.mostActiveComplex && (
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Most Active Complex</h3>
+              <Badge variant="secondary">
+                {analyticsQuery.data.mostActiveComplex.eventsCount} events this month
+              </Badge>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Building2 className="h-12 w-12 text-primary" />
+              <div>
+                <p className="font-medium">{analyticsQuery.data.mostActiveComplex.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {analyticsQuery.data.mostActiveComplex.address}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Complex List */}
       <Card>
@@ -1200,7 +863,7 @@ function ComplexesView() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {complexesQuery.data?.map((complex: SelectComplex) => (
+                  {complexesQuery.data?.map((complex: any) => (
                     <TableRow key={complex.id}>
                       <TableCell>{complex.name}</TableCell>
                       <TableCell>
@@ -1211,16 +874,13 @@ function ComplexesView() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewComplex(complex)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditComplex(complex)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleManageFields(complex)}>
-                            <Flag className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteComplex(complex)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
                             <Trash className="h-4 w-4" />
                           </Button>
                         </div>
@@ -1234,103 +894,83 @@ function ComplexesView() {
         </CardContent>
       </Card>
 
-      {/* Create Complex Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <form onSubmit={handleSubmit}>
-            <DialogHeader>
-              <DialogTitle>Create New Complex</DialogTitle>
-            </DialogHeader>
-
-            <div className="grid grid-cols-2 gap-4 py-4">
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add New Complex</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <Label htmlFor="name" className="flex items-center gap-2">
-                  Complex Name
-                  <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="name"
+                <Label htmlFor="name">Complex Name</Label>
+                <Input 
+                  id="name" 
                   value={formData.name}
                   onChange={handleInputChange}
-                  placeholder="Enter complex name"
-                  required
+                  placeholder="Enter complex name" 
+                  required 
                 />
               </div>
 
               <div>
-                <Label htmlFor="openTime" className="flex items-center gap-2">
-                  Open Time
-                  <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="openTime"
-                  type="time"
+                <Label htmlFor="openTime">Open Time (Local Time)</Label>
+                <Input 
+                  id="openTime" 
+                  type="time" 
                   value={formData.openTime}
                   onChange={handleInputChange}
-                  required
+                  required 
                 />
               </div>
 
               <div>
-                <Label htmlFor="closeTime" className="flex items-center gap-2">
-                  Close Time
-                  <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="closeTime"
-                  type="time"
+                <Label htmlFor="closeTime">Close Time (Local Time)</Label>
+                <Input 
+                  id="closeTime" 
+                  type="time" 
                   value={formData.closeTime}
                   onChange={handleInputChange}
-                  required
+                  required 
                 />
               </div>
 
               <div className="col-span-2">
-                <Label htmlFor="address" className="flex items-center gap-2">
-                  Address
-                  <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="address"
+                <Label htmlFor="address">Address</Label>
+                <Input 
+                  id="address" 
                   value={formData.address}
                   onChange={handleInputChange}
-                  placeholder="Street address"
+                  placeholder="Street address" 
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="city" className="flex items-center gap-2">
-                  City
-                  <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="city"
+                <Label htmlFor="city">City</Label>
+                <Input 
+                  id="city" 
                   value={formData.city}
                   onChange={handleInputChange}
-                  placeholder="City"
+                  placeholder="City" 
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="state" className="flex items-center gap-2">
-                  State
-                  <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="state"
+                <Label htmlFor="state">State</Label>
+                <Input 
+                  id="state" 
                   value={formData.state}
                   onChange={handleInputChange}
-                  placeholder="State"
+                  placeholder="State" 
                   required
                 />
               </div>
 
               <div className="col-span-2">
                 <Label htmlFor="country">Country</Label>
-                <Select
-                  value={formData.country}
+                <Select 
+                  value={formData.country} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, country: value }))}
                 >
                   <SelectTrigger id="country">
@@ -1345,12 +985,12 @@ function ComplexesView() {
               </div>
 
               <div className="col-span-2">
-                <Label htmlFor="rules">Rules</Label>
+                <Label htmlFor="rules">Complex Rules</Label>
                 <Textarea
                   id="rules"
                   value={formData.rules}
                   onChange={handleInputChange}
-                  placeholder="Complex rules and regulations"
+                  placeholder="Enter complex rules and regulations..."
                 />
               </div>
 
@@ -1360,7 +1000,7 @@ function ComplexesView() {
                   id="directions"
                   value={formData.directions}
                   onChange={handleInputChange}
-                  placeholder="Directions to the complex"
+                  placeholder="Enter directions to the complex..."
                 />
               </div>
             </div>
@@ -1369,8 +1009,8 @@ function ComplexesView() {
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
-              <Button
-                type="submit"
+              <Button 
+                type="submit" 
                 disabled={createComplexMutation.isPending}
               >
                 {createComplexMutation.isPending ? (
@@ -1386,91 +1026,6 @@ function ComplexesView() {
           </form>
         </DialogContent>
       </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the complex and all associated data.
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleteComplexMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                'Delete Complex'
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* View Modal */}
-      <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>View Complex Details</DialogTitle>
-          </DialogHeader>
-          {selectedComplex && (
-            <div className="space-y-4">
-              <div>
-                <Label>Name</Label>
-                <p className="text-lg font-medium">{selectedComplex.name}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Open Time</Label>
-                  <p className="text-lg">{selectedComplex.openTime}</p>
-                </div>
-                <div>
-                  <Label>Close Time</Label>
-                  <p className="text-lg">{selectedComplex.closeTime}</p>
-                </div>
-              </div>
-              <div>
-                <Label>Address</Label>
-                <p className="text-lg">
-                  {selectedComplex.address}, {selectedComplex.city}, {selectedComplex.state}
-                </p>
-              </div>
-              {selectedComplex.rules && (
-                <div>
-                  <Label>Rules</Label>
-                  <p className="text-lg">{selectedComplex.rules}</p>
-                </div>
-              )}
-              {selectedComplex.directions && (
-                <div>
-                  <Label>Directions</Label>
-                  <p className="text-lg">{selectedComplex.directions}</p>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-      {/* Add Fields Management Dialog */}
-      {selectedComplex && (
-        <FieldsManagementDialog
-          complex={selectedComplex}
-          isOpen={isFieldsModalOpen}
-          onClose={() => {
-            setIsFieldsModalOpen(false);
-            setSelectedComplex(null);
-          }}
-        />
-      )}
     </>
   );
 }
@@ -1498,54 +1053,373 @@ function SchedulingView() {
 }
 
 function AdminDashboard() {
-  const [view, setView] = useState<View>('complexes');
-  const [settingsView, setSettingsView] = useState<SettingsView>('branding');
-  const { user } = useUser();
+  const { user, logout } = useUser();
   const [, navigate] = useLocation();
+  const [currentView, setCurrentView] = useState<View>('events');
+  const [currentSettingsView, setCurrentSettingsView] = useState<SettingsView>('general');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { currentColor, setColor, isLoading: isThemeLoading } = useTheme();
 
-  if (!user?.isAdmin) {
-    navigate('/');
-    return null;
-  }
+  useEffect(() => {
+    if (!isAdminUser(user)) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
-  const renderView = () => {
-    switch (view) {
-      case 'events':
-        return <div>Events view will be implemented here</div>;
-      case 'teams':
-        return <div>Teams view will be implemented here</div>;
-      case 'administrators':
-        return <div>Administrators view will be implemented here</div>;
-      case 'settings':
-        return (
-          <OrganizationSettingsProvider>
-            <BrandingPreviewProvider>
-              {settingsView === 'branding' && <OrganizationSettingsForm />}
-              {settingsView === 'payments' && <PaymentsSettingsView />}
-            </BrandingPreviewProvider>
-          </OrganizationSettingsProvider>
-        );
+  const { data: events, isLoading: eventsLoading, error: eventsError } = useQuery({
+    queryKey: ["/api/admin/events"],
+    enabled: isAdminUser(user) && currentView === 'events',
+    staleTime: 30000,
+    gcTime: 3600000,
+  });
+
+  const { data: administrators, isLoading: adminsLoading, error: adminsError } = useQuery<SelectUser[]>({
+    queryKey: ["/api/admin/administrators"],
+    enabled: isAdminUser(user) && currentView === 'administrators',
+    staleTime: 30000,
+    gcTime: 3600000,
+  });
+
+  const { data: households, isLoading: householdsLoading, error: householdsError } = useQuery<any[]>({
+    queryKey: ["/api/admin/households"],
+    enabled: isAdminUser(user) && currentView === 'households',
+    staleTime: 30000,
+    gcTime: 3600000,
+  });
+
+
+  const renderContent = () => {
+    switch (currentView) {
+      case 'complexes':
+        return <ComplexesView />;
       case 'households':
-        return <div>Households view will be implemented here</div>;
+        return (
+          <>
+            <div className="flex justify-between items-center mb-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search households..."
+                  className="pl-9 w-[300px]"
+                />
+              </div>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Household
+              </Button>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Households</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Address</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {householdsLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="h-24 text-center">
+                            <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                          </TableCell>
+                        </TableRow>
+                      ) : householdsError ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                            Failed to load households
+                          </TableCell>
+                        </TableRow>
+                      ) : households?.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                            No households found
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        households?.map((household) => (
+                          <TableRow key={household.id}>
+                            <TableCell>{household.name}</TableCell>
+                            <TableCell>{household.address}</TableCell>
+                            <TableCell>{household.phone}</TableCell>
+                            <TableCell>{household.email}</TableCell>
+                            <TableCell>
+                              <Badge variant={household.status === 'active' ? 'default' : 'secondary'}>
+                                {household.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        );
+
+      case 'administrators':
+        return (
+          <>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Administrators</h2>
+              <Button>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Create Administrator User
+              </Button>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Full Admin Access</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Created At</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {adminsLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="h-24 text-center">
+                            <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                          </TableCell>
+                        </TableRow>
+                      ) : adminsError ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="h-24 text-center text-destructive">
+                            Error loading administrators: {adminsError instanceof Error ? adminsError.message : 'Unknown error'}
+                          </TableCell>
+                        </TableRow>
+                      ) : !administrators || administrators.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="h-24 text-center">
+                            No administrators found
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        administrators.map((admin) => (
+                          <TableRow key={admin.id}>
+                            <TableCell>{admin.firstName} {admin.lastName}</TableCell>
+                            <TableCell>{admin.email}</TableCell>
+                            <TableCell>
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Active
+                              </span>
+                            </TableCell>
+                            <TableCell>{new Date(admin.createdAt).toLocaleDateString()}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                                  <Trash className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        );
+
+      case 'events':
+        return (
+          <>
+            <div className="flex justify-between items-center mb-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search events..."
+                  className="pl-9 w-[300px]"
+                />
+              </div>
+              <Button onClick={() => navigate("/create-event")}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Event
+              </Button>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Events</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>
+                          <div className="flex items-center gap-2">
+                            Date
+                            <div className="flex flex-col">
+                              <ChevronUp className="h-3 w-3" />
+                              <ChevronDown className="h-3 w-3" />
+                            </div>
+                          </div>
+                        </TableHead>
+                        <TableHead># of Applications</TableHead>
+                        <TableHead># of Accepted Teams</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {eventsLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="h-24 text-center">
+                            <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                          </TableCell>
+                        </TableRow>
+                      ) : eventsError ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="h-24 text-center text-destructive">
+                            Error loading events: {eventsError instanceof Error ? eventsError.message : 'Unknown error'}
+                          </TableCell>
+                        </TableRow>
+                      ) : !events || events.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="h-24 text-center">
+                            No events found
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        events.map((event: any) => (
+                          <TableRow key={event.id}>
+                            <TableCell>{event.name}</TableCell>
+                            <TableCell>{new Date(event.date).toLocaleDateString()}</TableCell>
+                            <TableCell>{event.applicationCount || 0}</TableCell>
+                            <TableCell>{event.acceptedTeamsCount || 0}</TableCell>
+                            <TableCell>
+                              <Badge variant={event.status === 'Active' ? 'default' : 'secondary'}>
+                                {event.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end items-center gap-2">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-48">
+                                    <DropdownMenuItem>
+                                      <Eye className="mr-2 h-4 w-4" />
+                                      Manage
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <ClipboardList className="mr-2 h-4 w-4" />
+                                      Application Questions
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <UserCircle className="mr-2 h-4 w-4" />
+                                      Player Questions
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <Percent className="mr-2 h-4 w-4" />
+                                      Discounts
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <Printer className="mr-2 h-4 w-4" />
+                                      Print Game Cards
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <Flag className="mr-2 h-4 w-4" />
+                                      Red Card Report
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem className="text-destructive">
+                                      <Trash className="mr-2 h-4 w-4" />
+                                      Delete Event
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        );
+
+      case 'settings':
+        if (currentSettingsView === 'branding') {
+          return (
+            <BrandingPreviewProvider>
+              <OrganizationSettingsForm />
+            </BrandingPreviewProvider>
+          );
+        }
+
+        if (currentSettingsView === 'payments') {
+          return <PaymentsSettingsView />;
+        }
+
+        return null;
       case 'reports':
         return <ReportsView />;
       case 'account':
         return (
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center min-h-[60vh]">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            }
+          >
             <MyAccount />
           </Suspense>
         );
       case 'complexes':
         return <ComplexesView />;
       case 'scheduling':
-        return <SchedulingView/>;
+        return <SchedulingView />;
       default:
-        return <div>Select a view from the sidebar</div>;
+        return null;
     }
   };
 
+  if (!isAdminUser(user)) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
       <div className="w-64 bg-card border-r flex flex-col h-full">
         <div className="p-4 flex flex-col h-full">
@@ -1558,64 +1432,64 @@ function AdminDashboard() {
           {/* Navigation */}
           <div className="space-y-2">
             <Button
-              variant={view === 'events' ? 'secondary' : 'ghost'}
+              variant={currentView === 'events' ? 'secondary' : 'ghost'}
               className="w-full justify-start"
-              onClick={() => setView('events')}
+              onClick={() => setCurrentView('events')}
             >
               <Calendar className="mr-2 h-4 w-4" />
               Events
             </Button>
 
             <Button
-              variant={view === 'households' ? 'secondary' : 'ghost'}
+              variant={currentView === 'households' ? 'secondary' : 'ghost'}
               className="w-full justify-start"
-              onClick={() => setView('households')}
+              onClick={() => setCurrentView('households')}
             >
               <Home className="mr-2 h-4 w-4" />
               Households
             </Button>
 
             <Button
-              variant={view === 'administrators' ? 'secondary' : 'ghost'}
+              variant={currentView === 'administrators' ? 'secondary' : 'ghost'}
               className="w-full justify-start"
-              onClick={() => setView('administrators')}
+              onClick={() => setCurrentView('administrators')}
             >
               <Shield className="mr-2 h-4 w-4" />
               Administrators
             </Button>
 
             <Button
-              variant={view === 'reports' ? 'secondary' : 'ghost'}
+              variant={currentView === 'reports' ? 'secondary' : 'ghost'}
               className="w-full justify-start"
-              onClick={() => setView('reports')}
+              onClick={() => setCurrentView('reports')}
             >
               <FileText className="mr-2 h-4 w-4" />
               Reports
             </Button>
             <Button
-              variant={view === 'complexes' ? 'secondary' : 'ghost'}
+              variant={currentView === 'complexes' ? 'secondary' : 'ghost'}
               className="w-full justify-start"
-              onClick={() => setView('complexes')}
+              onClick={() => setCurrentView('complexes')}
             >
               <Building2 className="mr-2 h-4 w-4" />
               Field Complexes
             </Button>
             <Button
-                variant={view === 'scheduling' ? 'secondary' : 'ghost'}
+                variant={currentView === 'scheduling' ? 'secondary' : 'ghost'}
                 className="w-full justify-start"
-                onClick={() => setView('scheduling')}
+                onClick={() => setCurrentView('scheduling')}
               >
                 <Calendar className="mr-2 h-4 w-4" />
                 Scheduling
               </Button>
             <Collapsible
-              open={false}
-              onOpenChange={(open) => {}}
+              open={isSettingsOpen}
+              onOpenChange={setIsSettingsOpen}
               className="space-y-2"
             >
               <CollapsibleTrigger asChild>
                 <Button
-                  variant={view === 'settings' ? 'secondary' : 'ghost'}
+                  variant={currentView === 'settings' ? 'secondary' : 'ghost'}
                   className="w-full justify-between"
                 >
                   <span className="flex items-center">
@@ -1623,28 +1497,30 @@ function AdminDashboard() {
                     Settings
                   </span>
                   <ChevronRight
-                    className={`h-4 w-4 transition-transform duration-200`}
+                    className={`h-4 w-4 transition-transform duration-200 ${
+                      isSettingsOpen ? 'rotate-90' : ''
+                    }`}
                   />
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-2 pl-4">
                 <Button
-                  variant={settingsView === 'branding' ? 'secondary' : 'ghost'}
+                  variant={currentSettingsView === 'branding' ? 'secondary' : 'ghost'}
                   className="w-full justify-start"
                   onClick={() => {
-                    setView('settings');
-                    setSettingsView('branding');
+                    setCurrentView('settings');
+                    setCurrentSettingsView('branding');
                   }}
                 >
                   <Palette className="mr-2 h-4 w-4" />
                   Branding
                 </Button>
                 <Button
-                  variant={settingsView === 'payments' ? 'secondary' : 'ghost'}
+                  variant={currentSettingsView === 'payments' ? 'secondary' : 'ghost'}
                   className="w-full justify-start"
                   onClick={() => {
-                    setView('settings');
-                    setSettingsView('payments');
+                    setCurrentView('settings');
+                    setCurrentSettingsView('payments');
                   }}
                 >
                   <CreditCard className="mr-2 h-4 w-4" />
@@ -1654,9 +1530,9 @@ function AdminDashboard() {
             </Collapsible>
 
             <Button
-              variant={view === 'account' ? 'secondary' : 'ghost'}
+              variant={currentView === 'account' ? 'secondary' : 'ghost'}
               className="w-full justify-start"
-              onClick={() => setView('account')}
+              onClick={() => setCurrentView('account')}
             >
               <User className="mr-2 h-4 w-4" />
               My Account
@@ -1668,7 +1544,7 @@ function AdminDashboard() {
             <Button
               variant="ghost"
               className="w-full justify-start text-muted-foreground"
-              onClick={() => {}}
+              onClick={() => logout()}
             >
               <LogOut className="mr-2 h-4 w-4" />
               Logout
@@ -1681,9 +1557,9 @@ function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto p-6">
-        {renderView()}
-      </main>
+      <div className="flex-1 overflow-auto p-8">
+        {renderContent()}
+      </div>
     </div>
   );
 }
