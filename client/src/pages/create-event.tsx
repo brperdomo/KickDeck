@@ -902,14 +902,13 @@ export default function CreateEvent() {
                             <TableHead>Age Group</TableHead>
                             <TableHead>Gender</TableHead>
                             <TableHead>Field Size</TableHead>
-                            <TableHead>Current Rule</TableHead>
-                            <TableHead className="text-center">Actions</TableHead>
+                            <TableHead className="text-center">Scoring Rule</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {ageGroups.length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={5} className="text-center py-4">
+                              <TableCell colSpan={4} className="text-center py-4">
                                 No age groups created yet. Create age groups first to assign scoring rules.
                               </TableCell>
                             </TableRow>
@@ -921,9 +920,6 @@ export default function CreateEvent() {
                                   <Badge variant="outline">{group.gender}</Badge>
                                 </TableCell>
                                 <TableCell>{group.fieldSize}</TableCell>
-                                <TableCell>
-                                  {group.scoringRule || 'Not assigned'}
-                                </TableCell>
                                 <TableCell>
                                   <div className="flex items-center justify-center">
                                     <Select
