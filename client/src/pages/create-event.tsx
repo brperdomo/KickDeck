@@ -36,6 +36,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from '@tanstack/react-query';
 import { Checkbox } from "@/components/ui/checkbox"; // Import Checkbox
+import { useToast } from "@/hooks/use-toast"; // Import useToast
+
 
 // Helper function to generate unique IDs
 const generateId = () => {
@@ -156,6 +158,7 @@ export default function CreateEvent() {
   const [selectedComplexes, setSelectedComplexes] = useState<SelectedComplex[]>([]);
   const [viewingComplexId, setViewingComplexId] = useState<number | null>(null);
   const [eventFieldSizes, setEventFieldSizes] = useState<Record<number, FieldSize>>({});
+  const { toast } = useToast();
 
   const complexesQuery = useQuery({
     queryKey: ['/api/admin/complexes'],
@@ -911,10 +914,10 @@ export default function CreateEvent() {
                           {ageGroups.length === 0 ? (
                             <TableRow>
                               <TableCell colSpan={5} className="text-center py-4">
-                                No age groups created yet. Create age groups first to assign scoring rules.
+                                No age groups created yet. Create agegroups first to assign scoring rules.
                               </TableCell>
                             </TableRow>
-                          ): (
+                          ) : (
                             ageGroups.map((group) => (
                               <TableRow key={group.id}>
                                 <TableCell>{group.ageGroup}</TableCell>
@@ -939,7 +942,7 @@ export default function CreateEvent() {
                                         );
                                       }}
                                     >
-                                      <SelectTrigger className="w-[180px]">
+                                      <SelectTrigger className="w-[200px]">
                                         <SelectValue placeholder="Select a rule" />
                                       </SelectTrigger>
                                       <SelectContent>
@@ -1091,71 +1094,103 @@ export default function CreateEvent() {
                             ) : !fieldsQuery.data?.length ? (
                               <div className="text-center py-4">No fields available in this complex</div>
                             ) : (
-                              <Table>
-                                <TableHeader>
-                                  <TableRow>
-                                    <TableHead>Field Name</TableHead>
-                                    <TableHead className="text-center">Features</TableHead>
-                                    <TableHead>Special Instructions</TableHead>
-                                    <TableHead className="text-center">Status</TableHead>
-                                    <TableHead className="text-center">Event Field Size</TableHead>
-                                  </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                  {fieldsQuery.data.map((field) => (
-                                    <TableRow key={field.id}>
-                                      <TableCell className="font-medium">
-                                        {field.name}
-                                      </TableCell>
-                                      <TableCell className="text-center">
-                                        <div className="flex gap-2 justify-center">
-                                          {field.hasLights && (
-                                            <Badge variant="secondary">Lights</Badge>
-                                          )}
-                                          {field.hasParking && (
-                                            <Badge variant="secondary">Parking</Badge>
-                                          )}
-                                        </div>
-                                      </TableCell>
-                                      <TableCell>
-                                        {field.specialInstructions || 'N/A'}
-                                      </TableCell>
-                                      <TableCell className="text-center">
-                                        <Badge variant={field.isOpen ? "outline" : "destructive"}>
-                                          {field.isOpen ? "Open" : "Closed"}
-                                        </Badge>
-                                      </TableCell>
-                                      <TableCell className="text-center">
-                                        <Select
-                                          value={eventFieldSizes[field.id] || ''}
-                                          onValueChange={(value) => {
-                                            setEventFieldSizes(prev => ({
-                                              ...prev,
-                                              [field.id]: value as FieldSize
-                                            }));
-                                          }}
-                                        >
-                                          <SelectTrigger className="w-[120px]">
-                                            <SelectValue placeholder="Select size" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {['3v3', '4v4', '5v5', '6v6', '7v7', '8v8', '9v9', '10v10', '11v11', 'N/A'].map((size) => (
-                                              <SelectItem key={size} value={size}>
-                                                {size}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
-                                        {eventFieldSizes[field.id] && (
-                                          <Badge variant="secondary" className="ml-2">
-                                            Set for event
-                                          </Badge>
-                                        )}
-                                      </TableCell>
+                              <div className="space-y-4">
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead>Field Name</TableHead>
+                                      <TableHead className="text-center">Features</TableHead>
+                                      <TableHead>Special Instructions</TableHead>
+                                      <TableHead className="text-center">Status</TableHead>
+                                      <TableHead className="text-center">Event Field Size</TableHead>
                                     </TableRow>
-                                  ))}
-                                </TableBody>
-                              </Table>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {fieldsQuery.data.map((field) => {
+                                      const hasChanges = !!eventFieldSizes[field.id];
+                                      return (
+                                        <TableRow key={field.id}>
+                                          <TableCell className="font-medium">
+                                            {field.name}
+                                          </TableCell>
+                                          <TableCell className="text-center">
+                                            <div className="flex gap-2 justify-center">
+                                              {field.hasLights && (
+                                                <Badge variant="secondary">Lights</Badge>
+                                              )}
+                                              {field.hasParking && (
+                                                <Badge variant="secondary">Parking</Badge>
+                                              )}
+                                            </div>
+                                          </TableCell>
+                                          <TableCell>
+                                            {field.specialInstructions || 'N/A'}
+                                          </TableCell>
+                                          <TableCell className="text-center">
+                                            <Badge variant={field.isOpen ? "outline" : "destructive"}>
+                                              {field.isOpen ? "Open" : "Closed"}
+                                            </Badge>
+                                          </TableCell>
+                                          <TableCell className="text-center">
+                                            <div className="flex items-center justify-center gap-2">
+                                              <Select
+                                                value={eventFieldSizes[field.id] || ''}
+                                                onValueChange={(value) => {
+                                                  setEventFieldSizes(prev => ({
+                                                    ...prev,
+                                                    [field.id]: value as FieldSize
+                                                  }));
+                                                }}
+                                              >
+                                                <SelectTrigger className="w-[120px]">
+                                                  <SelectValue placeholder="Select size" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                  {['3v3', '4v4', '5v5', '6v6', '7v7', '8v8', '9v9', '10v10', '11v11', 'N/A'].map((size) => (
+                                                    <SelectItem key={size} value={size}>
+                                                      {size}
+                                                    </SelectItem>
+                                                  ))}
+                                                </SelectContent>
+                                              </Select>
+                                              {hasChanges && (
+                                                <Badge variant="secondary">
+                                                  Changed
+                                                </Badge>
+                                              )}
+                                            </div>
+                                          </TableCell>
+                                        </TableRow>
+                                      );
+                                    })}
+                                  </TableBody>
+                                </Table>
+                                <div className="flex justify-end gap-2">
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                      // Reset changes when canceling
+                                      setEventFieldSizes({});
+                                      setViewingComplexId(null);
+                                    }}
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    onClick={() => {
+                                      toast({
+                                        title: "Field sizes saved",
+                                        description: "Field sizes have been set for this event.",
+                                      });
+                                      setViewingComplexId(null);
+                                    }}
+                                    disabled={Object.keys(eventFieldSizes).length === 0}
+                                  >
+                                    Save Field Sizes
+                                  </Button>
+                                </div>
+                              </div>
+
                             )}
                           </div>
                         </DialogContent>
