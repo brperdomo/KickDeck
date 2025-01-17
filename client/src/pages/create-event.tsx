@@ -99,7 +99,6 @@ interface ScoringRule {
   shutout: number;
   redCard: number;
   tieBreaker: string;
-  ageGroups: string[];
 }
 
 const scoringRuleSchema = z.object({
@@ -111,7 +110,6 @@ const scoringRuleSchema = z.object({
   shutout: z.number().min(0, "Shutout points must be positive"),
   redCard: z.number().min(-10, "Red card points must be greater than -10"),
   tieBreaker: z.string().min(1, "Tie breaker is required"),
-  ageGroups: z.array(z.string()).min(1, "Select at least one age group"),
 });
 
 type ScoringRuleValues = z.infer<typeof scoringRuleSchema>;
@@ -247,7 +245,6 @@ export default function CreateEvent() {
       shutout: 1,
       redCard: -1,
       tieBreaker: "head_to_head",
-      ageGroups: [],
     },
   });
 
@@ -275,7 +272,6 @@ export default function CreateEvent() {
       shutout: rule.shutout,
       redCard: rule.redCard,
       tieBreaker: rule.tieBreaker,
-      ageGroups: rule.ageGroups,
     });
     setIsScoringModalOpen(true);
   };
@@ -1123,43 +1119,6 @@ export default function CreateEvent() {
                           )}
                         />
 
-                        <FormField
-                          control={scoringForm.control}
-                          name="ageGroups"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Age Groups</FormLabel>
-                              <FormControl>
-                                <Select
-                                  onValueChange={(value) => {
-                                    const currentValues = field.value || [];
-                                    const newValues = currentValues.includes(value)
-                                      ? currentValues.filter(v => v !== value)
-                                      : [...currentValues, value];
-                                    field.onChange(newValues);
-                                  }}
-                                  value={field.value?.[0] || ""}
-                                  multiple
-                                >
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select age groups" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {ageGroups.map((group) => (
-                                      <SelectItem key={group.id} value={group.id}>
-                                        {group.ageGroup} - {group.gender}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
                         <div className="flex justify-end space-x-2 pt-4">
                           <Button
                             type="button"
@@ -1222,7 +1181,7 @@ export default function CreateEvent() {
                               </TableCell>
                               <TableCell>
                                 {ageGroups
-                                  .filter(group => rule.ageGroups.includes(group.id))
+                                  .filter(group => rule.ageGroups?.includes(group.id))
                                   .map(group => group.ageGroup)
                                   .join(', ')}
                               </TableCell>
