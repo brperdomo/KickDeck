@@ -14,6 +14,7 @@ import { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTheme } from "@/hooks/use-theme";
 import { SelectUser } from "@db/schema";
+import { useToast } from "@/hooks/use-toast"; // Fixed import for toast
 import {
   Calendar,
   Search,
@@ -78,6 +79,25 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch"; // Added import
+
+
+interface Complex {
+  id: number;
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  openTime: string;
+  closeTime: string;
+  rules?: string;
+  directions?: string;
+  isOpen: boolean;
+  createdAt: string;
+  updatedAt: string;
+  openFields: number;
+  closedFields: number;
+}
 
 const MyAccount = lazy(() => import("./my-account"));
 
@@ -658,12 +678,13 @@ function PaymentsSettingsView() {
 }
 
 function ComplexesView() {
+  const { toast } = useToast(); // Get toast function from hook
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isFieldModalOpen, setIsFieldModalOpen] = useState(false);
   const [isViewFieldsModalOpen, setIsViewFieldsModalOpen] = useState(false);
   const [selectedComplexId, setSelectedComplexId] = useState<number | null>(null);
-  const [selectedComplex, setSelectedComplex] = useState<any>(null);
+  const [selectedComplex, setSelectedComplex] = useState<Complex | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     openTime: '',
@@ -766,7 +787,7 @@ function ComplexesView() {
     }
   };
 
-  const handleEdit = (complex: any) => {
+  const handleEdit = (complex: Complex) => {
     setSelectedComplex(complex);
     setFormData({
       name: complex.name,
@@ -963,7 +984,7 @@ function ComplexesView() {
     enabled: !!selectedComplexId && isViewFieldsModalOpen
   });
 
-  const handleViewFields = (complex: any) => {
+  const handleViewFields = (complex: Complex) => {
     setSelectedComplexId(complex.id);
     setSelectedComplex(complex);
     setIsViewFieldsModalOpen(true);
@@ -987,7 +1008,7 @@ function ComplexesView() {
   // Add field status toggle mutation
   const toggleFieldStatusMutation = useMutation({
     mutationFn: async ({ fieldId, isOpen }: { fieldId: number, isOpen: boolean }) => {
-      const response = await fetch(`/api/admin/fields/${fieldId}/status`, {
+      constresponse = await fetch(`/api/admin/fields/${fieldId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isOpen })
@@ -996,8 +1017,7 @@ function ComplexesView() {
       return response.json();
     },
     onSuccess: () => {
-      // Refetch fields after status update
-      fieldsQuery.refetch();
+      // Refetch fields after status update      fieldsQuery.refetch();
     }
   });
 
@@ -1017,8 +1037,39 @@ function ComplexesView() {
     }
   });
 
+  const toggleComplexStatusMutation = useMutation({
+    mutationFn: async ({ complexId, isOpen }: { complexId: number; isOpen: boolean }) => {
+      const response = await fetch(`/api/admin/complexes/${complexId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isOpen })
+      });
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error);
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      // Refetch both queries after status update
+      complexesQuery.refetch();
+      analyticsQuery.refetch();
+      toast({
+        title: "Complex status updated",
+        description: "All fields have been updated accordingly.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to update complex status",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
   // In the table actions cell, update to include Add Field button
-  const renderActionButtons = (complex: any) => (
+  const renderActionButtons = (complex: Complex) => (
     <div className="flex items-center gap-2">
       <Tooltip>
         <TooltipTrigger asChild>
@@ -1295,12 +1346,13 @@ function ComplexesView() {
                   <TableHead>Name</TableHead>
                   <TableHead>Address</TableHead>
                   <TableHead>Hours</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
                   <TableHead className="text-center">Fields Status</TableHead>
                   <TableHead className="w-[200px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {complexesQuery.data?.map((complex) => (
+                {complexesQuery.data?.map((complex:Complex) => (
                   <TableRow key={complex.id}>
                     <TableCell className="font-medium">
                       {complex.name}
@@ -1310,6 +1362,22 @@ function ComplexesView() {
                     </TableCell>
                     <TableCell>
                       {complex.openTime} - {complex.closeTime}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-center gap-2">
+                        <Switch
+                          checked={complex.isOpen}
+                          onCheckedChange={(checked) => 
+                            toggleComplexStatusMutation.mutate({ 
+                              complexId: complex.id, 
+                              isOpen: checked 
+                            })
+                          }
+                        />
+                        <span className={complex.isOpen ? "text-green-600" : "text-red-600"}>
+                          {complex.isOpen ? "Open" : "Closed"}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-center gap-4">
@@ -1322,72 +1390,7 @@ function ComplexesView() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => handleFieldModalOpen(complex.id)}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Add new field</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8"
-                              onClick={() => handleViewFields(complex)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>View fields in this complex</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8"
-                              onClick={() => handleEdit(complex)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Edit complex information</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 text-destructive"
-                              onClick={() => {
-                                if (window.confirm('Are you sure you want to delete this complex? This will also delete all fields associated with it.')) {
-                                  deleteComplexMutation.mutate(complex.id);
-                                }
-                              }}
-                            >
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Delete this complex</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
+                      {renderActionButtons(complex)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -1514,6 +1517,7 @@ function AdminDashboard() {
   const [currentSettingsView, setCurrentSettingsView] = useState<SettingsView>('general');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { currentColor, setColor, isLoading: isThemeLoading } = useTheme();
+  const { toast } = useToast(); // Added toast import
 
   useEffect(() => {
     if (!isAdminUser(user)) {
@@ -1969,8 +1973,7 @@ function AdminDashboard() {
                 >
                   <Palette className="mr-2 h-4 w-4" />
                   Branding
-                </Button>
-                <Button
+                </Button>                <Button
                   variant={currentSettingsView === 'payments' ? 'secondary' : 'ghost'}
                   className="w-full justify-start"
                   onClick={() => {

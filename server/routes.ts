@@ -149,6 +149,47 @@ export function registerRoutes(app: Express): Server {
       }
     });
 
+    // Add complex status update endpoint
+    app.patch('/api/admin/complexes/:id/status', isAdmin, async (req, res) => {
+      try {
+        const complexId = parseInt(req.params.id);
+        const { isOpen } = req.body;
+
+        // Start a transaction to update both complex and fields
+        await db.transaction(async (tx) => {
+          // Update complex status
+          const [updatedComplex] = await tx
+            .update(complexes)
+            .set({
+              isOpen,
+              updatedAt: new Date().toISOString(),
+            })
+            .where(eq(complexes.id, complexId))
+            .returning();
+
+          if (!updatedComplex) {
+            return res.status(404).send("Complex not found");
+          }
+
+          // If complex is closed, force all fields to be closed
+          if (!isOpen) {
+            await tx
+              .update(fields)
+              .set({
+                isOpen: false,
+                updatedAt: new Date().toISOString(),
+              })
+              .where(eq(fields.complexId, complexId));
+          }
+
+          res.json(updatedComplex);
+        });
+      } catch (error) {
+        console.error('Error updating complex status:', error);
+        res.status(500).send("Failed to update complex status");
+      }
+    });
+
     // Add complex deletion endpoint
     app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
       try {
@@ -401,11 +442,30 @@ export function registerRoutes(app: Express): Server {
       }
     });
 
-    // Add field status update endpoint
+    // Update the field status endpoint to respect complex status
     app.patch('/api/admin/fields/:id/status', isAdmin, async (req, res) => {
       try {
         const fieldId = parseInt(req.params.id);
         const { isOpen } = req.body;
+
+        // First check if the complex is open
+        const [field] = await db
+          .select({
+            field: fields,
+            complexIsOpen: complexes.isOpen,
+          })
+          .from(fields)
+          .innerJoin(complexes, eq(fields.complexId, complexes.id))
+          .where(eq(fields.id, fieldId));
+
+        if (!field) {
+          return res.status(404).send("Field not found");
+        }
+
+        // If trying to open a field while complex is closed, return error
+        if (isOpen && !field.complexIsOpen) {
+          return res.status(400).send("Cannot open field when complex is closed");
+        }
 
         const [updatedField] = await db
           .update(fields)
@@ -415,10 +475,6 @@ export function registerRoutes(app: Express): Server {
           })
           .where(eq(fields.id, fieldId))
           .returning();
-
-        if (!updatedField) {
-          return res.status(404).send("Field not found");
-        }
 
         res.json(updatedField);
       } catch (error) {

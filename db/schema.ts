@@ -48,6 +48,7 @@ export const complexes = pgTable("complexes", {
   closeTime: text("close_time").notNull(),
   rules: text("rules"),
   directions: text("directions"),
+  isOpen: boolean("is_open").default(true).notNull(),
   createdAt: text("created_at").notNull().default(new Date().toISOString()),
   updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
 });
@@ -109,6 +110,7 @@ export const insertComplexSchema = createInsertSchema(complexes, {
   closeTime: z.string().min(1, "Close time is required"),
   rules: z.string().optional(),
   directions: z.string().optional(),
+  isOpen: z.boolean().optional(),
 });
 
 export const selectComplexSchema = createSelectSchema(complexes);
