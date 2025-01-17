@@ -34,7 +34,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import crypto from 'crypto';
+
+// Helper function to generate unique IDs
+const generateId = () => {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
 
 type EventTab = 'information' | 'age-groups' | 'scoring' | 'complexes' | 'settings' | 'administrators';
 
@@ -149,7 +153,7 @@ export default function CreateEvent() {
       ));
       setEditingAgeGroup(null);
     } else {
-      setAgeGroups([...ageGroups, { ...data, id: crypto.randomUUID() }]);
+      setAgeGroups([...ageGroups, { ...data, id: generateId() }]);
     }
     setIsDialogOpen(false);
     ageGroupForm.reset();
@@ -200,7 +204,7 @@ export default function CreateEvent() {
   });
 
   const handleAddScoringRule = (data: ScoringRuleValues) => {
-    setScoringRules([...scoringRules, { ...data, id: crypto.randomUUID() }]);
+    setScoringRules([...scoringRules, { ...data, id: generateId() }]);
     setIsScoringModalOpen(false);
     scoringForm.reset();
   };
@@ -936,7 +940,7 @@ export default function CreateEvent() {
                             )}
                           />
 
-                          <div className="flex justify-end space-x-2 pt-4">
+                          <div className="flex justify-end space-x2 pt-4">
                             <Button
                               type="button"
                               variant="outline"
