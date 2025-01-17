@@ -1007,7 +1007,6 @@ function ComplexesView() {
     }
   });
 
-  //<replit_final_file>
   // Add field status toggle mutation
   const toggleFieldStatusMutation = useMutation({
     mutationFn: async ({ fieldId, isOpen }: { fieldId: number, isOpen: boolean }) => {
@@ -1052,9 +1051,9 @@ function ComplexesView() {
         const error = await response.text();
         throw new Error(error);
       }
-      return response.json();
+      return { response: await response.json(), isOpen };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Refetch all relevant data
       complexesQuery.refetch();
       analyticsQuery.refetch();
@@ -1064,7 +1063,7 @@ function ComplexesView() {
       }
       toast({
         title: "Complex status updated",
-        description: isOpen ? 
+        description: data.isOpen ? 
           "Complex has been opened. You can now manage individual field statuses." : 
           "Complex has been closed. All fields have been automatically closed.",
       });
@@ -1974,7 +1973,7 @@ function AdminDashboard() {
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-2 pl-4">
                 <Button
-                  variant={currentSettingsView === 'branding' ? 'secondary' : 'ghost'}
+                  variant={currentSettingsView=== 'branding' ? 'secondary' : 'ghost'}
                   className="w-full justify-start"
                   onClick={() => {
                     setCurrentView('settings');
