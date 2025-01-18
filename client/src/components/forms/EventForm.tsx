@@ -84,7 +84,7 @@ interface EventFormProps {
 }
 
 export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormProps) {
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<EventTab>('information');
   const [ageGroups, setAgeGroups] = useState<AgeGroup[]>(initialData?.ageGroups || []);
   const [complexFieldSizes, setComplexFieldSizes] = useState<Record<number, FieldSize>>(
