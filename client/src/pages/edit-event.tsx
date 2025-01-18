@@ -1,8 +1,9 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { EventForm, type EventData } from "@/components/forms/EventForm";
+import { EventForm } from "@/components/forms/EventForm";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import type { EventData } from "@/lib/types/event";
 
 export default function EditEvent() {
   const { id } = useParams();
@@ -15,7 +16,7 @@ export default function EditEvent() {
     queryFn: async () => {
       const response = await fetch(`/api/admin/events/${id}/edit`);
       if (!response.ok) throw new Error('Failed to fetch event details');
-      return response.json();
+      return response.json() as Promise<EventData>;
     },
   });
 
