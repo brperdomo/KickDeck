@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Edit, Eye } from "lucide-react";
+import { ArrowLeft, Plus, Minus, Edit, Trash, Eye, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -14,13 +14,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Editor } from '@tinymce/tinymce-react';
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 
-// Types and interfaces
+// Types and interfaces from create-event.tsx
 export interface EventData {
   name: string;
   startDate: string;
@@ -84,7 +84,7 @@ interface EventFormProps {
 }
 
 export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormProps) {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<EventTab>('information');
   const [ageGroups, setAgeGroups] = useState<AgeGroup[]>(initialData?.ageGroups || []);
   const [complexFieldSizes, setComplexFieldSizes] = useState<Record<number, FieldSize>>(
@@ -134,7 +134,7 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate("/admin")}
+          onClick={() => setLocation("/admin")}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -340,7 +340,7 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => navigate("/admin")}
+                      onClick={() => setLocation("/admin")}
                     >
                       Cancel
                     </Button>
