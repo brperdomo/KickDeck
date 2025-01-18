@@ -1995,7 +1995,8 @@ function AdminDashboard() {
                           </TableRow>
                         ))
                       )}
-                    </TableBody                  </Table>
+                    </TableBody>
+                  </Table>
                 </div>
               </CardContent>            </Card>
           </>
@@ -2624,4 +2625,3 @@ function AdministratorsView() {
     </>
   );
 }
-<
