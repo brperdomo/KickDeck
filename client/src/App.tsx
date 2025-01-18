@@ -9,6 +9,7 @@ import AuthPage from "@/pages/auth-page";
 import Profile from "@/pages/profile";
 import AdminDashboard from "@/pages/admin-dashboard";
 import CreateEvent from "@/pages/create-event";
+import EditEvent from "@/pages/edit-event";
 import ForgotPassword from "@/pages/forgot-password";
 import { useUser } from "@/hooks/use-user";
 
@@ -43,6 +44,9 @@ function Router() {
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/create-event">
         {user.isAdmin ? <CreateEvent /> : <NotFound />}
+      </Route>
+      <Route path="/admin/events/:id/edit">
+        {user.isAdmin ? <EditEvent /> : <NotFound />}
       </Route>
       <Route path="/">
         {user.isAdmin ? <AdminDashboard /> : <Profile />}
