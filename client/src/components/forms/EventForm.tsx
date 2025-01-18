@@ -84,7 +84,7 @@ interface EventFormProps {
 }
 
 export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormProps) {
-  const [location, navigate] = useLocation();
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<EventTab>('information');
   const [ageGroups, setAgeGroups] = useState<AgeGroup[]>(initialData?.ageGroups || []);
   const [complexFieldSizes, setComplexFieldSizes] = useState<Record<number, FieldSize>>(
@@ -134,7 +134,7 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate("/admin")}
+          onClick={() => setLocation("/admin")}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -340,7 +340,7 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => navigate("/admin")}
+                      onClick={() => setLocation("/admin")}
                     >
                       Cancel
                     </Button>
@@ -353,7 +353,6 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
                 </form>
               </Form>
             </TabsContent>
-
           </Tabs>
         </CardContent>
       </Card>
