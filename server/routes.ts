@@ -580,34 +580,39 @@ export function registerRoutes(app: Express): Server {
               endDate: eventData.endDate,
               timezone: eventData.timezone,
               applicationDeadline: eventData.applicationDeadline,
-              details: eventData.details,
-              agreement: eventData.agreement,
-              refundPolicy: eventData.refundPolicy,
+              details: eventData.details || null,
+              agreement: eventData.agreement || null,
+              refundPolicy: eventData.refundPolicy || null,
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             })
             .returning();
 
           // Create age groups
-          await Promise.all(
-            eventData.ageGroups.map(async (group) => {
-              await tx
-                .insert(eventAgeGroups)
-                .values({
-                  ...group,
-                  eventId: event.id,
-                  createdAt: new Date().toISOString(),
-                });
-            })
-          );
+          for (const group of eventData.ageGroups) {
+            await tx
+              .insert(eventAgeGroups)
+              .values({
+                eventId: event.id,
+                gender: group.gender,
+                projectedTeams: group.projectedTeams,
+                birthDateStart: group.birthDateStart,
+                birthDateEnd: group.birthDateEnd,
+                scoringRule: group.scoringRule,
+                ageGroup: group.ageGroup,
+                fieldSize: group.fieldSize,
+                amountDue: group.amountDue || null,
+                createdAt: new Date().toISOString(),
+              });
+          }
 
-          // Create complex assignments with field sizes
+          // Create complex assignments
           for (const complexId of eventData.selectedComplexIds) {
             await tx
               .insert(eventComplexes)
               .values({
                 eventId: event.id,
-                complexId,
+                complexId: complexId,
                 createdAt: new Date().toISOString(),
               });
           }
@@ -619,7 +624,7 @@ export function registerRoutes(app: Express): Server {
               .values({
                 eventId: event.id,
                 fieldId: parseInt(fieldId),
-                fieldSize,
+                fieldSize: fieldSize,
                 createdAt: new Date().toISOString(),
               });
           }
@@ -628,7 +633,11 @@ export function registerRoutes(app: Express): Server {
         res.json({ message: "Event created successfully" });
       } catch (error) {
         console.error('Error creating event:', error);
-        res.status(500).send("Failed to create event");
+        let errorMessage = "Failed to create event";
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        res.status(500).send(errorMessage);
       }
     });
 

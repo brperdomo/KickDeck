@@ -352,7 +352,7 @@ export default function CreateEvent() {
   // Add new function to handle event creation
   const handleCreateEvent = async () => {
     // Collect all event data
-    const eventData: EventData = {
+    const eventData = {
       name: form.getValues().name,
       startDate: form.getValues().startDate,
       endDate: form.getValues().endDate,
@@ -361,7 +361,11 @@ export default function CreateEvent() {
       details: form.getValues().details,
       agreement: form.getValues().agreement,
       refundPolicy: form.getValues().refundPolicy,
-      ageGroups,
+      ageGroups: ageGroups.map(({ id, ...rest }) => ({
+        ...rest,
+        // Remove the client-side ID as the database will generate its own
+        scoringRule: rest.scoringRule || null
+      })),
       complexFieldSizes: eventFieldSizes,
       selectedComplexIds: selectedComplexes.map(complex => complex.id)
     };
@@ -394,7 +398,8 @@ export default function CreateEvent() {
       });
 
       if (!response.ok) {
-        throw new Error(await response.text());
+        const errorText = await response.text();
+        throw new Error(errorText);
       }
 
       toast({
@@ -408,7 +413,7 @@ export default function CreateEvent() {
       console.error('Error creating event:', error);
       toast({
         title: "Error",
-        description: "Failed to create event. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to create event. Please try again.",
         variant: "destructive",
       });
     }
