@@ -8,7 +8,7 @@ export default function ChatPage() {
     <div className="min-h-screen bg-background p-4">
       <div className="container mx-auto">
         <div className="flex items-center gap-4 mb-4">
-          <Link href="/admin-dashboard">
+          <Link href="/admin">
             <Button variant="ghost" size="sm" className="gap-2">
               <ArrowLeft className="h-4 w-4" />
               Back to Dashboard
