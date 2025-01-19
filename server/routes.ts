@@ -297,6 +297,7 @@ export function registerRoutes(app: Express): Server {
     });
 
 
+
     // Organization settings endpoints
     app.get('/api/admin/organization-settings', isAdmin, async (req, res) => {
       try {
@@ -690,35 +691,85 @@ export function registerRoutes(app: Express): Server {
             .returning();
 
           if (!updatedEvent) {
-            return res.status(404).send("Event not found");
+            throw new Error("Event not found");
           }
 
-          // First, delete tournament groups associated with the event's age groups
-          await tx
-            .delete(tournamentGroups)
-            .where(eq(tournamentGroups.eventId, eventId));
-
-          // Then delete age groups
-          await tx
-            .delete(eventAgeGroups)
+          // Get existing age groups
+          const existingAgeGroups = await tx
+            .select()
+            .from(eventAgeGroups)
             .where(eq(eventAgeGroups.eventId, eventId));
 
-          // Create new age groups
+          // Get age groups that have teams
+          const ageGroupsWithTeams = await tx
+            .select({
+              ageGroupId: teams.ageGroupId,
+              teamCount: sql<number>`count(*)`.mapWith(Number)
+            })
+            .from(teams)
+            .where(eq(teams.eventId, eventId))
+            .groupBy(teams.ageGroupId);
+
+          const ageGroupsWithTeamsMap = new Map(
+            ageGroupsWithTeams.map(({ ageGroupId, teamCount }) => [ageGroupId, teamCount])
+          );
+
+          // Map of existing age groups by their properties for comparison
+          const existingAgeGroupsMap = new Map(
+            existingAgeGroups.map(group => [
+              `${group.gender}-${group.ageGroup}-${group.fieldSize}`,
+              group
+            ])
+          );
+
+          // Process each age group from the request
           for (const group of eventData.ageGroups) {
-            await tx
-              .insert(eventAgeGroups)
-              .values({
-                eventId: eventId,
-                gender: group.gender,
-                projectedTeams: group.projectedTeams,
-                birthDateStart: group.birthDateStart,
-                birthDateEnd: group.birthDateEnd,
-                scoringRule: group.scoringRule,
-                ageGroup: group.ageGroup,
-                fieldSize: group.fieldSize,
-                amountDue: group.amountDue || null,
-                createdAt: new Date().toISOString(),
-              });
+            const groupKey = `${group.gender}-${group.ageGroup}-${group.fieldSize}`;
+            const existingGroup = existingAgeGroupsMap.get(groupKey);
+
+            if (existingGroup) {
+              // Update existing group
+              await tx
+                .update(eventAgeGroups)
+                .set({
+                  projectedTeams: group.projectedTeams,
+                  birthDateStart: group.birthDateStart,
+                  birthDateEnd: group.birthDateEnd,
+                  scoringRule: group.scoringRule,
+                  amountDue: group.amountDue || null,
+                })
+                .where(eq(eventAgeGroups.id, existingGroup.id));
+
+              // Remove from map to track which ones need to be deleted
+              existingAgeGroupsMap.delete(groupKey);
+            } else {
+              // Create new group
+              await tx
+                .insert(eventAgeGroups)
+                .values({
+                  eventId,
+                  gender: group.gender,
+                  projectedTeams: group.projectedTeams,
+                  birthDateStart: group.birthDateStart,
+                  birthDateEnd: group.birthDateEnd,
+                  scoringRule: group.scoringRule,
+                  ageGroup: group.ageGroup,
+                  fieldSize: group.fieldSize,
+                  amountDue: group.amountDue || null,
+                  createdAt: new Date().toISOString(),
+                });
+            }
+          }
+
+          // Handle age groups that were removed
+          for (const [, group] of existingAgeGroupsMap) {
+            // Check if the age group has teams
+            if (!ageGroupsWithTeamsMap.has(group.id)) {
+              // Only delete if no teams are associated
+              await tx
+                .delete(eventAgeGroups)
+                .where(eq(eventAgeGroups.id, group.id));
+            }
           }
 
           // Update complex assignments
@@ -730,8 +781,8 @@ export function registerRoutes(app: Express): Server {
             await tx
               .insert(eventComplexes)
               .values({
-                eventId: eventId,
-                complexId: complexId,
+                eventId,
+                complexId,
                 createdAt: new Date().toISOString(),
               });
           }
@@ -745,9 +796,9 @@ export function registerRoutes(app: Express): Server {
             await tx
               .insert(eventFieldSizes)
               .values({
-                eventId: eventId,
+                eventId,
                 fieldId: parseInt(fieldId),
-                fieldSize: fieldSize,
+                fieldSize,
                 createdAt: new Date().toISOString(),
               });
           }
@@ -975,7 +1026,7 @@ export function registerRoutes(app: Express): Server {
               complex: complexes,
             })
             .from(eventComplexes)
-            .innerJoin(fields, eq(eventCompleComplexes.complexId))
+            .innerJoin(fields, eq(eventComplexes.complexId, fields.complexId))
             .innerJoin(complexes, eq(eventComplexes.complexId, complexes.id))
             .where(eq(eventComplexes.eventId, eventId));
 
