@@ -956,7 +956,7 @@ export function registerRoutes(app: Express): Server {
             });
           }
 
-          // 6. Schedule will be generated based on registered teams          // This will be implemented in a separate endpoint once teams are registered
+          //          // 6. Schedule will be generated based on registered teams          // This will be implemented in a separate endpoint once teams are registered
         });
 
         res.json({ message: "Schedule framework generated successfully" });
@@ -1071,6 +1071,49 @@ export function registerRoutes(app: Express): Server {
     });
 
     // Add administrators endpoint
+    //This endpoint is already present in the original code, removing it as per the intention of replacement.
+    app.post('/api/admin/administrators', isAdmin, async (req, res) => {
+      try {
+        const { firstName, lastName, email, temporaryPassword } = req.body;
+
+        // Check if user exists
+        const [existingUser] = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, email))
+          .limit(1);
+
+        if (existingUser) {
+          return res.status(400).send("User with this email already exists");
+        }
+
+        // Hash the temporary password
+        const hashedPassword = await crypto.hash(temporaryPassword);
+
+        // Create the administrator
+        const [newAdmin] = await db
+          .insert(users)
+          .values({
+            email,
+            username: email,
+            password: hashedPassword,
+            firstName,
+            lastName,
+            isAdmin: true,
+            isParent: false,
+            createdAt: new Date().toISOString(),
+          })
+          .returning();
+
+        // Remove password from response
+        const { password, ...adminWithoutPassword } = newAdmin;
+        res.status(201).json(adminWithoutPassword);
+      } catch (error) {
+        console.error('Error creating administrator:', error);
+        res.status(500).send("Failed to create administrator");
+      }
+    });
+
     app.get('/api/admin/administrators', isAdmin, async (req, res) => {
       try {
         const administrators = await db
@@ -1079,12 +1122,11 @@ export function registerRoutes(app: Express): Server {
             email: users.email,
             firstName: users.firstName,
             lastName: users.lastName,
-            phone: users.phone,
             createdAt: users.createdAt,
           })
           .from(users)
           .where(eq(users.isAdmin, true))
-          .orderBy(users.lastName, users.firstName);
+          .orderBy(users.createdAt);
 
         res.json(administrators);
       } catch (error) {
