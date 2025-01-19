@@ -108,20 +108,15 @@ export default function AuthPage() {
     mode: "all",
   });
 
-  // Handle email validation
+  // Improved email validation with proper debouncing
   const handleEmailValidation = async (email: string) => {
     if (!email || email === lastCheckedEmail || !isRegistering) return;
 
     try {
       const emailValidation = z.string().email().safeParse(email);
       if (emailValidation.success) {
-        // Debounce the API call
-        const timeoutId = setTimeout(async () => {
-          setLastCheckedEmail(email);
-          await emailCheckMutation.mutateAsync(email);
-        }, 500);
-
-        return () => clearTimeout(timeoutId);
+        setLastCheckedEmail(email);
+        await emailCheckMutation.mutateAsync(email);
       }
     } catch (error) {
       console.error("Email validation error:", error);
@@ -275,14 +270,17 @@ export default function AuthPage() {
                                 {...field}
                                 className={cn(
                                   "pr-10",
-                                  emailCheckMutation.data?.available && "border-green-500 focus-visible:ring-green-500",
+                                  emailCheckMutation.data?.available && field.value && "border-green-500 focus-visible:ring-green-500",
                                   emailCheckMutation.data?.available === false && "border-red-500 focus-visible:ring-red-500"
                                 )}
                                 onChange={(e) => {
                                   field.onChange(e);
                                   const value = e.target.value;
                                   if (value) {
-                                    handleEmailValidation(value);
+                                    const timeoutId = setTimeout(() => {
+                                      handleEmailValidation(value);
+                                    }, 500);
+                                    return () => clearTimeout(timeoutId);
                                   }
                                 }}
                               />
