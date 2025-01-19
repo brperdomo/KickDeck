@@ -1900,7 +1900,7 @@ function AdminDashboard() {
     gcTime: 3600000,
   });
 
-  const { data: administrators, isLoading: adminsLoading, error: adminsError } = useQuery<SelectUser[]>({
+  const adminsQuery = useQuery<SelectUser[]>({
     queryKey: ["/api/admin/administrators"],
     enabled: isAdminUser(user) && currentView === 'administrators',
     staleTime: 30000,
@@ -1995,7 +1995,8 @@ function AdminDashboard() {
                     </TableBody>
                   </Table>
                 </div>
-              </CardContent>            </Card>
+              </CardContent>
+            </Card>
           </>
         );
       case 'administrators':
@@ -2004,73 +2005,38 @@ function AdminDashboard() {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">Administrators</h2>
               <Button>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Create Administrator User
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Administrator
               </Button>
             </div>
-
             <Card>
-              <CardHeader>
-                <CardTitle>Full Admin Access</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Created At</TableHead>
-                        <TableHead>Actions</TableHead>
+              <CardContent className="p-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {adminsQuery?.data?.map((admin) => (
+                      <TableRow key={admin.id}>
+                        <TableCell>{admin.firstName} {admin.lastName}</TableCell>
+                        <TableCell>{admin.email}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">Active</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {adminsLoading ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="h-24 text-center">
-                            <Loader2 className="h-6 w-6 animate-spin mx-auto" />
-                          </TableCell>
-                        </TableRow>
-                      ) : adminsError ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="h-24 text-center text-destructive">
-                            Error loading administrators: {adminsError instanceof Error ? adminsError.message : 'Unknown error'}
-                          </TableCell>
-                        </TableRow>
-                      ) : !administrators || administrators.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="h-24 text-center">
-                            No administrators found
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        administrators.map((admin) => (
-                          <TableRow key={admin.id}>
-                            <TableCell>{admin.firstName} {admin.lastName}</TableCell>
-                            <TableCell>{admin.email}</TableCell>
-                            <TableCell>
-                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Active
-                              </span>
-                            </TableCell>
-                            <TableCell>{new Date(admin.createdAt).toLocaleDateString()}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                                  <Trash className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </>
