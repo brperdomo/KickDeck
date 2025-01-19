@@ -306,3 +306,38 @@ export const insertEventScoringRuleSchema = createInsertSchema(eventScoringRules
 export const selectEventScoringRuleSchema = createSelectSchema(eventScoringRules);
 export type InsertEventScoringRule = typeof eventScoringRules.$inferInsert;
 export type SelectEventScoringRule = typeof eventScoringRules.$inferSelect;
+
+export const eventAdministrators = pgTable("event_administrators", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull().references(() => events.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  role: text("role").notNull(),
+  createdAt: text("created_at").notNull().default(new Date().toISOString()),
+});
+
+export const eventSettings = pgTable("event_settings", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull().references(() => events.id),
+  settingKey: text("setting_key").notNull(),
+  settingValue: text("setting_value").notNull(),
+  createdAt: text("created_at").notNull().default(new Date().toISOString()),
+  updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
+});
+
+// Add new schema validation
+export const insertEventAdministratorSchema = createInsertSchema(eventAdministrators, {
+  role: z.enum(['owner', 'admin', 'moderator']),
+});
+
+export const insertEventSettingSchema = createInsertSchema(eventSettings, {
+  settingKey: z.string().min(1, "Setting key is required"),
+  settingValue: z.string().min(1, "Setting value is required"),
+});
+
+export const selectEventAdministratorSchema = createSelectSchema(eventAdministrators);
+export const selectEventSettingSchema = createSelectSchema(eventSettings);
+
+export type InsertEventAdministrator = typeof eventAdministrators.$inferInsert;
+export type SelectEventAdministrator = typeof eventAdministrators.$inferSelect;
+export type InsertEventSetting = typeof eventSettings.$inferInsert;
+export type SelectEventSetting = typeof eventSettings.$inferSelect;

@@ -259,13 +259,13 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
             onValueChange={(value) => setActiveTab(value as EventTab)}
             className="space-y-6"
           >
-            <TabsList className="grid grid-cols-3 gap-4">
+            <TabsList className="grid grid-cols-6 gap-4">
               <TabsTrigger value="information">Event Information</TabsTrigger>
               <TabsTrigger value="age-groups">Age Groups</TabsTrigger>
               <TabsTrigger value="scoring">Scoring Settings</TabsTrigger>
-              {/* <TabsTrigger value="complexes">Complexes & Fields</TabsTrigger>
+              <TabsTrigger value="complexes">Complexes & Fields</TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
-              <TabsTrigger value="administrators">Administrators</TabsTrigger> */}
+              <TabsTrigger value="administrators">Administrators</TabsTrigger>
             </TabsList>
 
             {/* Event Information Tab */}
@@ -833,6 +833,52 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
                   </Form>
                 </DialogContent>
               </Dialog>
+            </TabsContent>
+
+            {/* Complexes & Fields Tab */}
+            <TabsContent value="complexes">
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Complexes and Fields</h3>
+                  <Button onClick={() => {
+                    // TODO: Implement complex selection
+                  }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Complex
+                  </Button>
+                </div>
+                <div className="grid gap-4">
+                  {/* Complex selection and field configuration will go here */}
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Settings Tab */}
+            <TabsContent value="settings">
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold">Event Settings</h3>
+                <div className="grid gap-4">
+                  {/* Event settings configuration will go here */}
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Administrators Tab */}
+            <TabsContent value="administrators">
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Event Administrators</h3>
+                  <Button onClick={() => {
+                    // TODO: Implement administrator assignment
+                  }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Administrator
+                  </Button>
+                </div>
+                <div className="grid gap-4">
+                  {/* Administrator list and management will go here */}
+                </div>
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>
