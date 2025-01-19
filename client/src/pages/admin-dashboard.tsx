@@ -1508,6 +1508,7 @@ function ComplexesView() {
 
 function SchedulingView() {
   const [selectedEvent, setSelectedEvent] = useState<number | null>(null);
+  const [selectedAgeGroup, setSelectedAgeGroup] = useState("");
   const [scheduleParams, setScheduleParams] = useState({
     gamesPerDay: 6,
     minutesPerGame: 60,
@@ -1525,12 +1526,28 @@ function SchedulingView() {
     }
   });
 
+  // Query for age groups
+  const ageGroupsQuery = useQuery({
+    queryKey: ['/api/admin/events', selectedEvent, 'age-groups'],
+    queryFn: async () => {
+      if (!selectedEvent) return [];
+      const response = await fetch(`/api/admin/events/${selectedEvent}/age-groups`);
+      if (!response.ok) throw new Error('Failed to fetch age groups');
+      return response.json();
+    },
+    enabled: !!selectedEvent
+  });
+
   // Query for schedule
   const scheduleQuery = useQuery({
-    queryKey: ['/api/admin/events', selectedEvent, 'schedule'],
+    queryKey: ['/api/admin/events', selectedEvent, 'schedule', selectedAgeGroup],
     queryFn: async () => {
       if (!selectedEvent) return { games: [] };
-      const response = await fetch(`/api/admin/events/${selectedEvent}/schedule`);
+      const url = new URL(`/api/admin/events/${selectedEvent}/schedule`, window.location.origin);
+      if (selectedAgeGroup) {
+        url.searchParams.append('ageGroup', selectedAgeGroup);
+      }
+      const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch schedule');
       return response.json();
     },
@@ -1541,6 +1558,7 @@ function SchedulingView() {
   const generateScheduleMutation = useMutation({
     mutationFn: async (data: {
       eventId: number,
+      ageGroup: string,
       gamesPerDay: number,
       minutesPerGame: number,
       breakBetweenGames: number
@@ -1570,8 +1588,18 @@ function SchedulingView() {
   });
 
   const handleGenerateSchedule = (eventId: number) => {
+    if (!selectedAgeGroup) {
+      toast({
+        title: "Error",
+        description: "Please select an age group",
+        variant: "destructive"
+      });
+      return;
+    }
+
     generateScheduleMutation.mutate({
       eventId,
+      ageGroup: selectedAgeGroup,
       ...scheduleParams
     });
   };
@@ -1593,7 +1621,10 @@ function SchedulingView() {
               <Label>Event</Label>
               <Select
                 value={selectedEvent?.toString()}
-                onValueChange={(value) => setSelectedEvent(parseInt(value))}
+                onValueChange={(value) => {
+                  setSelectedEvent(parseInt(value));
+                  setSelectedAgeGroup(""); // Reset age group when event changes
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Event" />
@@ -1610,6 +1641,25 @@ function SchedulingView() {
 
             {selectedEvent && (
               <>
+                <div>
+                  <Label>Age Group</Label>
+                  <Select
+                    value={selectedAgeGroup}
+                    onValueChange={setSelectedAgeGroup}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Age Group" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ageGroupsQuery.data?.map((group: any) => (
+                        <SelectItem key={group.id} value={group.id}>
+                          {group.ageGroup} ({group.gender})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="space-y-2">
                   <Label>Games Per Day</Label>
                   <Input
@@ -1674,6 +1724,9 @@ function SchedulingView() {
         <div className="col-span-3">
           <ScheduleVisualization
             games={scheduleQuery.data?.games || []}
+            ageGroups={ageGroupsQuery.data || []}
+            selectedAgeGroup={selectedAgeGroup}
+            onAgeGroupChange={setSelectedAgeGroup}
             isLoading={scheduleQuery.isLoading}
             date={selectedDate}
           />
