@@ -1509,246 +1509,101 @@ function ComplexesView() {
 
 function SchedulingView() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedEvent, setSelectedEvent] = useState<number | null>(null);
-  const [selectedAgeGroup, setSelectedAgeGroup] = useState("");
-  const [scheduleParams, setScheduleParams] = useState({
-    gamesPerDay: 6,
-    minutesPerGame: 60,
-    breakBetweenGames: 15,
-  });
+  const [selectedComplex, setSelectedComplex] = useState<string>("");
   const { toast } = useToast();
 
-  // Query for events
-  const eventsQuery = useQuery({
-    queryKey: ['/api/admin/events'],
+  // Query for complexes
+  const complexesQuery = useQuery({
+    queryKey: ['/api/admin/complexes'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/events');
-      if (!response.ok) throw new Error('Failed to fetch events');
+      const response = await fetch('/api/admin/complexes');
+      if (!response.ok) throw new Error('Failed to fetch complexes');
       return response.json();
     }
   });
 
-  // Query for age groups
-  const ageGroupsQuery = useQuery({
-    queryKey: ['/api/admin/events', selectedEvent, 'age-groups'],
+  // Query for schedules based on selected date and complex
+  const schedulesQuery = useQuery({
+    queryKey: ['/api/admin/schedules', selectedDate.toISOString(), selectedComplex],
     queryFn: async () => {
-      if (!selectedEvent) return [];
-      const response = await fetch(`/api/admin/events/${selectedEvent}/age-groups`);
-      if (!response.ok) throw new Error('Failed to fetch age groups');
+      if (!selectedComplex) return [];
+      const response = await fetch(`/api/admin/schedules?date=${selectedDate.toISOString()}&complexId=${selectedComplex}`);
+      if (!response.ok) throw new Error('Failed to fetch schedules');
       return response.json();
     },
-    enabled: !!selectedEvent
+    enabled: !!selectedComplex
   });
-
-  // Query for schedule
-  const scheduleQuery = useQuery({
-    queryKey: ['/api/admin/events', selectedEvent, 'schedule', selectedAgeGroup],
-    queryFn: async () => {
-      if (!selectedEvent) return { games: [] };
-      const url = new URL(`/api/admin/events/${selectedEvent}/schedule`, window.location.origin);
-      if (selectedAgeGroup) {
-        url.searchParams.append('ageGroup', selectedAgeGroup);
-      }
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch schedule');
-      return response.json();
-    },
-    enabled: !!selectedEvent
-  });
-
-  // Mutation for generating schedule
-  const generateScheduleMutation = useMutation({
-    mutationFn: async (data: {
-      eventId: number,
-      ageGroup: string,
-      gamesPerDay: number,
-      minutesPerGame: number,
-      breakBetweenGames: number
-    }) => {
-      const response = await fetch(`/api/admin/events/${data.eventId}/generate-schedule`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate schedule');
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      scheduleQuery.refetch();
-      toast({
-        title: "Success",
-        description: "Schedule generated successfully!",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleGenerateSchedule = (eventId: number) => {
-    if (!selectedAgeGroup) {
-      toast({
-        title: "Error",
-        description: "Please select an age group",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    generateScheduleMutation.mutate({
-      eventId,
-      ageGroup: selectedAgeGroup,
-      ...scheduleParams
-    });
-  };
-
-  if (eventsQuery.isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[200px]">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Game Scheduling</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Field Scheduling</h2>
+      </div>
 
-      <div className="grid grid-cols-4 gap-6">
-        <Card className="col-span-1">
-          <CardContent className="p-6 space-y-4">
-            <div>
-              <Label>Event</Label>
-              <Select
-                value={selectedEvent?.toString()}
-                onValueChange={(value) => {
-                  setSelectedEvent(parseInt(value));
-                  setSelectedAgeGroup(""); // Reset age group when event changes
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Event" />
-                </SelectTrigger>
-                <SelectContent>
-                  {eventsQuery.data?.map((event: any) => (
-                    <SelectItem key={event.id} value={event.id.toString()}>
-                      {event.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {selectedEvent && (
-              <>
-                <div>
-                  <Label>Age Group</Label>
-                  <Select
-                    value={selectedAgeGroup}
-                    onValueChange={setSelectedAgeGroup}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Age Group" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ageGroupsQuery.data?.map((group: any) => (
-                        <SelectItem key={group.id} value={group.id}>
-                          {group.ageGroup} ({group.gender})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Games Per Day</Label>
-                  <Input
-                    type="number"
-                    value={scheduleParams.gamesPerDay}
-                    onChange={(e) =>
-                      setScheduleParams({
-                        ...scheduleParams,
-                        gamesPerDay: parseInt(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Minutes Per Game</Label>
-                  <Input
-                    type="number"
-                    value={scheduleParams.minutesPerGame}
-                    onChange={(e) =>
-                      setScheduleParams({
-                        ...scheduleParams,
-                        minutesPerGame: parseInt(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Break Between Games (minutes)</Label>
-                  <Input
-                    type="number"
-                    value={scheduleParams.breakBetweenGames}
-                    onChange={(e) =>
-                      setScheduleParams({
-                        ...scheduleParams,
-                        breakBetweenGames: parseInt(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-
-                <Button
-                  className="w-full"
-                  onClick={() => handleGenerateSchedule(selectedEvent)}
-                  disabled={generateScheduleMutation.isPending}
-                >
-                  {generateScheduleMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    "Generate Schedule"
-                  )}
-                </Button>
-
-                <div>
-                  <Label>Select Date</Label>
-                  <DatePicker
-                    date={selectedDate}
-                    onDateChange={setSelectedDate}
-                  />
-                </div>
-              </>
-            )}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Date Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Select Date</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && setSelectedDate(date)}
+              className="rounded-md border"
+            />
           </CardContent>
         </Card>
 
-        <div className="col-span-3">
-          <ScheduleVisualization
-            games={scheduleQuery.data?.games || []}
-            ageGroups={ageGroupsQuery.data || []}
-            selectedAgeGroup={selectedAgeGroup}
-            onAgeGroupChange={setSelectedAgeGroup}
-            isLoading={scheduleQuery.isLoading}
-            date={selectedDate}
-          />
-        </div>
+        {/* Complex Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Select Complex</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Select
+              value={selectedComplex}
+              onValueChange={setSelectedComplex}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a complex" />
+              </SelectTrigger>
+              <SelectContent>
+                {complexesQuery.data?.map((complex: any) => (
+                  <SelectItem key={complex.id} value={complex.id.toString()}>
+                    {complex.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {schedulesQuery.isLoading ? (
+              <div className="flex justify-center mt-4">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+            ) : schedulesQuery.data?.length === 0 ? (
+              <p className="text-center text-muted-foreground mt-4">
+                No schedules found for this date and complex.
+              </p>
+            ) : (
+              <div className="mt-4 space-y-2">
+                {schedulesQuery.data?.map((schedule: any) => (
+                  <div
+                    key={schedule.id}
+                    className="p-4 border rounded-lg"
+                  >
+                    <p className="font-medium">{schedule.fieldName}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(schedule.startTime).toLocaleTimeString()} - 
+                      {new Date(schedule.endTime).toLocaleTimeString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
@@ -2027,113 +1882,16 @@ function AdminDashboard() {
 
   function renderContent() {
     switch (activeView) {
-      case 'complexes':
-        return <ComplexesView />;
-      case 'households':
-        return (
-          <>
-            <div className="flex justify-between items-center mb-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search households..."
-                  className="pl-9 w-[300px]"
-                />
-              </div>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Household
-              </Button>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Households</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Address</TableHead>
-                        <TableHead>Phone</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {householdsLoading ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="h-24 text-center">
-                            <Loader2 className="h-6 w-6 animate-spin mx-auto" />
-                          </TableCell>
-                        </TableRow>
-                      ) : householdsError ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="h-24 text-muted-foreground">
-                            Failed to load households
-                          </TableCell>
-                        </TableRow>
-                      ) : households?.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                            No households found
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        households?.map((household) => (
-                          <TableRow key={household.id}>
-                            <TableCell>{household.name}</TableCell>
-                            <TableCell>{household.address}</TableCell>
-                            <TableCell>{household.phone}</TableCell>
-                            <TableCell>{household.email}</TableCell>
-                            <TableCell>
-                              <Badge variant={household.status === 'active' ? 'default' : 'secondary'}>
-                                {household.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </>
-        );
-      case 'administrators':
-        return <AdministratorsView />;
       case 'events':
         return <EventsView />;
-      case 'settings':
-        if (activeSettingsView === 'branding') {
-          return (
-            <BrandingPreviewProvider>
-              <OrganizationSettingsForm />
-            </BrandingPreviewProvider>
-          );
-        }
-        if (activeSettingsView === 'payments') {
-          return <PaymentsSettingsView />;
-        }
-        if (activeSettingsView === 'general') {
-          return (
-            <div>
-              General Settings Content Here
-            </div>
-          );
-        }
-        return null;
+      case 'households':
+        return <HouseholdsView />;
+      case 'administrators':
+        return <AdministratorsView />;
       case 'reports':
         return <ReportsView />;
+      case 'settings':
+        return <SettingsView activeSettingsView={activeSettingsView} />;
       case 'account':
         return (
           <Suspense
@@ -2680,6 +2438,263 @@ function AdministratorsView() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
+    </>
+  );
+}
+
+function HouseholdsView() {
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedHousehold, setSelectedHousehold] = useState<number | null>(null);
+  const [handleDuplicateHousehold, setHandleDuplicateHousehold] = useState(() => () => { });
+  const [handleDeleteHousehold, setHandleDeleteHousehold] = useState(() => () => { });
+
+  // Query for households list
+  const householdsQuery = useQuery({
+    queryKey: ['/api/admin/households'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/households');
+      if (!response.ok) throw new Error('Failed to fetch households');
+      return response.json();
+    }
+  });
+
+  // Query for selected household details
+  const householdDetailsQuery = useQuery({
+    queryKey: ['/api/admin/households', selectedHousehold, 'edit'],
+    queryFn: async () => {
+      if (!selectedHousehold) return null;
+      const response = await fetch(`/api/admin/households/${selectedHousehold}/edit`);
+      if (!response.ok) throw new Error('Failed to fetch household details');
+      return response.json();
+    },
+    enabled: !!selectedHousehold
+  });
+
+  // Mutation for updating household
+  const updateHouseholdMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await fetch(`/api/admin/households/${selectedHousehold}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Failed to update household');
+      return response.json();
+    },
+    onSuccess: () => {
+      householdsQuery.refetch();
+      setIsEditModalOpen(false);
+      setSelectedHousehold(null);
+      toast({
+        title: "Success",
+        description: "Household updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update household",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleEditClick = (householdId: number) => {
+    setSelectedHousehold(householdId);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdate = (formData: any) => {
+    updateHouseholdMutation.mutate(formData);
+  };
+
+  return (
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Households</h2>
+        <Button onClick={() => setLocation("/create-household")}>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Household
+        </Button>
+      </div>
+
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>All Households</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="relative">
+              {householdsQuery.isLoading ? (
+                <div className="flex justify-center p-4">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              ) : householdsQuery.data?.length === 0 ? (
+                <p className="text-center text-muted-foreground py-4">
+                  No households found. Create your first household to get started.
+                </p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Household Name</TableHead>
+                      <TableHead>Address</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {householdsQuery.data?.map((household: any) => (
+                      <TableRow key={household.id}>
+                        <TableCell>{household.name}</TableCell>
+                        <TableCell>{household.address}</TableCell>
+                        <TableCell>{household.phone}</TableCell>
+                        <TableCell>{household.email}</TableCell>
+                        <TableCell>
+                          <Badge variant={household.status === 'active' ? 'default' : 'secondary'}>
+                            {household.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {/* Household Actions */}
+                          <div className="flex items-center justify-end space-x-2">
+                            <Link href={`/admin/households/${household.id}`}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="flex items-center gap-2 hover:bg-secondary"
+                              >
+                                <Edit className="h-4 w-4" />
+                                <span>Edit Details</span>
+                              </Button>
+                            </Link>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="flex items-center gap-2 hover:bg-secondary"
+                              onClick={() => handleDuplicateHousehold(household)}
+                            >
+                              <Copy className="h-4 w-4" />
+                              <span>Duplicate</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="flex items-center gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                              onClick={() => handleDeleteHousehold(household)}
+                            >
+                              <Trash className="h-4 w-4" />
+                              <span>Delete</span>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Edit Household Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Edit Household</DialogTitle>
+          </DialogHeader>
+          {householdDetailsQuery.isLoading ? (
+            <div className="flex justify-center p-4">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : householdDetailsQuery.data ? (
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              // TODO: Add form handling
+              handleUpdate(householdDetailsQuery.data);
+            }}>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Household Name</Label>
+                  <Input
+                    id="name"
+                    defaultValue={householdDetailsQuery.data.name}
+                    placeholder="Enter household name"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="address">Address</Label>
+                  <Input
+                    id="address"
+                    defaultValue={householdDetailsQuery.data.address}
+                    placeholder="Enter address"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    defaultValue={householdDetailsQuery.data.phone}
+                    placeholder="Enter phone number"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    defaultValue={householdDetailsQuery.data.email}
+                    placeholder="Enter email address"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditModalOpen(false)}
+                  type="button"
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateHouseholdMutation.isPending}>
+                  {updateHouseholdMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Save Changes
+                </Button>
+              </DialogFooter>
+            </form>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function SettingsView(props: { activeSettingsView: SettingsView }) {
+  const { activeSettingsView } = props;
+  return (
+    <>
+      {activeSettingsView === 'branding' && (
+        <BrandingPreviewProvider>
+          <OrganizationSettingsForm />
+        </BrandingPreviewProvider>
+      )}
+      {activeSettingsView === 'payments' && <PaymentsSettingsView />}
+      {activeSettingsView === 'general' && (
+        <div>
+          General Settings Content Here
+        </div>
+      )}
     </>
   );
 }
