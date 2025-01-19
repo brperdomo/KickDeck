@@ -277,3 +277,32 @@ export type InsertTeam = typeof teams.$inferInsert;
 export type SelectTeam = typeof teams.$inferSelect;
 export type InsertGame = typeof games.$inferInsert;
 export type SelectGame = typeof games.$inferSelect;
+
+export const eventScoringRules = pgTable("event_scoring_rules", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull().references(() => events.id),
+  title: text("title").notNull(),
+  win: integer("win").notNull(),
+  loss: integer("loss").notNull(),
+  tie: integer("tie").notNull(),
+  goalCapped: integer("goal_capped").notNull(),
+  shutout: integer("shutout").notNull(),
+  redCard: integer("red_card").notNull(),
+  tieBreaker: text("tie_breaker").notNull(),
+  createdAt: text("created_at").notNull().default(new Date().toISOString()),
+});
+
+export const insertEventScoringRuleSchema = createInsertSchema(eventScoringRules, {
+  title: z.string().min(1, "Title is required"),
+  win: z.number().min(0, "Win points must be positive"),
+  loss: z.number().min(0, "Loss points must be positive"),
+  tie: z.number().min(0, "Tie points must be positive"),
+  goalCapped: z.number().min(0, "Goal cap must be positive"),
+  shutout: z.number().min(0, "Shutout points must be positive"),
+  redCard: z.number().min(-10, "Red card points must be greater than -10"),
+  tieBreaker: z.string().min(1, "Tie breaker is required"),
+});
+
+export const selectEventScoringRuleSchema = createSelectSchema(eventScoringRules);
+export type InsertEventScoringRule = typeof eventScoringRules.$inferInsert;
+export type SelectEventScoringRule = typeof eventScoringRules.$inferSelect;

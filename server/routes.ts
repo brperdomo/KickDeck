@@ -15,7 +15,8 @@ import {
   gameTimeSlots,
   tournamentGroups,
   teams,
-  games
+  games,
+  eventScoringRules // Added import for eventScoringRules
 } from "@db/schema";
 import { eq, sql, count, and, gte, lte } from "drizzle-orm";
 import fs from "fs/promises";
@@ -819,6 +820,63 @@ export function registerRoutes(app: Express): Server {
         const response = {
           ...event,
           ageGroups,
+          selectedComplexIds: complexAssignments.map(a => a.complexId),
+          complexFieldSizes: Object.fromEntries(
+            fieldSizes.map(f => [f.fieldId, f.fieldSize])
+          )
+        };
+
+        res.json(response);
+      } catch (error) {
+        console.error('Error fetching event details:', error);
+        res.status(500).send("Failed to fetch event details");
+      }
+    });
+
+    // Add this new endpoint after the existing event endpoints
+    app.get('/api/admin/events/:id', isAdmin, async (req, res) => {
+      try {
+        const eventId = parseInt(req.params.id);
+
+        // Get event details
+        const [event] = await db
+          .select()
+          .from(events)
+          .where(eq(events.id, eventId));
+
+        if (!event) {
+          return res.status(404).send("Event not found");
+        }
+
+        // Get age groups
+        const ageGroups = await db
+          .select()
+          .from(eventAgeGroups)
+          .where(eq(eventAgeGroups.eventId, eventId));
+
+        // Get scoring rules
+        const scoringRules = await db
+          .select()
+          .from(eventScoringRules)
+          .where(eq(eventScoringRules.eventId, eventId));
+
+        // Get complex assignments
+        const complexAssignments = await db
+          .select()
+          .from(eventComplexes)
+          .where(eq(eventComplexes.eventId, eventId));
+
+        // Get field size assignments
+        const fieldSizes = await db
+          .select()
+          .from(eventFieldSizes)
+          .where(eq(eventFieldSizes.eventId, eventId));
+
+        // Format response
+        const response = {
+          ...event,
+          ageGroups,
+          scoringRules,
           selectedComplexIds: complexAssignments.map(a => a.complexId),
           complexFieldSizes: Object.fromEntries(
             fieldSizes.map(f => [f.fieldId, f.fieldSize])
