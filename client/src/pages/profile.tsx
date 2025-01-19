@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser } from "@/hooks/use-user";
+import { Link } from "wouter";
+import { MessageSquare } from "lucide-react";
 
 export default function Profile() {
   const { user, logout } = useUser();
@@ -36,14 +38,25 @@ export default function Profile() {
               </div>
             )}
           </div>
-          
-          <Button 
-            variant="destructive" 
-            onClick={() => logout()}
-            className="mt-8"
-          >
-            Logout
-          </Button>
+
+          <div className="flex gap-4">
+            <Button 
+              variant="destructive" 
+              onClick={() => logout()}
+              className="mt-8"
+            >
+              Logout
+            </Button>
+            <Link href="/chat">
+              <Button 
+                variant="outline"
+                className="mt-8"
+              >
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Chat
+              </Button>
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>

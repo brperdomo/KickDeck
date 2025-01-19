@@ -45,6 +45,7 @@ import {
   Flag,
   MoreHorizontal,
   Building2,
+  MessageSquare,
 } from "lucide-react";
 import {
   Table,
@@ -1008,7 +1009,7 @@ function ComplexesView() {
 
   // Add field status toggle mutation
   const toggleFieldStatusMutation = useMutation({
-    mutationFn: async ({ fieldId, isOpen }: { fieldId: number; isOpen: boolean }) => {
+    mutationFn: async ({fieldId, isOpen }: { fieldId: number; isOpen: boolean }) => {
       const response = await fetch(`/api/admin/fields/${fieldId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -1921,8 +1922,8 @@ function EventsView() {
 function AdminDashboard() {
   const { user, logout } = useUser();
   const [, setLocation] = useLocation();
-  const [currentView, setCurrentView] = useState<View>('events');
-  const [currentSettingsView, setCurrentSettingsView] = useState<SettingsView>('general');
+  const [activeView, setActiveView] = useState<View>('events');
+  const [activeSettingsView, setActiveSettingsView] = useState<SettingsView>('general');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { currentColor, setColor, isLoading: isThemeLoading } = useTheme();
   const { toast } = useToast();
@@ -1934,28 +1935,28 @@ function AdminDashboard() {
 
   const { data: events, isLoading: eventsLoading, error: eventsError } = useQuery({
     queryKey: ["/api/admin/events"],
-    enabled: isAdminUser(user) && currentView === 'events',
+    enabled: isAdminUser(user) && activeView === 'events',
     staleTime: 30000,
     gcTime: 3600000,
   });
 
   const adminsQuery = useQuery<SelectUser[]>({
     queryKey: ["/api/admin/administrators"],
-    enabled: isAdminUser(user) && currentView === 'administrators',
+    enabled: isAdminUser(user) && activeView === 'administrators',
     staleTime: 30000,
     gcTime: 3600000,
   });
 
   const { data: households, isLoading: householdsLoading, error: householdsError } = useQuery<any[]>({
     queryKey: ["/api/admin/households"],
-    enabled: isAdminUser(user) && currentView === 'households',
+    enabled: isAdminUser(user) && activeView === 'households',
     staleTime: 30000,
     gcTime: 3600000,
   });
 
 
-  const renderContent = () => {
-    switch (currentView) {
+  function renderContent() {
+    switch (activeView) {
       case 'complexes':
         return <ComplexesView />;
       case 'households':
@@ -2001,7 +2002,7 @@ function AdminDashboard() {
                         </TableRow>
                       ) : householdsError ? (
                         <TableRow>
-                          <TableCell colSpan={6} className="h-24 textcenter text-muted-foreground">
+                          <TableCell colSpan={6} className="h-24 text-muted-foreground">
                             Failed to load households
                           </TableCell>
                         </TableRow>
@@ -2042,15 +2043,22 @@ function AdminDashboard() {
       case 'events':
         return <EventsView />;
       case 'settings':
-        if (currentSettingsView === 'branding') {
+        if (activeSettingsView === 'branding') {
           return (
             <BrandingPreviewProvider>
               <OrganizationSettingsForm />
             </BrandingPreviewProvider>
           );
         }
-        if (currentSettingsView === 'payments') {
+        if (activeSettingsView === 'payments') {
           return <PaymentsSettingsView />;
+        }
+        if (activeSettingsView === 'general') {
+          return (
+            <div>
+              General Settings Content Here
+            </div>
+          );
         }
         return null;
       case 'reports':
@@ -2076,7 +2084,7 @@ function AdminDashboard() {
       default:
         return null;
     }
-  };
+  }
 
   if (!isAdminUser(user)) {
     return null;
@@ -2096,64 +2104,78 @@ function AdminDashboard() {
           {/* Navigation */}
           <div className="space-y-2">
             <Button
-              variant={currentView === 'events' ? 'secondary' : 'ghost'}
+              variant={activeView === 'events' ? 'secondary' : 'ghost'}
               className="w-full justify-start"
-              onClick={() => setCurrentView('events')}
+              onClick={() => setActiveView('events')}
             >
               <Calendar className="mr-2 h-4 w-4" />
               Events
             </Button>
 
             <Button
-              variant={currentView === 'households' ? 'secondary' : 'ghost'}
+              variant={activeView === 'households' ? 'secondary' : 'ghost'}
               className="w-full justify-start"
-              onClick={() => setCurrentView('households')}
+              onClick={() => setActiveView('households')}
             >
               <Home className="mr-2 h-4 w-4" />
               Households
             </Button>
 
             <Button
-              variant={currentView === 'administrators' ? 'secondary' : 'ghost'}
+              variant={activeView === 'administrators' ? 'secondary' : 'ghost'}
               className="w-full justify-start"
-              onClick={() => setCurrentView('administrators')}
+              onClick={() => setActiveView('administrators')}
             >
               <Shield className="mr-2 h-4 w-4" />
               Administrators
             </Button>
 
             <Button
-              variant={currentView === 'reports' ? 'secondary' : 'ghost'}
+              variant={activeView === 'reports' ? 'secondary' : 'ghost'}
               className="w-full justify-start"
-              onClick={() => setCurrentView('reports')}
+              onClick={() => setActiveView('reports')}
             >
               <FileText className="mr-2 h-4 w-4" />
               Reports
             </Button>
+
             <Button
-              variant={currentView === 'complexes' ? 'secondary' : 'ghost'}
+              variant={activeView === 'complexes' ? 'secondary' : 'ghost'}
               className="w-full justify-start"
-              onClick={() => setCurrentView('complexes')}
+              onClick={() => setActiveView('complexes')}
             >
               <Building2 className="mr-2 h-4 w-4" />
               Field Complexes
             </Button>
             <Button
-                variant={currentView === 'scheduling' ? 'secondary' : 'ghost'}
+                variant={activeView === 'scheduling' ? 'secondary' : 'ghost'}
                 className="w-full justify-start"
-                onClick={() => setCurrentView('scheduling')}
+                onClick={() => setActiveView('scheduling')}
               >
                 <Calendar className="mr-2 h-4 w-4" />
                 Scheduling
               </Button>
             <Button
-              variant={currentView === 'teams' ? 'secondary' : 'ghost'}
+              variant={activeView === 'teams' ? 'secondary' : 'ghost'}
               className="w-full justify-start"
-              onClick={() => setCurrentView('teams')}
+              onClick={() => setActiveView('teams')}
             >
               <Users className="mr-2 h-4 w-4" />
               Teams
             </Button>
+
+            {/* Add Chat Button */}
+            <Link href="/chat">
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+              >
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Chat
+              </Button>
+            </Link>
+
+            {/* Settings Collapsible */}
             <Collapsible
               open={isSettingsOpen}
               onOpenChange={setIsSettingsOpen}
@@ -2161,7 +2183,7 @@ function AdminDashboard() {
             >
               <CollapsibleTrigger asChild>
                 <Button
-                  variant={currentView === 'settings' ? 'secondary' : 'ghost'}
+                  variant={activeView === 'settings' ? 'secondary' : 'ghost'}
                   className="w-full justify-between"
                 >
                   <span className="flex items-center">
@@ -2177,34 +2199,45 @@ function AdminDashboard() {
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-2 pl-4">
                 <Button
-                  variant={currentSettingsView === 'branding' ? 'secondary' : 'ghost'}
+                  variant={activeSettingsView === 'branding' ? 'secondary' : 'ghost'}
                   className="w-full justify-start"
                   onClick={() => {
-                    setCurrentView('settings');
-                    setCurrentSettingsView('branding');
+                    setActiveView('settings');
+                    setActiveSettingsView('branding');
                   }}
                 >
                   <Palette className="mr-2 h-4 w-4" />
                   Branding
                 </Button>
                 <Button
-                  variant={currentSettingsView === 'payments' ? 'secondary' : 'ghost'}
+                  variant={activeSettingsView === 'payments' ? 'secondary' : 'ghost'}
                   className="w-full justify-start"
                   onClick={() => {
-                    setCurrentView('settings');
-                    setCurrentSettingsView('payments');
+                    setActiveView('settings');
+                    setActiveSettingsView('payments');
                   }}
                 >
                   <CreditCard className="mr-2 h-4 w-4" />
                   Payments
                 </Button>
+                <Button
+                  variant={activeSettingsView === 'general' ? 'secondary' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => {
+                    setActiveView('settings');
+                    setActiveSettingsView('general');
+                  }}
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  General
+                </Button>
               </CollapsibleContent>
             </Collapsible>
 
             <Button
-              variant={currentView === 'account' ? 'secondary' : 'ghost'}
+              variant={activeView === 'account' ? 'secondary' : 'ghost'}
               className="w-full justify-start"
-              onClick={() => setCurrentView('account')}
+              onClick={() => setActiveView('account')}
             >
               <User className="mr-2 h-4 w-4" />
               My Account

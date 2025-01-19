@@ -11,6 +11,7 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import CreateEvent from "@/pages/create-event";
 import EditEvent from "@/pages/edit-event";
 import ForgotPassword from "@/pages/forgot-password";
+import Chat from "@/pages/chat";
 import { useUser } from "@/hooks/use-user";
 
 function Router() {
@@ -48,6 +49,7 @@ function Router() {
       <Route path="/admin/events/:id">
         {user.isAdmin ? <EditEvent /> : <NotFound />}
       </Route>
+      <Route path="/chat" component={Chat} />
       <Route path="/">
         {user.isAdmin ? <AdminDashboard /> : <Profile />}
       </Route>
