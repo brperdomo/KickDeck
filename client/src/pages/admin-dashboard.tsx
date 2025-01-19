@@ -82,6 +82,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { ScheduleVisualization } from "@/components/ScheduleVisualization";
 import { format } from 'date-fns';
+import { AdminModal } from "@/components/admin/AdminModal";
 
 interface Complex {
   id: number;
@@ -1003,7 +1004,7 @@ function ComplexesView() {
     },
     onSuccess: () => {
       // Refetch      // Refetch fields after deletion
-      fieldsQuery.refetch();
+      fieldsQuery.refetch;
     }
   });
 
@@ -2000,51 +2001,7 @@ function AdminDashboard() {
           </>
         );
       case 'administrators':
-        return (
-          <>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Administrators</h2>
-              <Button>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Add Administrator
-              </Button>
-            </div>
-            <Card>
-              <CardContent className="p-6">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {adminsQuery?.data?.map((admin) => (
-                      <TableRow key={admin.id}>
-                        <TableCell>
-                          {admin.firstName} {admin.lastName}
-                        </TableCell>
-                        <TableCell>{admin.email}</TableCell>
-                        <TableCell>{admin.phone || '-'}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">Active</Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </>
-        );
+        return <AdministratorsView />;
       case 'events':
         return <EventsView />;
       case 'settings':
@@ -2469,6 +2426,79 @@ function TeamsView() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </>
+  );
+}
+
+function AdministratorsView() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { data: administrators, isLoading } = useQuery({
+    queryKey: ['/api/admin/administrators'],
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Administrators</h2>
+        <Button onClick={() => setIsModalOpen(true)}>
+          <UserPlus className="h-4 w-4 mr-2" />
+          Add Administrator
+        </Button>
+      </div>
+
+      <Card>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Added</TableHead>
+              <TableHead className="w-[100px]">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {administrators?.map((admin) => (
+              <TableRow key={admin.id}>
+                <TableCell>{admin.firstName} {admin.lastName}</TableCell>
+                <TableCell>{admin.email}</TableCell>
+                <TableCell>{format(new Date(admin.createdAt), 'MMM d, yyyy')}</TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive">
+                        <Trash className="h-4 w-4 mr-2" />
+                        Remove Access
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
+
+      <AdminModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </>
   );
 }
