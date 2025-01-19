@@ -18,7 +18,7 @@ import {
   games,
   eventScoringRules
 } from "@db/schema";
-import { eq, sql, count, and, gte, lte } from "drizzle-orm";
+import { eq, sql, count, and, gte, lte, or } from "drizzle-orm";
 import fs from "fs/promises";
 import path from "path";
 import { crypto } from "./crypto";
@@ -1254,6 +1254,72 @@ export function registerRoutes(app: Express): Server {
     });
 
     // Teams management endpoints
+    app.patch('/api/admin/teams/:id', isAdmin, async (req, res) => {
+      try {
+        const teamId = parseInt(req.params.id);
+        const { name, coach, managerName, managerPhone, managerEmail } = req.body;
+
+        const [updatedTeam] = await db
+          .update(teams)
+          .set({
+            name,
+            coach,
+            managerName,
+            managerPhone,
+            managerEmail,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(teams.id, teamId))
+          .returning();
+
+        if (!updatedTeam) {
+          return res.status(404).send("Team not found");
+        }
+
+        res.json(updatedTeam);
+      } catch (error) {
+        console.error('Error updating team:', error);
+        res.status(500).send("Failed to update team");
+      }
+    });
+
+    app.delete('/api/admin/teams/:id', isAdmin, async (req, res) => {
+      try {
+        const teamId = parseInt(req.params.id);
+
+        // Check if team has any associated games
+        const [gameCount] = await db
+          .select({
+            count: sql<number>`count(*)`.mapWith(Number)
+          })
+          .from(games)
+          .where(
+            or(
+              eq(games.homeTeamId, teamId),
+              eq(games.awayTeamId, teamId)
+            )
+          );
+
+        if (gameCount.count > 0) {
+          return res.status(400).send("Cannot delete team with associated games");
+        }
+
+        const [deletedTeam] = await db
+          .delete(teams)
+          .where(eq(teams.id, teamId))
+          .returning();
+
+        if (!deletedTeam) {
+          return res.status(404).send("Team not found");
+        }
+
+        res.json(deletedTeam);
+      } catch (error) {
+        console.error('Error deleting team:', error);
+        res.status(500).send("Failed to delete team");
+      }
+    });
+
     return httpServer;
 
   } catch (error) {
