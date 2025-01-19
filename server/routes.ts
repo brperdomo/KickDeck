@@ -883,7 +883,7 @@ export function registerRoutes(app: Express): Server {
         const complexData = await db
           .select({
             complex: complexes,
-            fields: sql<any>`json_agg(
+            fields: sql<any>`COALESCE(json_agg(
               CASE WHEN ${fields.id} IS NOT NULL THEN
                 json_build_object(
                   'id', ${fields.id},
@@ -895,7 +895,7 @@ export function registerRoutes(app: Express): Server {
                 )
               ELSE NULL
               END
-            )`.mapWith((f) => f === null ? [] : f),
+            ) FILTER (WHERE ${fields.id} IS NOT NULL), '[]')`.mapWith((f) => Array.isArray(f) ? f : []),
             openFields: sql<number>`count(case when ${fields.isOpen} = true then 1 end)`.mapWith(Number),
             closedFields: sql<number>`count(case when ${fields.isOpen} = false then 1 end)`.mapWith(Number),
           })
@@ -943,14 +943,14 @@ export function registerRoutes(app: Express): Server {
           ageGroups: ageGroups.map(({ ageGroup, teamCount }) => ({
             ...ageGroup,
             teamCount,
-            assignedFields: [], // This will be populated by the frontend if needed
-            assignedTeams: []   // This will be populated by the frontend if needed
+            assignedFields: [], // Will be populated by frontend
+            assignedTeams: []   // Will be populated by frontend
           })),
           complexes: complexData.map(({ complex, fields, openFields, closedFields }) => ({
             ...complex,
             fields: fields || [],
-            openFields,
-            closedFields
+            openFields: openFields || 0,
+            closedFields: closedFields || 0
           })),
           selectedComplexIds: complexAssignments.map(a => a.complexId),
           complexFieldSizes: Object.fromEntries(
@@ -960,9 +960,9 @@ export function registerRoutes(app: Express): Server {
           administrators,
           // Additional metadata needed by create view
           availableAgeGroups: ageGroups.map(({ ageGroup }) => ageGroup.ageGroup),
-          availableFieldSizes: [...new Set(fieldSizes.map(f => f.fieldSize))],
+          availableFieldSizes: [...new Set(fieldSizes.map(f => f.fieldSize))].filter(Boolean),
           timeZones: event.timezone ? [event.timezone] : [], // Include current timezone
-          validationErrors: {} // Empty object for frontend validation
+          validationErrors: {} // Empty object for frontendvalidation
         };
 
         res.json(response);
