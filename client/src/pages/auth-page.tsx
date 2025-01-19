@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { type InsertUser } from "@db/schema";
 import { useUser } from "@/hooks/use-user";
 import { useToast } from "@/hooks/use-toast";
+import { SoccerFieldBackground } from "@/components/ui/SoccerFieldBackground";
 import {
   Form,
   FormControl,
@@ -207,9 +208,10 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-700 to-green-900 p-4">
-      <div className="container max-w-lg mx-auto">
-        <Card className="w-full bg-white/95 shadow-xl">
+    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
+      <SoccerFieldBackground className="opacity-50" />
+      <div className="container max-w-lg mx-auto relative z-10">
+        <Card className="w-full bg-white/95 backdrop-blur-sm shadow-xl">
           <CardHeader>
             <div className="flex flex-col items-center text-center">
               <Trophy className="h-16 w-16 text-green-600 mb-4" />
