@@ -297,7 +297,6 @@ export function registerRoutes(app: Express): Server {
     });
 
 
-
     // Organization settings endpoints
     app.get('/api/admin/organization-settings', isAdmin, async (req, res) => {
       try {
@@ -1086,40 +1085,50 @@ export function registerRoutes(app: Express): Server {
     });
 
     // Teams management endpoints
-    app.get('/api/admin/teams', isAdmin, async (req, res) => {
+    app.get('/api/admin/events/:eventId/age-groups', isAdmin, async (req, res) => {
       try {
-        const { eventId, ageGroup } = req.query;
-
-        if (!eventId || !ageGroup) {
-          return res.status(400).send("Event ID and age group are required");
-        }
-
-        const [ageGroupRecord] = await db
+        const eventId = parseInt(req.params.eventId);
+        const ageGroups = await db
           .select()
           .from(eventAgeGroups)
-          .where(
-            and(
-              eq(eventAgeGroups.eventId, Number(eventId)),
-              eq(eventAgeGroups.ageGroup, ageGroup as string)
-            )
-          );
+          .where(eq(eventAgeGroups.eventId, eventId))
+          .orderBy(eventAgeGroups.ageGroup);
 
-        if (!ageGroupRecord) {
-          return res.status(404).send("Age group not found");
+        res.json(ageGroups);
+      } catch (error) {
+        console.error('Error fetching age groups:', error);
+        res.status(500).send("Failed to fetch age groups");
+      }
+    });
+
+    app.get('/api/admin/teams', isAdmin, async (req, res) => {
+      try {
+        const eventId = parseInt(req.query.eventId as string);
+        const ageGroupId = req.query.ageGroupId ? parseInt(req.query.ageGroupId as string) : null;
+
+        let query = db
+          .select({
+            team: teams,
+            ageGroup: eventAgeGroups,
+          })
+          .from(teams)
+          .leftJoin(eventAgeGroups, eq(teams.ageGroupId, eventAgeGroups.id))
+          .where(eq(teams.eventId, eventId));
+
+        // Add age group filter if specified
+        if (ageGroupId) {
+          query = query.where(eq(teams.ageGroupId, ageGroupId));
         }
 
-        const teamsList = await db
-          .select()
-          .from(teams)
-          .where(
-            and(
-              eq(teams.eventId, Number(eventId)),
-              eq(teams.ageGroupId, ageGroupRecord.id)
-            )
-          )
-          .orderBy(teams.name);
+        const results = await query.orderBy(teams.name);
 
-        res.json(teamsList);
+        // Format the response
+        const formattedTeams = results.map(({ team, ageGroup }) => ({
+          ...team,
+          ageGroup: ageGroup?.ageGroup || 'Unknown',
+        }));
+
+        res.json(formattedTeams);
       } catch (error) {
         console.error('Error fetching teams:', error);
         res.status(500).send("Failed to fetch teams");
