@@ -872,7 +872,7 @@ export function registerRoutes(app: Express): Server {
         const ageGroups = await db
           .select({
             ageGroup: eventAgeGroups,
-            teamCount: sql<number>`count(${teams.id})`.mapWith(Number)
+            teamCount: sql<number>`count(distinct ${teams.id})`.mapWith(Number),
           })
           .from(eventAgeGroups)
           .leftJoin(teams, eq(teams.ageGroupId, eventAgeGroups.id))
@@ -896,24 +896,13 @@ export function registerRoutes(app: Express): Server {
               ELSE NULL
               END
             )`.mapWith((f) => f === null ? [] : f),
+            openFields: sql<number>`count(case when ${fields.isOpen} = true then 1 end)`.mapWith(Number),
+            closedFields: sql<number>`count(case when ${fields.isOpen} = false then 1 end)`.mapWith(Number),
           })
           .from(complexes)
           .leftJoin(fields, eq(complexes.id, fields.complexId))
-          .groupBy(
-            complexes.id,
-            complexes.name,
-            complexes.address,
-            complexes.city,
-            complexes.state,
-            complexes.country,
-            complexes.openTime,
-            complexes.closeTime,
-            complexes.isOpen,
-            complexes.rules,
-            complexes.directions,
-            complexes.createdAt,
-            complexes.updatedAt
-          );
+          .groupBy(complexes.id)
+          .orderBy(complexes.name);
 
         // Get scoring rules
         const scoringRules = await db
@@ -954,9 +943,11 @@ export function registerRoutes(app: Express): Server {
             assignedFields: [], // This will be populated by the frontend if needed
             assignedTeams: []   // This will be populated by the frontend if needed
           })),
-          complexes: complexData.map(({ complex, fields }) => ({
+          complexes: complexData.map(({ complex, fields, openFields, closedFields }) => ({
             ...complex,
-            fields: fields || []
+            fields: fields || [],
+            openFields,
+            closedFields
           })),
           selectedComplexIds: complexAssignments.map(a => a.complexId),
           complexFieldSizes: Object.fromEntries(
