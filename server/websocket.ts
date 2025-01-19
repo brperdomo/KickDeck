@@ -17,10 +17,20 @@ interface ChatMessage {
 }
 
 export function setupWebSocketServer(server: Server) {
-  const wss = new WebSocketServer({ server });
+  const wss = new WebSocketServer({ 
+    server,
+    verifyClient: ({ req }, done) => {
+      // Skip verification for Vite HMR
+      if (req.headers['sec-websocket-protocol'] === 'vite-hmr') {
+        done(false); // Reject this connection, let Vite handle it
+        return;
+      }
+      done(true); // Accept chat connections
+    }
+  });
 
   wss.on('connection', (ws: ChatClient) => {
-    console.log('New WebSocket connection established');
+    console.log('New chat WebSocket connection established');
 
     ws.on('message', async (data: string) => {
       try {
@@ -42,28 +52,44 @@ export function setupWebSocketServer(server: Server) {
           case 'message':
             if (!ws.chatRoomId || !ws.userId || !message.content) return;
 
-            // Store message in database
-            const newMessage = await db.insert(messages).values({
-              chatRoomId: ws.chatRoomId,
-              userId: ws.userId,
-              content: message.content,
-              type: 'text',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            }).returning();
+            try {
+              // Store message in database
+              const [newMessage] = await db.insert(messages).values({
+                content: message.content,
+                userId: ws.userId,
+                type: 'text',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              }).returning();
 
-            // Broadcast message to all clients in the room
-            broadcastToRoom(wss, ws.chatRoomId, {
-              type: 'message',
-              content: message.content,
-              userId: ws.userId,
-              chatRoomId: ws.chatRoomId
-            });
+              // Broadcast message to all clients in the room
+              broadcastToRoom(wss, ws.chatRoomId, {
+                type: 'message',
+                content: message.content,
+                userId: ws.userId,
+                chatRoomId: ws.chatRoomId,
+                messageId: newMessage.id
+              });
+            } catch (error) {
+              console.error('Error storing message:', error);
+              ws.send(JSON.stringify({
+                type: 'error',
+                content: 'Failed to save message'
+              }));
+            }
             break;
         }
       } catch (error) {
         console.error('Error processing WebSocket message:', error);
+        ws.send(JSON.stringify({
+          type: 'error',
+          content: 'Failed to process message'
+        }));
       }
+    });
+
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
     });
 
     ws.on('close', () => {
