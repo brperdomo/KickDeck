@@ -116,7 +116,7 @@ export default function AuthPage() {
       const emailValidation = z.string().email().safeParse(email);
       if (emailValidation.success) {
         setLastCheckedEmail(email);
-        await emailCheckMutation.mutateAsync(email);
+        emailCheckMutation.mutate(email);
       }
     } catch (error) {
       console.error("Email validation error:", error);
@@ -277,10 +277,7 @@ export default function AuthPage() {
                                   field.onChange(e);
                                   const value = e.target.value;
                                   if (value) {
-                                    const timeoutId = setTimeout(() => {
-                                      handleEmailValidation(value);
-                                    }, 500);
-                                    return () => clearTimeout(timeoutId);
+                                    setTimeout(() => handleEmailValidation(value), 500);
                                   }
                                 }}
                               />
