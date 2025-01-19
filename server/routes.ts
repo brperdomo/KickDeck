@@ -901,7 +901,10 @@ export function registerRoutes(app: Express): Server {
           })
           .from(complexes)
           .leftJoin(fields, eq(complexes.id, fields.complexId))
-          .groupBy(complexes.id)
+          .groupBy(complexes.id, complexes.name, complexes.address, complexes.city,
+            complexes.state, complexes.country, complexes.openTime, complexes.closeTime,
+            complexes.isOpen, complexes.rules, complexes.directions,
+            complexes.createdAt, complexes.updatedAt)
           .orderBy(complexes.name);
 
         // Get scoring rules
@@ -934,7 +937,7 @@ export function registerRoutes(app: Express): Server {
           .from(users)
           .where(eq(users.isAdmin, true));
 
-        // Format response to match create event view structure
+        // Format response to match create event view structure exactly
         const response = {
           ...event,
           ageGroups: ageGroups.map(({ ageGroup, teamCount }) => ({
