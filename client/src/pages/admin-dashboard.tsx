@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import {
   Collapsible,
   CollapsibleContent,
@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useUser } from "@/hooks/use-user";
-//import { useLocation } from "wouter";
 import { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTheme } from "@/hooks/use-theme";
@@ -1009,18 +1008,34 @@ function ComplexesView() {
 
   // Add field status toggle mutation
   const toggleFieldStatusMutation = useMutation({
-    mutationFn: async ({ fieldId, isOpen }: { fieldId: number, isOpen: boolean }) => {
-      const response= await fetch(`/api/admin/fields/${fieldId}/status`, {
+    mutationFn: async ({ fieldId, isOpen }: { fieldId: number; isOpen: boolean }) => {
+      const response = await fetch(`/api/admin/fields/${fieldId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isOpen })
       });
-      if (!response.ok) throw new Error('Failed to update field status');
+
+      if (!response.ok) {
+        throw new Error('Failed to toggle field status');
+      }
+
       return response.json();
     },
     onSuccess: () => {
-      // Refetch fields after status update      fieldsQuery.refetch();
-    }
+      complexesQuery.refetch();
+      fieldsQuery.refetch();
+      toast({
+        title: "Success",
+        description: "Field status updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update field status",
+        variant: "destructive",
+      });
+    },
   });
 
   // Add delete complex mutation
@@ -1672,6 +1687,8 @@ function EventsView() {
   const { toast } = useToast();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<number | null>(null);
+  const [handleDuplicateEvent, setHandleDuplicateEvent] = useState(() => () => { });
+  const [handleDeleteEvent, setHandleDeleteEvent] = useState(() => () => { });
 
   // Query for events list
   const eventsQuery = useQuery({
@@ -1773,7 +1790,7 @@ function EventsView() {
                       <TableRow key={event.id}>
                         <TableCell>{event.name}</TableCell>
                         <TableCell>
-                          {format(new Date(event.startDate), 'MMM d, yyyy')} - 
+                          {format(new Date(event.startDate), 'MMM d, yyyy')} -
                           {format(new Date(event.endDate), 'MMM d, yyyy')}
                         </TableCell>
                         <TableCell>
@@ -1782,13 +1799,35 @@ function EventsView() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
+                          {/* Event Actions */}
+                          <div className="flex items-center justify-end space-x-2">
+                            <Link href={`/admin/events/${event.id}`}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="flex items-center gap-2 hover:bg-secondary"
+                              >
+                                <Edit className="h-4 w-4" />
+                                <span>Edit Details</span>
+                              </Button>
+                            </Link>
                             <Button
                               variant="ghost"
-                              size="icon"
-                              onClick={() => handleEditClick(event.id)}
+                              size="sm"
+                              className="flex items-center gap-2 hover:bg-secondary"
+                              onClick={() => handleDuplicateEvent(event)}
                             >
-                              <Edit className="h-4 w-4" />
+                              <Copy className="h-4 w-4" />
+                              <span>Duplicate</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="flex items-center gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                              onClick={() => handleDeleteEvent(event)}
+                            >
+                              <Trash className="h-4 w-4" />
+                              <span>Delete</span>
                             </Button>
                           </div>
                         </TableCell>
@@ -1962,7 +2001,7 @@ function AdminDashboard() {
                         </TableRow>
                       ) : householdsError ? (
                         <TableRow>
-                          <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                          <TableCell colSpan={6} className="h-24 textcenter text-muted-foreground">
                             Failed to load households
                           </TableCell>
                         </TableRow>
@@ -2463,7 +2502,7 @@ function AdministratorsView() {
           </Button>
         </Card>
 
-        <AdminModal 
+        <AdminModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />
@@ -2533,7 +2572,7 @@ function AdministratorsView() {
         </div>
       </Card>
 
-      <AdminModal 
+      <AdminModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
