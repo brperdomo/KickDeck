@@ -864,11 +864,34 @@ export function registerRoutes(app: Express): Server {
           return res.status(404).send("Event not found");
         }
 
-        // Get age groups
+        // Get age groups with their teams
         const ageGroups = await db
-          .select()
+          .select({
+            ageGroup: eventAgeGroups,
+            teamCount: sql<number>`count(${teams.id})`.mapWith(Number)
+          })
           .from(eventAgeGroups)
-          .where(eq(eventAgeGroups.eventId, eventId));
+          .leftJoin(teams, eq(teams.ageGroupId, eventAgeGroups.id))
+          .where(eq(eventAgeGroups.eventId, eventId))
+          .groupBy(eventAgeGroups.id);
+
+        // Get all complexes with their fields
+        const complexData = await db
+          .select({
+            complex: complexes,
+            fields: sql<Field[]>`json_agg(
+              json_build_object(
+                'id', ${fields.id},
+                'name', ${fields.name},
+                'hasLights', ${fields.hasLights},
+                'hasParking', ${fields.hasParking},
+                'isOpen', ${fields.isOpen}
+              )
+            )`.mapWith((f) => f === null ? [] : f),
+          })
+          .from(complexes)
+          .leftJoin(fields, eq(complexes.id, fields.complexId))
+          .groupBy(complexes.id);
 
         // Get complex assignments
         const complexAssignments = await db
@@ -882,14 +905,34 @@ export function registerRoutes(app: Express): Server {
           .from(eventFieldSizes)
           .where(eq(eventFieldSizes.eventId, eventId));
 
+        // Get administrators (users with isAdmin=true)
+        const administrators = await db
+          .select({
+            id: users.id,
+            username: users.username,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email
+          })
+          .from(users)
+          .where(eq(users.isAdmin, true));
+
         // Format response
         const response = {
           ...event,
-          ageGroups,
+          ageGroups: ageGroups.map(({ ageGroup, teamCount }) => ({
+            ...ageGroup,
+            teamCount
+          })),
+          complexes: complexData.map(({ complex, fields }) => ({
+            ...complex,
+            fields: fields || []
+          })),
           selectedComplexIds: complexAssignments.map(a => a.complexId),
           complexFieldSizes: Object.fromEntries(
             fieldSizes.map(f => [f.fieldId, f.fieldSize])
-          )
+          ),
+          administrators
         };
 
         res.json(response);
