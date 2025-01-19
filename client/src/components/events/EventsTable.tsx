@@ -102,8 +102,8 @@ export function EventsTable() {
             <TableRow>
               <TableHead>Event Name</TableHead>
               <TableHead>Date Range</TableHead>
-              <TableHead className="text-center">Applications</TableHead>
-              <TableHead className="text-center">Teams</TableHead>
+              <TableHead className="text-center">Applications Received</TableHead>
+              <TableHead className="text-center">Teams Accepted</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
