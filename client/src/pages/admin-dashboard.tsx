@@ -1002,7 +1002,7 @@ function ComplexesView() {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete field');
-      return response.json();
+      returnjson();
     },
     onSuccess: () => {
       // Refetch      fieldsQuery.refetch;
@@ -1892,11 +1892,17 @@ function AdminDashboard() {
         return <ReportsView />;
       case 'settings':
         return <SettingsView activeSettingsView={activeSettingsView} />;
+      case 'complexes':
+        return <ComplexesView />;
+      case 'scheduling':
+        return <SchedulingView />;
+      case 'teams':
+        return <TeamsView />;
       case 'account':
         return (
           <Suspense
             fallback={
-              <div className="flex items-center justify-center min-h-[60vh]">
+              <div className="flex items-center justify-center min-h-[200px]">
                 <Loader2 className="h-8 w-8 animate-spin" />
               </div>
             }
@@ -1904,12 +1910,6 @@ function AdminDashboard() {
             <MyAccount />
           </Suspense>
         );
-      case 'complexes':
-        return <ComplexesView />;
-      case 'scheduling':
-        return <SchedulingView />;
-      case 'teams':
-        return <TeamsView />;
       default:
         return null;
     }
@@ -1981,7 +1981,7 @@ function AdminDashboard() {
               className="w-full justify-start"
               onClick={() => setActiveView('scheduling')}
             >
-              <Calendar className="mr-2 h-4 w-4" />
+              <Calendar className="mr2 h-4 w-4" />
               Scheduling
             </Button>
             <Button
