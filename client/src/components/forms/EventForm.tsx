@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Plus, Minus, Edit, Trash, Eye } from "lucide-react";
+import { ArrowLeft, Plus, Minus, Edit, Trash, Eye, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -187,6 +187,7 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
   const [editingScoringRule, setEditingScoringRule] = useState<ScoringRule | null>(null);
   const [editingSetting, setEditingSetting] = useState<EventSetting | null>(null);
   const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
 
   // Fetch available complexes
   const complexesQuery = useQuery<Complex[]>({
@@ -350,6 +351,52 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
     setScoringRules(scoringRules.filter(rule => rule.id !== id));
   };
 
+  const handleSaveChanges = async () => {
+    setIsSaving(true);
+    try {
+      const formData = form.getValues();
+      const combinedData: EventData = {
+        ...formData,
+        ageGroups,
+        scoringRules,
+        settings,
+        complexFieldSizes,
+        selectedComplexIds,
+        administrators: initialData?.administrators || [],
+      };
+      await onSubmit(combinedData);
+      toast({
+        title: "Success",
+        description: "Event updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update event",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const SaveButton = () => (
+    <div className="flex justify-end mt-6 pt-4 border-t">
+      <Button
+        onClick={handleSaveChanges}
+        disabled={isSaving}
+      >
+        {isSaving ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Saving...
+          </>
+        ) : (
+          'Save Changes'
+        )}
+      </Button>
+    </div>
+  );
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -574,6 +621,7 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
                       </Button>
                     </div>
                   </div>
+                  {isEdit && <SaveButton />}
                 </form>
               </Form>
             </TabsContent>
@@ -625,6 +673,7 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
                     </Card>
                   ))}
                 </div>
+                {isEdit && <SaveButton />}
               </div>
 
               {/* Age Group Dialog */}
@@ -822,6 +871,7 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
                     </Card>
                   ))}
                 </div>
+                {isEdit && <SaveButton />}
               </div>
 
               {/* Scoring Rule Dialog */}
@@ -1014,6 +1064,7 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
                     ))}
                   </div>
                 )}
+                {isEdit && <SaveButton />}
               </div>
             </TabsContent>
 
@@ -1067,6 +1118,7 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
                     </Card>
                   ))}
                 </div>
+                {isEdit && <SaveButton />}
               </div>
 
               <Dialog open={isSettingDialogOpen} onOpenChange={setIsSettingDialogOpen}>
@@ -1151,6 +1203,7 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
                     </Card>
                   ))}
                 </div>
+                {isEdit && <SaveButton />}
               </div>
 
               {/* Administrator Modal */}
