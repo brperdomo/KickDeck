@@ -79,21 +79,25 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
+    <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6 md:p-8 overflow-hidden">
       <SoccerFieldBackground className="opacity-50" />
-      <div className="container max-w-lg mx-auto relative z-10">
-        <Card className="w-full bg-white/95 backdrop-blur-sm shadow-xl">
-          <CardHeader>
-            <div className="flex flex-col items-center text-center">
-              <Trophy className="h-16 w-16 text-green-600 mb-4" />
-              <CardTitle className="text-3xl font-bold">Sign In to MatchPro</CardTitle>
+      <div className="w-full max-w-[min(400px,100%-2rem)] mx-auto relative z-10">
+        <Card className="w-full bg-white/95 backdrop-blur-sm shadow-xl border-0">
+          <CardHeader className="space-y-3 pb-6">
+            <div className="flex justify-center">
+              <div className="rounded-full bg-green-50 p-3">
+                <Trophy className="h-8 w-8 sm:h-10 sm:w-10 text-green-600" />
+              </div>
             </div>
+            <CardTitle className="text-2xl sm:text-3xl font-bold text-center">
+              Sign In to MatchPro
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Form {...loginForm}>
               <form 
                 onSubmit={loginForm.handleSubmit(onSubmit)} 
-                className="space-y-4"
+                className="space-y-5"
                 id="login-form"
                 name="login"
                 autoComplete="on"
@@ -103,11 +107,12 @@ export default function AuthPage() {
                   name="loginEmail"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel className="text-base">Email</FormLabel>
                       <FormControl>
                         <Input
                           type="email"
                           autoComplete="username email"
+                          className="h-11 text-base px-4"
                           {...field}
                         />
                       </FormControl>
@@ -120,11 +125,12 @@ export default function AuthPage() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel className="text-base">Password</FormLabel>
                       <FormControl>
                         <Input
                           type="password"
                           autoComplete="current-password"
+                          className="h-11 text-base px-4"
                           {...field}
                         />
                       </FormControl>
@@ -132,14 +138,17 @@ export default function AuthPage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
+                <Button 
+                  type="submit" 
+                  className="w-full h-11 text-base bg-green-600 hover:bg-green-700 transition-colors"
+                >
                   Login
                 </Button>
-                <div className="text-center mt-4">
-                  <p className="text-sm text-gray-600">
+                <div className="pt-2 text-center">
+                  <p className="text-sm sm:text-base text-gray-600">
                     New to MatchPro?{" "}
                     <Link href="/register">
-                      <a className="text-green-600 hover:text-green-700 font-semibold">
+                      <a className="text-green-600 hover:text-green-700 font-semibold transition-colors">
                         Register Here
                       </a>
                     </Link>
