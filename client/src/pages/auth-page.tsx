@@ -125,7 +125,7 @@ export default function AuthPage() {
       } else {
         const loginData = data as LoginFormData;
         const result = await login({
-          username: loginData.email, // Use email as username
+          username: loginData.email,
           password: loginData.password,
           email: loginData.email,
           firstName: "",
@@ -195,9 +195,10 @@ export default function AuthPage() {
                           <FormLabel>Email *</FormLabel>
                           <FormControl>
                             <Input 
-                              type="email" 
+                              type="email"
                               placeholder="Enter your email"
                               {...field}
+                              value={field.value || ""}
                             />
                           </FormControl>
                           <FormMessage />
@@ -216,6 +217,7 @@ export default function AuthPage() {
                               type="password"
                               placeholder="Enter your password"
                               {...field}
+                              value={field.value || ""}
                             />
                           </FormControl>
                           <FormDescription>
@@ -237,6 +239,7 @@ export default function AuthPage() {
                               type="password"
                               placeholder="Confirm your password"
                               {...field}
+                              value={field.value || ""}
                             />
                           </FormControl>
                           <FormMessage />
@@ -316,6 +319,7 @@ export default function AuthPage() {
                               type="email"
                               placeholder="Enter your email"
                               {...field}
+                              value={field.value || ""}
                             />
                           </FormControl>
                           <FormMessage />
@@ -334,6 +338,7 @@ export default function AuthPage() {
                               type="password"
                               placeholder="Enter your password"
                               {...field}
+                              value={field.value || ""}
                             />
                           </FormControl>
                           <FormMessage />
