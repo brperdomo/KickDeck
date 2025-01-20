@@ -24,7 +24,7 @@ import { useMutation } from "@tanstack/react-query";
 
 // Registration schema
 const registerSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+  registrationEmail: z.string().email("Please enter a valid email address"),
   username: z.string().min(3, "Username must be at least 3 characters").max(50),
   password: z.string()
     .min(8, "Password must be at least 8 characters")
@@ -91,7 +91,7 @@ export default function AuthPage() {
   const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      email: "",
+      registrationEmail: "",
       username: "",
       password: "",
       confirmPassword: "",
@@ -104,10 +104,10 @@ export default function AuthPage() {
   async function onSubmit(data: LoginFormData | RegisterFormData) {
     try {
       if (isRegistering) {
-        const { confirmPassword, ...registerData } = data as RegisterFormData;
+        const { confirmPassword, registrationEmail, ...registerData } = data as RegisterFormData;
         const submitData: InsertUser = {
           username: registerData.username,
-          email: registerData.email,
+          email: registrationEmail,
           password: registerData.password,
           firstName: registerData.firstName,
           lastName: registerData.lastName,
@@ -189,11 +189,13 @@ export default function AuthPage() {
                   <form 
                     onSubmit={registerForm.handleSubmit(onSubmit)} 
                     className="space-y-4"
-                    autoComplete="off" // Prevent form from using login autofill
+                    id="register-form"
+                    name="register"
+                    autoComplete="off"
                   >
                     <FormField
                       control={registerForm.control}
-                      name="email"
+                      name="registrationEmail"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Email *</FormLabel>
