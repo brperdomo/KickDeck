@@ -287,7 +287,21 @@ export function registerRoutes(app: Express): Server {
       try {
         const complexesWithFields = await db
           .select({
-            complex: complexes,
+            complex: {
+              id: complexes.id,
+              name: complexes.name,
+              address: complexes.address,
+              city: complexes.city,
+              state: complexes.state,
+              country: complexes.country,
+              openTime: complexes.openTime,
+              closeTime: complexes.closeTime,
+              rules: complexes.rules,
+              directions: complexes.directions,
+              isOpen: complexes.isOpen,
+              createdAt: complexes.createdAt,
+              updatedAt: complexes.updatedAt,
+            },
             fields: sql<any>`json_agg(
               CASE WHEN ${fields.id} IS NOT NULL THEN
                 json_build_object(
@@ -300,7 +314,7 @@ export function registerRoutes(app: Express): Server {
                 )
               ELSE NULL
               END
-            )`.mapWith((f) => f === null ? [] : f),
+            )`.mapWith((f) => f === null ? [] : f.filter(Boolean)),
             openFields: sql<number>`count(case when ${fields.isOpen} = true then 1 end)`.mapWith(Number),
             closedFields: sql<number>`count(case when ${fields.isOpen} = false then 1 end)`.mapWith(Number),
           })
@@ -316,6 +330,9 @@ export function registerRoutes(app: Express): Server {
           openFields,
           closedFields
         }));
+
+        // Add debug logging
+        console.log('Complexes retrieved:', formattedComplexes.length);
 
         res.json(formattedComplexes);
       } catch (error) {
