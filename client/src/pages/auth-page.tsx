@@ -22,19 +22,12 @@ import { Trophy } from "lucide-react";
 import { z } from "zod";
 import { Link } from "wouter";
 import { useMutation } from "@tanstack/react-query";
-import { HelpButton } from "@/components/ui/help-button";
 
 // Shared password schema
 const passwordSchema = z.string()
   .min(8, "Password must be at least 8 characters")
   .regex(/[0-9]/, "Password must contain at least one number")
   .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character");
-
-// Login schema
-const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: passwordSchema,
-});
 
 // Registration schema
 const registerSchema = z.object({
@@ -52,6 +45,12 @@ const registerSchema = z.object({
       path: ["confirmPassword"],
     });
   }
+});
+
+// Login schema
+const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: passwordSchema,
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -76,9 +75,6 @@ export default function AuthPage() {
   // Email availability check mutation
   const emailCheckMutation = useMutation({
     mutationFn: checkEmailAvailability,
-    onError: (error) => {
-      console.error("Email check failed:", error);
-    },
   });
 
   const loginForm = useForm<LoginFormData>({
@@ -198,18 +194,13 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>Email *</FormLabel>
                           <FormControl>
-                            <Input
-                              type="email"
+                            <Input 
+                              type="email" 
                               placeholder="Enter your email"
                               {...field}
                             />
                           </FormControl>
                           <FormMessage />
-                          {emailCheckMutation.data?.available === false && (
-                            <p className="text-sm text-red-500 mt-1">
-                              This email is already registered
-                            </p>
-                          )}
                         </FormItem>
                       )}
                     />
