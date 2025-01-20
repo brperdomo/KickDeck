@@ -191,7 +191,7 @@ export default function AuthPage() {
                     className="space-y-4"
                     id="register-form"
                     name="register"
-                    autoComplete="off"
+                    autoComplete="new-password"
                   >
                     <FormField
                       control={registerForm.control}
@@ -202,7 +202,7 @@ export default function AuthPage() {
                           <FormControl>
                             <Input
                               type="email"
-                              autoComplete="off"
+                              autoComplete="new-email"
                               {...field}
                             />
                           </FormControl>
@@ -223,7 +223,7 @@ export default function AuthPage() {
                           <FormLabel>Username *</FormLabel>
                           <FormControl>
                             <Input
-                              autoComplete="off"
+                              autoComplete="new-username"
                               {...field}
                             />
                           </FormControl>
@@ -276,7 +276,7 @@ export default function AuthPage() {
                           <FormLabel>First Name *</FormLabel>
                           <FormControl>
                             <Input
-                              autoComplete="off"
+                              autoComplete="given-name"
                               {...field}
                             />
                           </FormControl>
@@ -292,7 +292,7 @@ export default function AuthPage() {
                           <FormLabel>Last Name *</FormLabel>
                           <FormControl>
                             <Input
-                              autoComplete="off"
+                              autoComplete="family-name"
                               {...field}
                             />
                           </FormControl>
@@ -309,7 +309,7 @@ export default function AuthPage() {
                           <FormControl>
                             <Input
                               type="tel"
-                              autoComplete="off"
+                              autoComplete="tel"
                               {...field}
                             />
                           </FormControl>
@@ -329,6 +329,7 @@ export default function AuthPage() {
                     className="space-y-4"
                     id="login-form"
                     name="login"
+                    autoComplete="on"
                   >
                     <FormField
                       control={loginForm.control}
@@ -339,7 +340,7 @@ export default function AuthPage() {
                           <FormControl>
                             <Input
                               type="email"
-                              autoComplete="username"
+                              autoComplete="username email"
                               {...field}
                             />
                           </FormControl>
