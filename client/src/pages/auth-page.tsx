@@ -74,6 +74,13 @@ export default function AuthPage() {
   const { login, register: registerUser } = useUser();
   const [isRegistering, setIsRegistering] = useState(false);
   const [passwordMatch, setPasswordMatch] = useState<boolean | null>(null);
+  const [inputFocus, setInputFocus] = useState<{
+    email: boolean;
+    username: boolean;
+  }>({
+    email: false,
+    username: false,
+  });
 
   // Email availability check mutation
   const emailCheckMutation = useMutation({
@@ -89,6 +96,7 @@ export default function AuthPage() {
       email: "",
       password: "",
     },
+    mode: "onChange", // Enable real-time validation
   });
 
   const registerForm = useForm<RegisterFormData>({
@@ -102,6 +110,7 @@ export default function AuthPage() {
       lastName: "",
       phone: "",
     },
+    mode: "onChange", // Enable real-time validation
   });
 
   async function onSubmit(data: LoginFormData | RegisterFormData) {
@@ -226,9 +235,23 @@ export default function AuthPage() {
                             <Input
                               type="email"
                               placeholder="Enter your email"
+                              className={`${
+                                inputFocus.email ? 'border-primary ring-2 ring-primary/20' : ''
+                              } ${
+                                registerForm.formState.errors.email ? 'border-red-500' : ''
+                              }`}
                               {...field}
+                              onFocus={() => setInputFocus(prev => ({ ...prev, email: true }))}
                               onBlur={(e) => {
                                 field.onBlur();
+                                setInputFocus(prev => ({ ...prev, email: false }));
+                                const email = e.target.value;
+                                if (email && email.includes('@')) {
+                                  emailCheckMutation.mutate(email);
+                                }
+                              }}
+                              onChange={(e) => {
+                                field.onChange(e);
                                 const email = e.target.value;
                                 if (email && email.includes('@')) {
                                   emailCheckMutation.mutate(email);
@@ -256,10 +279,25 @@ export default function AuthPage() {
                           <FormControl>
                             <Input
                               placeholder="Choose a username"
+                              className={`${
+                                inputFocus.username ? 'border-primary ring-2 ring-primary/20' : ''
+                              } ${
+                                registerForm.formState.errors.username ? 'border-red-500' : ''
+                              }`}
                               {...field}
+                              onFocus={() => setInputFocus(prev => ({ ...prev, username: true }))}
+                              onBlur={() => {
+                                field.onBlur();
+                                setInputFocus(prev => ({ ...prev, username: false }));
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
+                          {field.value && field.value.length < 3 && (
+                            <p className="text-sm text-amber-500 mt-1">
+                              Username must be at least 3 characters
+                            </p>
+                          )}
                         </FormItem>
                       )}
                     />
