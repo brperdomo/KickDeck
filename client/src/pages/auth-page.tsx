@@ -32,7 +32,7 @@ const passwordSchema = z.string()
 
 // Login schema
 const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+  loginEmail: z.string().email("Please enter a valid email address"),
   password: passwordSchema,
 });
 
@@ -93,7 +93,7 @@ export default function AuthPage() {
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      loginEmail: "",
       password: "",
     },
     mode: "onChange", // Enable real-time validation
@@ -141,9 +141,9 @@ export default function AuthPage() {
       } else {
         const loginData = data as LoginFormData;
         const result = await login({
-          username: loginData.email,
+          username: loginData.loginEmail,
           password: loginData.password,
-          email: loginData.email,
+          email: loginData.loginEmail,
           firstName: "",
           lastName: "",
           phone: null,
@@ -429,7 +429,7 @@ export default function AuthPage() {
                   <form onSubmit={loginForm.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField
                       control={loginForm.control}
-                      name="email"
+                      name="loginEmail"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Email</FormLabel>
@@ -438,6 +438,7 @@ export default function AuthPage() {
                               type="email"
                               placeholder="Enter your email"
                               {...field}
+                              value={field.value || ""}
                             />
                           </FormControl>
                           <FormMessage />
