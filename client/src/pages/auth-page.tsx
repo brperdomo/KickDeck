@@ -39,7 +39,6 @@ const loginSchema = z.object({
 // Registration schema
 const registerSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  username: z.string().min(3, "Username must be at least 3 characters").max(50),
   password: passwordSchema,
   confirmPassword: z.string(),
   firstName: z.string().min(1, "First name is required").max(50),
@@ -76,10 +75,8 @@ export default function AuthPage() {
   const [passwordMatch, setPasswordMatch] = useState<boolean | null>(null);
   const [inputFocus, setInputFocus] = useState<{
     email: boolean;
-    username: boolean;
   }>({
     email: false,
-    username: false,
   });
 
   // Email availability check mutation
@@ -96,13 +93,12 @@ export default function AuthPage() {
       email: "",
       password: "",
     },
-    mode: "onChange", // Enable real-time validation
+    mode: "onChange",
   });
 
   const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      username: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -110,7 +106,7 @@ export default function AuthPage() {
       lastName: "",
       phone: "",
     },
-    mode: "onChange", // Enable real-time validation
+    mode: "onChange",
   });
 
   async function onSubmit(data: LoginFormData | RegisterFormData) {
@@ -118,7 +114,7 @@ export default function AuthPage() {
       if (isRegistering) {
         const { confirmPassword, ...registerData } = data as RegisterFormData;
         const submitData: InsertUser = {
-          username: registerData.username,
+          username: registerData.email, // Use email as username
           email: registerData.email,
           password: registerData.password,
           firstName: registerData.firstName,
@@ -141,7 +137,7 @@ export default function AuthPage() {
       } else {
         const loginData = data as LoginFormData;
         const result = await login({
-          username: loginData.email,
+          username: loginData.email, // Use email as username
           password: loginData.password,
           email: loginData.email,
           firstName: "",
@@ -266,39 +262,6 @@ export default function AuthPage() {
                           {emailCheckMutation.data?.available === false && (
                             <p className="text-sm text-red-500 mt-1">
                               This email is already registered
-                            </p>
-                          )}
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Username Field */}
-                    <FormField
-                      control={registerForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Username *</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Choose a username"
-                              className={`${
-                                inputFocus.username ? 'border-primary ring-2 ring-primary/20' : ''
-                              } ${
-                                registerForm.formState.errors.username ? 'border-red-500' : ''
-                              }`}
-                              {...field}
-                              onFocus={() => setInputFocus(prev => ({ ...prev, username: true }))}
-                              onBlur={() => {
-                                field.onBlur();
-                                setInputFocus(prev => ({ ...prev, username: false }));
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                          {field.value && field.value.length < 3 && (
-                            <p className="text-sm text-amber-500 mt-1">
-                              Username must be at least 3 characters
                             </p>
                           )}
                         </FormItem>
