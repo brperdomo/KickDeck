@@ -24,23 +24,14 @@ import { Link } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { HelpButton } from "@/components/ui/help-button";
 
-// Shared password schema
-const passwordSchema = z.string()
-  .min(8, "Password must be at least 8 characters")
-  .regex(/[0-9]/, "Password must contain at least one number")
-  .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character");
-
-// Login schema
-const loginSchema = z.object({
-  loginEmail: z.string().email("Please enter a valid email address"),
-  password: passwordSchema,
-});
-
 // Registration schema
 const registerSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   username: z.string().min(3, "Username must be at least 3 characters").max(50),
-  password: passwordSchema,
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character"),
   confirmPassword: z.string(),
   firstName: z.string().min(1, "First name is required").max(50),
   lastName: z.string().min(1, "Last name is required").max(50),
@@ -53,6 +44,15 @@ const registerSchema = z.object({
       path: ["confirmPassword"],
     });
   }
+});
+
+// Login schema
+const loginSchema = z.object({
+  loginEmail: z.string().email("Please enter a valid email address"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character"),
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -73,11 +73,7 @@ export default function AuthPage() {
   const { toast } = useToast();
   const { login, register: registerUser } = useUser();
   const [isRegistering, setIsRegistering] = useState(false);
-  const [passwordMatch, setPasswordMatch] = useState<boolean | null>(null);
-  const [inputFocus, setInputFocus] = useState<{
-    email: boolean;
-    username: boolean;
-  }>({
+  const [inputFocus, setInputFocus] = useState({
     email: false,
     username: false,
   });
@@ -96,21 +92,21 @@ export default function AuthPage() {
       loginEmail: "",
       password: "",
     },
-    mode: "onChange", // Enable real-time validation
+    mode: "onChange",
   });
 
   const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      username: "",
       email: "",
+      username: "",
       password: "",
       confirmPassword: "",
       firstName: "",
       lastName: "",
       phone: "",
     },
-    mode: "onChange", // Enable real-time validation
+    mode: "onChange",
   });
 
   async function onSubmit(data: LoginFormData | RegisterFormData) {
@@ -185,41 +181,17 @@ export default function AuthPage() {
               <Trophy className="h-16 w-16 text-green-600 mb-4" />
               <CardTitle className="text-3xl font-bold">Sign In to MatchPro</CardTitle>
             </div>
-            <div className="absolute top-4 right-4">
-              <HelpButton
-                title={isRegistering ? "Registration Help" : "Login Help"}
-                content={
-                  isRegistering ? (
-                    <div className="space-y-2">
-                      <p>To register for the soccer system:</p>
-                      <ul className="list-disc pl-4 space-y-1">
-                        <li>Fill in all required fields marked with *</li>
-                        <li>Password must be at least 8 characters with numbers and special characters</li>
-                        <li>Your email will be used for account verification</li>
-                      </ul>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <p>To log in to your account:</p>
-                      <ul className="list-disc pl-4 space-y-1">
-                        <li>Enter your registered email address</li>
-                        <li>Enter your password</li>
-                        <li>Click "Forgot Password?" if you need to reset</li>
-                      </ul>
-                    </div>
-                  )
-                }
-              />
-            </div>
           </CardHeader>
           <CardContent>
             <Tabs
               value={isRegistering ? "register" : "login"}
               onValueChange={(v) => {
                 setIsRegistering(v === "register");
-                loginForm.reset();
-                registerForm.reset();
-                setPasswordMatch(null);
+                if (v === "register") {
+                  registerForm.reset();
+                } else {
+                  loginForm.reset();
+                }
               }}
             >
               <TabsList className="grid w-full grid-cols-2 mb-4">
@@ -230,7 +202,6 @@ export default function AuthPage() {
               {isRegistering ? (
                 <Form {...registerForm}>
                   <form onSubmit={registerForm.handleSubmit(onSubmit)} className="space-y-4">
-                    {/* Email Field */}
                     <FormField
                       control={registerForm.control}
                       name="email"
@@ -239,9 +210,9 @@ export default function AuthPage() {
                           <FormLabel>Email *</FormLabel>
                           <FormControl>
                             <Input
-                              {...field}
                               type="email"
                               placeholder="Enter your email"
+                              {...field}
                               className={`${
                                 inputFocus.email ? 'border-primary ring-2 ring-primary/20' : ''
                               } ${
@@ -266,8 +237,6 @@ export default function AuthPage() {
                         </FormItem>
                       )}
                     />
-
-                    {/* Username Field */}
                     <FormField
                       control={registerForm.control}
                       name="username"
@@ -299,8 +268,6 @@ export default function AuthPage() {
                         </FormItem>
                       )}
                     />
-
-                    {/* Password Field */}
                     <FormField
                       control={registerForm.control}
                       name="password"
@@ -312,13 +279,6 @@ export default function AuthPage() {
                               type="password"
                               placeholder="Enter your password"
                               {...field}
-                              onChange={(e) => {
-                                field.onChange(e);
-                                const confirmPassword = registerForm.getValues("confirmPassword");
-                                if (confirmPassword) {
-                                  setPasswordMatch(e.target.value === confirmPassword);
-                                }
-                              }}
                             />
                           </FormControl>
                           <FormDescription>
@@ -328,8 +288,6 @@ export default function AuthPage() {
                         </FormItem>
                       )}
                     />
-
-                    {/* Confirm Password Field */}
                     <FormField
                       control={registerForm.control}
                       name="confirmPassword"
@@ -341,24 +299,12 @@ export default function AuthPage() {
                               type="password"
                               placeholder="Confirm your password"
                               {...field}
-                              onChange={(e) => {
-                                field.onChange(e);
-                                const password = registerForm.getValues("password");
-                                setPasswordMatch(e.target.value === password);
-                              }}
                             />
                           </FormControl>
                           <FormMessage />
-                          {passwordMatch === false && (
-                            <p className="text-sm text-red-500 mt-1">
-                              Passwords do not match
-                            </p>
-                          )}
                         </FormItem>
                       )}
                     />
-
-                    {/* First Name Field */}
                     <FormField
                       control={registerForm.control}
                       name="firstName"
@@ -375,8 +321,6 @@ export default function AuthPage() {
                         </FormItem>
                       )}
                     />
-
-                    {/* Last Name Field */}
                     <FormField
                       control={registerForm.control}
                       name="lastName"
@@ -393,27 +337,23 @@ export default function AuthPage() {
                         </FormItem>
                       )}
                     />
-
-                    {/* Phone Field */}
                     <FormField
                       control={registerForm.control}
                       name="phone"
-                      render={({ field: { value, ...fieldProps } }) => (
+                      render={({ field }) => (
                         <FormItem>
                           <FormLabel>Phone Number (Optional)</FormLabel>
                           <FormControl>
                             <Input
                               type="tel"
                               placeholder="Enter your phone number"
-                              {...fieldProps}
-                              value={value ?? ""}
+                              {...field}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
                     <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
                       Register
                     </Button>
@@ -433,14 +373,12 @@ export default function AuthPage() {
                               type="email"
                               placeholder="Enter your email"
                               {...field}
-                              value={field.value || ""}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={loginForm.control}
                       name="password"
@@ -458,22 +396,11 @@ export default function AuthPage() {
                         </FormItem>
                       )}
                     />
-
                     <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
                       Login
                     </Button>
                   </form>
                 </Form>
-              )}
-
-              {!isRegistering && (
-                <div className="text-center mt-4">
-                  <Link href="/forgot-password">
-                    <Button variant="link" className="text-sm text-green-600" type="button">
-                      Forgot Password?
-                    </Button>
-                  </Link>
-                </div>
               )}
             </Tabs>
           </CardContent>
