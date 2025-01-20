@@ -239,9 +239,9 @@ export default function AuthPage() {
                           <FormLabel>Email *</FormLabel>
                           <FormControl>
                             <Input
+                              {...field}
                               type="email"
                               placeholder="Enter your email"
-                              {...field}
                               onChange={(e) => {
                                 field.onChange(e);
                                 const email = e.target.value;
@@ -280,13 +280,13 @@ export default function AuthPage() {
                           <FormLabel>Username *</FormLabel>
                           <FormControl>
                             <Input
+                              {...field}
                               placeholder="Choose a username"
                               className={`${
                                 inputFocus.username ? 'border-primary ring-2 ring-primary/20' : ''
                               } ${
                                 registerForm.formState.errors.username ? 'border-red-500' : ''
                               }`}
-                              {...field}
                               onFocus={() => setInputFocus(prev => ({ ...prev, username: true }))}
                               onBlur={() => {
                                 field.onBlur();
