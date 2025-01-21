@@ -23,7 +23,7 @@ import {
   households,
   householdInvitations,
 } from "@db/schema";
-import { eq, sql, count, and, gte, lte, or } from "drizzle-orm";
+import { sql, eq, and, or, count } from "drizzle-orm";
 import fs from "fs/promises";
 import path from "path";
 import { crypto } from "./crypto";
@@ -134,12 +134,14 @@ export function registerRoutes(app: Express): Server {
         const [invitation] = await db
           .insert(householdInvitations)
           .values({
-            householdId,
-            email,
-            token,
-            expiresAt: expiresAt.toISOString(),
+            householdId: householdId,
+            email: email,
+            token: token,
+            status: 'pending',
+            expiresAt: expiresAt,
             createdBy: userId,
-          })
+            createdAt: new Date().toISOString(),
+          } as typeof householdInvitations.$inferInsert)
           .returning();
 
         // TODO: Send email with invitation link
@@ -736,7 +738,7 @@ export function registerRoutes(app: Express): Server {
             email,
             phone,
             updatedAt: new Date().toISOString(),
-          })
+          } as typeof users.$inferInsert)
           .where(eq(users.id, req.user.id))
           .returning();
 
@@ -776,7 +778,7 @@ export function registerRoutes(app: Express): Server {
           .set({
             password: hashedPassword,
             updatedAt: new Date().toISOString(),
-          })
+          } as typeof users.$inferInsert)
           .where(eq(users.id, req.user.id));
 
         res.json({ message: "Password updated successfully" });
@@ -848,7 +850,7 @@ export function registerRoutes(app: Express): Server {
                 fieldId: parseInt(fieldId),
                 fieldSize: fieldSize,
                 createdAt: new Date().toISOString(),
-              });
+              } as typeof eventFieldSizes.$inferInsert);
           }
         });
 
@@ -960,7 +962,8 @@ export function registerRoutes(app: Express): Server {
           }
 
           // Handle age groups that were removed
-          for (const [, group] of existingAgeGroupsMap) {
+          const remainingGroups = Array.from(existingAgeGroupsMap.entries());
+          for (const [, group] of remainingGroups) {
             // Check if the age group has teams
             if (!ageGroupsWithTeamsMap.has(group.id)) {
               // Only delete if no teams are associated
