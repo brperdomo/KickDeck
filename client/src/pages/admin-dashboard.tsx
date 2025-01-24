@@ -599,8 +599,8 @@ function EventsView() {
                     <TableCell>
                       <Badge variant="outline" className={
                         event.status === 'open' ? "bg-green-50 text-green-700" :
-                        event.status === 'closed' ? "bg-red-50 text-red-700" :
-                        "bg-yellow-50 text-yellow-700"
+                          event.status === 'closed' ? "bg-red-50 text-red-700" :
+                            "bg-yellow-50 text-yellow-700"
                       }>
                         {event.status}
                       </Badge>
@@ -786,7 +786,7 @@ function AdminDashboard() {
           {/* Header */}
           <div className="flex items-center gap-2 mb-6">
             <Calendar className="h-6 w-6 text-primary" />
-            <h1 className="font-semibold text-xl">Admin Dashboard</h1>
+            <h1 className="font-semibold text-xl">MatchPro Dashboard</h1>
           </div>
 
           {/* Navigation */}
@@ -953,6 +953,22 @@ function AdminDashboard() {
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto p-8">
+        {/* Welcome Card */}
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <UserCircle className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">Welcome back, {user?.firstName}!</h2>
+                <p className="text-muted-foreground">
+                  Manage your organization's activities and settings from this dashboard.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         {renderView()}
       </div>
     </div>
@@ -992,8 +1008,8 @@ function ChatView() {
               {messagesQuery.data?.map((message: any) => (
                 <div key={message.id} className={`flex ${message.isAdmin ? 'justify-end' : 'justify-start'}`}>
                   <div className={`rounded-lg px-4 py-2 max-w-[70%] ${
-                    message.isAdmin 
-                      ? 'bg-primary text-primary-foreground' 
+                    message.isAdmin
+                      ? 'bg-primary text-primary-foreground'
                       : 'bg-muted'
                   }`}>
                     <p className="text-sm font-medium">{message.sender}</p>
@@ -1004,7 +1020,7 @@ function ChatView() {
               ))}
             </div>
             <div className="flex gap-2">
-              <Input 
+              <Input
                 placeholder="Type your message..."
                 className="flex-1"
               />
