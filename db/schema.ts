@@ -427,3 +427,42 @@ export type InsertComplex = typeof complexes.$inferInsert;
 export type SelectComplex = typeof complexes.$inferSelect;
 export type InsertField = typeof fields.$inferInsert;
 export type SelectField = typeof fields.$inferSelect;
+
+
+export const roles = pgTable("roles", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const adminRoles = pgTable("admin_roles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  roleId: integer("role_id").notNull().references(() => roles.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Add role schemas
+export const insertRoleSchema = createInsertSchema(roles, {
+  name: z.string().min(1, "Role name is required"),
+  description: z.string().optional(),
+});
+
+export const selectRoleSchema = createSelectSchema(roles);
+
+export type InsertRole = typeof roles.$inferInsert;
+export type SelectRole = typeof roles.$inferSelect;
+export type InsertAdminRole = typeof adminRoles.$inferInsert;
+export type SelectAdminRole = typeof adminRoles.$inferSelect;
+
+// Update admin form schema to support multiple roles
+export const adminFormSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  roles: z.array(z.string()).min(1, "At least one role is required"),
+});
+
+export type AdminFormValues = z.infer<typeof adminFormSchema>;

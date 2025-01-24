@@ -89,6 +89,81 @@ export function registerRoutes(app: Express): Server {
       }
     });
 
+    // Administrator creation endpoint
+    app.post('/api/admin/administrators', isAdmin, async (req, res) => {
+      try {
+        const { email, firstName, lastName, password, roles } = req.body;
+
+        // Verify if email exists
+        const [existingUser] = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, email))
+          .limit(1);
+
+        if (existingUser) {
+          return res.status(400).send("Email already registered");
+        }
+
+        // Start a transaction to create user and assign roles
+        await db.transaction(async (tx) => {
+          // Create the user
+          const hashedPassword = await crypto.hash(password);
+          const [newAdmin] = await tx
+            .insert(users)
+            .values({
+              email,
+              username: email,
+              firstName,
+              lastName,
+              password: hashedPassword,
+              isAdmin: true,
+              createdAt: new Date().toISOString(),
+            })
+            .returning();
+
+          // Ensure we have valid roles
+          if (!Array.isArray(roles) || roles.length === 0) {
+            throw new Error("At least one role is required");
+          }
+
+          // Get or create roles
+          for (const roleName of roles) {
+            // Get or create the role
+            let role = await tx
+              .select()
+              .from(roles)
+              .where(eq(roles.name, roleName))
+              .limit(1)
+              .then(rows => rows[0]);
+
+            if (!role) {
+              [role] = await tx
+                .insert(roles)
+                .values({
+                  name: roleName,
+                  description: `${roleName.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} role`,
+                })
+                .returning();
+            }
+
+            // Assign role to admin
+            await tx
+              .insert(adminRoles)
+              .values({
+                userId: newAdmin.id,
+                roleId: role.id,
+              });
+          }
+        });
+
+        res.json({ message: "Administrator created successfully" });
+      } catch (error) {
+        console.error('Error creating administrator:', error);
+        res.status(500).send(error instanceof Error ? error.message : "Failed to create administrator");
+      }
+    });
+
     // Email availability check endpoint
     app.get('/api/check-email', async (req, res) => {
       try {
@@ -557,6 +632,7 @@ export function registerRoutes(app: Express): Server {
     });
 
 
+
     // Organization settings endpoints
     app.get('/api/admin/organization-settings', isAdmin, async (req, res) => {
       try {
@@ -928,7 +1004,7 @@ export function registerRoutes(app: Express): Server {
             throw new Error("Event not found");
           }
 
-          // Get existing age groups
+          // Get existing agegroups
           const existingAgeGroups = await tx
             .select()
             .from(eventAgeGroups)

@@ -12,34 +12,20 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
+import { adminFormSchema } from "@db/schema";
+import type { AdminFormValues } from "@db/schema";
 
-const adminTypes = [
-  { value: 'super_admin', label: 'Super Admin' },
-  { value: 'tournament_admin', label: 'Tournament Admin' },
-  { value: 'score_admin', label: 'Score Admin' },
-  { value: 'finance_admin', label: 'Finance Admin' },
+const availableRoles = [
+  { id: "super_admin", name: "Super Admin", description: "Full system access" },
+  { id: "tournament_admin", name: "Tournament Admin", description: "Manage tournaments and events" },
+  { id: "score_admin", name: "Score Admin", description: "Manage scores and results" },
+  { id: "finance_admin", name: "Finance Admin", description: "Manage financial aspects" },
 ] as const;
-
-const adminSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Invalid email address"),
-  temporaryPassword: z.string().min(8, "Password must be at least 8 characters"),
-  adminType: z.enum(['super_admin', 'tournament_admin', 'score_admin', 'finance_admin']),
-});
-
-type AdminFormValues = z.infer<typeof adminSchema>;
 
 interface AdminModalProps {
   open: boolean;
@@ -52,13 +38,13 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
   const [emailToCheck, setEmailToCheck] = useState("");
 
   const form = useForm<AdminFormValues>({
-    resolver: zodResolver(adminSchema),
+    resolver: zodResolver(adminFormSchema),
     defaultValues: {
       firstName: "",
       lastName: "",
       email: "",
-      temporaryPassword: "",
-      adminType: "super_admin",
+      password: "",
+      roles: [],
     },
   });
 
@@ -73,7 +59,7 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
       }
       return response.json();
     },
-    enabled: !!emailToCheck && emailToCheck.includes('@'), // Only run when email is valid
+    enabled: !!emailToCheck && emailToCheck.includes('@'),
   });
 
   // Debounced email check
@@ -117,7 +103,6 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
   });
 
   const onSubmit = async (data: AdminFormValues) => {
-    // Check if email exists before submitting
     if (emailCheckQuery.data?.exists) {
       form.setError('email', {
         type: 'manual',
@@ -126,6 +111,15 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
       return;
     }
     createAdminMutation.mutate(data);
+  };
+
+  // Handle role selection
+  const toggleRole = (roleId: string) => {
+    const currentRoles = form.getValues("roles");
+    const newRoles = currentRoles.includes(roleId)
+      ? currentRoles.filter(id => id !== roleId)
+      : [...currentRoles, roleId];
+    form.setValue("roles", newRoles, { shouldValidate: true });
   };
 
   return (
@@ -201,24 +195,37 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
 
             <FormField
               control={form.control}
-              name="adminType"
+              name="roles"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Administrator Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select administrator type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {adminTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
+                  <FormLabel>Administrator Roles</FormLabel>
+                  <FormControl>
+                    <div className="space-y-2">
+                      {availableRoles.map((role) => (
+                        <div
+                          key={role.id}
+                          className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                            field.value.includes(role.id)
+                              ? "border-primary bg-primary/5"
+                              : "border-input hover:bg-accent"
+                          }`}
+                          onClick={() => toggleRole(role.id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium">{role.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {role.description}
+                              </p>
+                            </div>
+                            {field.value.includes(role.id) && (
+                              <Badge variant="secondary">Selected</Badge>
+                            )}
+                          </div>
+                        </div>
                       ))}
-                    </SelectContent>
-                  </Select>
+                    </div>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -226,7 +233,7 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
 
             <FormField
               control={form.control}
-              name="temporaryPassword"
+              name="password"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Temporary Password</FormLabel>
@@ -248,7 +255,12 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
               </Button>
               <Button 
                 type="submit" 
-                disabled={createAdminMutation.isPending || emailCheckQuery.isLoading || emailCheckQuery.data?.exists}
+                disabled={
+                  createAdminMutation.isPending || 
+                  emailCheckQuery.isLoading || 
+                  emailCheckQuery.data?.exists ||
+                  form.getValues("roles").length === 0
+                }
               >
                 {createAdminMutation.isPending ? "Creating..." : "Create Administrator"}
               </Button>
