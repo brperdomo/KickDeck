@@ -27,6 +27,8 @@ import {
   ChevronRight,
   Loader2,
   CreditCard,
+  Search,
+  Plus,
   ClipboardList,
   MoreHorizontal,
   Building2,
@@ -38,14 +40,13 @@ import {
   ChevronDown,
   Edit,
   Trash,
-  Search,
-  Plus,
   Eye,
   Download,
   UserCircle,
   Percent,
   Printer,
   Flag,
+  CalendarDays,
 } from "lucide-react";
 import {
   Table,
@@ -438,13 +439,156 @@ function OrganizationSettingsForm() {
   );
 }
 
+function ComplexesView() {
+  const { toast } = useToast();
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedComplex, setSelectedComplex] = useState<Complex | null>(null);
+
+  const complexesQuery = useQuery({
+    queryKey: ['/api/admin/complexes'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/complexes');
+      if (!response.ok) throw new Error('Failed to fetch complexes');
+      return response.json();
+    }
+  });
+
+  if (complexesQuery.isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Field Complexes</h2>
+        <Button onClick={() => setIsAddModalOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Complex
+        </Button>
+      </div>
+
+      <div className="grid gap-6">
+        {complexesQuery.data?.map((complex: Complex) => (
+          <Card key={complex.id}>
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle>{complex.name}</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {complex.address}, {complex.city}, {complex.state}
+                  </p>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => setSelectedComplex(complex)}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Eye className="mr-2 h-4 w-4" />
+                      View Fields
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Operating Hours</Label>
+                  <p className="text-sm">
+                    {complex.openTime} - {complex.closeTime}
+                  </p>
+                </div>
+                <div>
+                  <Label>Fields Status</Label>
+                  <div className="flex gap-2 mt-1">
+                    <Badge variant="secondary" className="bg-green-50 text-green-700">
+                      {complex.openFields} Open
+                    </Badge>
+                    <Badge variant="secondary" className="bg-red-50 text-red-700">
+                      {complex.closedFields} Closed
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function EventsView() {
+  return (
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Events</h2>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Event
+        </Button>
+      </div>
+      <Card>
+        <CardContent className="p-6">
+          <p className="text-muted-foreground">Events management coming soon</p>
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
+function HouseholdsView() {
+  return (
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Households</h2>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Household
+        </Button>
+      </div>
+      <Card>
+        <CardContent className="p-6">
+          <p className="text-muted-foreground">Household management coming soon</p>
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
+function SchedulingView() {
+  return (
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Scheduling</h2>
+      </div>
+      <Card>
+        <CardContent className="p-6">
+          <p className="text-muted-foreground">Game scheduling interface coming soon</p>
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
+
 function AdminDashboard() {
   const { user, logout } = useUser();
   const [, setLocation] = useLocation();
   const [activeView, setActiveView] = useState<View>('administrators');
   const [activeSettingsView, setActiveSettingsView] = useState<SettingsView>('general');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const { currentColor, setColor, isLoading: isThemeLoading } = useTheme();
 
   useEffect(() => {
     if (!isAdminUser(user)) {
@@ -456,19 +600,23 @@ function AdminDashboard() {
     switch (activeView) {
       case 'administrators':
         return <AdministratorsView />;
+      case 'events':
+        return <EventsView />;
+      case 'complexes':
+        return <ComplexesView />;
+      case 'households':
+        return <HouseholdsView />;
+      case 'scheduling':
+        return <SchedulingView />;
       case 'settings':
         return <SettingsView activeSettingsView={activeSettingsView} />;
       case 'reports':
         return <ReportsView />;
       case 'account':
         return (
-          <Suspense
-            fallback={
-              <div className="flex items-center justify-center min-h-[200px]">
-                <Loader2 className="h-8 w-8 animate-spin" />
-              </div>
-            }
-          >
+          <Suspense fallback={<div className="flex items-center justify-center min-h-[200px]">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>}>
             <MyAccount />
           </Suspense>
         );
@@ -476,10 +624,6 @@ function AdminDashboard() {
         return <div>Feature coming soon</div>;
     }
   };
-
-  if (!isAdminUser(user)) {
-    return null;
-  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -501,6 +645,42 @@ function AdminDashboard() {
             >
               <Shield className="mr-2 h-4 w-4" />
               Administrators
+            </Button>
+
+            <Button
+              variant={activeView === 'events' ? 'secondary' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => setActiveView('events')}
+            >
+              <Calendar className="mr-2 h-4 w-4" />
+              Events
+            </Button>
+
+            <Button
+              variant={activeView === 'complexes' ? 'secondary' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => setActiveView('complexes')}
+            >
+              <Building2 className="mr-2 h-4 w-4" />
+              Field Complexes
+            </Button>
+
+            <Button
+              variant={activeView === 'households' ? 'secondary' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => setActiveView('households')}
+            >
+              <Home className="mr-2 h-4 w-4" />
+              Households
+            </Button>
+
+            <Button
+              variant={activeView === 'scheduling' ? 'secondary' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => setActiveView('scheduling')}
+            >
+              <CalendarDays className="mr-2 h-4 w-4" />
+              Scheduling
             </Button>
 
             <Button
