@@ -4,26 +4,48 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+const adminTypes = [
+  { value: 'super_admin', label: 'Super Admin' },
+  { value: 'tournament_admin', label: 'Tournament Admin' },
+  { value: 'score_admin', label: 'Score Admin' },
+  { value: 'finance_admin', label: 'Finance Admin' },
+] as const;
 
 const adminSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email address"),
   temporaryPassword: z.string().min(8, "Password must be at least 8 characters"),
+  adminType: z.enum(['super_admin', 'tournament_admin', 'score_admin', 'finance_admin']),
 });
 
 type AdminFormValues = z.infer<typeof adminSchema>;
 
 interface AdminModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function AdminModal({ isOpen, onClose }: AdminModalProps) {
+export function AdminModal({ open, onOpenChange }: AdminModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const form = useForm<AdminFormValues>({
@@ -33,6 +55,7 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
       lastName: "",
       email: "",
       temporaryPassword: "",
+      adminType: "super_admin",
     },
   });
 
@@ -60,7 +83,7 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
         description: "Administrator created successfully",
       });
       form.reset();
-      onClose();
+      onOpenChange(false);
     },
     onError: (error) => {
       toast({
@@ -76,7 +99,7 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px] p-0">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle>Add New Administrator</DialogTitle>
@@ -111,6 +134,7 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
                 )}
               />
             </div>
+
             <FormField
               control={form.control}
               name="email"
@@ -124,6 +148,32 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="adminType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Administrator Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select administrator type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {adminTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="temporaryPassword"
@@ -137,11 +187,19 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
                 </FormItem>
               )}
             />
+
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={createAdminMutation.isPending}>
+              <Button 
+                type="submit" 
+                disabled={createAdminMutation.isPending}
+              >
                 {createAdminMutation.isPending ? "Creating..." : "Create Administrator"}
               </Button>
             </div>
