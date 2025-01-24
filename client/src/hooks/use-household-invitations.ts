@@ -59,7 +59,7 @@ export function useHouseholdInvitations() {
       queryClient.invalidateQueries({ queryKey: ['/api/household/invitations'] });
       toast({
         title: 'Success',
-        description: 'Invitation sent successfully',
+        description: 'MatchPro Client invitation sent successfully',
       });
     },
     onError: (error: Error) => {
@@ -88,7 +88,7 @@ export function useHouseholdInvitations() {
       queryClient.invalidateQueries({ queryKey: ['/api/household/invitations'] });
       toast({
         title: 'Success',
-        description: 'Invitation accepted successfully',
+        description: 'MatchPro Client invitation accepted successfully',
       });
     },
     onError: (error: Error) => {
@@ -117,7 +117,7 @@ export function useHouseholdInvitations() {
       queryClient.invalidateQueries({ queryKey: ['/api/household/invitations'] });
       toast({
         title: 'Success',
-        description: 'Invitation declined successfully',
+        description: 'MatchPro Client invitation declined successfully',
       });
     },
     onError: (error: Error) => {

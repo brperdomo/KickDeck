@@ -2,7 +2,12 @@ import { useState } from "react";
 import { useUser } from "@/hooks/use-user";
 import { useHouseholdInvitations } from "@/hooks/use-household-invitations";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +31,7 @@ import {
 import { Users, Send, Clock } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
-export default function HouseholdPage() {
+export default function MatchProClientPage() {
   const { user } = useUser();
   const { invitations, isLoading, sendInvitation } = useHouseholdInvitations();
   const [email, setEmail] = useState("");
