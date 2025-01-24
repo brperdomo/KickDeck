@@ -170,6 +170,158 @@ export function registerRoutes(app: Express): Server {
       }
     });
 
+    // Add administrator update endpoint
+    app.patch('/api/admin/administrators/:id', isAdmin, async (req, res) => {
+      try {
+        const adminId = parseInt(req.params.id);
+        const { email, firstName, lastName, roles } = req.body;
+
+        // Verify admin exists
+        const [existingAdmin] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, adminId))
+          .limit(1);
+
+        if (!existingAdmin) {
+          return res.status(404).send("Administrator not found");
+        }
+
+        // If email is being changed, check if new email is available
+        if (email !== existingAdmin.email) {
+          const [emailExists] = await db
+            .select()
+            .from(users)
+            .where(eq(users.email, email))
+            .limit(1);
+
+          if (emailExists) {
+            return res.status(400).send("Email already registered");
+          }
+        }
+
+        // Start a transaction to update user and roles
+        await db.transaction(async (tx) => {
+          // Update user details
+          await tx
+            .update(users)
+            .set({
+              email,
+              username: email,
+              firstName,
+              lastName,
+              updatedAt: new Date().toISOString(),
+            })
+            .where(eq(users.id, adminId));
+
+          // Remove existing roles
+          await tx
+            .delete(adminRoles)
+            .where(eq(adminRoles.userId, adminId));
+
+          // Add new roles
+          for (const roleName of roles) {
+            // Get or create the role
+            let role = await tx
+              .select()
+              .from(roles)
+              .where(eq(roles.name, roleName))
+              .limit(1)
+              .then(rows => rows[0]);
+
+            if (!role) {
+              [role] = await tx
+                .insert(roles)
+                .values({
+                  name: roleName,
+                  description: `${roleName.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} role`,
+                })
+                .returning();
+            }
+
+            // Assign role to admin
+            await tx
+              .insert(adminRoles)
+              .values({
+                userId: adminId,
+                roleId: role.id,
+              });
+          }
+        });
+
+        res.json({ message: "Administrator updated successfully" });
+      } catch (error) {
+        console.error('Error updating administrator:', error);
+        console.error("Error details:", error);
+        res.status(500).send(error instanceof Error ? error.message : "Failed to update administrator");
+      }
+    });
+
+    // Add administrator deletion endpoint
+    app.delete('/api/admin/administrators/:id', isAdmin, async (req, res) => {
+      try {
+        const adminId = parseInt(req.params.id);
+
+        // Verify admin exists and is not the last super admin
+        const [adminToDelete] = await db
+          .select({
+            admin: users,
+            roles: sql<string[]>`array_agg(${roles.name})`,
+          })
+          .from(users)
+          .leftJoin(adminRoles, eq(users.id, adminRoles.userId))
+          .leftJoin(roles, eq(adminRoles.roleId, roles.id))
+          .where(eq(users.id, adminId))
+          .groupBy(users.id)
+          .limit(1);
+
+        if (!adminToDelete) {
+          return res.status(404).send("Administrator not found");
+        }
+
+        // Check if this is a super admin
+        if (adminToDelete.roles.includes('super_admin')) {
+          // Count other super admins
+          const [{count}] = await db
+            .select({
+              count: count(),
+            })
+            .from(users)
+            .innerJoin(adminRoles, eq(users.id, adminRoles.userId))
+            .innerJoin(roles, eq(adminRoles.roleId, roles.id))
+            .where(
+              and(
+                eq(roles.name, 'super_admin'),
+                sql`${users.id} != ${adminId}`
+              )
+            );
+
+          if (count === 0) {
+            return res.status(400).send("Cannot delete the last super administrator");
+          }
+        }
+
+        // Start a transaction to delete admin roles and user
+        await db.transaction(async (tx) => {
+          // Delete admin roles
+          await tx
+            .delete(adminRoles)
+            .where(eq(adminRoles.userId, adminId));
+
+          // Delete user
+          await tx
+            .delete(users)
+            .where(eq(users.id, adminId));
+        });
+
+        res.json({ message: "Administrator deleted successfully" });
+      } catch (error) {
+        console.error('Error deleting administrator:', error);
+        console.error("Error details:", error);
+        res.status(500).send(error instanceof Error ? error.message : "Failed to delete administrator");
+      }
+    });
+
     // Email availability check endpoint
     app.get('/api/check-email', async (req, res) => {
       try {

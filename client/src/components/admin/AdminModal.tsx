@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { Loader2, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { adminFormSchema } from "@db/schema";
 import type { AdminFormValues } from "@db/schema";
 
@@ -31,9 +31,16 @@ const availableRoles = [
 interface AdminModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  adminToEdit?: {
+    id: number;
+    email: string;
+    firstName: string;
+    lastName: string;
+    roles: string[];
+  };
 }
 
-export function AdminModal({ open, onOpenChange }: AdminModalProps) {
+export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [emailToCheck, setEmailToCheck] = useState("");
@@ -41,11 +48,11 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
   const form = useForm<AdminFormValues>({
     resolver: zodResolver(adminFormSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
+      firstName: adminToEdit?.firstName ?? "",
+      lastName: adminToEdit?.lastName ?? "",
+      email: adminToEdit?.email ?? "",
       password: "",
-      roles: [],
+      roles: adminToEdit?.roles ?? [],
     },
   });
 
@@ -53,7 +60,7 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
   const emailCheckQuery = useQuery({
     queryKey: ['checkEmail', emailToCheck],
     queryFn: async () => {
-      if (!emailToCheck) return null;
+      if (!emailToCheck || (adminToEdit && adminToEdit.email === emailToCheck)) return null;
       const response = await fetch(`/api/admin/check-email?email=${encodeURIComponent(emailToCheck)}`);
       if (!response.ok) {
         throw new Error('Failed to check email');
@@ -103,15 +110,94 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
     },
   });
 
+  const updateAdminMutation = useMutation({
+    mutationFn: async (data: AdminFormValues) => {
+      if (!adminToEdit) throw new Error("No administrator to update");
+
+      const response = await fetch(`/api/admin/administrators/${adminToEdit.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error);
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/administrators"] });
+      toast({
+        title: "Success",
+        description: "Administrator updated successfully",
+      });
+      onOpenChange(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update administrator",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteAdminMutation = useMutation({
+    mutationFn: async () => {
+      if (!adminToEdit) throw new Error("No administrator to delete");
+
+      const response = await fetch(`/api/admin/administrators/${adminToEdit.id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error);
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/administrators"] });
+      toast({
+        title: "Success",
+        description: "Administrator deleted successfully",
+      });
+      onOpenChange(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete administrator",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = async (data: AdminFormValues) => {
-    if (emailCheckQuery.data?.exists) {
+    if (emailCheckQuery.data?.exists && data.email !== adminToEdit?.email) {
       form.setError('email', {
         type: 'manual',
         message: 'This email is already registered'
       });
       return;
     }
-    createAdminMutation.mutate(data);
+
+    if (adminToEdit) {
+      updateAdminMutation.mutate(data);
+    } else {
+      createAdminMutation.mutate(data);
+    }
+  };
+
+  const handleDelete = () => {
+    if (confirm("Are you sure you want to delete this administrator?")) {
+      deleteAdminMutation.mutate();
+    }
   };
 
   // Handle role selection
@@ -152,7 +238,7 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px] p-0">
         <DialogHeader className="p-6 pb-0">
-          <DialogTitle>Add New Administrator</DialogTitle>
+          <DialogTitle>{adminToEdit ? 'Edit Administrator' : 'Add New Administrator'}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-6">
@@ -209,7 +295,7 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
                       )}
                     </div>
                   </FormControl>
-                  {emailCheckQuery.data?.exists && (
+                  {emailCheckQuery.data?.exists && field.value !== adminToEdit?.email && (
                     <p className="text-sm font-medium text-destructive">
                       This email is already registered
                     </p>
@@ -269,21 +355,33 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Temporary Password</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="password" placeholder="Minimum 8 characters" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!adminToEdit && (
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Temporary Password</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="password" placeholder="Minimum 8 characters" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
+              {adminToEdit && (
+                <Button 
+                  type="button" 
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={deleteAdminMutation.isPending}
+                >
+                  {deleteAdminMutation.isPending ? "Deleting..." : "Delete Administrator"}
+                </Button>
+              )}
               <Button 
                 type="button" 
                 variant="outline" 
@@ -295,12 +393,15 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
                 type="submit" 
                 disabled={
                   createAdminMutation.isPending || 
+                  updateAdminMutation.isPending ||
                   emailCheckQuery.isLoading || 
-                  emailCheckQuery.data?.exists ||
+                  (emailCheckQuery.data?.exists && form.getValues("email") !== adminToEdit?.email) ||
                   form.getValues("roles").length === 0
                 }
               >
-                {createAdminMutation.isPending ? "Creating..." : "Create Administrator"}
+                {createAdminMutation.isPending || updateAdminMutation.isPending
+                  ? adminToEdit ? "Updating..." : "Creating..."
+                  : adminToEdit ? "Update Administrator" : "Create Administrator"}
               </Button>
             </div>
           </form>
