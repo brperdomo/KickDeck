@@ -55,6 +55,40 @@ export function registerRoutes(app: Express): Server {
     log("Authentication routes registered successfully");
 
 
+    // Admin email check endpoint
+    app.get('/api/admin/check-email', isAdmin, async (req, res) => {
+      try {
+        const email = req.query.email as string;
+
+        if (!email) {
+          return res.status(400).json({ exists: false, message: "Email is required" });
+        }
+
+        // Check if email exists in users table with isAdmin=true
+        const [existingAdmin] = await db
+          .select()
+          .from(users)
+          .where(
+            and(
+              eq(users.email, email),
+              eq(users.isAdmin, true)
+            )
+          )
+          .limit(1);
+
+        // Add a small delay to prevent brute force attempts
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        return res.json({
+          exists: !!existingAdmin,
+          message: existingAdmin ? "Email is already registered" : undefined
+        });
+      } catch (error) {
+        console.error('Error checking admin email:', error);
+        return res.status(500).json({ exists: false, message: "Internal server error" });
+      }
+    });
+
     // Email availability check endpoint
     app.get('/api/check-email', async (req, res) => {
       try {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 
 const adminTypes = [
   { value: 'super_admin', label: 'Super Admin' },
@@ -48,6 +49,8 @@ interface AdminModalProps {
 export function AdminModal({ open, onOpenChange }: AdminModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [emailToCheck, setEmailToCheck] = useState("");
+
   const form = useForm<AdminFormValues>({
     resolver: zodResolver(adminSchema),
     defaultValues: {
@@ -58,6 +61,25 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
       adminType: "super_admin",
     },
   });
+
+  // Email validation query
+  const emailCheckQuery = useQuery({
+    queryKey: ['checkEmail', emailToCheck],
+    queryFn: async () => {
+      if (!emailToCheck) return null;
+      const response = await fetch(`/api/admin/check-email?email=${encodeURIComponent(emailToCheck)}`);
+      if (!response.ok) {
+        throw new Error('Failed to check email');
+      }
+      return response.json();
+    },
+    enabled: !!emailToCheck && emailToCheck.includes('@'), // Only run when email is valid
+  });
+
+  // Debounced email check
+  const handleEmailChange = useCallback((email: string) => {
+    setEmailToCheck(email);
+  }, []);
 
   const createAdminMutation = useMutation({
     mutationFn: async (data: AdminFormValues) => {
@@ -94,7 +116,15 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
     },
   });
 
-  const onSubmit = (data: AdminFormValues) => {
+  const onSubmit = async (data: AdminFormValues) => {
+    // Check if email exists before submitting
+    if (emailCheckQuery.data?.exists) {
+      form.setError('email', {
+        type: 'manual',
+        message: 'This email is already registered'
+      });
+      return;
+    }
     createAdminMutation.mutate(data);
   };
 
@@ -142,8 +172,28 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input {...field} type="email" placeholder="john.doe@example.com" />
+                    <div className="relative">
+                      <Input 
+                        {...field} 
+                        type="email" 
+                        placeholder="john.doe@example.com"
+                        onChange={(e) => {
+                          field.onChange(e);
+                          handleEmailChange(e.target.value);
+                        }}
+                      />
+                      {emailCheckQuery.isLoading && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
                   </FormControl>
+                  {emailCheckQuery.data?.exists && (
+                    <p className="text-sm font-medium text-destructive">
+                      This email is already registered
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -198,7 +248,7 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
               </Button>
               <Button 
                 type="submit" 
-                disabled={createAdminMutation.isPending}
+                disabled={createAdminMutation.isPending || emailCheckQuery.isLoading || emailCheckQuery.data?.exists}
               >
                 {createAdminMutation.isPending ? "Creating..." : "Create Administrator"}
               </Button>
