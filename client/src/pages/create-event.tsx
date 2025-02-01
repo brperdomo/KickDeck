@@ -37,6 +37,7 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery } from '@tanstack/react-query';
 import { Checkbox } from "@/components/ui/checkbox"; // Import Checkbox
 import { useToast } from "@/hooks/use-toast"; // Import useToast
+import { ComplexEditor } from "@/components/ComplexEditor";
 
 // Add these types near the top of the file, after existing imports
 interface EventData {
@@ -1092,234 +1093,206 @@ export default function CreateEvent() {
 
             <TabsContent value="complexes">
               <div className="space-y-6">
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" onClick={() => navigateTab('prev')}>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Available Complexes</h3>
+                  <Button onClick={() => navigateTab('prev')}>
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back
                   </Button>
-                  <h3 className="text-lg font-semibold">Select Complexes</h3>
                 </div>
 
-                <div className="space-y-4">
-                  <Form {...complexSelectionForm}>
-                    <form onSubmit={complexSelectionForm.handleSubmit(onComplexSelectionSubmit)} className="space-y-4">
-                      <FormField
-                        control={complexSelectionForm.control}
-                        name="selectedComplexIds"
-                        render={({ field }) => (
-                          <FormItem className="space-y-4">
-                            <FormLabel>Select Complexes for this Event</FormLabel>
-                            <FormControl>
-                              <div className="space-y-2">
-                                {complexesQuery.data?.map((complex) => (
-                                  <div key={complex.id} className="flex items-center space-x-2">
-                                    <Checkbox
-                                      checked={field.value.includes(complex.id.toString())}
-                                      onCheckedChange={(checked) => {
-                                        const value = complex.id.toString();
-                                        const newValue = checked
-                                          ? [...field.value, value]
-                                          : field.value.filter((v) => v !== value);
-                                        field.onChange(newValue);
+                {complexesQuery.isLoading ? (
+                  <div>Loading complexes...</div>
+                ) : complexesQuery.error ? (
+                  <div>Error loading complexes</div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {complexesQuery.data?.map((complex) => (
+                      <Card key={complex.id} className="p-4">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h4 className="font-semibold">{complex.name}</h4>
+                            <p className="text-sm text-gray-500">{complex.address}</p>
+                            <p className="text-sm text-gray-500">{complex.city}, {complex.state}</p>
+                          </div>
+                          <ComplexEditor
+                            complex={complex}
+                            onUpdate={async (id, data) => {
+                              try {
+                                const response = await fetch(`/api/admin/complexes/${id}`, {
+                                  method: 'PATCH',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                  },
+                                  body: JSON.stringify(data),
+                                });
 
-                                        // Update selected complexes
-                                        const selectedIds = newValue.map(v => parseInt(v));
-                                        const updatedComplexes = complexesQuery.data
-                                          ?.filter(complex => selectedIds.includes(complex.id))
-                                          .map(complex => ({
-                                            ...complex,
-                                            selected: true
-                                          })) || [];
-                                        setSelectedComplexes(updatedComplexes);
-                                      }}
-                                    />
-                                    <Label>
-                                      {complex.name} ({complex.openFields + complex.closedFields} fields)
-                                    </Label>
-                                  </div>
-                                ))}
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </form>
-                  </Form>
+                                if (!response.ok) {
+                                  throw new Error('Failed to update complex');
+                                }
 
-                  {selectedComplexes.length > 0 && (
-                    <>
-                      <Card>
-                        <CardContent className="p-0">
+                                // Invalidate and refetch complexes
+                                await complexesQuery.refetch();
+
+                                toast({
+                                  title: "Success",
+                                  description: "Complex updated successfully",
+                                  variant: "default",
+                                });
+                              } catch (error) {
+                                console.error('Error updating complex:', error);
+                                toast({
+                                  title: "Error",
+                                  description: "Failed to update complex",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span>Open Fields:</span>
+                            <span>{complex.openFields}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Closed Fields:</span>
+                            <span>{complex.closedFields}</span>
+                          </div>
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => setViewingComplexId(complex.id)}
+                          >
+                            <Eye className="mr-2 h-4 w-4" />
+                            View Fields
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+
+                <Dialog open={!!viewingComplexId} onOpenChange={(open) => !open && setViewingComplexId(null)}>
+                  <DialogContent className="max-w-3xl">
+                    <DialogHeader>
+                      <DialogTitle>
+                        Fields in {selectedComplexes.find(c => c.id === viewingComplexId)?.name}
+                      </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="mt-4">
+                      {fieldsQuery.isLoading ? (
+                        <div className="text-center py-4">Loading fields...</div>
+                      ) : !fieldsQuery.data?.length ? (
+                        <div className="text-center py-4">No fields available in this complex</div>
+                      ) : (
+                        <div className="space-y-4">
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead>Complex Name</TableHead>
-                                <TableHead className="text-center"># of Fields</TableHead>
-                                <TableHead>Address</TableHead>
+                                <TableHead>Field Name</TableHead>
+                                <TableHead className="text-center">Features</TableHead>
+                                <TableHead>Special Instructions</TableHead>
                                 <TableHead className="text-center">Status</TableHead>
-                                <TableHead className="text-center">Actions</TableHead>
+                                <TableHead className="text-center">Event Field Size</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {selectedComplexes.map((complex) => (
-                                <TableRow key={complex.id}>
-                                  <TableCell className="font-medium">
-                                    {complex.name}
-                                  </TableCell>
-                                  <TableCell className="text-center">
-                                    <Badge variant="secondary">
-                                      {complex.openFields + complex.closedFields} Fields
-                                    </Badge>
-                                  </TableCell>
-                                  <TableCell>
-                                    {complex.address}, {complex.city}, {complex.state}
-                                  </TableCell>
-                                  <TableCell className="text-center">
-                                    <Badge variant={complex.isOpen ? "success" : "destructive"}>
-                                      {complex.isOpen ? "Open" : "Closed"}
-                                    </Badge>
-                                  </TableCell>
-                                  <TableCell className="text-center">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => setViewingComplexId(complex.id)}
-                                    >
-                                      <Eye className="mr-2 h-4 w-4" />
-                                      View Fields
-                                    </Button>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
+                              {fieldsQuery.data.map((field) => {
+                                const hasChanges = !!eventFieldSizes[field.id];
+                                return (
+                                  <TableRow key={field.id}>
+                                    <TableCell className="font-medium">
+                                      {field.name}
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                      <div className="flex gap-2 justify-center">
+                                        {field.hasLights && (
+                                          <Badge variant="secondary">Lights</Badge>
+                                        )}
+                                        {field.hasParking && (
+                                          <Badge variant="secondary">Parking</Badge>
+                                        )}
+                                      </div>
+                                    </TableCell>
+                                    <TableCell>
+                                      {field.specialInstructions || 'N/A'}
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                      <Badge variant={field.isOpen ? "outline" : "destructive"}>
+                                        {field.isOpen ? "Open" : "Closed"}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                      <div className="flex items-center justify-center gap-2">
+                                        <Select
+                                          value={eventFieldSizes[field.id] || ''}
+                                          onValueChange={(value) => {
+                                            setEventFieldSizes(prev => ({
+                                              ...prev,
+                                              [field.id]: value as FieldSize
+                                            }));
+                                          }}
+                                        >
+                                          <SelectTrigger className="w-[120px]">
+                                            <SelectValue placeholder="Select size" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {['3v3', '4v4', '5v5', '6v6', '7v7', '8v8', '9v9', '10v10', '11v11', 'N/A'].map((size) => (
+                                              <SelectItem key={size} value={size}>
+                                                {size}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                        {hasChanges && (
+                                          <Badge variant="secondary">
+                                            Changed
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
                             </TableBody>
                           </Table>
-                        </CardContent>
-                      </Card>
-
-                      <Dialog open={!!viewingComplexId} onOpenChange={(open) => !open && setViewingComplexId(null)}>
-                        <DialogContent className="max-w-3xl">
-                          <DialogHeader>
-                            <DialogTitle>
-                              Fields in {selectedComplexes.find(c => c.id === viewingComplexId)?.name}
-                            </DialogTitle>
-                          </DialogHeader>
-
-                          <div className="mt-4">
-                            {fieldsQuery.isLoading ? (
-                              <div className="text-center py-4">Loading fields...</div>
-                            ) : !fieldsQuery.data?.length ? (
-                              <div className="text-center py-4">No fields available in this complex</div>
-                            ) : (
-                              <div className="space-y-4">
-                                <Table>
-                                  <TableHeader>
-                                    <TableRow>
-                                      <TableHead>Field Name</TableHead>
-                                      <TableHead className="text-center">Features</TableHead>
-                                      <TableHead>Special Instructions</TableHead>
-                                      <TableHead className="text-center">Status</TableHead>
-                                      <TableHead className="text-center">Event Field Size</TableHead>
-                                    </TableRow>
-                                  </TableHeader>
-                                  <TableBody>
-                                    {fieldsQuery.data.map((field) => {
-                                      const hasChanges = !!eventFieldSizes[field.id];
-                                      return (
-                                        <TableRow key={field.id}>
-                                          <TableCell className="font-medium">
-                                            {field.name}
-                                          </TableCell>
-                                          <TableCell className="text-center">
-                                            <div className="flex gap-2 justify-center">
-                                              {field.hasLights && (
-                                                <Badge variant="secondary">Lights</Badge>
-                                              )}
-                                              {field.hasParking && (
-                                                <Badge variant="secondary">Parking</Badge>
-                                              )}
-                                            </div>
-                                          </TableCell>
-                                          <TableCell>
-                                            {field.specialInstructions || 'N/A'}
-                                          </TableCell>
-                                          <TableCell className="text-center">
-                                            <Badge variant={field.isOpen ? "outline" : "destructive"}>
-                                              {field.isOpen ? "Open" : "Closed"}
-                                            </Badge>
-                                          </TableCell>
-                                          <TableCell className="text-center">
-                                            <div className="flex items-center justify-center gap-2">
-                                              <Select
-                                                value={eventFieldSizes[field.id] || ''}
-                                                onValueChange={(value) => {
-                                                  setEventFieldSizes(prev => ({
-                                                    ...prev,
-                                                    [field.id]: value as FieldSize
-                                                  }));
-                                                }}
-                                              >
-                                                <SelectTrigger className="w-[120px]">
-                                                  <SelectValue placeholder="Select size" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                  {['3v3', '4v4', '5v5', '6v6', '7v7', '8v8', '9v9', '10v10', '11v11', 'N/A'].map((size) => (
-                                                    <SelectItem key={size} value={size}>
-                                                      {size}
-                                                    </SelectItem>
-                                                  ))}
-                                                </SelectContent>
-                                              </Select>
-                                              {hasChanges && (
-                                                <Badge variant="secondary">
-                                                  Changed
-                                                </Badge>
-                                              )}
-                                            </div>
-                                          </TableCell>
-                                        </TableRow>
-                                      );
-                                    })}
-                                  </TableBody>
-                                </Table>
-                                <div className="flex justify-end gap-2">
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                      // Reset changes when canceling
-                                      setEventFieldSizes({});
-                                      setViewingComplexId(null);
-                                    }}
-                                  >
-                                    Cancel
-                                  </Button>
-                                  <Button
-                                    onClick={() => {
-                                      toast({
-                                        title: "Field sizes saved",
-                                        description: "Field sizes have been set for this event.",
-                                      });
-                                      setViewingComplexId(null);
-                                    }}
-                                    disabled={Object.keys(eventFieldSizes).length === 0}
-                                  >
-                                    Save Field Sizes
-                                  </Button>
-                                </div>
-                              </div>
-
-                            )}
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                // Reset changes when canceling
+                                setEventFieldSizes({});
+                                setViewingComplexId(null);
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                toast({
+                                  title: "Field sizes saved",
+                                  description: "Field sizes have been set for this event.",
+                                  variant: "default",
+                                });
+                                setViewingComplexId(null);
+                              }}
+                              disabled={Object.keys(eventFieldSizes).length === 0}
+                            >
+                              Save Field Sizes
+                            </Button>
                           </div>
-                        </DialogContent>
-                      </Dialog>
-                    </>
-                  )}
+                        </div>
 
-                </div>
+                      )}
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
 
-                <div className="flex justify-end mt-4">
-                  <Button onClick={() => navigateTab('next')}>Save & Continue</Button>
-                </div>
+              <div className="flex justify-end mt-4">
+                <Button onClick={() => navigateTab('next')}>Save & Continue</Button>
               </div>
             </TabsContent>
 
