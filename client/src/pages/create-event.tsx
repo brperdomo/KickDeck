@@ -209,8 +209,8 @@ export default function CreateEvent() {
   const [isScoringModalOpen, setIsScoringModalOpen] = useState(false);
   const [editingScoringRule, setEditingScoringRule] = useState<ScoringRule | null>(null);
   const [selectedComplexes, setSelectedComplexes] = useState<SelectedComplex[]>([]);
-  const [viewingComplexId, setViewingComplexId] = useState<number | null>(null);
-  const [eventFieldSizes, setEventFieldSizes] = useState<Record<number, FieldSize>>({});
+    const [viewingComplexId, setViewingComplexId] = useState<number | null>(null);
+    const [eventFieldSizes, setEventFieldSizes] = useState<Record<number, FieldSize>>({});
   const { toast } = useToast();
   const [isComplexDialogOpen, setIsComplexDialogOpen] = useState(false);
   const [editingComplex, setEditingComplex] = useState<Complex | null>(null);
@@ -220,12 +220,17 @@ export default function CreateEvent() {
     queryKey: ['/api/admin/complexes'],
     enabled: activeTab === 'complexes',
     queryFn: async () => {
-      const response = await fetch('/api/admin/complexes');
-      if (!response.ok) {
-        throw new Error('Failed to fetch complexes');
+      try {
+        const response = await fetch('/api/admin/complexes');
+        if (!response.ok) {
+          throw new Error('Failed to fetch complexes');
+        }
+        const data = await response.json();
+        return data as Complex[];
+      } catch (error) {
+        console.error('Error fetching complexes:', error);
+        throw error;
       }
-      const data = await response.json();
-      return data as Complex[];
     }
   });
 
@@ -234,12 +239,17 @@ export default function CreateEvent() {
     enabled: !!viewingComplexId,
     queryFn: async () => {
       if (!viewingComplexId) return [];
-      const response = await fetch(`/api/admin/complexes/${viewingComplexId}/fields`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch fields');
+      try {
+        const response = await fetch(`/api/admin/complexes/${viewingComplexId}/fields`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch fields');
+        }
+        const data = await response.json();
+        return data as Field[];
+      } catch (error) {
+        console.error('Error fetching fields:', error);
+        throw error;
       }
-      const data = await response.json();
-      return data as Field[];
     }
   });
 
@@ -361,6 +371,33 @@ export default function CreateEvent() {
     }
   });
 
+    const handleEditComplex = (complex: Complex) => {
+        try {
+            setEditingComplex(complex);
+            setIsComplexDialogOpen(true);
+        } catch (error) {
+            console.error('Error setting up complex edit:', error);
+            toast({
+                title: "Error",
+                description: "Failed to open complex editor",
+                variant: "destructive",
+            });
+        }
+    };
+
+    const handleViewFields = (complexId: number) => {
+        try {
+            setViewingComplexId(complexId);
+        } catch (error) {
+            console.error('Error setting up fields view:', error);
+            toast({
+                title: "Error",
+                description: "Failed to view fields",
+                variant: "destructive",
+            });
+        }
+    };
+
 
   const handleCreateComplex = async (data: ComplexFormValues) => {
     try {
@@ -369,18 +406,7 @@ export default function CreateEvent() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: data.name,
-          address: data.address,
-          city: data.city,
-          state: data.state,
-          country: data.country,
-          openTime: data.openTime,
-          closeTime: data.closeTime,
-          rules: data.rules || null,
-          directions: data.directions || null,
-          isOpen: data.isOpen
-        }),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
@@ -413,18 +439,7 @@ export default function CreateEvent() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: data.name,
-          address: data.address,
-          city: data.city,
-          state: data.state,
-          country: data.country,
-          openTime: data.openTime,
-          closeTime: data.closeTime,
-          rules: data.rules || null,
-          directions: data.directions || null,
-          isOpen: data.isOpen
-        }),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
@@ -448,15 +463,6 @@ export default function CreateEvent() {
       });
     }
   };
-
-    const handleEditComplex = (complex: Complex) => {
-        setEditingComplex(complex);
-        setIsComplexDialogOpen(true);
-    };
-
-    const handleViewFields = (complexId: number) => {
-        setViewingComplexId(complexId);
-    };
 
 
 
@@ -1095,7 +1101,7 @@ export default function CreateEvent() {
                                         type="number"
                                         className="pl-7"
                                         placeholder="0.00"
-                                                                               step="0.01"min="0"
+                                                                                step="0.01"min="0"
                                         {...field}
                                         value={field.value?? ''}
                                         onChange={(e) => {
