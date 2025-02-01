@@ -7,7 +7,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -32,7 +31,6 @@ const complexSchema = z.object({
   closeTime: z.string().min(1, "Close time is required"),
   rules: z.string().optional(),
   directions: z.string().optional(),
-  isOpen: z.boolean().default(true),
 });
 
 type ComplexFormValues = z.infer<typeof complexSchema>;
@@ -52,12 +50,12 @@ interface ComplexEditorProps {
     isOpen: boolean;
   };
   onSubmit: (data: ComplexFormValues) => Promise<void>;
-  trigger?: React.ReactNode;
-  mode?: 'create' | 'edit';
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
 }
 
-export function ComplexEditor({ complex, onSubmit, trigger, mode = 'edit' }: ComplexEditorProps) {
-  const [open, setOpen] = useState(false);
+export function ComplexEditor({ complex, onSubmit, open, onOpenChange, title }: ComplexEditorProps) {
   const { toast } = useToast();
 
   const form = useForm<ComplexFormValues>({
@@ -72,7 +70,6 @@ export function ComplexEditor({ complex, onSubmit, trigger, mode = 'edit' }: Com
       closeTime: complex.closeTime,
       rules: complex.rules,
       directions: complex.directions,
-      isOpen: complex.isOpen,
     } : {
       name: '',
       address: '',
@@ -81,35 +78,28 @@ export function ComplexEditor({ complex, onSubmit, trigger, mode = 'edit' }: Com
       country: 'USA',
       openTime: '06:00',
       closeTime: '22:00',
-      isOpen: true,
     },
   });
 
   async function handleSubmit(data: ComplexFormValues) {
     try {
       await onSubmit(data);
-      setOpen(false);
-      toast({
-        title: "Success",
-        description: `Complex ${mode === 'create' ? 'created' : 'updated'} successfully`,
-      });
+      onOpenChange(false);
+      form.reset();
     } catch (error) {
       toast({
         title: "Error",
-        description: `Failed to ${mode === 'create' ? 'create' : 'update'} complex`,
+        description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
       });
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || <Button variant="outline" size="sm">Edit</Button>}
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{mode === 'create' ? 'Create Complex' : 'Edit Complex'}</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -234,7 +224,12 @@ export function ComplexEditor({ complex, onSubmit, trigger, mode = 'edit' }: Com
                 </FormItem>
               )}
             />
-            <Button type="submit">Save</Button>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Save</Button>
+            </div>
           </form>
         </Form>
       </DialogContent>

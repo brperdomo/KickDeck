@@ -194,6 +194,18 @@ interface Field {
   specialInstructions: string | null;
 }
 
+const complexFormSchema = z.object({
+  name: z.string().min(1, "Complex name is required"),
+  address: z.string().min(1, "Address is required"),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  openFields: z.number().min(0, "Open fields must be a positive number"),
+  closedFields: z.number().min(0, "Closed fields must be a positive number"),
+  isOpen: z.boolean(),
+});
+
+type ComplexFormValues = z.infer<typeof complexFormSchema>;
+
 export default function CreateEvent() {
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<EventTab>('information');
@@ -207,6 +219,8 @@ export default function CreateEvent() {
   const [viewingComplexId, setViewingComplexId] = useState<number | null>(null);
   const [eventFieldSizes, setEventFieldSizes] = useState<Record<number, FieldSize>>({});
   const { toast } = useToast();
+    const [isComplexDialogOpen, setIsComplexDialogOpen] = useState(false);
+  const [editingComplex, setEditingComplex] = useState<Complex | null>(null);
 
   const complexesQuery = useQuery({
     queryKey: ['/api/admin/complexes'],
@@ -338,6 +352,45 @@ export default function CreateEvent() {
       selectedComplexIds: []
     }
   });
+
+    const handleCreateComplex = async (data: ComplexFormValues) => {
+    const response = await fetch('/api/admin/complexes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create complex');
+    }
+
+    toast({
+      title: "Success",
+      description: "Complex created successfully",
+    });
+    await complexesQuery.refetch();
+  };
+
+  const handleUpdateComplex = async (data: ComplexFormValues) => {
+    if (!editingComplex) return;
+
+    const response = await fetch(`/api/admin/complexes/${editingComplex.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update complex');
+    }
+
+    toast({
+      title: "Success",
+      description: "Complex updated successfully",
+    });
+    await complexesQuery.refetch();
+  };
+
 
   const onComplexSelectionSubmit = (data: ComplexSelectionValues) => {
     const selectedIds = data.selectedComplexIds.map(id => parseInt(id));
@@ -1091,100 +1144,86 @@ export default function CreateEvent() {
               </div>
             </TabsContent>
 
-            <TabsContent value="complexes">
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Available Complexes</h3>
-                  <div className="flex gap-2">
-                    <ComplexEditor
-                      mode="create"
-                      trigger={
-                        <Button>
-                          <Plus className="mr-2 h-4 w-4" />
-                          Add New Complex
-                        </Button>
-                      }
-                      onSubmit={async (data) => {
-                        const response = await fetch('/api/admin/complexes', {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify(data),
-                        });
+              <TabsContent value="complexes">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Available Complexes</h3>
+        <div className="flex gap-2">
+          <Button onClick={() => {
+            setEditingComplex(null);
+            setIsComplexDialogOpen(true);
+          }}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Complex
+          </Button>
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+        </div>
+      </div>
 
-                        if (!response.ok) {
-                          throw new Error('Failed to create complex');
-                        }
-
-                        // Refetch complexes after creation
-                        await complexesQuery.refetch();
+      {complexesQuery.isLoading ? (
+        <div>Loading complexes...</div>
+      ) : complexesQuery.error ? (
+        <div>Error loading complexes</div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Complex Name</TableHead>
+              <TableHead>Address</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-center">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {complexesQuery.data?.map((complex) => (
+              <TableRow key={complex.id}>
+                <TableCell className="font-medium">{complex.name}</TableCell>
+                <TableCell>{complex.address}, {complex.city}, {complex.state}</TableCell>
+                <TableCell>
+                  <Badge variant={complex.isOpen ? "outline" : "destructive"}>
+                    {complex.isOpen ? "Open" : "Closed"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-center">
+                  <div className="flex justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditingComplex(complex);
+                        setIsComplexDialogOpen(true);
                       }}
-                    />
-                    <Button variant="outline" onClick={() => navigateTab('prev')}>
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      Back
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setViewingComplexId(complex.id)}
+                    >
+                      <Eye className="h-4 w-4" />
                     </Button>
                   </div>
-                </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
 
-                {complexesQuery.isLoading ? (
-                  <div>Loading complexes...</div>
-                ) : complexesQuery.error ? (
-                  <div>Error loading complexes</div>
-                ) : (
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {complexesQuery.data?.map((complex) => (
-                      <Card key={complex.id} className="p-4">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h4 className="font-semibold">{complex.name}</h4>
-                            <p className="text-sm text-gray-500">{complex.address}</p>
-                            <p className="text-sm text-gray-500">{complex.city}, {complex.state}</p>
-                          </div>
-                          <ComplexEditor
-                            mode="edit"
-                            complex={complex}
-                            onSubmit={async (data) => {
-                              const response = await fetch(`/api/admin/complexes/${complex.id}`, {
-                                method: 'PATCH',
-                                headers: {
-                                  'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify(data),
-                              });
+      <ComplexEditor
+        complex={editingComplex || undefined}
+        open={isComplexDialogOpen}
+        onOpenChange={setIsComplexDialogOpen}
+        title={editingComplex ? "Edit Complex" : "Add Complex"}
+        onSubmit={editingComplex ? handleUpdateComplex : handleCreateComplex}
+      />
 
-                              if (!response.ok) {
-                                throw new Error('Failed to update complex');
-                              }
-
-                              // Refetch complexes after update
-                              await complexesQuery.refetch();
-                            }}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>Status:</span>
-                            <Badge variant={complex.isOpen ? "outline" : "destructive"}>
-                              {complex.isOpen ? "Open" : "Closed"}
-                            </Badge>
-                          </div>
-                          <Button
-                            variant="outline"
-                            className="w-full"
-                            onClick={() => setViewingComplexId(complex.id)}
-                          >
-                            <Eye className="mr-2 h-4 w-4" />
-                            View Fields
-                          </Button>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-
-                <Dialog open={!!viewingComplexId} onOpenChange={(open) => !open && setViewingComplexId(null)}>
+      {/* Keep the existing Dialog for viewing fields */}
+      <Dialog open={!!viewingComplexId} onOpenChange={(open) => !open && setViewingComplexId(null)}>
                   <DialogContent className="max-w-3xl">
                     <DialogHeader>
                       <DialogTitle>
@@ -1300,12 +1339,8 @@ export default function CreateEvent() {
                     </div>
                   </DialogContent>
                 </Dialog>
-              </div>
-
-              <div className="flex justify-end mt-4">
-                <Button onClick={() => navigateTab('next')}>Save & Continue</Button>
-              </div>
-            </TabsContent>
+    </div>
+  </TabsContent>
 
             <TabsContent value="settings">
               <div className="space-y-4">
