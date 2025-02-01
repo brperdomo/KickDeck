@@ -90,8 +90,6 @@ export function ComplexEditor({ open, onOpenChange, onSubmit, complex }: Complex
   const handleSubmit = async (data: ComplexFormValues) => {
     try {
       await onSubmit(data);
-      form.reset();
-      onOpenChange(false);
     } catch (error) {
       console.error('Form submission error:', error);
       toast({

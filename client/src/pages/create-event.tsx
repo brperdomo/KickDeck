@@ -189,8 +189,11 @@ const complexFormSchema = z.object({
   address: z.string().min(1, "Address is required"),
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
-  openFields: z.number().min(0, "Open fields must be a positive number"),
-  closedFields: z.number().min(0, "Closed fields must be a positive number"),
+  country: z.string().min(1, "Country is required"),
+  openTime: z.string().min(1, "Open time is required"),
+  closeTime: z.string().min(1, "Close time is required"),
+  rules: z.string().optional(),
+  directions: z.string().optional(),
   isOpen: z.boolean(),
 });
 
@@ -362,7 +365,18 @@ export default function CreateEvent() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          name: data.name,
+          address: data.address,
+          city: data.city,
+          state: data.state,
+          country: data.country,
+          openTime: data.openTime,
+          closeTime: data.closeTime,
+          rules: data.rules || null,
+          directions: data.directions || null,
+          isOpen: data.isOpen
+        }),
       });
 
       if (!response.ok) {
@@ -395,7 +409,18 @@ export default function CreateEvent() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          name: data.name,
+          address: data.address,
+          city: data.city,
+          state: data.state,
+          country: data.country,
+          openTime: data.openTime,
+          closeTime: data.closeTime,
+          rules: data.rules || null,
+          directions: data.directions || null,
+          isOpen: data.isOpen
+        }),
       });
 
       if (!response.ok) {
@@ -876,8 +901,7 @@ export default function CreateEvent() {
                   <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                       <Button onClick={() => {
-                        setEditingAgeGroup(null);
-                        ageGroupForm.reset();
+                        setEditingAgeGroup(null);ageGroupForm.reset();
                       }}>
                         <Plus className="mr-2 h-4 w-4" />
                         Add New Age Group
