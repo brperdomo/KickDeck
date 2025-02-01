@@ -36,11 +36,25 @@ const complexSchema = z.object({
 
 type ComplexFormValues = z.infer<typeof complexSchema>;
 
+interface Complex {
+  id: number;
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  openTime: string;
+  closeTime: string;
+  rules?: string;
+  directions?: string;
+  isOpen: boolean;
+}
+
 interface ComplexEditorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: ComplexFormValues) => Promise<void>;
-  complex?: ComplexFormValues & { id: number } | null;
+  complex?: Complex | null;
 }
 
 export function ComplexEditor({ open, onOpenChange, onSubmit, complex }: ComplexEditorProps) {
@@ -77,6 +91,7 @@ export function ComplexEditor({ open, onOpenChange, onSubmit, complex }: Complex
     try {
       await onSubmit(data);
       form.reset();
+      onOpenChange(false);
     } catch (error) {
       console.error('Form submission error:', error);
       toast({
@@ -100,7 +115,7 @@ export function ComplexEditor({ open, onOpenChange, onSubmit, complex }: Complex
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Complex Name</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter complex name" {...field} />
                   </FormControl>
@@ -144,10 +159,10 @@ export function ComplexEditor({ open, onOpenChange, onSubmit, complex }: Complex
                   <FormItem>
                     <FormLabel>State</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="CA" 
-                        maxLength={2} 
-                        {...field} 
+                      <Input
+                        placeholder="CA"
+                        maxLength={2}
+                        {...field}
                         onChange={e => {
                           const value = e.target.value.toUpperCase();
                           if (value.length <= 2) {
