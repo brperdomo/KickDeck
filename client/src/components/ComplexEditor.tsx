@@ -32,12 +32,13 @@ const complexSchema = z.object({
   closeTime: z.string().min(1, "Close time is required"),
   rules: z.string().optional(),
   directions: z.string().optional(),
+  isOpen: z.boolean().default(true),
 });
 
 type ComplexFormValues = z.infer<typeof complexSchema>;
 
 interface ComplexEditorProps {
-  complex: {
+  complex?: {
     id: number;
     name: string;
     address: string;
@@ -48,17 +49,20 @@ interface ComplexEditorProps {
     closeTime: string;
     rules?: string;
     directions?: string;
+    isOpen: boolean;
   };
-  onUpdate: (id: number, data: ComplexFormValues) => Promise<void>;
+  onSubmit: (data: ComplexFormValues) => Promise<void>;
+  trigger?: React.ReactNode;
+  mode?: 'create' | 'edit';
 }
 
-export function ComplexEditor({ complex, onUpdate }: ComplexEditorProps) {
+export function ComplexEditor({ complex, onSubmit, trigger, mode = 'edit' }: ComplexEditorProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  
+
   const form = useForm<ComplexFormValues>({
     resolver: zodResolver(complexSchema),
-    defaultValues: {
+    defaultValues: complex ? {
       name: complex.name,
       address: complex.address,
       city: complex.city,
@@ -68,21 +72,31 @@ export function ComplexEditor({ complex, onUpdate }: ComplexEditorProps) {
       closeTime: complex.closeTime,
       rules: complex.rules,
       directions: complex.directions,
+      isOpen: complex.isOpen,
+    } : {
+      name: '',
+      address: '',
+      city: '',
+      state: '',
+      country: 'USA',
+      openTime: '06:00',
+      closeTime: '22:00',
+      isOpen: true,
     },
   });
 
-  async function onSubmit(data: ComplexFormValues) {
+  async function handleSubmit(data: ComplexFormValues) {
     try {
-      await onUpdate(complex.id, data);
+      await onSubmit(data);
       setOpen(false);
       toast({
         title: "Success",
-        description: "Complex updated successfully",
+        description: `Complex ${mode === 'create' ? 'created' : 'updated'} successfully`,
       });
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update complex",
+        description: `Failed to ${mode === 'create' ? 'create' : 'update'} complex`,
         variant: "destructive",
       });
     }
@@ -91,16 +105,14 @@ export function ComplexEditor({ complex, onUpdate }: ComplexEditorProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          Edit
-        </Button>
+        {trigger || <Button variant="outline" size="sm">Edit</Button>}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Edit Complex</DialogTitle>
+          <DialogTitle>{mode === 'create' ? 'Create Complex' : 'Edit Complex'}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -222,7 +234,7 @@ export function ComplexEditor({ complex, onUpdate }: ComplexEditorProps) {
                 </FormItem>
               )}
             />
-            <Button type="submit">Save changes</Button>
+            <Button type="submit">Save</Button>
           </form>
         </Form>
       </DialogContent>

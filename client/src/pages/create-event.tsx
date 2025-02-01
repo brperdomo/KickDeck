@@ -1095,10 +1095,37 @@ export default function CreateEvent() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold">Available Complexes</h3>
-                  <Button onClick={() => navigateTab('prev')}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                  </Button>
+                  <div className="flex gap-2">
+                    <ComplexEditor
+                      mode="create"
+                      trigger={
+                        <Button>
+                          <Plus className="mr-2 h-4 w-4" />
+                          Add New Complex
+                        </Button>
+                      }
+                      onSubmit={async (data) => {
+                        const response = await fetch('/api/admin/complexes', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify(data),
+                        });
+
+                        if (!response.ok) {
+                          throw new Error('Failed to create complex');
+                        }
+
+                        // Refetch complexes after creation
+                        await complexesQuery.refetch();
+                      }}
+                    />
+                    <Button variant="outline" onClick={() => navigateTab('prev')}>
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Back
+                    </Button>
+                  </div>
                 </div>
 
                 {complexesQuery.isLoading ? (
@@ -1116,48 +1143,32 @@ export default function CreateEvent() {
                             <p className="text-sm text-gray-500">{complex.city}, {complex.state}</p>
                           </div>
                           <ComplexEditor
+                            mode="edit"
                             complex={complex}
-                            onUpdate={async (id, data) => {
-                              try {
-                                const response = await fetch(`/api/admin/complexes/${id}`, {
-                                  method: 'PATCH',
-                                  headers: {
-                                    'Content-Type': 'application/json',
-                                  },
-                                  body: JSON.stringify(data),
-                                });
+                            onSubmit={async (data) => {
+                              const response = await fetch(`/api/admin/complexes/${complex.id}`, {
+                                method: 'PATCH',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(data),
+                              });
 
-                                if (!response.ok) {
-                                  throw new Error('Failed to update complex');
-                                }
-
-                                // Invalidate and refetch complexes
-                                await complexesQuery.refetch();
-
-                                toast({
-                                  title: "Success",
-                                  description: "Complex updated successfully",
-                                  variant: "default",
-                                });
-                              } catch (error) {
-                                console.error('Error updating complex:', error);
-                                toast({
-                                  title: "Error",
-                                  description: "Failed to update complex",
-                                  variant: "destructive",
-                                });
+                              if (!response.ok) {
+                                throw new Error('Failed to update complex');
                               }
+
+                              // Refetch complexes after update
+                              await complexesQuery.refetch();
                             }}
                           />
                         </div>
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
-                            <span>Open Fields:</span>
-                            <span>{complex.openFields}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span>Closed Fields:</span>
-                            <span>{complex.closedFields}</span>
+                            <span>Status:</span>
+                            <Badge variant={complex.isOpen ? "outline" : "destructive"}>
+                              {complex.isOpen ? "Open" : "Closed"}
+                            </Badge>
                           </div>
                           <Button
                             variant="outline"
