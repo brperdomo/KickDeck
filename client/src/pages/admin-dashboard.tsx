@@ -530,8 +530,10 @@ function ComplexesView() {
   const updateComplexMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: ComplexFormValues }) => {
       const response = await fetch(`/api/admin/complexes/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           name: data.name,
           address: data.address,
@@ -545,6 +547,7 @@ function ComplexesView() {
           isOpen: data.isOpen
         }),
       });
+
       if (!response.ok) {
         const error = await response.text();
         throw new Error(error || 'Failed to update complex');
