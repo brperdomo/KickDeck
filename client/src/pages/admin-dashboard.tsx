@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useUser } from "@/hooks/use-user";
 import { useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "@/hooks/use-theme";
 import { SelectUser } from "@db/schema";
 import { useToast } from "@/hooks/use-toast";
@@ -81,6 +81,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { AdminModal } from "@/components/admin/AdminModal";
 import { lazy, Suspense } from "react";
+import { ComplexEditor } from "@/components/ComplexEditor";
 
 const MyAccount = lazy(() => import("./my-account"));
 
@@ -109,6 +110,19 @@ interface Complex {
   updatedAt: string;
   openFields: number;
   closedFields: number;
+}
+
+interface ComplexFormValues {
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  openTime: string;
+  closeTime: string;
+  rules?: string;
+  directions?: string;
+  isOpen: boolean;
 }
 
 function AdministratorsView() {
@@ -463,6 +477,8 @@ function ComplexesView() {
   const { toast } = useToast();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedComplex, setSelectedComplex] = useState<Complex | null>(null);
+  const [viewingComplexId, setViewingComplexId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
 
   const complexesQuery = useQuery({
     queryKey: ['/api/admin/complexes'],
@@ -472,6 +488,89 @@ function ComplexesView() {
       return response.json();
     }
   });
+
+  const fieldsQuery = useQuery({
+    queryKey: ['/api/admin/fields', viewingComplexId],
+    enabled: !!viewingComplexId,
+    queryFn: async () => {
+      if (!viewingComplexId) return [];
+      const response = await fetch(`/api/admin/complexes/${viewingComplexId}/fields`);
+      if (!response.ok) throw new Error('Failed to fetch fields');
+      return response.json();
+    }
+  });
+
+  const createComplexMutation = useMutation({
+    mutationFn: async (data: ComplexFormValues) => {
+      const response = await fetch('/api/admin/complexes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to create complex');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['/api/admin/complexes']);
+      toast({
+        title: "Success",
+        description: "Complex created successfully",
+      });
+      setIsAddModalOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create complex",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateComplexMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: ComplexFormValues }) => {
+      const response = await fetch(`/api/admin/complexes/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to update complex');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['/api/admin/complexes']);
+      toast({
+        title: "Success",
+        description: "Complex updated successfully",
+      });
+      setIsAddModalOpen(false);
+      setSelectedComplex(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update complex",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = async (data: ComplexFormValues) => {
+    if (selectedComplex) {
+      await updateComplexMutation.mutate({ id: selectedComplex.id, data });
+    } else {
+      await createComplexMutation.mutate(data);
+    }
+  };
+
+  const handleViewFields = (complexId: number) => {
+    setViewingComplexId(complexId);
+  };
+
+  const handleEditComplex = (complex: Complex) => {
+    setSelectedComplex(complex);
+    setIsAddModalOpen(true);
+  };
 
   if (complexesQuery.isLoading) {
     return (
@@ -509,11 +608,11 @@ function ComplexesView() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => setSelectedComplex(complex)}>
+                    <DropdownMenuItem onClick={() => handleEditComplex(complex)}>
                       <Edit className="mr-2 h-4 w-4" />
                       Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleViewFields(complex.id)}>
                       <Eye className="mr-2 h-4 w-4" />
                       View Fields
                     </DropdownMenuItem>
@@ -530,21 +629,53 @@ function ComplexesView() {
                   </p>
                 </div>
                 <div>
-                  <Label>Fields Status</Label>
-                  <div className="flex gap-2 mt-1">
-                    <Badge variant="secondary" className="bg-green-50 text-green-700">
-                      {complex.openFields} Open
-                    </Badge>
-                    <Badge variant="secondary" className="bg-red-50 text-red-700">
-                      {complex.closedFields} Closed
-                    </Badge>
-                  </div>
+                  <Label>Status</Label>
+                  <Badge variant={complex.isOpen ? "success" : "destructive"}>
+                    {complex.isOpen ? "Open" : "Closed"}
+                  </Badge>
                 </div>
               </div>
+
+              {viewingComplexId === complex.id && (
+                <div className="mt-4 border-t pt-4">
+                  <h3 className="text-lg font-semibold mb-2">Fields</h3>
+                  {fieldsQuery.isLoading ? (
+                    <div className="flex items-center justify-center p-4">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </div>
+                  ) : fieldsQuery.data?.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No fields available</p>
+                  ) : (
+                    <div className="grid gap-2">
+                      {fieldsQuery.data?.map((field: any) => (
+                        <div key={field.id} className="flex justify-between items-center p-2 bg-muted rounded-lg">
+                          <div>
+                            <p className="font-medium">{field.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {field.hasLights ? "Has lights" : "No lights"} • 
+                              {field.hasParking ? "Parking available" : "No parking"}
+                            </p>
+                          </div>
+                          <Badge variant={field.isOpen ? "success" : "destructive"}>
+                            {field.isOpen ? "Open" : "Closed"}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}
       </div>
+
+      <ComplexEditor
+        open={isAddModalOpen}
+        onOpenChange={setIsAddModalOpen}
+        onSubmit={handleSubmit}
+        complex={selectedComplex}
+      />
     </>
   );
 }
@@ -784,7 +915,7 @@ function AdminDashboard() {
       case 'reports':
         return <ReportsView />;
       case 'chat':
-        return <ChatView />;
+          return <ChatView />;
       case 'account':
         return (
           <Suspense fallback={<div className="flex items-center justify-center min-h-[200px]">
