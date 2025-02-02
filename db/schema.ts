@@ -466,3 +466,20 @@ export const adminFormSchema = z.object({
 });
 
 export type AdminFormValues = z.infer<typeof adminFormSchema>;
+
+// Add updates table definition after the adminRoles table
+export const updates = pgTable("updates", {
+  id: serial("id").primaryKey(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Add update schemas after adminFormSchema
+export const insertUpdateSchema = createInsertSchema(updates, {
+  content: z.string().min(1, "Update content is required"),
+});
+
+export const selectUpdateSchema = createSelectSchema(updates);
+
+export type InsertUpdate = typeof updates.$inferInsert;
+export type SelectUpdate = typeof updates.$inferSelect;
