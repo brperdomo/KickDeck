@@ -45,6 +45,7 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
   const queryClient = useQueryClient();
   const [emailToCheck, setEmailToCheck] = useState("");
 
+  // Initialize form with adminToEdit data or empty values
   const form = useForm<AdminFormValues>({
     resolver: zodResolver(adminFormSchema),
     defaultValues: {
@@ -56,6 +57,7 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
     },
   });
 
+  // Reset form when adminToEdit changes
   useEffect(() => {
     if (adminToEdit) {
       form.reset({
@@ -75,7 +77,6 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
       });
     }
   }, [adminToEdit, form]);
-
 
   // Email validation query
   const emailCheckQuery = useQuery({
@@ -140,7 +141,12 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          roles: data.roles,
+        }),
       });
 
       if (!response.ok) {
@@ -415,8 +421,7 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
               <Button 
                 type="submit" 
                 disabled={
-                  createAdminMutation.isPending || 
-                  updateAdminMutation.isPending ||
+                  (adminToEdit ? updateAdminMutation.isPending : createAdminMutation.isPending) ||
                   emailCheckQuery.isLoading || 
                   (emailCheckQuery.data?.exists && form.getValues("email") !== adminToEdit?.email) ||
                   form.getValues("roles").length === 0
