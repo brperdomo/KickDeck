@@ -13,10 +13,7 @@ export async function createAdmin() {
       .limit(1);
 
     if (!existingAdmin) {
-      console.log("Creating new admin user...");
-      const password = "!Nova2025";
-      const hashedPassword = await crypto.hash(password);
-      console.log("Password hashed successfully");
+      const hashedPassword = await crypto.hash("!Nova2025");
 
       await db.insert(users).values({
         email: "bperdomo@zoho.com",
@@ -29,23 +26,8 @@ export async function createAdmin() {
         createdAt: new Date().toISOString()
       });
       console.log("Admin user created successfully");
-
-      // Verify the password works
-      const [newAdmin] = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, "bperdomo@zoho.com"))
-        .limit(1);
-
-      if (newAdmin) {
-        const passwordVerifies = await crypto.compare(password, newAdmin.password);
-        console.log("Password verification check:", passwordVerifies ? "SUCCESS" : "FAILED");
-      }
     } else {
       console.log("Admin user already exists");
-      // Test existing admin password
-      const passwordVerifies = await crypto.compare("!Nova2025", existingAdmin.password);
-      console.log("Existing admin password verification:", passwordVerifies ? "SUCCESS" : "FAILED");
     }
   } catch (error) {
     console.error("Error creating admin user:", error);
