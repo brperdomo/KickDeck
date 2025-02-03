@@ -156,7 +156,6 @@ function AdministratorsView() {
     roles: string[];
   } | null>(null);
 
-  // Query to fetch all administrators
   const administratorsQuery = useQuery({
     queryKey: ['/api/admin/administrators'],
     queryFn: async () => {
@@ -167,22 +166,31 @@ function AdministratorsView() {
   });
 
   const administrators = useMemo(() => {
-    if (!administratorsQuery.data) return {};
+    if (!administratorsQuery.data) {
+      return {
+        super_admin: [],
+        tournament_admin: [],
+        score_admin: [],
+        finance_admin: []
+      };
+    }
 
     // Initialize with empty arrays for each role type
     const groupedAdmins = {
-      super_admin: [],
-      tournament_admin: [],
-      score_admin: [],
-      finance_admin: [],
+      super_admin: [] as any[],
+      tournament_admin: [] as any[],
+      score_admin: [] as any[],
+      finance_admin: [] as any[]
     };
 
     // Group administrators by their roles
     administratorsQuery.data.forEach((admin: any) => {
-      if (Array.isArray(admin.roles)) {
+      if (admin.roles && Array.isArray(admin.roles)) {
         admin.roles.forEach((role: string) => {
+          // Only add if it's a valid role group
           if (role in groupedAdmins) {
-            if (!groupedAdmins[role].find((a: any) => a.id === admin.id)) {
+            // Avoid duplicate entries
+            if (!groupedAdmins[role].some((a: any) => a.id === admin.id)) {
               groupedAdmins[role].push(admin);
             }
           }
@@ -1115,7 +1123,7 @@ function AdminDashboard() {
       case 'reports':
         return <ReportsView />;
       case 'chat':
-        return <ChatView />;
+         return <ChatView />;
       case 'account':
         return (
           <Suspense fallback={
