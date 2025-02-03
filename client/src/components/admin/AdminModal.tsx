@@ -374,15 +374,15 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
               <Button 
                 type="submit" 
                 disabled={
-                  (adminToEdit ? updateAdminMutation.isPending : createAdminMutation.isPending) ||
+                  (createAdminMutation.isPending || updateAdminMutation.isPending) ||
                   emailCheckQuery.isLoading || 
-                  (emailCheckQuery.data?.exists && form.getValues("email") !== adminToEdit?.email) ||
-                  form.getValues("roles").length === 0
+                  (emailCheckQuery.data?.exists && form.getValues("email") !== adminToEdit?.email)
                 }
               >
-                {createAdminMutation.isPending || updateAdminMutation.isPending
-                  ? adminToEdit ? "Updating..." : "Creating..."
-                  : adminToEdit ? "Update Administrator" : "Create Administrator"}
+                {(createAdminMutation.isPending || updateAdminMutation.isPending) ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                {adminToEdit ? "Update Administrator" : "Create Administrator"}
               </Button>
             </div>
           </form>
