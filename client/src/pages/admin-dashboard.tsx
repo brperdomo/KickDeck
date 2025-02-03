@@ -162,18 +162,25 @@ function AdministratorsView() {
     queryFn: async () => {
       const response = await fetch('/api/admin/administrators');
       if (!response.ok) throw new Error('Failed to fetch administrators');
-      return response.json();
+      const data = await response.json();
+      // Group administrators by their roles
+      return data.reduce((acc: Record<string, any[]>, admin: any) => {
+        // Handle multiple roles per admin
+        admin.roles?.forEach((role: string) => {
+          if (!acc[role]) acc[role] = [];
+          // Only add the admin once per role category
+          if (!acc[role].find((a: any) => a.id === admin.id)) {
+            acc[role].push(admin);
+          }
+        });
+        return acc;
+      }, {});
     }
   });
 
   const administrators = useMemo(() => {
     if (!administratorsQuery.data) return {};
-    return administratorsQuery.data.reduce((acc: Record<string, any[]>, admin: any) => {
-      const type = admin.roles?.[0] || 'super_admin';
-      if (!acc[type]) acc[type] = [];
-      acc[type].push(admin);
-      return acc;
-    }, {});
+    return administratorsQuery.data;
   }, [administratorsQuery.data]);
 
   const handleEditAdmin = (admin: any) => {
