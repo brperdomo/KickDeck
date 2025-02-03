@@ -137,13 +137,11 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
       if (!adminToEdit) throw new Error("No administrator to update");
 
       const updateData = {
-        email: data.email,
         firstName: data.firstName,
         lastName: data.lastName,
+        email: data.email,
         roles: data.roles,
       };
-
-      console.log('Updating admin with data:', updateData);
 
       const response = await fetch(`/api/admin/administrators/${adminToEdit.id}`, {
         method: "PATCH",
@@ -154,14 +152,11 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
       });
 
       if (!response.ok) {
-        console.error('Update failed with status:', response.status);
-        const error = await response.text();
-        throw new Error(error);
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to update administrator');
       }
 
-      const result = await response.json();
-      console.log('Update successful:', result);
-      return result;
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/administrators"] });
@@ -172,7 +167,6 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
       onOpenChange(false);
     },
     onError: (error) => {
-      console.error('Update error:', error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to update administrator",
@@ -190,9 +184,6 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
       return;
     }
 
-    console.log('Form data being submitted:', data);
-    console.log('Admin being edited:', adminToEdit);
-
     try {
       if (adminToEdit) {
         await updateAdminMutation.mutateAsync(data);
@@ -200,6 +191,7 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
         await createAdminMutation.mutateAsync(data);
       }
     } catch (error) {
+      // Error will be handled by mutation's onError
       console.error('Form submission error:', error);
     }
   };
