@@ -4,6 +4,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { db } from "@db";
 import { users } from "@db/schema";
 import { createAdmin } from "./create-admin";
+import { WebSocketServer } from "ws";
 
 const app = express();
 
@@ -69,6 +70,30 @@ async function testDbConnection() {
     // Register routes first to ensure all middleware is set up
     const server = registerRoutes(app);
 
+    // Create WebSocket server
+    const wss = new WebSocketServer({ 
+      server,
+      path: "/ws",
+      // Ignore Vite HMR WebSocket connections
+      verifyClient: (info) => {
+        return info.req.headers['sec-websocket-protocol'] !== 'vite-hmr';
+      }
+    });
+
+    // WebSocket connection handling
+    wss.on('connection', (ws) => {
+      log("New WebSocket connection established");
+
+      ws.on('message', (message) => {
+        // Handle incoming messages
+        log("Received WebSocket message: " + message);
+      });
+
+      ws.on('close', () => {
+        log("WebSocket connection closed");
+      });
+    });
+
     if (app.get("env") === "development") {
       // Setup Vite middleware
       await setupVite(app, server);
@@ -87,7 +112,7 @@ async function testDbConnection() {
     });
 
     // Start the server
-    const PORT = 5000;
+    const PORT = process.env.PORT || 5000;
     server.listen(PORT, "0.0.0.0", () => {
       log(`Server started successfully on port ${PORT}`);
     });
