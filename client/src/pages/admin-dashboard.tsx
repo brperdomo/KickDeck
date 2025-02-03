@@ -162,25 +162,35 @@ function AdministratorsView() {
     queryFn: async () => {
       const response = await fetch('/api/admin/administrators');
       if (!response.ok) throw new Error('Failed to fetch administrators');
-      const data = await response.json();
-      // Group administrators by their roles
-      return data.reduce((acc: Record<string, any[]>, admin: any) => {
-        // Handle multiple roles per admin
-        admin.roles?.forEach((role: string) => {
-          if (!acc[role]) acc[role] = [];
-          // Only add the admin once per role category
-          if (!acc[role].find((a: any) => a.id === admin.id)) {
-            acc[role].push(admin);
-          }
-        });
-        return acc;
-      }, {});
+      return response.json();
     }
   });
 
   const administrators = useMemo(() => {
     if (!administratorsQuery.data) return {};
-    return administratorsQuery.data;
+
+    // Initialize with empty arrays for each role type
+    const groupedAdmins = {
+      super_admin: [],
+      tournament_admin: [],
+      score_admin: [],
+      finance_admin: [],
+    };
+
+    // Group administrators by their roles
+    administratorsQuery.data.forEach((admin: any) => {
+      if (Array.isArray(admin.roles)) {
+        admin.roles.forEach((role: string) => {
+          if (role in groupedAdmins) {
+            if (!groupedAdmins[role].find((a: any) => a.id === admin.id)) {
+              groupedAdmins[role].push(admin);
+            }
+          }
+        });
+      }
+    });
+
+    return groupedAdmins;
   }, [administratorsQuery.data]);
 
   const handleEditAdmin = (admin: any) => {
@@ -283,14 +293,14 @@ function AdministratorsView() {
           </TabsTrigger>
         </TabsList>
 
-        {Object.keys(administrators).map((type) => (
+        {Object.entries(administrators).map(([type, admins]) => (
           <TabsContent key={type} value={type} className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
                   {getTypeLabel(type)}
                   <Badge className={`ml-2 ${getBadgeColor(type)}`}>
-                    {administrators[type]?.length || 0} Members
+                    {admins?.length || 0} Members
                   </Badge>
                 </CardTitle>
               </CardHeader>
@@ -300,22 +310,24 @@ function AdministratorsView() {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
-                      <TableHead>Role</TableHead>
+                      <TableHead>Roles</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {administrators[type]?.map((admin: any) => (
+                    {admins?.map((admin: any) => (
                       <TableRow key={admin.id}>
                         <TableCell className="font-medium">
                           {admin.firstName} {admin.lastName}
                         </TableCell>
                         <TableCell>{admin.email}</TableCell>
                         <TableCell>
-                          <Badge variant="outline">
-                            {admin.roles?.[0] || "N/A"}
-                          </Badge>
+                          {admin.roles?.map((role: string) => (
+                            <Badge key={role} variant="outline" className="mr-1">
+                              {role}
+                            </Badge>
+                          ))}
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary" className="bg-green-50 text-green-700">
