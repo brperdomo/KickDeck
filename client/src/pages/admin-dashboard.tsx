@@ -86,6 +86,7 @@ import { UpdatesLogModal } from "@/components/admin/UpdatesLogModal";
 import { useDropzone } from 'react-dropzone';
 
 
+
 const MyAccount = lazy(() => import("./my-account"));
 
 // Type guard function to check if user is admin
@@ -562,20 +563,28 @@ function OrganizationSettingsForm() {
     setLogo(file);
 
     try {
-      // Extract colors from the uploaded image
+      // Import Vibrant using dynamic import
       const Vibrant = (await import('node-vibrant')).default;
-      const palette = await Vibrant.from(objectUrl).getPalette();
+
+      // Create new Vibrant instance
+      const v = new Vibrant(objectUrl);
+
+      // Get the palette with error handling
+      const palette = await v.getPalette();
 
       // Set primary color from the Vibrant swatch
       if (palette.Vibrant) {
         setPrimaryColor(palette.Vibrant.hex);
+        console.log('Primary color extracted:', palette.Vibrant.hex);
       }
 
       // Set secondary color from the LightVibrant or Muted swatch
       if (palette.LightVibrant) {
         setSecondaryColor(palette.LightVibrant.hex);
+        console.log('Secondary color (Light Vibrant) extracted:', palette.LightVibrant.hex);
       } else if (palette.Muted) {
         setSecondaryColor(palette.Muted.hex);
+        console.log('Secondary color (Muted) extracted:', palette.Muted.hex);
       }
 
       // Update the preview
@@ -590,9 +599,10 @@ function OrganizationSettingsForm() {
         description: "Brand colors have been updated based on your logo.",
       });
     } catch (error) {
+      console.error('Color extraction error:', error);
       toast({
         title: "Error",
-        description: "Failed to extract colors from the logo.",
+        description: "Failed to extract colors from the logo. Please try a different image.",
         variant: "destructive",
       });
     }
