@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, lazy, Suspense } from "react";
+import { useState, useMemo, useEffect, lazy, Suspense, useCallback } from "react";
 import { useLocation, Link } from "wouter";
 import {
   Collapsible,
@@ -46,6 +46,7 @@ import {
   Printer,
   Flag,
   CalendarDays,
+  ImageIcon,
 } from "lucide-react";
 import {
   Table,
@@ -82,6 +83,7 @@ import { AdminModal } from "@/components/admin/AdminModal";
 import { ComplexEditor } from "@/components/ComplexEditor";
 import { FieldEditor } from "@/components/FieldEditor";
 import { UpdatesLogModal } from "@/components/admin/UpdatesLogModal";
+import { useDropzone } from 'react-dropzone';
 
 
 const MyAccount = lazy(() => import("./my-account"));
@@ -94,6 +96,15 @@ function isAdminUser(user: SelectUser | null): user is SelectUser & { isAdmin: t
 type View = 'events' | 'teams' | 'administrators' | 'settings' | 'households' | 'reports' | 'account' | 'complexes' | 'scheduling' | 'chat';
 type SettingsView = 'branding' | 'general' | 'payments';
 type ReportType = 'financial' | 'manager' | 'player' | 'schedule' | 'guest-player';
+type RoleType = 'super_admin' | 'tournament_admin' | 'score_admin' | 'finance_admin';
+
+interface RoleGroup {
+  [key: string]: any[];
+  super_admin: any[];
+  tournament_admin: any[];
+  score_admin: any[];
+  finance_admin: any[];
+}
 
 interface Complex {
   id: number;
@@ -176,11 +187,11 @@ function AdministratorsView() {
     }
 
     // Initialize with empty arrays for each role type
-    const groupedAdmins = {
-      super_admin: [] as any[],
-      tournament_admin: [] as any[],
-      score_admin: [] as any[],
-      finance_admin: [] as any[]
+    const groupedAdmins: RoleGroup = {
+      super_admin: [],
+      tournament_admin: [],
+      score_admin: [],
+      finance_admin: []
     };
 
     // Group administrators by their roles
@@ -497,23 +508,137 @@ function BrandingPreview() {
               />
             </div>
           )}
-          {/* ... other preview elements ... */}
+          {/* Color Preview */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div
+                className="w-8 h-8 rounded"
+                style={{ backgroundColor: preview.primaryColor }}
+              />
+              <span className="text-sm">Primary Color</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div
+                className="w-8 h-8 rounded"
+                style={{ backgroundColor: preview.secondaryColor }}
+              />
+              <span className="text-sm">Secondary Color</span>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
   );
 }
 
+// Add type for organization settings
+interface OrganizationSettings {
+  id: number;
+  name: string;
+  createdAt: string;
+  primaryColor: string;
+  secondaryColor: string | null;
+  logoUrl: string | null;
+  updatedAt: string;
+}
+
 function OrganizationSettingsForm() {
-  const { settings, isLoading, updateSettings, isUpdating } = useOrganizationSettings();
+  const { settings, isLoading, updateSettings, isUpdating } = useOrganizationSettings<OrganizationSettings>();
   const { updatePreview } = useBrandingPreview();
   const [name, setName] = useState(settings?.name || '');
   const [primaryColor, setPrimaryColor] = useState(settings?.primaryColor || '#000000');
   const [secondaryColor, setSecondaryColor] = useState(settings?.secondaryColor || '#ffffff');
   const [logo, setLogo] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState(settings?.logoUrl);
+  const { toast } = useToast();
 
-  // ... form handling logic ...
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (!file) return;
+
+    // Preview the uploaded image
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+    setLogo(file);
+
+    try {
+      // Extract colors from the uploaded image
+      const Vibrant = (await import('node-vibrant')).default;
+      const palette = await Vibrant.from(objectUrl).getPalette();
+
+      // Set primary color from the Vibrant swatch
+      if (palette.Vibrant) {
+        setPrimaryColor(palette.Vibrant.hex);
+      }
+
+      // Set secondary color from the LightVibrant or Muted swatch
+      if (palette.LightVibrant) {
+        setSecondaryColor(palette.LightVibrant.hex);
+      } else if (palette.Muted) {
+        setSecondaryColor(palette.Muted.hex);
+      }
+
+      // Update the preview
+      updatePreview({
+        logoUrl: objectUrl,
+        primaryColor: palette.Vibrant?.hex || primaryColor,
+        secondaryColor: palette.LightVibrant?.hex || palette.Muted?.hex || secondaryColor,
+      });
+
+      toast({
+        title: "Colors extracted",
+        description: "Brand colors have been updated based on your logo.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to extract colors from the logo.",
+        variant: "destructive",
+      });
+    }
+  }, [primaryColor, secondaryColor, updatePreview, toast]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/*': ['.png', '.jpg', '.jpeg', '.svg']
+    },
+    maxFiles: 1,
+    multiple: false
+  });
+
+  const handleSave = async () => {
+    try {
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('primaryColor', primaryColor);
+      formData.append('secondaryColor', secondaryColor);
+      if (logo) {
+        formData.append('logo', logo);
+      }
+
+      await updateSettings.mutateAsync(formData);
+
+      toast({
+        title: "Success",
+        description: "Organization settings updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update settings",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-2 gap-6">
@@ -523,7 +648,93 @@ function OrganizationSettingsForm() {
         </CardHeader>
         <CardContent>
           <form className="space-y-6">
-            {/* ... form fields ... */}
+            <div>
+              <Label htmlFor="name">Organization Name</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter organization name"
+              />
+            </div>
+
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-lg p-6 cursor-pointer transition-colors ${
+                isDragActive ? 'border-primary bg-primary/5' : 'border-border'
+              }`}
+            >
+              <input {...getInputProps()} />
+              <div className="flex flex-col items-center justify-center gap-2">
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="Organization logo"
+                    className="h-20 w-20 object-contain"
+                  />
+                ) : (
+                  <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                )}
+                <p className="text-sm text-muted-foreground text-center">
+                  {isDragActive
+                    ? "Drop the logo here"
+                    : "Drag & drop your logo here, or click to select"}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="primaryColor">Primary Color</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="primaryColor"
+                    type="color"
+                    value={primaryColor}
+                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    className="w-12 h-12 p-1"
+                  />
+                  <Input
+                    value={primaryColor}
+                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    className="font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="secondaryColor">Secondary Color</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="secondaryColor"
+                    type="color"
+                    value={secondaryColor}
+                    onChange={(e) => setSecondaryColor(e.target.value)}
+                    className="w-12 h-12 p-1"
+                  />
+                  <Input
+                    value={secondaryColor}
+                    onChange={(e) => setSecondaryColor(e.target.value)}
+                    className="font-mono"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <Button
+              onClick={handleSave}
+              disabled={isUpdating}
+              className="w-full"
+            >
+              {isUpdating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving Changes
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </Button>
           </form>
         </CardContent>
       </Card>
@@ -755,7 +966,6 @@ function ComplexesView() {
     setIsFieldModalOpen(true);
   };
 
-
   if (complexesQuery.isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
@@ -822,7 +1032,7 @@ function ComplexesView() {
 
               {viewingComplexId === complex.id && (
                 <div className="mt-4 border-t pt-4">
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex justifybetween items-center mb-4">
                     <h3 className="text-lg font-semibold">Fields</h3>
                     <Button onClick={handleAddField} size="sm">
                       <Plus className="mr-2 h-4 w-4" />
@@ -1136,7 +1346,7 @@ function AdminDashboard() {
       case 'reports':
         return <ReportsView />;
       case 'chat':
-         return <ChatView />;
+        return <ChatView />;
       case 'account':
         return (
           <Suspense fallback={
@@ -1210,7 +1420,7 @@ function AdminDashboard() {
               MatchPro Client
             </Button>
 
-             <Button
+            <Button
               variant={activeView === 'scheduling' ? 'secondary' : 'ghost'}
               className="w-full justify-start"
               onClick={() => setActiveView('scheduling')}
@@ -1228,7 +1438,7 @@ function AdminDashboard() {
               Reports
             </Button>
 
-             <Button
+            <Button
               variant={activeView === 'chat' ? 'secondary' : 'ghost'}
               className="w-full justify-start"
               onClick={() => setActiveView('chat')}
