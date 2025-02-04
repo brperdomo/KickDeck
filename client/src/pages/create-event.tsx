@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Plus, Minus, Edit, Trash, Eye, ArrowRight } from "lucide-react";
+import { ArrowLeft, Plus, Minus, Edit, Trash, Eye, ArrowRight, ImageIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -39,6 +39,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { ComplexEditor } from "@/components/ComplexEditor";
 import { ComplexSelector } from "@/components/events/ComplexSelector";
+import { useDropzone } from 'react-dropzone';
 
 interface Complex {
   id: number;
@@ -54,6 +55,12 @@ interface Complex {
   isOpen: boolean;
 }
 
+interface EventBranding {
+  logoUrl?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+}
+
 interface EventData {
   name: string;
   startDate: string;
@@ -66,6 +73,7 @@ interface EventData {
   ageGroups: AgeGroup[];
   complexFieldSizes: Record<number, FieldSize>;
   selectedComplexIds: number[];
+  branding?: EventBranding;
 }
 
 function validateEventData(data: Partial<EventData>): { isValid: boolean; errors: string[] } {
@@ -210,12 +218,17 @@ export default function CreateEvent() {
   const [isScoringModalOpen, setIsScoringModalOpen] = useState(false);
   const [editingScoringRule, setEditingScoringRule] = useState<ScoringRule | null>(null);
   const [selectedComplexes, setSelectedComplexes] = useState<SelectedComplex[]>([]);
-    const [viewingComplexId, setViewingComplexId] = useState<number | null>(null);
-    const [eventFieldSizes, setEventFieldSizes] = useState<Record<number, FieldSize>>({});
+  const [viewingComplexId, setViewingComplexId] = useState<number | null>(null);
+  const [eventFieldSizes, setEventFieldSizes] = useState<Record<number, FieldSize>>({});
   const { toast } = useToast();
   const [isComplexDialogOpen, setIsComplexDialogOpen] = useState(false);
   const [editingComplex, setEditingComplex] = useState<Complex | null>(null);
   const queryClient = useQueryClient();
+  const [logo, setLogo] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [primaryColor, setPrimaryColor] = useState('#000000');
+  const [secondaryColor, setSecondaryColor] = useState('#ffffff');
+
 
   const complexesQuery = useQuery({
     queryKey: ['/api/admin/complexes'],
@@ -372,33 +385,32 @@ export default function CreateEvent() {
     }
   });
 
-    const handleEditComplex = (complex: Complex) => {
-        try {
-            setEditingComplex(complex);
-            setIsComplexDialogOpen(true);
-        } catch (error) {
-            console.error('Error setting up complex edit:', error);
-            toast({
-                title: "Error",
-                description: "Failed to open complex editor",
-                variant: "destructive",
-            });
-        }
-    };
+  const handleEditComplex = (complex: Complex) => {
+    try {
+      setEditingComplex(complex);
+      setIsComplexDialogOpen(true);
+    } catch (error) {
+      console.error('Error setting up complex edit:', error);
+      toast({
+        title: "Error",
+        description: "Failed to open complex editor",
+        variant: "destructive",
+      });
+    }
+  };
 
-    const handleViewFields = (complexId: number) => {
-        try {
-            setViewingComplexId(complexId);
-        } catch (error) {
-            console.error('Error setting up fields view:', error);
-            toast({
-                title: "Error",
-                description: "Failed to view fields",
-                variant: "destructive",
-            });
-        }
-    };
-
+  const handleViewFields = (complexId: number) => {
+    try {
+      setViewingComplexId(complexId);
+    } catch (error) {
+      console.error('Error setting up fields view:', error);
+      toast({
+        title: "Error",
+        description: "Failed to view fields",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleCreateComplex = async (data: ComplexFormValues) => {
     try {
@@ -466,8 +478,6 @@ export default function CreateEvent() {
   };
 
 
-
-
   const onComplexSelectionSubmit = (data: ComplexSelectionValues) => {
     const selectedIds = data.selectedComplexIds.map(id => parseInt(id));
     const updatedComplexes = complexesQuery.data?.filter(complex =>
@@ -479,210 +489,384 @@ export default function CreateEvent() {
     setSelectedComplexes(updatedComplexes);
   };
 
-    const handleCreateEvent = async () => {
-        const eventData = {
-            name: form.getValues().name,
-            startDate: form.getValues().startDate,
-            endDate: form.getValues().endDate,
-            timezone: form.getValues().timezone,
-            applicationDeadline: form.getValues().applicationDeadline,
-            details: form.getValues().details,
-            agreement: form.getValues().agreement,
-            refundPolicy: form.getValues().refundPolicy,
-            ageGroups: ageGroups.map(({ id, ...rest }) => ({
-                ...rest,
-                scoringRule: rest.scoringRule || null
-            })),
-            complexFieldSizes: eventFieldSizes,
-            selectedComplexIds: selectedComplexes.map(complex => complex.id)
-        };
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (!file) return;
 
-        const { isValid, errors } = validateEventData(eventData);
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+    setLogo(file);
 
-        if (!isValid) {
-            toast({
-                title: "Missing Required Fields",
-                description: (
-                    <ul className="list-disc pl-4">
-                        {errors.map((error, index) => (
-                            <li key={index}>{error}</li>
-                        ))}
-                    </ul>
-                ),
-                variant: "destructive",
-            });
-            return;
-        }
+    try {
+      const Vibrant = (await import('node-vibrant')).default;
+      const v = new Vibrant(objectUrl);
+      const palette = await v.getPalette();
 
-        try {
-            const response = await fetch('/api/admin/events', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(eventData),
-            });
+      if (palette.Vibrant) {
+        setPrimaryColor(palette.Vibrant.hex);
+        console.log('Primary color extracted:', palette.Vibrant.hex);
+      }
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText);
-            }
+      if (palette.LightVibrant) {
+        setSecondaryColor(palette.LightVibrant.hex);
+        console.log('Secondary color (Light Vibrant) extracted:', palette.LightVibrant.hex);
+      } else if (palette.Muted) {
+        setSecondaryColor(palette.Muted.hex);
+        console.log('Secondary color (Muted) extracted:', palette.Muted.hex);
+      }
 
-            toast({
-                title: "Success",
-                description: "Event created successfully! Redirecting to dashboard...",
-                variant: "default",
-            });
+      toast({
+        title: "Colors extracted",
+        description: "Brand colors have been updated based on your logo.",
+      });
+    } catch (error) {
+      console.error('Color extraction error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to extract colors from the logo. Please try a different image.",
+        variant: "destructive",
+      });
+    }
+  }, []);
 
-            setTimeout(() => {
-                navigate("/admin");
-            }, 1500);
-        } catch (error) {
-            console.error('Error creating event:', error);
-            toast({
-                title: "Error",
-                description: error instanceof Error ? error.message : "Failed to create event. Please try again.",
-                variant: "destructive",
-            });
-        }
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/*': ['.png', '.jpg', '.jpeg', '.svg']
+    },
+    maxFiles: 1,
+    multiple: false
+  });
+
+  const renderSettingsTab = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h3 className="text-lg font-semibold">Event Settings</h3>
+        </div>
+        <Button variant="outline" onClick={() => handleCreateEvent()}>
+          Create Event
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6 space-y-6">
+          <div>
+            <h4 className="text-sm font-medium mb-4">Event Branding</h4>
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-lg p-6 cursor-pointer transition-colors ${
+                isDragActive ? 'border-primary bg-primary/5' : 'border-border'
+              }`}
+            >
+              <input {...getInputProps()} />
+              <div className="flex flex-col items-center justify-center gap-2">
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="Event logo"
+                    className="h-20 w-20 object-contain"
+                  />
+                ) : (
+                  <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                )}
+                <p className="text-sm text-muted-foreground text-center">
+                  {isDragActive
+                    ? "Drop the event logo here"
+                    : "Drag & drop your event logo here, or click to select"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="primaryColor">Primary Color</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="primaryColor"
+                  type="color"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="w-12 h-12 p-1"
+                />
+                <Input
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="font-mono"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="secondaryColor">Secondary Color</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="secondaryColor"
+                  type="color"
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  className="w-12 h-12 p-1"
+                />
+                <Input
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  className="font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="border rounded-lg p-4">
+            <h4 className="text-sm font-medium mb-4">Brand Preview</h4>
+            <div className="space-y-4">
+              {previewUrl && (
+                <div className="flex justify-center p-4 bg-background rounded-lg">
+                  <img
+                    src={previewUrl}
+                    alt="Event logo preview"
+                    className="h-20 w-20 object-contain"
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-4">
+                <div>
+                  <div
+                    className="w-8 h-8 rounded"
+                    style={{ backgroundColor: primaryColor }}
+                  />
+                  <span className="text-sm">Primary</span>
+                </div>
+                <div>
+                  <div
+                    className="w-8 h-8 rounded"
+                    style={{ backgroundColor: secondaryColor }}
+                  />
+                  <span className="text-sm">Secondary</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderComplexesTab = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h3 className="text-lg font-semibold">Select Complexes for Event</h3>
+        </div>
+        <Button variant="outline" onClick={() => navigateTab('next')}>
+          Continue
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <ComplexSelector
+            selectedComplexes={selectedComplexes.map(complex => complex.id)}
+            onComplexSelect={(ids) => {
+              const selectedComplexData = complexesQuery.data?.filter(complex =>
+                ids.includes(complex.id)
+              ).map(complex => ({
+                ...complex,
+                selected: true
+              })) || [];
+              setSelectedComplexes(selectedComplexData);
+            }}
+          />
+        </CardContent>
+      </Card>
+
+      {selectedComplexes.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {selectedComplexes.map((complex) => (
+            <Card key={complex.id} className="p-4">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h4 className="font-semibold">{complex.name}</h4>
+                  <p className="text-sm text-gray-500">{complex.address}</p>
+                  <p className="text-sm text-gray-500">{complex.city}, {complex.state}</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleViewFields(complex.id)}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-sm text-gray-500">Status:</span>
+                <Badge variant={complex.isOpen ? "outline" : "destructive"}>
+                  {complex.isOpen ? "Open" : "Closed"}
+                </Badge>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={!!viewingComplexId} onOpenChange={(open) => !open && setViewingComplexId(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>
+              Fields in {complexesQuery.data?.find(c => c.id === viewingComplexId)?.name}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="mt-4">
+            {fieldsQuery.isLoading ? (
+              <div>Loading fields...</div>
+            ) : !fieldsQuery.data?.length ? (
+              <div>No fields available in this complex</div>
+            ) : (
+              <div className="space-y-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Field Name</TableHead>
+                      <TableHead className="text-center">Features</TableHead>
+                      <TableHead>Special Instructions</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-center">Event Field Size</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {fieldsQuery.data.map((field) => (
+                      <TableRow key={field.id}>
+                        <TableCell className="font-medium">{field.name}</TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex gap-2 justify-center">
+                            {field.hasLights && <Badge variant="secondary">Lights</Badge>}
+                            {field.hasParking && <Badge variant="secondary">Parking</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell>{field.specialInstructions || 'N/A'}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={field.isOpen ? "outline" : "destructive"}>
+                            {field.isOpen ? "Open" : "Closed"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Select
+                            value={eventFieldSizes[field.id] || ''}
+                            onValueChange={(value: FieldSize) => {
+                              setEventFieldSizes(prev => ({
+                                ...prev,
+                                [field.id]: value
+                              }));
+                            }}
+                          >
+                            <SelectTrigger className="w-[120px]">
+                              <SelectValue placeholder="Select size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {['3v3', '4v4', '5v5', '6v6', '7v7', '8v8', '9v9', '10v10', '11v11', 'N/A'].map((size) => (
+                                <SelectItem key={size} value={size}>
+                                  {size}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+
+  const handleCreateEvent = async () => {
+    const eventData = {
+      name: form.getValues().name,
+      startDate: form.getValues().startDate,
+      endDate: form.getValues().endDate,
+      timezone: form.getValues().timezone,
+      applicationDeadline: form.getValues().applicationDeadline,
+      details: form.getValues().details,
+      agreement: form.getValues().agreement,
+      refundPolicy: form.getValues().refundPolicy,
+      ageGroups: ageGroups.map(({ id, ...rest }) => ({
+        ...rest,
+        scoringRule: rest.scoringRule || null
+      })),
+      complexFieldSizes: eventFieldSizes,
+      selectedComplexIds: selectedComplexes.map(complex => complex.id),
+      branding: {
+        primaryColor,
+        secondaryColor,
+      }
     };
 
-const renderComplexesTab = () => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <Button variant="outline" onClick={() => navigateTab('prev')}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-        <h3 className="text-lg font-semibold">Select Complexes for Event</h3>
-      </div>
-      <Button variant="outline" onClick={() => navigateTab('next')}>
-        Continue
-        <ArrowRight className="ml-2 h-4 w-4" />
-      </Button>
-    </div>
+    const { isValid, errors } = validateEventData(eventData);
 
-    <Card>
-      <CardContent className="pt-6">
-        <ComplexSelector
-          selectedComplexes={selectedComplexes.map(complex => complex.id)}
-          onComplexSelect={(ids) => {
-            const selectedComplexData = complexesQuery.data?.filter(complex =>
-              ids.includes(complex.id)
-            ).map(complex => ({
-              ...complex,
-              selected: true
-            })) || [];
-            setSelectedComplexes(selectedComplexData);
-          }}
-        />
-      </CardContent>
-    </Card>
+    if (!isValid) {
+      toast({
+        title: "Missing Required Fields",
+        description: (
+          <ul className="list-disc pl-4">
+            {errors.map((error, index) => (
+              <li key={index}>{error}</li>
+            ))}
+          </ul>
+        ),
+        variant: "destructive",
+      });
+      return;
+    }
 
-    {selectedComplexes.length > 0 && (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {selectedComplexes.map((complex) => (
-          <Card key={complex.id} className="p-4">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h4 className="font-semibold">{complex.name}</h4>
-                <p className="text-sm text-gray-500">{complex.address}</p>
-                <p className="text-sm text-gray-500">{complex.city}, {complex.state}</p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleViewFields(complex.id)}
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex justify-between items-center mt-2">
-              <span className="text-sm text-gray-500">Status:</span>
-              <Badge variant={complex.isOpen ? "outline" : "destructive"}>
-                {complex.isOpen ? "Open" : "Closed"}
-              </Badge>
-            </div>
-          </Card>
-        ))}
-      </div>
-    )}
+    try {
+      const formData = new FormData();
+      formData.append('data', JSON.stringify(eventData));
+      if (logo) {
+        formData.append('logo', logo);
+      }
 
-    <Dialog open={!!viewingComplexId} onOpenChange={(open) => !open && setViewingComplexId(null)}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>
-            Fields in {complexesQuery.data?.find(c => c.id === viewingComplexId)?.name}
-          </DialogTitle>
-        </DialogHeader>
+      const response = await fetch('/api/admin/events', {
+        method: 'POST',
+        body: formData,
+      });
 
-        <div className="mt-4">
-          {fieldsQuery.isLoading ? (
-            <div>Loading fields...</div>
-          ) : !fieldsQuery.data?.length ? (
-            <div>No fields available in this complex</div>
-          ) : (
-            <div className="space-y-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Field Name</TableHead>
-                    <TableHead className="text-center">Features</TableHead>
-                    <TableHead>Special Instructions</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
-                    <TableHead className="text-center">Event Field Size</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {fieldsQuery.data.map((field) => (
-                    <TableRow key={field.id}>
-                      <TableCell className="font-medium">{field.name}</TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex gap-2 justify-center">
-                          {field.hasLights && <Badge variant="secondary">Lights</Badge>}
-                          {field.hasParking && <Badge variant="secondary">Parking</Badge>}
-                        </div>
-                      </TableCell>
-                      <TableCell>{field.specialInstructions || 'N/A'}</TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant={field.isOpen ? "outline" : "destructive"}>
-                          {field.isOpen ? "Open" : "Closed"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Select
-                          value={eventFieldSizes[field.id] || ''}
-                          onValueChange={(value: FieldSize) => {
-                            setEventFieldSizes(prev => ({
-                              ...prev,
-                              [field.id]: value
-                            }));
-                          }}
-                        >
-                          <SelectTrigger className="w-[120px]">
-                            <SelectValue placeholder="Select size" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {['3v3', '4v4', '5v5', '6v6', '7v7', '8v8', '9v9', '10v10', '11v11', 'N/A'].map((size) => (
-                              <SelectItem key={size} value={size}>
-                                {size}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
-  </div>
-);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+
+      toast({
+        title: "Success",
+        description: "Event created successfully! Redirecting to dashboard...",
+        variant: "default",
+      });
+
+      setTimeout(() => {
+        navigate("/admin");
+      }, 1500);
+    } catch (error) {
+      console.error('Error creating event:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create event. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -735,14 +919,14 @@ const renderComplexesTab = () => (
                       control={form.control}
                       name="startDate"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Event Start Date *</FormLabel>
-                          <FormControl>
-                            <Input type="datetime-local" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      <FormItem>
+                        <FormLabel>Event Start Date *</FormLabel>
+                        <FormControl>
+                          <Input type="datetime-local" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                     />
 
                     <FormField
@@ -1094,9 +1278,10 @@ const renderComplexesTab = () => (
                                         type="number"
                                         className="pl-7"
                                         placeholder="0.00"
-                                                                                step="0.01"min="0"
+                                        step="0.01"
+                                        min="0"
                                         {...field}
-                                        value={field.value?? ''}
+                                        value={field.value ?? ''}
                                         onChange={(e) => {
                                           const value = e.target.value;
                                           field.onChange(value === '' ? null : Number(value));
@@ -1350,23 +1535,12 @@ const renderComplexesTab = () => (
               </div>
             </TabsContent>
 
-             <TabsContent value="complexes">
+            <TabsContent value="complexes">
               {renderComplexesTab()}
             </TabsContent>
 
             <TabsContent value="settings">
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" onClick={() => navigateTab('prev')}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                  </Button>
-                  <h3 className="text-lg font-semibold">Event Settings</h3>
-                </div>
-                <div className="flex justify-end mt-4">
-                  <Button onClick={() => navigateTab('next')}>Save & Continue</Button>
-                </div>
-              </div>
+              {renderSettingsTab()}
             </TabsContent>
 
             <TabsContent value="administrators">
