@@ -166,13 +166,6 @@ interface EventFormProps {
   isEdit?: boolean;
 }
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_IMAGE_TYPES = {
-  'image/jpeg': ['.jpg', '.jpeg'],
-  'image/png': ['.png'],
-  'image/svg+xml': ['.svg']
-};
-
 function AgeGroupDialog({
   open,
   onClose,
@@ -357,7 +350,7 @@ function AgeGroupDialog({
   );
 }
 
-export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormProps) {
+const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormProps) => {
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<EventTab>("information");
   const [ageGroups, setAgeGroups] = useState<AgeGroup[]>(initialData?.ageGroups || []);
@@ -380,20 +373,6 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
   const [primaryColor, setPrimaryColor] = useState(initialData?.branding?.primaryColor || '#000000');
   const [secondaryColor, setSecondaryColor] = useState(initialData?.branding?.secondaryColor || '#ffffff');
   const [isExtracting, setIsExtracting] = useState(false);
-
-  const scoringForm = useForm<ScoringRuleValues>({
-    resolver: zodResolver(scoringRuleSchema),
-    defaultValues: editingScoringRule || {
-      title: "",
-      win: 0,
-      loss: 0,
-      tie: 0,
-      goalCapped: 0,
-      shutout: 0,
-      redCard: 0,
-      tieBreaker: "",
-    },
-  });
 
   const form = useForm<EventInformationValues>({
     resolver: zodResolver(eventInformationSchema),
@@ -531,8 +510,8 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/png': ['.png'],
       'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
       'image/svg+xml': ['.svg']
     },
     maxFiles: 1,
@@ -597,6 +576,12 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
   };
 
   const validateFile = (file: File) => {
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    const ACCEPTED_IMAGE_TYPES = {
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/svg+xml': ['.svg']
+    };
     if (file.size > MAX_FILE_SIZE) {
       throw new Error(`File size must be less than ${MAX_FILE_SIZE / 1024 / 1024}MB`);
     }
@@ -743,7 +728,6 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
       {isEdit && <SaveButton />}
     </div>
   );
-};
 
 const renderAgeGroupsContent = () => (
   <div className="space-y-6">
@@ -938,7 +922,8 @@ const renderScoringContent = () => (
                   <FormLabel>Shutout Points</FormLabel>
                   <FormControl>
                     <Input type="number" {...field} />
-                  </FormControl><FormMessage />
+                  </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -1213,7 +1198,6 @@ const renderComplexesContent = () => (
   </div>
 );
 
-
 const renderInformationContent = () => (
   <Form {...form}>
     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
@@ -1414,8 +1398,8 @@ const administratorsQuery = useQuery({
 const { getRootProps, getInputProps, isDragActive } = useDropzone({
   onDrop,
   accept: {
-    'image/png': ['.png'],
     'image/jpeg': ['.jpg', '.jpeg'],
+    'image/png': ['.png'],
     'image/svg+xml': ['.svg']
   },
   maxFiles: 1,
@@ -1423,71 +1407,33 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
 });
 
 return (
-  <div className="container mx-auto py-8 space-y-8">
+  <div className="container max-w-4xl mx-auto py-6 space-y-6">
     <div className="flex items-center gap-4">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setLocation("/admin")}
-        className="h-8 w-8 p-0"
-      >
+      <Button variant="ghost" size="icon" onClick={() => setLocation('/admin')}>
         <ArrowLeft className="h-4 w-4" />
       </Button>
-      <h1 className="text-2xl font-bold">
-        {isEdit ? 'Edit Event' : 'Create Event'}
-      </h1>
+      <h2 className="text-2xl font-bold">{isEdit ? 'Edit Event' : 'Create Event'}</h2>
     </div>
 
-    <Card>
-      <CardContent className="pt-6">
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as EventTab)}>
-          <TabsList className="grid w-full grid-cols-6">
-            {TAB_ORDER.map((tab) => (
-              <TabsTrigger key={tab} value={tab} className="capitalize">
-                {tab.replace('-', ' ')}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+    <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as EventTab)}>
+      <TabsList className="grid grid-cols-6 w-full">
+        <TabsTrigger value="information">Information</TabsTrigger>
+        <TabsTrigger value="age-groups">Age Groups</TabsTrigger>
+        <TabsTrigger value="scoring">Scoring</TabsTrigger>
+        <TabsTrigger value="complexes">Complexes</TabsTrigger>
+        <TabsTrigger value="settings">Settings</TabsTrigger>
+        <TabsTrigger value="administrators">Administrators</TabsTrigger>
+      </TabsList>
 
-          <TabsContent value="information" className="space-y-6">
-            {renderInformationContent()}
-          </TabsContent>
-
-          <TabsContent value="age-groups" className="space-y-6">
-            {renderAgeGroupsContent()}
-          </TabsContent>
-
-          <TabsContent value="scoring" className="space-y-6">
-            {renderScoringContent()}
-          </TabsContent>
-
-          <TabsContent value="complexes" className="space-y-6">
-            {renderComplexesContent()}
-          </TabsContent>
-
-          <TabsContent value="settings" className="space-y-6">
-            {renderSettingsContent()}
-          </TabsContent>
-
-          <TabsContent value="administrators" className="space-y-6">
-            {renderAdministratorsContent()}
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
-
-    <AgeGroupDialog
-      open={isAgeGroupDialogOpen}
-      onClose={() => {
-        setIsAgeGroupDialogOpen(false);
-        setEditingAgeGroup(null);
-      }}
-      onSubmit={handleAddAgeGroup}
-      defaultValues={editingAgeGroup || undefined}
-      isEdit={!!editingAgeGroup}
-    />
+      <TabsContent value="information">{renderInformationContent()}</TabsContent>
+      <TabsContent value="age-groups">{renderAgeGroupsContent()}</TabsContent>
+      <TabsContent value="scoring">{renderScoringContent()}</TabsContent>
+      <TabsContent value="complexes">{renderComplexesContent()}</TabsContent>
+      <TabsContent value="settings">{renderSettingsContent()}</TabsContent>
+      <TabsContent value="administrators">{renderAdministratorsContent()}</TabsContent>
+    </Tabs>
   </div>
 );
-}
+};
 
 export default EventForm;
