@@ -1,34 +1,45 @@
+
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { EventForm, type EventData } from "@/components/forms/EventForm";
+import { EventForm } from "@/components/forms/EventForm";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function EditEvent() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
-  // Query for event details
   const eventQuery = useQuery({
-    queryKey: [`/api/admin/events/${id}`],
+    queryKey: ['event', id],
     queryFn: async () => {
       const response = await fetch(`/api/admin/events/${id}`);
       if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
+        throw new Error('Failed to fetch event');
       }
-      return response.json();
+      const data = await response.json();
+      if (!data) {
+        throw new Error('No event data found');
+      }
+      return {
+        ...data,
+        startDate: data.startDate?.split('T')[0] || '',
+        endDate: data.endDate?.split('T')[0] || '',
+        applicationDeadline: data.applicationDeadline?.split('T')[0] || '',
+      };
     },
+    retry: 1,
+    refetchOnWindowFocus: false,
+    staleTime: 30000,
   });
 
-  // Mutation for updating event
   const updateEventMutation = useMutation({
-    mutationFn: async (data: EventData) => {
+    mutationKey: ['updateEvent', id],
+    mutationFn: async (data: any) => {
       const formData = new FormData();
       formData.append('data', JSON.stringify(data));
 
-      // If there's a logo File object in the branding data, append it
       if (data.branding?.logo instanceof File) {
         formData.append('logo', data.branding.logo);
       }
@@ -39,8 +50,7 @@ export default function EditEvent() {
       });
 
       if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
+        throw new Error('Failed to update event');
       }
 
       return response.json();
@@ -61,33 +71,39 @@ export default function EditEvent() {
     }
   });
 
-  if (eventQuery.isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (eventQuery.error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <p className="text-destructive font-medium">Failed to load event details</p>
-        <button
-          onClick={() => navigate("/admin")}
-          className="text-primary hover:underline"
-        >
-          Return to Dashboard
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <EventForm
-      initialData={eventQuery.data}
-      onSubmit={(data) => updateEventMutation.mutate(data)}
-      isEdit={true}
-    />
+    <div className="container mx-auto px-4 py-6 max-w-7xl">
+      <div className="flex items-center gap-4 mb-6">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate("/admin")}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <h2 className="text-2xl font-bold">Edit Event</h2>
+      </div>
+
+      <Card>
+        <CardContent className="p-6">
+          {eventQuery.isLoading ? (
+            <div className="flex items-center justify-center min-h-[200px]">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          ) : eventQuery.error ? (
+            <div className="text-center text-destructive space-y-4">
+              <p>Failed to load event details</p>
+              <Button onClick={() => navigate("/admin")}>Return to Dashboard</Button>
+            </div>
+          ) : eventQuery.data ? (
+            <EventForm
+              initialData={eventQuery.data}
+              onSubmit={(data) => updateEventMutation.mutate(data)}
+              isEdit={true}
+            />
+          ) : null}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

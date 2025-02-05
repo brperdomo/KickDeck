@@ -132,7 +132,7 @@ export function EventsTable() {
                       <DropdownMenuLabel>Event Actions</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => navigate(`/admin/events/${event.id}/edit`)}>
-                        <Edit className="h-4 w-4 mr-2" /> Edit Details
+                        <Edit className="h-4 w-4 mr-2" /> Edit Event
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate(`/admin/events/${event.id}/application-questions`)}>
                         <FileQuestion className="h-4 w-4 mr-2" /> Application Questions

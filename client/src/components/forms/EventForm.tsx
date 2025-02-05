@@ -224,150 +224,25 @@ function AgeGroupDialog({
     onClose();
   };
 
-  return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{isEdit ? 'Edit Age Group' : 'Add Age Group'}</DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="ageGroup"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Age Group Name *</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="e.g., U10, U12, etc." />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="gender"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Gender *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                      <SelectItem value="Coed">Coed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="birthDateStart"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Birth Date Start *</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="birthDateEnd"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Birth Date End *</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="fieldSize"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Field Size *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select field size" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {['3v3', '4v4', '5v5', '6v6', '7v7', '8v8', '9v9', '10v10', '11v11', 'N/A'].map((size) => (
-                        <SelectItem key={size} value={size}>{size}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="projectedTeams"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Projected Teams *</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="amountDue"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Amount Due</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex justify-end gap-4 pt-4">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button type="submit">
-                {isEdit ? 'Update' : 'Add'} Age Group
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
-  );
-}
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'information':
+        return renderInformationContent();
+      case 'age-groups':
+        return renderAgeGroupsContent();
+      case 'scoring':
+        return renderScoringContent();
+      case 'complexes':
+        return renderComplexesContent();
+      case 'settings':
+        return renderSettingsContent();
+      case 'administrators':
+        return renderAdministratorsContent();
+      default:
+        return null;
+    }
+  };
+};
 
 export const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormProps) => {
   // State declarations
@@ -962,7 +837,7 @@ const renderScoringContent = () => (
         <Card key={rule.id}>
           <CardContent className="p-4 flex justify-between itemscenter">
             <div>
-              <h4<h4 className="font-semibold">{rule.title}</h4>
+              <h4 className="font-semibold">{rule.title}</h4>
               <p className="text-sm text-muted-foreground">
                 Win: {rule.win} | Tie: {rule.tie} | Loss: {rule.loss}
               </p>
@@ -1359,50 +1234,6 @@ const renderComplexesContent = () => {
       {isEdit && <SaveButton />}
     </div>
   );
-};
-
-return (
-  <div className="container mx-auto py-6 space-y-6">
-    <div className="flex items-center gap-4">
-      <Button variant="ghost" size="icon" onClick={() => setLocation('/admin')}>
-        <ArrowLeft className="h-4 w-4" />
-      </Button>
-      <h2 className="text-2xl font-bold">
-        {isEdit ? 'Edit Event' : 'Create Event'}
-      </h2>
-    </div>
-
-    <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as EventTab)}>
-      <TabsList className="grid w-full grid-cols-6">
-        {TAB_ORDER.map((tab) => (
-          <TabsTrigger key={tab} value={tab} className="capitalize">
-            {tab.replace('-', ' ')}
-          </TabsTrigger>
-        ))}
-      </TabsList>
-      <TabsContent value={activeTab}>
-        {renderContent()}
-      </TabsContent>
-    </Tabs>
-
-    <AdminModal
-      open={isAdminModalOpen}
-      onOpenChange={setIsAdminModalOpen}
-      adminToEdit={editingAdmin}
-    />
-
-    <AgeGroupDialog
-      open={isAgeGroupDialogOpen}
-      onClose={() => {
-        setIsAgeGroupDialogOpen(false);
-        setEditingAgeGroup(null);
-      }}
-      onSubmit={handleAddAgeGroup}
-      defaultValues={editingAgeGroup || undefined}
-      isEdit={!!editingAgeGroup}
-    />
-  </div>
-);
 };
 
 export default EventForm;
