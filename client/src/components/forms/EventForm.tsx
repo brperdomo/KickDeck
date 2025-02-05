@@ -3,13 +3,10 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Plus, Minus, Edit, Trash, Eye, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Editor } from '@tinymce/tinymce-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -17,10 +14,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
-import { AdminModal } from "@/components/admin/AdminModal";
 import { useDropzone } from 'react-dropzone';
-import { ImageIcon, Loader2 as Loader2Icon } from 'lucide-react';
-import { useCallback } from "react";
+import { ImageIcon } from 'lucide-react';
 
 // Types and interfaces
 interface EventBranding {
@@ -322,9 +317,9 @@ function AgeGroupDialog({
                 <FormItem>
                   <FormLabel>Amount Due</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="number" 
-                      {...field} 
+                    <Input
+                      type="number"
+                      {...field}
                       onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
                     />
                   </FormControl>
@@ -347,7 +342,6 @@ function AgeGroupDialog({
     </Dialog>
   );
 }
-
 
 export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormProps) {
   const [, setLocation] = useLocation();
