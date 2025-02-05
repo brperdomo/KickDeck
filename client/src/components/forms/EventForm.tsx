@@ -18,174 +18,34 @@ import { useDropzone } from 'react-dropzone';
 import { AdminModal } from "@/components/admin/AdminModal";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Editor } from "@tinymce/tinymce-react";
+import {
+  EventBranding,
+  EventData,
+  Complex,
+  Field,
+  EventSetting,
+  EventAdministrator,
+  Gender,
+  FieldSize,
+  AgeGroup,
+  ScoringRule,
+  EventTab,
+  TAB_ORDER,
+  USA_TIMEZONES,
+  eventInformationSchema,
+  ageGroupSchema,
+  scoringRuleSchema,
+  eventSettingSchema,
+  EventInformationValues,
+  AgeGroupValues,
+  ScoringRuleValues,
+  EventSettingValues,
+  EventFormProps,
+  AdminModalProps,
+} from "./event-form-types";
 
-// Types and interfaces
-interface EventBranding {
-  logoUrl?: string;
-  primaryColor?: string;
-  secondaryColor?: string;
-}
 
-export interface EventData {
-  name: string;
-  startDate: string;
-  endDate: string;
-  timezone: string;
-  applicationDeadline: string;
-  details?: string;
-  agreement?: string;
-  refundPolicy?: string;
-  ageGroups: AgeGroup[];
-  complexFieldSizes: Record<number, FieldSize>;
-  selectedComplexIds: number[];
-  scoringRules: ScoringRule[];
-  settings: EventSetting[];
-  administrators: EventAdministrator[];
-  branding?: EventBranding;
-}
-
-interface Complex {
-  id: number;
-  name: string;
-  fields: {
-    id: number;
-    name: string;
-    complexId: number;
-    hasLights: boolean;
-    hasParking: boolean;
-    isOpen: boolean;
-  }[];
-}
-
-interface Field {
-  id: number;
-  name: string;
-  complexId: number;
-  hasLights: boolean;
-  hasParking: boolean;
-  isOpen: boolean;
-}
-
-interface EventSetting {
-  id: string;
-  key: string;
-  value: string;
-}
-
-interface EventAdministrator {
-  id: string;
-  userId: number;
-  role: 'owner' | 'admin' | 'moderator';
-  user: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-}
-
-type Gender = 'Male' | 'Female' | 'Coed';
-type FieldSize = '3v3' | '4v4' | '5v5' | '6v6' | '7v7' | '8v8' | '9v9' | '10v10' | '11v11' | 'N/A';
-
-interface AgeGroup {
-  id: string;
-  gender: Gender;
-  projectedTeams: number;
-  birthDateStart: string;
-  birthDateEnd: string;
-  scoringRule?: string;
-  ageGroup: string;
-  fieldSize: FieldSize;
-  amountDue?: number | null;
-}
-
-interface ScoringRule {
-  id: string;
-  title: string;
-  win: number;
-  loss: number;
-  tie: number;
-  goalCapped: number;
-  shutout: number;
-  redCard: number;
-  tieBreaker: string;
-}
-
-export type EventTab = 'information' | 'age-groups' | 'scoring' | 'complexes' | 'settings' | 'administrators';
-export const TAB_ORDER: EventTab[] = ['information', 'age-groups', 'scoring', 'complexes', 'settings', 'administrators'];
-
-const USA_TIMEZONES = [
-  { value: 'America/New_York', label: 'Eastern Time (ET)' },
-  { value: 'America/Chicago', label: 'Central Time (CT)' },
-  { value: 'America/Denver', label: 'Mountain Time (MT)' },
-  { value: 'America/Phoenix', label: 'Mountain Time - Arizona (MT)' },
-  { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
-  { value: 'America/Anchorage', label: 'Alaska Time (AKT)' },
-  { value: 'Pacific/Honolulu', label: 'Hawaii Time (HT)' },
-];
-
-// Form Schemas
-const eventInformationSchema = z.object({
-  name: z.string().min(1, "Event name is required"),
-  startDate: z.string().min(1, "Start date is required"),
-  endDate: z.string().min(1, "End date is required"),
-  timezone: z.string().min(1, "Time zone is required"),
-  applicationDeadline: z.string().min(1, "Application deadline is required"),
-  details: z.string().optional(),
-  agreement: z.string().optional(),
-  refundPolicy: z.string().optional(),
-});
-
-const ageGroupSchema = z.object({
-  gender: z.enum(['Male', 'Female', 'Coed']),
-  projectedTeams: z.number().min(0).max(200),
-  birthDateStart: z.string().min(1, "Start date is required"),
-  birthDateEnd: z.string().min(1, "End date is required"),
-  scoringRule: z.string().optional(),
-  ageGroup: z.string().min(1, "Age group is required"),
-  fieldSize: z.enum(['3v3', '4v4', '5v5', '6v6', '7v7', '8v8', '9v9', '10v10', '11v11', 'N/A']),
-  amountDue: z.number().nullable().optional(),
-});
-
-const scoringRuleSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  win: z.number().min(0, "Win points must be positive"),
-  loss: z.number().min(0, "Loss points must be positive"),
-  tie: z.number().min(0, "Tie points must be positive"),
-  goalCapped: z.number().min(0, "Goal cap must be positive"),
-  shutout: z.number().min(0, "Shutout points must be positive"),
-  redCard: z.number().min(-10, "Red card points must be greater than -10"),
-  tieBreaker: z.string().min(1, "Tie breaker is required"),
-});
-
-const eventSettingSchema = z.object({
-  key: z.string().min(1, "Key is required"),
-  value: z.string().min(1, "Value is required"),
-});
-
-type EventInformationValues = z.infer<typeof eventInformationSchema>;
-type AgeGroupValues = z.infer<typeof ageGroupSchema>;
-type ScoringRuleValues = z.infer<typeof scoringRuleSchema>;
-type EventSettingValues = z.infer<typeof eventSettingSchema>;
-
-interface EventFormProps {
-  initialData?: EventData;
-  onSubmit: (data: EventData) => void;
-  isEdit?: boolean;
-}
-
-interface AdminModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  adminToEdit?: {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    roles: string[];
-  } | null;
-}
-
-function AgeGroupDialog({
+const AgeGroupDialog = ({
   open,
   onClose,
   onSubmit,
@@ -197,7 +57,7 @@ function AgeGroupDialog({
   onSubmit: (data: AgeGroupValues) => void;
   defaultValues?: AgeGroup;
   isEdit?: boolean;
-}) {
+}) => {
   const form = useForm<AgeGroupValues>({
     resolver: zodResolver(ageGroupSchema),
     defaultValues: defaultValues || {
@@ -363,12 +223,14 @@ function AgeGroupDialog({
       </DialogContent>
     </Dialog>
   );
-}
+};
 
 export const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormProps) => {
-  // State declarations
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<EventTab>("information");
+  const { toast } = useToast();
+
+  // Initialize all state variables
   const [ageGroups, setAgeGroups] = useState<AgeGroup[]>(initialData?.ageGroups || []);
   const [selectedComplexIds, setSelectedComplexIds] = useState<number[]>(initialData?.selectedComplexIds || []);
   const [complexFieldSizes, setComplexFieldSizes] = useState<Record<number, FieldSize>>(initialData?.complexFieldSizes || {});
@@ -382,7 +244,6 @@ export const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormPr
   const [editingSetting, setEditingSetting] = useState<EventSetting | null>(null);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<AdminModalProps['adminToEdit'] | null>(null);
-  const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [logo, setLogo] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.branding?.logoUrl || null);
@@ -390,7 +251,7 @@ export const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormPr
   const [secondaryColor, setSecondaryColor] = useState(initialData?.branding?.secondaryColor || '#ffffff');
   const [isExtracting, setIsExtracting] = useState(false);
 
-  // Form initialization
+  // Main form setup
   const form = useForm<EventInformationValues>({
     resolver: zodResolver(eventInformationSchema),
     defaultValues: initialData || {
@@ -405,9 +266,10 @@ export const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormPr
     },
   });
 
+  // Scoring form setup
   const scoringForm = useForm<ScoringRuleValues>({
     resolver: zodResolver(scoringRuleSchema),
-    defaultValues: {
+    defaultValues: editingScoringRule || {
       title: "",
       win: 0,
       loss: 0,
@@ -439,21 +301,46 @@ export const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormPr
     }
   }, [editingScoringRule, scoringForm]);
 
-  useEffect(() => {
-    if (initialData && isEdit) {
-      form.reset(initialData);
-      setAgeGroups(initialData.ageGroups || []);
-      setScoringRules(initialData.scoringRules || []);
-      setSettings(initialData.settings || []);
-      setSelectedComplexIds(initialData.selectedComplexIds || []);
-      setComplexFieldSizes(initialData.complexFieldSizes || {});
-      setPrimaryColor(initialData.branding?.primaryColor || '#000000');
-      setSecondaryColor(initialData.branding?.secondaryColor || '#ffffff');
-      setPreviewUrl(initialData.branding?.logoUrl || null);
-    }
-  }, [initialData, isEdit, form]);
+  // Event handlers
+  const handleSubmit = async (data: EventInformationValues) => {
+    setIsSaving(true);
+    try {
+      const combinedData: EventData = {
+        ...data,
+        ageGroups,
+        scoringRules,
+        settings,
+        complexFieldSizes,
+        selectedComplexIds,
+        administrators: initialData?.administrators || [],
+        branding: {
+          primaryColor,
+          secondaryColor,
+          logo,
+          logoUrl: previewUrl || undefined,
+        },
+      };
 
-  // Handlers
+      await onSubmit(combinedData);
+
+      toast({
+        title: "Success",
+        description: isEdit ? "Event updated successfully" : "Event created successfully",
+      });
+
+      setLocation("/admin");
+    } catch (error) {
+      console.error('Submit error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save event",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleAddAgeGroup = (data: AgeGroupValues) => {
     if (editingAgeGroup) {
       setAgeGroups(ageGroups.map(group =>
@@ -555,44 +442,6 @@ export const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormPr
     }
 
     return true;
-  };
-
-  const handleSubmit = async (data: EventInformationValues) => {
-    setIsSaving(true);
-    try {
-      const combinedData: EventData = {
-        ...data,
-        ageGroups,
-        scoringRules,
-        settings,
-        complexFieldSizes,
-        selectedComplexIds,
-        administrators: initialData?.administrators || [],
-        branding: {
-          primaryColor,
-          secondaryColor,
-          logoUrl: previewUrl || undefined,
-        },
-      };
-
-      await onSubmit(combinedData);
-
-      toast({
-        title: "Success",
-        description: isEdit ? "Event updated successfully" : "Event created successfully",
-      });
-
-      setLocation("/admin");
-    } catch (error) {
-      console.error('Submit error:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to save event",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
-    }
   };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -1150,7 +999,7 @@ const renderSettingsContent = () => (
               />
               <Input
                 value={primaryColor}
-                onChange={(e) => setPrimaryColor(e.target.value)}
+                onChange={(e) => setPrimaryColor(etarget.value)}
                 className="font-mono"
               />
             </div>

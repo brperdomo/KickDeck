@@ -35,14 +35,24 @@ export default function EditEvent() {
   });
 
   const updateEventMutation = useMutation({
-    mutationKey: ['updateEvent', id],
     mutationFn: async (data: any) => {
       const formData = new FormData();
-      formData.append('data', JSON.stringify(data));
 
+      // Handle the logo file if it exists
       if (data.branding?.logo instanceof File) {
         formData.append('logo', data.branding.logo);
       }
+
+      // Remove the logo File object before stringifying
+      const dataToSend = {
+        ...data,
+        branding: {
+          ...data.branding,
+          logo: undefined // Remove the File object
+        }
+      };
+
+      formData.append('data', JSON.stringify(dataToSend));
 
       const response = await fetch(`/api/admin/events/${id}`, {
         method: 'PATCH',
