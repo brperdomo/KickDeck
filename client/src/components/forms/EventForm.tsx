@@ -999,7 +999,7 @@ const renderSettingsContent = () => (
               />
               <Input
                 value={primaryColor}
-                onChange={(e) => setPrimaryColor(etarget.value)}
+                onChange={(e) => setPrimaryColor(e.target.value)}
                 className="font-mono"
               />
             </div>
@@ -1184,6 +1184,81 @@ const renderComplexesContent = () => {
         ))}
       </div>
       {isEdit && <SaveButton />}
+    </div>
+  );
+};
+
+return (
+    <div className="w-full">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as EventTab)}>
+        <TabsList className="w-full justify-start mb-4 overflow-x-auto">
+          {TAB_ORDER.map((tab) => (
+            <TabsTrigger
+              key={tab}
+              value={tab}
+              className="capitalize"
+            >
+              {tab.replace('-', ' ')}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        <TabsContent value="information">
+          {renderInformationContent()}
+        </TabsContent>
+
+        <TabsContent value="age-groups">
+          {renderAgeGroupsContent()}
+        </TabsContent>
+
+        <TabsContent value="scoring">
+          {renderScoringContent()}
+        </TabsContent>
+
+        <TabsContent value="complexes">
+          {renderComplexesContent()}
+        </TabsContent>
+
+        <TabsContent value="settings">
+          {renderSettingsContent()}
+        </TabsContent>
+
+        <TabsContent value="administrators">
+          {renderAdministratorsContent()}
+        </TabsContent>
+      </Tabs>
+
+      <AgeGroupDialog
+        open={isAgeGroupDialogOpen}
+        onClose={() => {
+          setIsAgeGroupDialogOpen(false);
+          setEditingAgeGroup(null);
+        }}
+        onSubmit={handleAddAgeGroup}
+        defaultValues={editingAgeGroup || undefined}
+        isEdit={!!editingAgeGroup}
+      />
+
+      <Dialog open={isScoringDialogOpen} onOpenChange={setIsScoringDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingScoringRule ? 'Edit Scoring Rule' : 'Add Scoring Rule'}
+            </DialogTitle>
+          </DialogHeader>
+          <Form {...scoringForm}>
+            <form onSubmit={scoringForm.handleSubmit(handleAddScoringRule)} className="space-y-4">
+              {/* Scoring form fields */}
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      <AdminModal
+        open={isAdminModalOpen}
+        onOpenChange={setIsAdminModalOpen}
+        adminToEdit={editingAdmin}
+      />
     </div>
   );
 };
