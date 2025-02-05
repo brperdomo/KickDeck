@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Plus, Minus, Edit, Trash, Eye, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label"; // Added import for Label
 import {
   Select,
   SelectContent,
@@ -30,8 +31,17 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { AdminModal } from "@/components/admin/AdminModal";
+import { useDropzone } from 'react-dropzone';
+import { ImageIcon } from 'lucide-react';
+import { useCallback } from "react";
 
 // Types and interfaces
+interface EventBranding {
+  logoUrl?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+}
+
 export interface EventData {
   name: string;
   startDate: string;
@@ -47,6 +57,7 @@ export interface EventData {
   scoringRules: ScoringRule[];
   settings: EventSetting[];
   administrators: EventAdministrator[];
+  branding?: EventBranding;
 }
 
 interface Complex {
@@ -186,9 +197,13 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
   const [editingAgeGroup, setEditingAgeGroup] = useState<AgeGroup | null>(null);
   const [editingScoringRule, setEditingScoringRule] = useState<ScoringRule | null>(null);
   const [editingSetting, setEditingSetting] = useState<EventSetting | null>(null);
-   const [editingAdmin, setEditingAdmin] = useState<EventAdministrator | null>(null);
+  const [editingAdmin, setEditingAdmin] = useState<EventAdministrator | null>(null);
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const [logo, setLogo] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.branding?.logoUrl || null);
+  const [primaryColor, setPrimaryColor] = useState(initialData?.branding?.primaryColor || '#000000');
+  const [secondaryColor, setSecondaryColor] = useState(initialData?.branding?.secondaryColor || '#ffffff');
 
   // Fetch available complexes
   const complexesQuery = useQuery<Complex[]>({
@@ -262,6 +277,9 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
       setSettings(initialData.settings || []);
       setSelectedComplexIds(initialData.selectedComplexIds || []);
       setComplexFieldSizes(initialData.complexFieldSizes || {});
+      setPrimaryColor(initialData.branding?.primaryColor || '#000000');
+      setSecondaryColor(initialData.branding?.secondaryColor || '#ffffff');
+      setPreviewUrl(initialData?.branding?.logoUrl || null);
     }
   }, [initialData, isEdit, form]);
 
@@ -274,6 +292,11 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
       complexFieldSizes,
       selectedComplexIds,
       administrators: initialData?.administrators || [],
+      branding: {
+        primaryColor,
+        secondaryColor,
+        logoUrl: previewUrl
+      }
     };
     onSubmit(combinedData);
   };
@@ -352,20 +375,81 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
     setScoringRules(scoringRules.filter(rule => rule.id !== id));
   };
 
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (!file) return;
+
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+    setLogo(file);
+
+    try {
+      const Vibrant = (await import('node-vibrant')).default;
+      const v = new Vibrant(objectUrl);
+      const palette = await v.getPalette();
+
+      if (palette.Vibrant) {
+        setPrimaryColor(palette.Vibrant.hex);
+        console.log('Primary color extracted:', palette.Vibrant.hex);
+      }
+
+      if (palette.LightVibrant) {
+        setSecondaryColor(palette.LightVibrant.hex);
+        console.log('Secondary color (Light Vibrant) extracted:', palette.LightVibrant.hex);
+      } else if (palette.Muted) {
+        setSecondaryColor(palette.Muted.hex);
+        console.log('Secondary color (Muted) extracted:', palette.Muted.hex);
+      }
+
+      toast({
+        title: "Colors extracted",
+        description: "Brand colors have been updated based on your logo.",
+      });
+    } catch (error) {
+      console.error('Color extraction error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to extract colors from the logo. Please try a different image.",
+        variant: "destructive",
+      });
+    }
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/*': ['.png', '.jpg', '.jpeg', '.svg']
+    },
+    maxFiles: 1,
+    multiple: false
+  });
+
+
   const handleSaveChanges = async () => {
     setIsSaving(true);
     try {
-      const formData = form.getValues();
-      const combinedData: EventData = {
-        ...formData,
+      const formData = new FormData();
+      const data = {
+        ...form.getValues(),
         ageGroups,
         scoringRules,
         settings,
         complexFieldSizes,
         selectedComplexIds,
         administrators: initialData?.administrators || [],
+        branding: {
+          primaryColor,
+          secondaryColor,
+          logoUrl: previewUrl
+        }
       };
-      await onSubmit(combinedData);
+
+      formData.append('data', JSON.stringify(data));
+      if (logo) {
+        formData.append('logo', logo);
+      }
+
+      await onSubmit(data);
       toast({
         title: "Success",
         description: "Event updated successfully",
@@ -396,6 +480,112 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
           'Save Changes'
         )}
       </Button>
+    </div>
+  );
+
+  const renderSettingsContent = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="pt-6 space-y-6">
+          <div>
+            <h4 className="text-sm font-medium mb-4">Event Branding</h4>
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-lg p-6 cursor-pointer transition-colors ${
+                isDragActive ? 'border-primary bg-primary/5' : 'border-border'
+              }`}
+            >
+              <input {...getInputProps()} />
+              <div className="flex flex-col items-center justify-center gap-2">
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="Event logo"
+                    className="h-20 w-20 object-contain"
+                  />
+                ) : (
+                  <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                )}
+                <p className="text-sm text-muted-foreground text-center">
+                  {isDragActive
+                    ? "Drop the event logo here"
+                    : "Drag & drop your event logo here, or click to select"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="primaryColor">Primary Color</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="primaryColor"
+                  type="color"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="w-12 h-12 p-1"
+                />
+                <Input
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="font-mono"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="secondaryColor">Secondary Color</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="secondaryColor"
+                  type="color"
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  className="w-12 h-12 p-1"
+                />
+                <Input
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  className="font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="border rounded-lg p-4">
+            <h4 className="text-sm font-medium mb-4">Brand Preview</h4>
+            <div className="space-y-4">
+              {previewUrl && (
+                <div className="flex justify-center p-4 bg-background rounded-lg">
+                  <img
+                    src={previewUrl}
+                    alt="Event logo preview"
+                    className="h-20 w-20 object-contain"
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-4">
+                <div>
+                  <div
+                    className="w-8 h-8 rounded"
+                    style={{ backgroundColor: primaryColor }}
+                  />
+                  <span className="text-sm">Primary</span>
+                </div>
+                <div>
+                  <div
+                    className="w-8 h-8 rounded"
+                    style={{ backgroundColor: secondaryColor }}
+                  />
+                  <span className="text-sm">Secondary</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      {isEdit && <SaveButton />}
     </div>
   );
 
@@ -757,8 +947,7 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
                             <FormControl>
                               <Input {...field} />
                             </FormControl>
-                            <FormMessage />
-                          </FormItem>
+                            <FormMessage />                          </FormItem>
                         )}
                       />
                       <FormField
@@ -924,7 +1113,7 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
                           </FormItem>
                         )}
                       />
-                       {/* Scoring Rule Form Fields */}
+                      {/* Scoring Rule Form Fields */}
                       <FormField
                         control={scoringForm.control}
                         name="tie"
@@ -1072,124 +1261,31 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
 
             {/* Settings Tab */}
             <TabsContent value="settings">
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Event Settings</h3>
-                  <Button onClick={() => {
-                    setEditingSetting(null);
-                    settingForm.reset();
-                    setIsSettingDialogOpen(true);
-                  }}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Setting
-                  </Button>
-                </div>
-
-                <div className="space-y-4">
-                  {settings.map(setting => (
-                    <Card key={setting.id}>
-                      <CardContent className="p-4 flex justify-between items-center">
-                        <div>
-                          <h4 className="font-semibold">{setting.key}</h4>
-                          <p className="text-sm text-muted-foreground">{setting.value}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setEditingSetting(setting);
-                              settingForm.reset(setting);
-                              setIsSettingDialogOpen(true);
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive"
-                            onClick={() => {
-                              setSettings(settings.filter(s => s.id !== setting.id));
-                            }}
-                          >
-                            <Trash className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-                {isEdit && <SaveButton />}
-              </div>
-
-              <Dialog open={isSettingDialogOpen} onOpenChange={setIsSettingDialogOpen}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>
-                      {editingSetting ? 'Edit Setting' : 'Add Setting'}
-                    </DialogTitle>
-                  </DialogHeader>
-                  <Form {...settingForm}>
-                    <form onSubmit={settingForm.handleSubmit(handleAddSetting)} className="space-y-4">
-                      <FormField
-                        control={settingForm.control}
-                        name="key"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Key</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={settingForm.control}
-                        name="value"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Value</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button type="submit">
-                        {editingSetting ? 'Update Setting' : 'Add Setting'}
-                      </Button>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
+              {renderSettingsContent()}
             </TabsContent>
 
             {/* Administrators Tab */}
-            
-              <TabsContent value="administrators">
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold">Event Administrators</h3>
-                    <Button onClick={() => setIsAdminModalOpen(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Administrator
-                    </Button>
-                  </div>
-            
-                  {/* Administrators List */}
-                  <div className="grid gap-4">
-                    {initialData?.administrators?.map((admin) => (
-                      <Card key={admin.id}>
-                        <CardContent className="p-4 flex justify-between items-center">
-                          <div>
-                            <h4 className="font-semibold">{admin.user.firstName} {admin.user.lastName}</h4>
-                            <p className="text-sm text-muted-foreground">{admin.user.email}</p>
-                            <p className="text-sm">Role: {admin.role}</p>
-                          </div>
-                           <div className="flex gap-2">
+            <TabsContent value="administrators">
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Event Administrators</h3>
+                  <Button onClick={() => setIsAdminModalOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Administrator
+                  </Button>
+                </div>
+
+                {/* Administrators List */}
+                <div className="grid gap-4">
+                  {initialData?.administrators?.map((admin) => (
+                    <Card key={admin.id}>
+                      <CardContent className="p-4 flex justify-between items-center">
+                        <div>
+                          <h4 className="font-semibold">{admin.user.firstName} {admin.user.lastName}</h4>
+                          <p className="text-sm text-muted-foreground">{admin.user.email}</p>
+                          <p className="text-sm">Role: {admin.role}</p>
+                        </div>
+                        <div className="flex gap-2">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -1200,21 +1296,21 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
-                         </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
 
-                 <AdminModal 
+                <AdminModal
                   open={isAdminModalOpen}
                   onOpenChange={setIsAdminModalOpen}
                   adminToEdit={editingAdmin}
                 />
 
-                  {isEdit && <SaveButton />}
-                </div>
-              </TabsContent>
+                {isEdit && <SaveButton />}
+              </div>
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>

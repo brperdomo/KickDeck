@@ -25,10 +25,17 @@ export default function EditEvent() {
   // Mutation for updating event
   const updateEventMutation = useMutation({
     mutationFn: async (data: EventData) => {
+      const formData = new FormData();
+      formData.append('data', JSON.stringify(data));
+
+      // If there's a logo File object in the branding data, append it
+      if (data.branding?.logo instanceof File) {
+        formData.append('logo', data.branding.logo);
+      }
+
       const response = await fetch(`/api/admin/events/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: formData
       });
 
       if (!response.ok) {
