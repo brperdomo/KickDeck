@@ -388,6 +388,26 @@ const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormProps) =>
     },
   });
 
+  const scoringForm = useForm<ScoringRuleValues>({
+    resolver: zodResolver(scoringRuleSchema),
+    defaultValues: {
+      title: "",
+      win: 0,
+      loss: 0,
+      tie: 0,
+      goalCapped: 0,
+      shutout: 0,
+      redCard: 0,
+      tieBreaker: "",
+    },
+  });
+
+  useEffect(() => {
+    if (editingScoringRule) {
+      scoringForm.reset(editingScoringRule);
+    }
+  }, [editingScoringRule, scoringForm]);
+
   useEffect(() => {
     if (initialData && isEdit) {
       form.reset(initialData);
@@ -429,9 +449,10 @@ const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormProps) =>
 
       setLocation("/admin");
     } catch (error) {
+      console.error('Submit error:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to save event",
+        description: error instanceof Error ? error.message : "Failed to save event. Please check your connection and try again.",
         variant: "destructive",
       });
     } finally {
@@ -728,6 +749,7 @@ const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormProps) =>
       {isEdit && <SaveButton />}
     </div>
   );
+};
 
 const renderAgeGroupsContent = () => (
   <div className="space-y-6">
@@ -921,7 +943,7 @@ const renderScoringContent = () => (
                 <FormItem>
                   <FormLabel>Shutout Points</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input type="number" {...field}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -1384,10 +1406,15 @@ const renderInformationContent = () => (
   </Form>
 );
 
-const complexesQuery = useQuery<Complex[]>({
-  queryKey: ['/api/admin/complexes'],
-  enabled: activeTab === 'complexes',
-  initialData: [],
+const complexesQuery = useQuery({
+  queryKey: ['complexes'],
+  queryFn: async () => {
+    const response = await fetch('/api/complexes');
+    if (!response.ok) {
+      throw new Error('Failed to fetch complexes');
+    }
+    return response.json() as Promise<Complex[]>;
+  },
 });
 
 const administratorsQuery = useQuery({
@@ -1405,6 +1432,17 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
   maxFiles: 1,
   multiple: false,
 });
+
+const handleEditAdmin = (admin: EventAdministrator) => {
+  setEditingAdmin({
+    id: admin.id,
+    email: admin.user.email,
+    firstName: admin.user.firstName,
+    lastName: admin.user.lastName,
+    roles: [admin.role],
+  });
+  setIsAdminModalOpen(true);
+};
 
 return (
   <div className="container max-w-4xl mx-auto py-6 space-y-6">
