@@ -32,7 +32,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useQuery } from "@tanstack/react-query";
 import { AdminModal } from "@/components/admin/AdminModal";
 import { useDropzone } from 'react-dropzone';
-import { ImageIcon } from 'lucide-react';
+import { ImageIcon, Loader2 as Loader2Icon } from 'lucide-react';
 import { useCallback } from "react";
 
 // Types and interfaces
@@ -402,28 +402,47 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
 
     try {
       validateFile(file);
-
       const objectUrl = URL.createObjectURL(file);
-      setPreviewUrl(objectUrl);
-      setLogo(file);
-      setIsExtracting(true);
 
       // Load the image first to ensure it's valid
-      const img = new Image();
       await new Promise((resolve, reject) => {
+        const img = new Image();
         img.onload = resolve;
         img.onerror = () => reject(new Error('Failed to load image. Please try a different file.'));
         img.src = objectUrl;
       });
 
-      try {
-        // Dynamically import node-vibrant
-        const Vibrant = await import('node-vibrant');
-        const vibrant = new Vibrant.default(objectUrl);
-        const palette = await vibrant.getPalette();
+      setPreviewUrl(objectUrl);
+      setLogo(file);
+      setIsExtracting(true);
 
-        if (!palette.Vibrant) {
-          throw new Error('Could not extract primary color from image. Try an image with more distinct colors.');
+      try {
+        // Create form data for file upload
+        const formData = new FormData();
+        formData.append('logo', file);
+
+        // Upload the file
+        const uploadResponse = await fetch('/api/upload/logo', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload logo. Please try again.');
+        }
+
+        const { url: logoUrl } = await uploadResponse.json();
+
+        // Update preview URL with the server URL
+        setPreviewUrl(logoUrl);
+
+        // Import and use node-vibrant
+        const { Vibrant } = await import('node-vibrant');
+        const v = new Vibrant(objectUrl);
+        const palette = await v.getPalette();
+
+        if (!palette || !palette.Vibrant) {
+          throw new Error('Could not extract colors. Please use an image with more distinct colors.');
         }
 
         setPrimaryColor(palette.Vibrant.hex);
@@ -431,36 +450,44 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
         // For secondary color, prefer LightVibrant, fallback to Muted
         const secondaryPalette = palette.LightVibrant || palette.Muted;
         if (!secondaryPalette) {
-          throw new Error('Could not extract secondary color from image. Try an image with more color variety.');
+          throw new Error('Could not extract secondary colors. Please use an image with more color variety.');
         }
 
         setSecondaryColor(secondaryPalette.hex);
 
         toast({
-          title: "Colors extracted successfully",
-          description: "Brand colors have been updated based on your logo.",
+          title: "Success",
+          description: "Logo uploaded and colors extracted successfully.",
         });
       } catch (error) {
-        throw new Error('Failed to extract colors. Please try a different image with more distinct colors.');
+        console.error('Processing error:', error);
+        toast({
+          title: "Processing Error",
+          description: error instanceof Error
+            ? error.message
+            : "Failed to process the image. Please try a different image with more distinct colors.",
+          variant: "destructive"
+        });
       }
     } catch (error) {
-      console.error('Color extraction error:', error);
+      console.error('File error:', error);
       toast({
-        title: "Logo Upload Error",
-        description: error instanceof Error ? error.message : "An unexpected error occurred while processing the image.",
+        title: "Error",
+        description: error instanceof Error
+          ? error.message
+          : "An unexpected error occurred while processing the file.",
         variant: "destructive",
       });
-      // Reset the logo state if there was an error
       setLogo(null);
       setPreviewUrl(null);
     } finally {
       setIsExtracting(false);
     }
-  }, []);
+  }, [toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: ACCEPTED_IMAGE_TYPES,
+    accept: Object.keys(ACCEPTED_IMAGE_TYPES).map(key => `${key}/*`).join(','),
     maxFiles: 1,
     multiple: false,
     maxSize: MAX_FILE_SIZE,
@@ -515,7 +542,7 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
       >
         {isSaving ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
             Saving...
           </>
         ) : (
@@ -549,7 +576,7 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
               <div className="flex flex-col items-center justify-center gap-2">
                 {isExtracting ? (
                   <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <Loader2Icon className="h-8 w-8 animate-spin text-primary" />
                     <p className="text-sm text-muted-foreground">Extracting colors...</p>
                   </div>
                 ) : previewUrl ? (
@@ -909,7 +936,6 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-destructive"
                             onClick={() => handleDeleteAgeGroup(group.id)}
                           >
                             <Trash className="h-4 w-4" />
