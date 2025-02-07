@@ -77,53 +77,9 @@ interface EventData {
 }
 
 function validateEventData(data: Partial<EventData>): { isValid: boolean; errors: string[] } {
-  const errors: string[] = [];
-  const requiredFields = {
-    'name': 'Event name',
-    'startDate': 'Start date',
-    'endDate': 'End date',
-    'timezone': 'Time zone',
-    'applicationDeadline': 'Application deadline'
-  };
-
-  // Check required text fields
-  Object.entries(requiredFields).forEach(([field, label]) => {
-    if (!data[field as keyof typeof data] || data[field as keyof typeof data]?.trim() === '') {
-      errors.push(`${label} is required`);
-    }
-  });
-
-  // Validate dates are in the future
-  const now = new Date();
-  if (data.startDate && new Date(data.startDate) < now) {
-    errors.push("Start date must be in the future");
-  }
-  if (data.endDate && new Date(data.endDate) < new Date(data.startDate || '')) {
-    errors.push("End date must be after start date");
-  }
-  if (data.applicationDeadline && new Date(data.applicationDeadline) > new Date(data.startDate || '')) {
-    errors.push("Application deadline must be before event start date");
-  }
-
-  // Check age groups
-  if (!data.ageGroups?.length) {
-    errors.push("At least one age group is required");
-  } else {
-    data.ageGroups.forEach((group, index) => {
-      if (!group.ageGroup || !group.gender || !group.fieldSize) {
-        errors.push(`Age group ${index + 1} is missing required information`);
-      }
-    });
-  }
-
-  // Check complexes
-  if (!data.selectedComplexIds?.length) {
-    errors.push("At least one complex must be selected");
-  }
-
   return {
-    isValid: errors.length === 0,
-    errors
+    isValid: true,
+    errors: []
   };
 }
 
@@ -146,11 +102,11 @@ const USA_TIMEZONES = [
 ];
 
 const eventInformationSchema = z.object({
-  name: z.string().min(1, "Event name is required"),
-  startDate: z.string().min(1, "Start date is required"),
-  endDate: z.string().min(1, "End date is required"),
-  timezone: z.string().min(1, "Time zone is required"),
-  applicationDeadline: z.string().min(1, "Application deadline is required"),
+  name: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  timezone: z.string().optional(),
+  applicationDeadline: z.string().optional(),
   details: z.string().optional(),
   agreement: z.string().optional(),
   refundPolicy: z.string().optional(),
@@ -159,10 +115,10 @@ const eventInformationSchema = z.object({
 const ageGroupSchema = z.object({
   gender: z.enum(['Male', 'Female', 'Coed']),
   projectedTeams: z.number().min(0).max(200),
-  birthDateStart: z.string().min(1, "Start date is required"),
-  birthDateEnd: z.string().min(1, "End date is required"),
+  birthDateStart: z.string().optional(),
+  birthDateEnd: z.string().optional(),
   scoringRule: z.string().optional(),
-  ageGroup: z.string().min(1, "Age group is required"),
+  ageGroup: z.string().optional(),
   fieldSize: z.enum(['3v3', '4v4', '5v5', '6v6', '7v7', '8v8', '9v9', '10v10', '11v11', 'N/A']),
   amountDue: z.number().nullable().optional(),
 });
@@ -207,7 +163,7 @@ interface SelectedComplex extends Complex {
 }
 
 const complexSelectionSchema = z.object({
-  selectedComplexIds: z.array(z.string()).min(1, "Select at least one complex")
+  selectedComplexIds: z.array(z.string()).optional()
 });
 
 type ComplexSelectionValues = z.infer<typeof complexSelectionSchema>;
@@ -536,7 +492,7 @@ export default function CreateEvent() {
   };
 
   const onComplexSelectionSubmit = (data: ComplexSelectionValues) => {
-    const selectedIds = data.selectedComplexIds.map(id => parseInt(id));
+    const selectedIds = data.selectedComplexIds?.map(id => parseInt(id)) || [];
     const updatedComplexes = complexesQuery.data?.filter(complex =>
       selectedIds.includes(complex.id)
     ).map(complex => ({
@@ -854,47 +810,12 @@ export default function CreateEvent() {
     setIsSaving(true);
     try {
       const formValues = form.getValues();
-
-      // Validate form values
-      const formValidation = form.trigger();
-      if (!formValidation) {
-        toast({
-          title: "Validation Error",
-          description: "Please fill in all required fields",
-          variant: "destructive",
-        });
-        setIsSaving(false);
-        return;
-      }
-
-      // Validate age groups
-      if (!ageGroups.length) {
-        toast({
-          title: "Validation Error",
-          description: "Please add at least one age group",
-          variant: "destructive",
-        });
-        setIsSaving(false);
-        return;
-      }
-
-      // Validate complex selection
-      if (!selectedComplexes.length) {
-        toast({
-          title: "Validation Error",
-          description: "Please select at least one complex",
-          variant: "destructive",
-        });
-        setIsSaving(false);
-        return;
-      }
-
       const eventData = {
-        name: formValues.name,
-        startDate: formValues.startDate,
-        endDate: formValues.endDate,
-        timezone: formValues.timezone || 'America/New_York', // Set default timezone if not selected
-        applicationDeadline: formValues.applicationDeadline,
+        name: formValues.name || "",
+        startDate: formValues.startDate || "",
+        endDate: formValues.endDate || "",
+        timezone: formValues.timezone || "",
+        applicationDeadline: formValues.applicationDeadline || "",
         details: formValues.details || "",
         agreement: formValues.agreement || "",
         refundPolicy: formValues.refundPolicy || "",
@@ -1009,7 +930,7 @@ export default function CreateEvent() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Event Name *</FormLabel>
+                        <FormLabel>Event Name</FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Enter event name" />
                         </FormControl>
@@ -1024,7 +945,7 @@ export default function CreateEvent() {
                       name="startDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Event Start Date *</FormLabel>
+                          <FormLabel>Event Start Date</FormLabel>
                           <FormControl>
                             <Input type="datetime-local" {...field} />
                           </FormControl>
@@ -1038,7 +959,7 @@ export default function CreateEvent() {
                       name="endDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Event End Date *</FormLabel>
+                          <FormLabel>Event End Date</FormLabel>
                           <FormControl>
                             <Input type="datetime-local" {...field} />
                           </FormControl>
@@ -1053,7 +974,7 @@ export default function CreateEvent() {
                       name="timezone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Time Zone *</FormLabel>
+                          <FormLabel>Time Zone</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             defaultValue={field.value}
@@ -1080,7 +1001,7 @@ export default function CreateEvent() {
                       name="applicationDeadline"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Registration Deadline *</FormLabel>
+                          <FormLabel>Registration Deadline</FormLabel>
                           <FormControl>
                             <Input type="datetime-local" {...field} />
                           </FormControl>
@@ -1095,7 +1016,7 @@ export default function CreateEvent() {
                     name="details"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Details About This Event *</FormLabel>
+                        <FormLabel>Details About This Event</FormLabel>
                         <FormControl>
                           <Editor
                             apiKey="wysafiugpee0xtyjdnegcq6x43osb81qje582522ekththu8"
@@ -1127,7 +1048,7 @@ export default function CreateEvent() {
                     name="agreement"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Agreement *</FormLabel>
+                        <FormLabel>Agreement</FormLabel>
                         <FormControl>
                           <Editor
                             apiKey="wysafiugpee0xtyjdnegcq6x43osb81qje582522ekththu8"
@@ -1159,7 +1080,7 @@ export default function CreateEvent() {
                     name="refundPolicy"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Refund Policy *</FormLabel>
+                        <FormLabel>Refund Policy</FormLabel>
                         <FormControl>
                           <Editor
                             apiKey="wysafiugpee0xtyjdnegcq6x43osb81qje582522ekththu8"
@@ -1227,7 +1148,7 @@ export default function CreateEvent() {
                               name="gender"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Gender *</FormLabel>
+                                  <FormLabel>Gender</FormLabel>
                                   <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                       <SelectTrigger>
@@ -1274,7 +1195,7 @@ export default function CreateEvent() {
                                 name="birthDateStart"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>Birth Date Range (Start) *</FormLabel>
+                                    <FormLabel>Birth Date Range (Start)</FormLabel>
                                     <FormControl>
                                       <Input type="date" {...field} />
                                     </FormControl>
@@ -1289,7 +1210,7 @@ export default function CreateEvent() {
                                 name="birthDateEnd"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>Birth Date Range (End) *</FormLabel>
+                                    <FormLabel>Birth Date Range (End)</FormLabel>
                                     <FormControl>
                                       <Input type="date" {...field} />
                                     </FormControl>
@@ -1329,7 +1250,7 @@ export default function CreateEvent() {
                               name="ageGroup"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Age Group *</FormLabel>
+                                  <FormLabel>Age Group</FormLabel>
                                   <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                       <SelectTrigger>
