@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -242,6 +242,7 @@ export default function CreateEvent() {
     settings: false,
     administrators: false,
   });
+  const [selectedComplexIds, setSelectedComplexIds] = useState<number[]>([]);
 
 
   const complexesQuery = useQuery({
@@ -500,6 +501,7 @@ export default function CreateEvent() {
       selected: true
     })) || [];
     setSelectedComplexes(updatedComplexes);
+    setSelectedComplexIds(selectedIds);
   };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -697,6 +699,7 @@ export default function CreateEvent() {
                 selected: true
               })) || [];
               setSelectedComplexes(selectedComplexData);
+              setSelectedComplexIds(ids);
             }}
           />
         </CardContent>
@@ -869,6 +872,24 @@ export default function CreateEvent() {
       setIsSaving(false);
     }
   };
+
+  useEffect(() => {
+    const validateTabs = () => {
+      const formValues = form.getValues();
+      const errors: Record<EventTab, boolean> = {
+        information: !formValues.name || !formValues.startDate || !formValues.endDate || !formValues.timezone,
+        'age-groups': ageGroups.length === 0,
+        scoring: scoringRules.length === 0,
+        complexes: selectedComplexIds.length === 0,
+        settings: false,
+        administrators: false,
+      };
+      setTabErrors(errors);
+    };
+
+    validateTabs();
+    form.watch(validateTabs);
+  }, [form, ageGroups, scoringRules, selectedComplexIds]);
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">

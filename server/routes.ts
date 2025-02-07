@@ -1202,35 +1202,30 @@ export function registerRoutes(app: Express): Server {
     // Add this new event creation endpoint
     app.post('/api/admin/events', isAdmin, async (req, res) => {
       try {
-        const eventData = req.body;
+        let eventData;
+        try {
+            eventData = typeof req.body.data === 'string' ? JSON.parse(req.body.data) : req.body;
+        } catch (error) {
+            console.error('Error parsing event data:', error);
+            return res.status(400).send("Invalid event data format");
+        }
 
-        // Validate required fields with trimming
-        const missingFields = [];
-        if (!eventData.name?.trim()) missingFields.push('name');
-        if (!eventData.startDate?.trim()) missingFields.push('startDate');
-        if (!eventData.endDate?.trim()) missingFields.push('endDate');
-        if (!eventData.timezone?.trim()) missingFields.push('timezone');
-        if (!eventData.applicationDeadline?.trim()) missingFields.push('applicationDeadline');
-
-        if (missingFields.length > 0) {
-          console.log('Missing fields:', missingFields);
-          return res.status(400).json({ 
-            error: "Missing required fields",
-            missingFields 
-          });
+        if (!eventData || !Array.isArray(eventData.ageGroups)) {
+            return res.status(400).json({ error: "Missing or invalid age groups data" });
         }
 
         // Sanitize the data
         const sanitizedEventData = {
-          ...eventData,
-          name: eventData.name.trim(),
-          startDate: eventData.startDate.trim(),
-          endDate: eventData.endDate.trim(),
-          timezone: eventData.timezone.trim(),
-          applicationDeadline: eventData.applicationDeadline.trim(),
-          details: eventData.details?.trim() || "",
-          agreement: eventData.agreement?.trim() || "",
-          refundPolicy: eventData.refundPolicy?.trim() || ""
+          name: eventData.name?.trim() || "Untitled Event",
+          startDate: eventData.startDate?.trim() || new Date().toISOString().split('T')[0],
+          endDate: eventData.endDate?.trim() || new Date().toISOString().split('T')[0],
+          timezone: eventData.timezone?.trim() || "America/New_York",
+          applicationDeadline: eventData.applicationDeadline?.trim() || new Date().toISOString().split('T')[0],
+          details: eventData.details?.trim() || null,
+          agreement: eventData.agreement?.trim() || null,
+          refundPolicy: eventData.refundPolicy?.trim() || null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         };
 
         // Start a transaction to create event and related records
@@ -1240,11 +1235,11 @@ export function registerRoutes(app: Express): Server {
             .insert(events)
             .values({
               id: String(Math.floor(Math.random() * 1000000) + 1),
-              name: eventData.name,
-              startDate: eventData.startDate,
-              endDate: eventData.endDate,
-              timezone: eventData.timezone,
-              applicationDeadline: eventData.applicationDeadline,
+              name: eventData.name || "Untitled Event",
+              startDate: eventData.startDate || new Date().toISOString(),
+              endDate: eventData.endDate || new Date().toISOString(),
+              timezone: eventData.timezone || "America/New_York",
+              applicationDeadline: eventData.applicationDeadline || new Date().toISOString(),
               details: eventData.details || null,
               agreement: eventData.agreement || null,
               refundPolicy: eventData.refundPolicy || null,
@@ -1312,7 +1307,13 @@ export function registerRoutes(app: Express): Server {
     app.patch('/api/admin/events/:id', isAdmin, async (req, res) => {
       try {
         const eventId = req.params.id;
-        const eventData = req.body;
+        let eventData;
+        
+        if (req.headers['content-type']?.includes('multipart/form-data')) {
+          eventData = JSON.parse(req.body.data);
+        } else {
+          eventData = req.body;
+        }
 
         // Start a transaction to update event and related records
         await db.transaction(async (tx) => {
@@ -1332,6 +1333,45 @@ export function registerRoutes(app: Express): Server {
             })
             .where(eq(events.id, eventId))
             .returning();
+
+          if (!updatedEvent) {
+            throw new Error("Event not found");
+          }
+
+          // Update complex assignments
+          await tx
+            .delete(eventComplexes)
+            .where(eq(eventComplexes.eventId, eventId));
+
+          if (eventData.selectedComplexIds && eventData.selectedComplexIds.length > 0) {
+            for (const complexId of eventData.selectedComplexIds) {
+              await tx
+                .insert(eventComplexes)
+                .values({
+                  eventId,
+                  complexId,
+                  createdAt: new Date().toISOString(),
+                });
+            }
+          }
+
+          // Update field size assignments
+          await tx
+            .delete(eventFieldSizes)
+            .where(eq(eventFieldSizes.eventId, eventId));
+
+          if (eventData.complexFieldSizes) {
+            for (const [fieldId, fieldSize] of Object.entries(eventData.complexFieldSizes)) {
+              await tx
+                .insert(eventFieldSizes)
+                .values({
+                  eventId,
+                  fieldId: parseInt(fieldId),
+                  fieldSize: fieldSize as string,
+                  createdAt: new Date().toISOString(),
+                });
+            }
+          }
 
           if (!updatedEvent) {
             throw new Error("Event not found");

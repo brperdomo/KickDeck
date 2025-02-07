@@ -62,8 +62,16 @@ export default function EditEvent() {
 
       const response = await fetch(`/api/admin/events/${id}`, {
         method: 'PATCH',
-        body: formData
+        body: formData,
+        headers: {
+          'Accept': 'application/json',
+        }
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to update event');
+      }
 
       if (!response.ok) {
         throw new Error('Failed to update event');

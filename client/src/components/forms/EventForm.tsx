@@ -317,6 +317,11 @@ export const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormPr
         throw new Error('Required fields are missing');
       }
 
+      // Validate complex selections
+      if (selectedComplexIds.length === 0) {
+        throw new Error('Please select at least one complex');
+      }
+
       const combinedData: EventData = {
         name: data.name,
         startDate: data.startDate,
@@ -330,7 +335,7 @@ export const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormPr
         scoringRules,
         settings,
         complexFieldSizes,
-        selectedComplexIds,
+        selectedComplexIds: selectedComplexIds,
         administrators: initialData?.administrators || [],
         branding: {
           primaryColor,
@@ -727,9 +732,11 @@ export const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormPr
           )}
         />
 
-        <div className="flex justify-end">
-          <SaveButton />
-        </div>
+        {isEdit && (
+          <div className="flex justify-end">
+            <SaveButton />
+          </div>
+        )}
       </form>
     </Form>
   );
@@ -798,7 +805,11 @@ export const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormPr
         defaultValues={editingAgeGroup || undefined}
         isEdit={!!editingAgeGroup}
       />
-      {isEdit && <SaveButton />}
+      {isEdit && (
+        <div className="flex justify-end mt-6">
+          <SaveButton />
+        </div>
+      )}
     </div>
   );
 
@@ -968,7 +979,11 @@ export const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormPr
         </DialogContent>
       </Dialog>
 
-      {isEdit && <SaveButton />}
+      {isEdit && (
+        <div className="flex justify-end mt-6">
+          <SaveButton />
+        </div>
+      )}
     </div>
   );
 
@@ -1087,7 +1102,11 @@ export const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormPr
           </div>
         </CardContent>
       </Card>
-      {isEdit && <SaveButton />}
+      {isEdit && (
+        <div className="flex justify-end mt-6">
+          <SaveButton />
+        </div>
+      )}
     </div>
   );
 
@@ -1144,7 +1163,11 @@ export const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormPr
         ))}
       </div>
 
-      {isEdit && <SaveButton />}
+      {isEdit && (
+        <div className="flex justify-end mt-6">
+          <SaveButton />
+        </div>
+      )}
     </div>
   );
 
@@ -1214,7 +1237,11 @@ export const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormPr
             </Card>
           ))}
         </div>
-        {isEdit && <SaveButton />}
+        {isEdit && (
+          <div className="flex justify-end mt-6">
+            <SaveButton />
+          </div>
+        )}
       </div>
     );
   };

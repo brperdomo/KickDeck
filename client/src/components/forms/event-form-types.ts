@@ -98,11 +98,11 @@ export const USA_TIMEZONES = [
 ];
 
 export const eventInformationSchema = z.object({
-  name: z.string().min(1, "Event name is required"),
-  startDate: z.string().min(1, "Start date is required"),
-  endDate: z.string().min(1, "End date is required"),
-  timezone: z.string().min(1, "Time zone is required"),
-  applicationDeadline: z.string().min(1, "Application deadline is required"),
+  name: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  timezone: z.string().optional(),
+  applicationDeadline: z.string().optional(),
   details: z.string().optional(),
   agreement: z.string().optional(),
   refundPolicy: z.string().optional(),
