@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Loader2, Edit, Save, X } from "lucide-react";
+import { Plus, Loader2, Edit, Eye, Save, X } from "lucide-react";
 import { z } from "zod";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface AgeGroup {
   birthYear: number;
@@ -42,6 +43,7 @@ export function SeasonalScopeSettings() {
   const [ageGroupMappings, setAgeGroupMappings] = useState<AgeGroup[]>([]);
   const [editingScope, setEditingScope] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<Partial<SeasonalScope>>({});
+  const [viewingScope, setViewingScope] = useState<SeasonalScope | null>(null);
 
   const scopesQuery = useQuery({
     queryKey: ['/api/admin/seasonal-scopes'],
@@ -323,9 +325,9 @@ export function SeasonalScopeSettings() {
             {scopesQuery.data?.length === 0 ? (
               <p className="text-sm text-muted-foreground">No seasonal scopes created yet.</p>
             ) : (
-              scopesQuery.data?.map((scope: SeasonalScope) => (
-                <Card key={scope.id} className="mt-4">
-                  <CardContent className="p-4">
+              <div className="space-y-2">
+                {scopesQuery.data?.map((scope: SeasonalScope) => (
+                  <Card key={scope.id} className="p-4">
                     {editingScope === scope.id ? (
                       <div className="space-y-4">
                         <div className="grid grid-cols-3 gap-4">
@@ -376,9 +378,22 @@ export function SeasonalScopeSettings() {
                         </div>
                       </div>
                     ) : (
-                      <>
-                        <div className="flex justify-between items-center mb-4">
-                          <h3 className="text-lg font-semibold">{scope.name}</h3>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-semibold">{scope.name}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {scope.startYear} - {scope.endYear}
+                          </p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setViewingScope(scope)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"
@@ -388,43 +403,54 @@ export function SeasonalScopeSettings() {
                             Edit
                           </Button>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <span className="text-sm text-muted-foreground">Start Year:</span>
-                            <span className="ml-2">{scope.startYear}</span>
-                          </div>
-                          <div>
-                            <span className="text-sm text-muted-foreground">End Year:</span>
-                            <span className="ml-2">{scope.endYear}</span>
-                          </div>
-                        </div>
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Birth Year</TableHead>
-                              <TableHead>Division Code</TableHead>
-                              <TableHead>Age Group</TableHead>
-                              <TableHead>Gender</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {scope.ageGroups?.map((group: AgeGroup) => (
-                              <TableRow key={`${group.gender}-${group.birthYear}`}>
-                                <TableCell>{group.birthYear}</TableCell>
-                                <TableCell>{group.divisionCode}</TableCell>
-                                <TableCell>{group.ageGroup}</TableCell>
-                                <TableCell>{group.gender}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </>
+                      </div>
                     )}
-                  </CardContent>
-                </Card>
-              ))
+                  </Card>
+                ))}
+              </div>
             )}
           </div>
+
+          {/* View Modal */}
+          <Dialog open={!!viewingScope} onOpenChange={() => setViewingScope(null)}>
+            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{viewingScope?.name}</DialogTitle>
+              </DialogHeader>
+              <div className="mt-4">
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <span className="text-sm text-muted-foreground">Start Year:</span>
+                    <span className="ml-2">{viewingScope?.startYear}</span>
+                  </div>
+                  <div>
+                    <span className="text-sm text-muted-foreground">End Year:</span>
+                    <span className="ml-2">{viewingScope?.endYear}</span>
+                  </div>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Birth Year</TableHead>
+                      <TableHead>Division Code</TableHead>
+                      <TableHead>Age Group</TableHead>
+                      <TableHead>Gender</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {viewingScope?.ageGroups?.map((group: AgeGroup) => (
+                      <TableRow key={`${group.gender}-${group.birthYear}`}>
+                        <TableCell>{group.birthYear}</TableCell>
+                        <TableCell>{group.divisionCode}</TableCell>
+                        <TableCell>{group.ageGroup}</TableCell>
+                        <TableCell>{group.gender}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </CardContent>
     </Card>
