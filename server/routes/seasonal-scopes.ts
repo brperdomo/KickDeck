@@ -11,7 +11,20 @@ router.get('/', async (req, res) => {
     console.log('Fetching seasonal scopes...');
     const scopes = await db.query.seasonalScopes.findMany({
       with: {
-        ageGroups: true
+        ageGroups: {
+          columns: {
+            id: true,
+            seasonalScopeId: true,
+            ageGroup: true,
+            birthYear: true,
+            gender: true,
+            divisionCode: true,
+            minBirthYear: true,
+            maxBirthYear: true,
+            createdAt: true,
+            updatedAt: true,
+          }
+        }
       }
     });
     console.log('Fetched scopes:', JSON.stringify(scopes, null, 2));
@@ -103,7 +116,20 @@ router.patch('/:id', async (req, res) => {
     const scope = await db.query.seasonalScopes.findFirst({
       where: eq(seasonalScopes.id, id),
       with: {
-        ageGroups: true
+        ageGroups: {
+          columns: {
+            id: true,
+            seasonalScopeId: true,
+            ageGroup: true,
+            birthYear: true,
+            gender: true,
+            divisionCode: true,
+            minBirthYear: true,
+            maxBirthYear: true,
+            createdAt: true,
+            updatedAt: true,
+          }
+        }
       }
     });
 
