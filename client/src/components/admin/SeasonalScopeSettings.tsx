@@ -77,10 +77,10 @@ export function SeasonalScopeSettings() {
             divisionCode: group.divisionCode,
             minBirthYear: group.minBirthYear,
             maxBirthYear: group.maxBirthYear,
-            seasonalScopeId: data.id || 0, // Added this line
-            id: group.id, // Added this line
-            createdAt: group.createdAt, // Added this line
-            updatedAt: group.updatedAt, // Added this line
+            seasonalScopeId: data.id || 0, 
+            id: group.id, 
+            createdAt: group.createdAt, 
+            updatedAt: group.updatedAt, 
 
           }))
         }),
@@ -170,28 +170,28 @@ export function SeasonalScopeSettings() {
 
         // Add both boys and girls divisions
         initialMappings.push({
-          id: 0, // Added this line
-          seasonalScopeId: 0, // Added this line
+          id: 0, 
+          seasonalScopeId: 0, 
           birthYear,
           ageGroup,
           gender: 'Boys',
           divisionCode: `B${birthYear}`,
           minBirthYear: birthYear,
           maxBirthYear: birthYear,
-          createdAt: "", // Added this line
-          updatedAt: "" // Added this line
+          createdAt: "", 
+          updatedAt: "" 
         });
         initialMappings.push({
-          id: 0, // Added this line
-          seasonalScopeId: 0, // Added this line
+          id: 0, 
+          seasonalScopeId: 0, 
           birthYear,
           ageGroup,
           gender: 'Girls',
           divisionCode: `G${birthYear}`,
           minBirthYear: birthYear,
           maxBirthYear: birthYear,
-          createdAt: "", // Added this line
-          updatedAt: "" // Added this line
+          createdAt: "", 
+          updatedAt: "" 
         });
       }
       setAgeGroupMappings(initialMappings);
@@ -459,8 +459,14 @@ export function SeasonalScopeSettings() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {viewingScope?.ageGroups?.map((group: AgeGroupSettings) => (
-                      <TableRow key={group.id}> {/* Changed key here */}
+                    {viewingScope?.ageGroups?.sort((a, b) => {
+                      // Sort first by birthYear, then by gender
+                      if (a.birthYear !== b.birthYear) {
+                        return b.birthYear - a.birthYear;
+                      }
+                      return a.gender.localeCompare(b.gender);
+                    }).map((group: AgeGroupSettings) => (
+                      <TableRow key={`${group.gender}-${group.birthYear}`}>
                         <TableCell>{group.birthYear}</TableCell>
                         <TableCell>{group.divisionCode}</TableCell>
                         <TableCell>{group.ageGroup}</TableCell>
