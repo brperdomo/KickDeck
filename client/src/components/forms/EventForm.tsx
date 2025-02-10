@@ -13,10 +13,9 @@ import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useQuery, UseMutationResult } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useDropzone } from 'react-dropzone';
 import { AdminModal } from "@/components/admin/AdminModal";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Editor } from "@tinymce/tinymce-react";
 import {
   EventBranding,
@@ -41,7 +40,6 @@ import {
   ScoringRuleValues,
   EventSettingValues,
   EventFormProps,
-  AdminModalProps,
 } from "./event-form-types";
 
 interface ScopeData {
@@ -249,7 +247,7 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
   const [isSettingDialogOpen, setIsSettingDialogOpen] = useState(false);
   const [editingSetting, setEditingSetting] = useState<EventSetting | null>(null);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
-  const [editingAdmin, setEditingAdmin] = useState<AdminModalProps['adminToEdit'] | null>(null);
+  const [editingAdmin, setEditingAdmin] = useState<EventAdministrator | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [logo, setLogo] = useState<File | undefined>(undefined);
   const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.branding?.logoUrl || null);
@@ -278,7 +276,7 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
     enabled: activeTab === 'complexes',
   });
 
-  // Form setup
+  // Forms setup
   const form = useForm<EventInformationValues>({
     resolver: zodResolver(eventInformationSchema),
     defaultValues: initialData || {
@@ -307,6 +305,7 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
     },
   });
 
+  // Effects
   useEffect(() => {
     if (editingScoringRule) {
       scoringForm.reset(editingScoringRule);
@@ -326,14 +325,7 @@ export function EventForm({ initialData, onSubmit, isEdit = false }: EventFormPr
       }
 
       const combinedData: EventData = {
-        name: data.name,
-        startDate: data.startDate,
-        endDate: data.endDate,
-        timezone: data.timezone,
-        applicationDeadline: data.applicationDeadline,
-        details: data.details || "",
-        agreement: data.agreement || "",
-        refundPolicy: data.refundPolicy || "",
+        ...data,
         ageGroups,
         scoringRules,
         settings,
@@ -1000,8 +992,7 @@ const renderSettingsContent = () => (
             <p>Requirements:</p>
             <ul className="list-disc pl-4 space-y-1">
               <li>File types: PNG, JPEG, or SVG</li>
-              <li>Maximum size: 5MB</li>
-              <li>Recommended: Images with distinct colors for better color extraction</li>
+              <li>Maximum size: 5MB</li><li>Recommended: Images with distinct colors for better color extraction</li>
             </ul>
           </div>
           <div
@@ -1013,10 +1004,9 @@ const renderSettingsContent = () => (
             <input {...getInputProps()} />
             <div className="flex flex-col items-center justify-center gap-2">
               {isExtracting ? (
-                <div className="flex flex-col items-center gap-2">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <p className="text-sm text-muted-foreground">Extracting colors...</p>
-                </div>
+                <div className="flex flex-col items-center gap-2<Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Extracting colors...</p>
+              </div>
               ) : previewUrl ? (
                 <img
                   src={previewUrl}
@@ -1261,49 +1251,61 @@ const getTabValidationState = () => {
   return errors;
 };
 
-const tabErrors = getTabValidationState();
-
 return (
   <div className="w-full max-w-7xl mx-auto px-4 py-6">
     <Card className="bg-white shadow-sm border border-gray-200">
       <CardContent className="p-6">
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as EventTab)}>
-          <TabsList className="w-full grid grid-cols-6 gap-4 mb-6 bg-[#F2F2F7] p-1 rounded-lg">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              onClick={() => setLocation("/admin")}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+            <h2 className="text-2xl font-semibold">
+              {isEdit ? 'Edit Event' : 'Create New Event'}
+            </h2>
+          </div>
+          {!isEdit && <SaveButton />}
+        </div>
+
+        <Tabs defaultValue="information" value={activeTab} onValueChange={(value) => setActiveTab(value as EventTab)}>
+          <TabsList className="grid grid-cols-6 gap-4">
             {TAB_ORDER.map((tab) => (
               <TabsTrigger
                 key={tab}
                 value={tab}
-                className="w-full px-4 py-2 rounded-md text-sm font-medium transition-colors
-                  data-[state=active]:bg-white data-[state=active]:text-[#007AFF] data-[state=active]:shadow-sm
-                  text-[#1C1C1E] hover:text-[#007AFF]"
+                className="w-full"
               >
-                {tab.replace('-', ' ').charAt(0).toUpperCase() + tab.slice(1).replace('-', ' ')}
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </TabsTrigger>
             ))}
           </TabsList>
 
           <div className="mt-6">
-            <TabsContent value="information">
+            <TabsContent value="information" className="space-y-6">
               {renderInformationContent()}
             </TabsContent>
 
-            <TabsContent value="age-groups">
+            <TabsContent value="age-groups" className="space-y-6">
               {renderAgeGroupsContent()}
             </TabsContent>
 
-            <TabsContent value="scoring">
+            <TabsContent value="scoring" className="space-y-6">
               {renderScoringContent()}
             </TabsContent>
 
-            <TabsContent value="complexes">
+            <TabsContent value="complexes" className="space-y-6">
               {renderComplexesContent()}
             </TabsContent>
 
-            <TabsContent value="settings">
+            <TabsContent value="settings" className="space-y-6">
               {renderSettingsContent()}
             </TabsContent>
 
-            <TabsContent value="administrators">
+            <TabsContent value="administrators" className="space-y-6">
               {renderAdministratorsContent()}
             </TabsContent>
           </div>
@@ -1321,8 +1323,9 @@ return (
         />
 
         <AdminModal
-          open={isAdminModalOpen}
-          onOpenChange={setIsAdminModalOpen}
+          isOpen={isAdminModalOpen}
+          onClose={() => setIsAdminModalOpen(false)}
+          eventId={initialData?.id}
           adminToEdit={editingAdmin}
         />
       </CardContent>
