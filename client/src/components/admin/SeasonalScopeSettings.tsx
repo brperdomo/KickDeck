@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,21 +7,25 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { Plus } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { z } from "zod";
 
-interface AgeGroup {
-  birthYear: number;
-  ageGroup: string;
-  gender: string;
-  divisionCode: string;
-}
+// Zod schemas for validation
+const ageGroupSchema = z.object({
+  birthYear: z.number().int().min(1900),
+  ageGroup: z.string().min(1),
+  gender: z.string().min(1),
+  divisionCode: z.string().min(1),
+});
 
-interface SeasonalScope {
-  name: string;
-  startYear: number;
-  endYear: number;
-  ageGroups: AgeGroup[];
-}
+const seasonalScopeSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  startYear: z.number().int().min(2000, "Start year must be after 2000"),
+  endYear: z.number().int().min(2000, "End year must be after 2000"),
+  ageGroups: z.array(ageGroupSchema),
+});
+
+type AgeGroup = z.infer<typeof ageGroupSchema>;
+type SeasonalScope = z.infer<typeof seasonalScopeSchema>;
 
 export function SeasonalScopeSettings() {
   const { toast } = useToast();
@@ -33,11 +36,12 @@ export function SeasonalScopeSettings() {
   const [ageGroupMappings, setAgeGroupMappings] = useState<AgeGroup[]>([]);
 
   const scopesQuery = useQuery({
-    queryKey: ['/api/admin/seasonal-scopes'],
+    queryKey: ['seasonalScopes'],
     queryFn: async () => {
       const response = await fetch('/api/admin/seasonal-scopes');
       if (!response.ok) throw new Error('Failed to fetch seasonal scopes');
-      return response.json();
+      const data = await response.json();
+      return data as SeasonalScope[];
     }
   });
 
@@ -52,10 +56,17 @@ export function SeasonalScopeSettings() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/admin/seasonal-scopes']);
+      queryClient.invalidateQueries({ queryKey: ['seasonalScopes'] });
       toast({ title: "Success", description: "Seasonal scope created successfully" });
       resetForm();
     },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to create seasonal scope",
+        variant: "destructive"
+      });
+    }
   });
 
   const resetForm = () => {
@@ -75,12 +86,12 @@ export function SeasonalScopeSettings() {
     if (endYear) {
       const year = parseInt(endYear);
       const initialMappings: AgeGroup[] = [];
-      
+
       // Generate 15 years of age groups (U4 to U19)
       for (let i = 0; i < 15; i++) {
         const birthYear = year - (4 + i);
         const ageGroup = calculateAgeGroup(birthYear, year);
-        
+
         // Add both boys and girls divisions
         initialMappings.push({
           birthYear,
@@ -110,16 +121,29 @@ export function SeasonalScopeSettings() {
     }
 
     try {
-      await createScopeMutation.mutateAsync({
+      const scopeData: SeasonalScope = {
         name: scopeName,
         startYear: parseInt(selectedStartYear),
         endYear: parseInt(selectedEndYear),
         ageGroups: ageGroupMappings
-      });
+      };
+
+      // Validate the data before submitting
+      const validationResult = seasonalScopeSchema.safeParse(scopeData);
+      if (!validationResult.success) {
+        toast({
+          title: "Validation Error",
+          description: validationResult.error.errors[0]?.message || "Invalid data",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      await createScopeMutation.mutateAsync(scopeData);
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to create seasonal scope",
+        description: error instanceof Error ? error.message : "Failed to create seasonal scope",
         variant: "destructive"
       });
     }
@@ -191,14 +215,14 @@ export function SeasonalScopeSettings() {
           <Button 
             onClick={handleSubmit}
             className="w-full mt-4"
-            disabled={createScopeMutation.isLoading}
+            disabled={createScopeMutation.isPending}
           >
             <Plus className="h-4 w-4 mr-2" />
-            {createScopeMutation.isLoading ? "Adding..." : "Add Scope"}
+            {createScopeMutation.isPending ? "Adding..." : "Add Scope"}
           </Button>
 
-          {scopesQuery.data?.map((scope: any) => (
-            <Card key={scope.id} className="mt-4">
+          {scopesQuery.data?.map((scope: SeasonalScope) => (
+            <Card key={scope.name} className="mt-4">
               <CardContent className="p-4">
                 <h3 className="text-lg font-semibold mb-4">{scope.name}</h3>
                 <Table>
@@ -211,7 +235,7 @@ export function SeasonalScopeSettings() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {scope.ageGroups?.map((group: AgeGroup) => (
+                    {scope.ageGroups.map((group) => (
                       <TableRow key={`${group.gender}-${group.birthYear}`}>
                         <TableCell>{group.birthYear}</TableCell>
                         <TableCell>{group.divisionCode}</TableCell>
