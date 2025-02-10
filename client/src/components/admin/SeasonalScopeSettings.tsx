@@ -10,13 +10,17 @@ import { Plus, Loader2, Edit, Eye, Save, X } from "lucide-react";
 import { z } from "zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-interface AgeGroup {
-  birthYear: number;
+interface AgeGroupSettings {
+  id: number;
+  seasonalScopeId: number;
   ageGroup: string;
+  birthYear: number;
   gender: string;
   divisionCode: string;
-  minBirthYear?: number;
-  maxBirthYear?: number;
+  minBirthYear: number;
+  maxBirthYear: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface SeasonalScope {
@@ -25,7 +29,7 @@ interface SeasonalScope {
   startYear: number;
   endYear: number;
   isActive: boolean;
-  ageGroups: AgeGroup[];
+  ageGroups: AgeGroupSettings[];
 }
 
 const seasonalScopeSchema = z.object({
@@ -40,7 +44,7 @@ export function SeasonalScopeSettings() {
   const [selectedStartYear, setSelectedStartYear] = useState<string>("");
   const [selectedEndYear, setSelectedEndYear] = useState<string>("");
   const [scopeName, setScopeName] = useState<string>("");
-  const [ageGroupMappings, setAgeGroupMappings] = useState<AgeGroup[]>([]);
+  const [ageGroupMappings, setAgeGroupMappings] = useState<AgeGroupSettings[]>([]);
   const [editingScope, setEditingScope] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<Partial<SeasonalScope>>({});
   const [viewingScope, setViewingScope] = useState<SeasonalScope | null>(null);
@@ -51,17 +55,8 @@ export function SeasonalScopeSettings() {
       const response = await fetch('/api/admin/seasonal-scopes');
       if (!response.ok) throw new Error('Failed to fetch seasonal scopes');
       const data = await response.json();
-      return data.map((scope: any) => ({
-        ...scope,
-        ageGroups: scope.ageGroups.map((group: any) => ({
-          birthYear: group.birthYear,
-          ageGroup: group.ageGroup,
-          gender: group.gender,
-          divisionCode: group.divisionCode,
-          minBirthYear: group.minBirthYear,
-          maxBirthYear: group.maxBirthYear
-        }))
-      }));
+      console.log('Raw API response:', data); // Debug log
+      return data;
     }
   });
 
@@ -79,7 +74,14 @@ export function SeasonalScopeSettings() {
             ageGroup: group.ageGroup,
             birthYear: group.birthYear,
             gender: group.gender,
-            divisionCode: group.divisionCode
+            divisionCode: group.divisionCode,
+            minBirthYear: group.minBirthYear,
+            maxBirthYear: group.maxBirthYear,
+            seasonalScopeId: data.id || 0, // Added this line
+            id: group.id, // Added this line
+            createdAt: group.createdAt, // Added this line
+            updatedAt: group.updatedAt, // Added this line
+
           }))
         }),
       });
@@ -159,7 +161,7 @@ export function SeasonalScopeSettings() {
     setSelectedEndYear(endYear);
     if (endYear) {
       const year = parseInt(endYear);
-      const initialMappings: AgeGroup[] = [];
+      const initialMappings: AgeGroupSettings[] = [];
 
       // Generate 15 years of age groups (U4 to U19)
       for (let i = 0; i < 15; i++) {
@@ -168,20 +170,28 @@ export function SeasonalScopeSettings() {
 
         // Add both boys and girls divisions
         initialMappings.push({
+          id: 0, // Added this line
+          seasonalScopeId: 0, // Added this line
           birthYear,
           ageGroup,
           gender: 'Boys',
           divisionCode: `B${birthYear}`,
           minBirthYear: birthYear,
-          maxBirthYear: birthYear
+          maxBirthYear: birthYear,
+          createdAt: "", // Added this line
+          updatedAt: "" // Added this line
         });
         initialMappings.push({
+          id: 0, // Added this line
+          seasonalScopeId: 0, // Added this line
           birthYear,
           ageGroup,
           gender: 'Girls',
           divisionCode: `G${birthYear}`,
           minBirthYear: birthYear,
-          maxBirthYear: birthYear
+          maxBirthYear: birthYear,
+          createdAt: "", // Added this line
+          updatedAt: "" // Added this line
         });
       }
       setAgeGroupMappings(initialMappings);
@@ -449,8 +459,8 @@ export function SeasonalScopeSettings() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {viewingScope?.ageGroups?.map((group: AgeGroup) => (
-                      <TableRow key={`${group.gender}-${group.birthYear}`}>
+                    {viewingScope?.ageGroups?.map((group: AgeGroupSettings) => (
+                      <TableRow key={group.id}> {/* Changed key here */}
                         <TableCell>{group.birthYear}</TableCell>
                         <TableCell>{group.divisionCode}</TableCell>
                         <TableCell>{group.ageGroup}</TableCell>

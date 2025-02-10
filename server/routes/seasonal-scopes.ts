@@ -8,11 +8,13 @@ const router = Router();
 // Get all seasonal scopes with their age groups
 router.get('/', async (req, res) => {
   try {
+    console.log('Fetching seasonal scopes...');
     const scopes = await db.query.seasonalScopes.findMany({
       with: {
         ageGroups: true
       }
     });
+    console.log('Fetched scopes:', JSON.stringify(scopes, null, 2));
     res.json(scopes);
   } catch (error) {
     console.error('Error fetching seasonal scopes:', error);
@@ -23,34 +25,40 @@ router.get('/', async (req, res) => {
 // Create a new seasonal scope with age groups
 router.post('/', async (req, res) => {
   try {
-    const { name, startYear, endYear, isActive, ageGroups } = req.body;
+    const { name, startYear, endYear, ageGroups } = req.body;
+    console.log('Creating seasonal scope with data:', { name, startYear, endYear, ageGroups });
 
     // Create the seasonal scope
     const [scope] = await db.insert(seasonalScopes).values({
       name,
       startYear,
       endYear,
-      isActive,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
     }).returning();
 
     // Create age group settings for the scope
     if (ageGroups && ageGroups.length > 0) {
-      await db.insert(ageGroupSettings).values(
-        ageGroups.map((group: { 
-          ageGroup: string; 
-          birthYear: number;
-          gender: string;
-          divisionCode: string;
-        }) => ({
-          seasonalScopeId: scope.id,
-          ageGroup: group.ageGroup,
-          minBirthYear: group.birthYear,
-          maxBirthYear: group.birthYear,
-          birthYear: group.birthYear,
-          gender: group.gender,
-          divisionCode: group.divisionCode
-        }))
-      );
+      const ageGroupsToInsert = ageGroups.map((group: { 
+        ageGroup: string; 
+        birthYear: number;
+        gender: string;
+        divisionCode: string;
+      }) => ({
+        seasonalScopeId: scope.id,
+        ageGroup: group.ageGroup,
+        birthYear: group.birthYear,
+        minBirthYear: group.birthYear,
+        maxBirthYear: group.birthYear,
+        gender: group.gender,
+        divisionCode: group.divisionCode,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }));
+
+      console.log('Inserting age groups:', JSON.stringify(ageGroupsToInsert, null, 2));
+      await db.insert(ageGroupSettings).values(ageGroupsToInsert);
     }
 
     // Fetch the created scope with its age groups
@@ -61,6 +69,7 @@ router.post('/', async (req, res) => {
       }
     });
 
+    console.log('Created scope with age groups:', JSON.stringify(createdScope, null, 2));
     res.status(200).json(createdScope);
   } catch (error) {
     console.error('Error creating seasonal scope:', error);
