@@ -1,5 +1,6 @@
 import { pgTable, text, serial, boolean, jsonb, time, integer, date, timestamp, bigint } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { relations } from "drizzle-orm";
 import { z } from "zod";
 
 export const organizationSettings = pgTable("organization_settings", {
@@ -496,7 +497,7 @@ export const seasonalScopes = pgTable("seasonal_scopes", {
 
 export const ageGroupSettings = pgTable("age_group_settings", {
   id: serial("id").primaryKey(),
-  seasonalScopeId: integer("seasonal_scope_id").notNull().references(() => seasonalScopes.id),
+  seasonalScopeId: integer("seasonal_scope_id").notNull().references(() => seasonalScopes.id, { onDelete: 'cascade' }),
   ageGroup: text("age_group").notNull(),
   minBirthYear: integer("min_birth_year").notNull(),
   maxBirthYear: integer("max_birth_year").notNull(),
@@ -506,3 +507,15 @@ export const ageGroupSettings = pgTable("age_group_settings", {
 
 export const insertSeasonalScopeSchema = createInsertSchema(seasonalScopes);
 export const insertAgeGroupSettingSchema = createInsertSchema(ageGroupSettings);
+
+// Add relationship definitions
+export const seasonalScopesRelations = relations(seasonalScopes, ({ many }) => ({
+  ageGroups: many(ageGroupSettings),
+}));
+
+export const ageGroupSettingsRelations = relations(ageGroupSettings, ({ one }) => ({
+  scope: one(seasonalScopes, {
+    fields: [ageGroupSettings.seasonalScopeId],
+    references: [seasonalScopes.id],
+  }),
+}));

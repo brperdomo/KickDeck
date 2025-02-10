@@ -25,7 +25,7 @@ import {
   roles,
   adminRoles,
 } from "@db/schema";
-import { sql, eq, and, or, count } from "drizzle-orm";
+import { sql, eq, and, or } from "drizzle-orm";
 import fs from "fs/promises";
 import path from "path";
 import { crypto } from "./crypto";
@@ -33,6 +33,7 @@ import session from "express-session";
 import passport from "passport";
 import { setupWebSocketServer } from "./websocket";
 import { randomBytes } from "crypto";
+import seasonalScopesRouter from './routes/seasonal-scopes';
 
 // Admin middleware
 const isAdmin = (req: Request, res: Response, next: Function) => {
@@ -52,6 +53,14 @@ export function registerRoutes(app: Express): Server {
   setupWebSocketServer(httpServer);
 
   try {
+    // Set up authentication first
+    setupAuth(app);
+    log("Authentication routes registered successfully");
+
+
+    // Register the seasonal scopes router with admin middleware
+    app.use('/api/admin/seasonal-scopes', isAdmin, seasonalScopesRouter);
+
     // Public event endpoint
     app.get('/api/events/:id', async (req, res) => {
       try {
@@ -78,10 +87,6 @@ export function registerRoutes(app: Express): Server {
         res.status(500).send("Failed to fetch event details");
       }
     });
-
-    // Set up authentication first
-    setupAuth(app);
-    log("Authentication routes registered successfully");
 
 
     // Admin email check endpoint
@@ -307,11 +312,12 @@ export function registerRoutes(app: Express): Server {
         }
 
         // Check if this is a super admin
-        if (adminToDelete.roles.includes('super_admin')) {
+        const isSuperAdmin = adminToDelete.roles.includes('super_admin');
+        if (isSuperAdmin) {
           // Count other super admins
-          const [{count}] = await db
+          const [{ count }] = await db
             .select({
-              count: count(),
+              count: sql`COUNT(*)`,
             })
             .from(users)
             .innerJoin(adminRoles, eq(users.id, adminRoles.userId))
@@ -532,81 +538,7 @@ export function registerRoutes(app: Express): Server {
 
         // Mark invitation as accepted
         await db
-
-    // Seasonal Scope Management Routes
-    app.get('/api/admin/seasonal-scopes', isAdmin, async (req, res) => {
-      try {
-        const scopes = await db
-          .select()
-          .from(seasonalScopes)
-          .orderBy(seasonalScopes.startYear);
-
-        res.json(scopes);
-      } catch (error) {
-        console.error('Error fetching seasonal scopes:', error);
-        res.status(500).send("Failed to fetch seasonal scopes");
-      }
-    });
-
-    app.post('/api/admin/seasonal-scopes', isAdmin, async (req, res) => {
-      try {
-        const { name, startYear, endYear } = req.body;
-
-        const [newScope] = await db
-          .insert(seasonalScopes)
-          .values({
-            name,
-            start_year: parseInt(startYear),
-            end_year: parseInt(endYear),
-            is_active: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .returning();
-
-        res.json(newScope);
-      } catch (error) {
-        console.error('Error creating seasonal scope:', error);
-        console.error('Detailed error:', error instanceof Error ? error.message : error);
-        res.status(500).send("Failed to create seasonal scope");
-      }
-    });
-
-    app.put('/api/admin/seasonal-scopes/:id/age-groups', isAdmin, async (req, res) => {
-      try {
-        const scopeId = parseInt(req.params.id);
-        const { ageGroups } = req.body;
-
-        await db.transaction(async (tx) => {
-          // Delete existing age groups for this scope
-          await tx
-            .delete(ageGroupSettings)
-            .where(eq(ageGroupSettings.seasonalScopeId, scopeId));
-
-          // Insert new age groups
-          for (const group of ageGroups) {
-            await tx
-              .insert(ageGroupSettings)
-              .values({
-                seasonalScopeId: scopeId,
-                ageGroup: group.ageGroup,
-                minBirthYear: group.minBirthYear,
-                maxBirthYear: group.maxBirthYear,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              });
-          }
-        });
-
-        res.json({ message: "Age groups updated successfully" });
-      } catch (error) {
-        console.error('Error updating age groups:', error);
-        res.status(500).send("Failed to update age groups");
-      }
-    });
-
-    // Continue with household invitations update
-    await db
+          .update(householdInvitations)
           .set({ status: 'accepted' })
           .where(eq(householdInvitations.id, invitation.id));
 
@@ -1060,7 +992,7 @@ export function registerRoutes(app: Express): Server {
 
         if (!deletedField) {
           return res.status(404).send("Field not found");
-        }
+}
 
         res.json(deletedField);
       } catch (error) {
@@ -2347,6 +2279,78 @@ export function registerRoutes(app: Express): Server {
         // Added basic error logging for white screen debugging.
         console.error("Error details:", error);
         res.status(500).send("Failed to add participants");
+      }
+    });
+
+    // Seasonal Scope Management Routes
+    app.get('/api/admin/seasonal-scopes', isAdmin, async (req, res) => {
+      try {
+        const scopes = await db
+          .select()
+          .from(seasonalScopes)
+          .orderBy(seasonalScopes.startYear);
+
+        res.json(scopes);
+      } catch (error) {
+        console.error('Error fetching seasonal scopes:', error);
+        res.status(500).send("Failed to fetch seasonal scopes");
+      }
+    });
+
+    app.post('/api/admin/seasonal-scopes', isAdmin, async (req, res) => {
+      try {
+        const { name, startYear, endYear } = req.body;
+
+        const [newScope] = await db
+          .insert(seasonalScopes)
+          .values({
+            name,
+            start_year: parseInt(startYear),
+            end_year: parseInt(endYear),
+            is_active: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .returning();
+
+        res.json(newScope);
+      } catch (error) {
+        console.error('Error creating seasonal scope:', error);
+        console.error('Detailed error:', error instanceof Error ? error.message : error);
+        res.status(500).send("Failed to create seasonal scope");
+      }
+    });
+
+    app.put('/api/admin/seasonal-scopes/:id/age-groups', isAdmin, async (req, res) => {
+      try {
+        const scopeId = parseInt(req.params.id);
+        const { ageGroups } = req.body;
+
+        await db.transaction(async (tx) => {
+          // Delete existing age groups for this scope
+          await tx
+            .delete(ageGroupSettings)
+            .where(eq(ageGroupSettings.seasonalScopeId, scopeId));
+
+          // Insert new age groups
+          for (const group of ageGroups) {
+            await tx
+              .insert(ageGroupSettings)
+              .values({
+                seasonalScopeId: scopeId,
+                ageGroup: group.ageGroup,
+                minBirthYear: group.minBirthYear,
+                maxBirthYear: group.maxBirthYear,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              });
+          }
+        });
+
+        res.json({ message: "Age groups updated successfully" });
+      } catch (error) {
+        console.error('Error updating age groups:', error);
+        res.status(500).send("Failed to update age groups");
       }
     });
 
