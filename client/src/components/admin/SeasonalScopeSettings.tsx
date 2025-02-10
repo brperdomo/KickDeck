@@ -52,6 +52,15 @@ export function SeasonalScopeSettings() {
 
   // Helper function to safely handle scope viewing
   const handleViewScope = (scope: SeasonalScope) => {
+    if (!scope || !scope.ageGroups) {
+      console.error('Invalid scope data:', scope);
+      toast({
+        title: "Error",
+        description: "Invalid scope data",
+        variant: "destructive"
+      });
+      return;
+    }
     console.log('Opening view modal for scope:', scope);
     setViewingScope(scope);
     setIsViewModalOpen(true);
@@ -422,7 +431,7 @@ export function SeasonalScopeSettings() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleViewScope(scope)} // Updated line
+                            onClick={() => handleViewScope(scope)}
                           >
                             <Eye className="h-4 w-4 mr-2" />
                             View
@@ -444,7 +453,7 @@ export function SeasonalScopeSettings() {
             )}
           </div>
 
-          {/* Updated View Modal */}
+          {/* Updated View Modal with proper error handling */}
           <Dialog open={isViewModalOpen} onOpenChange={handleCloseViewModal}>
             <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
               {viewingScope && (
@@ -476,11 +485,14 @@ export function SeasonalScopeSettings() {
                         </TableHeader>
                         <TableBody>
                           {viewingScope.ageGroups
+                            .filter(group => group && typeof group.birthYear === 'number' && typeof group.gender === 'string')
                             .sort((a, b) => {
+                              // Safe sorting with type checks
+                              if (!a || !b) return 0;
                               if (a.birthYear !== b.birthYear) {
                                 return b.birthYear - a.birthYear;
                               }
-                              return a.gender.localeCompare(b.gender);
+                              return (a.gender || '').localeCompare(b.gender || '');
                             })
                             .map((group) => (
                               <TableRow key={`${group.gender}-${group.birthYear}-${group.id}`}>
