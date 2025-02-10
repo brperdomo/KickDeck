@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,22 +6,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Plus } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Loader2 } from "lucide-react";
+import { z } from "zod";
 
 interface AgeGroup {
   birthYear: number;
   ageGroup: string;
   gender: string;
   divisionCode: string;
+  minBirthYear: number;
+  maxBirthYear: number;
 }
 
 interface SeasonalScope {
+  id?: number;
   name: string;
   startYear: number;
   endYear: number;
+  isActive: boolean;
   ageGroups: AgeGroup[];
 }
+
+const seasonalScopeSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  startYear: z.number().min(2000).max(2100),
+  endYear: z.number().min(2000).max(2100),
+});
 
 export function SeasonalScopeSettings() {
   const { toast } = useToast();
@@ -46,16 +55,43 @@ export function SeasonalScopeSettings() {
       const response = await fetch('/api/admin/seasonal-scopes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          name: data.name,
+          startYear: data.startYear,
+          endYear: data.endYear,
+          isActive: true,
+          ageGroups: data.ageGroups.map(group => ({
+            ageGroup: group.ageGroup,
+            minBirthYear: group.birthYear,
+            maxBirthYear: group.birthYear,
+            gender: group.gender
+          }))
+        }),
       });
-      if (!response.ok) throw new Error('Failed to create seasonal scope');
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || 'Failed to create seasonal scope');
+      }
+
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/admin/seasonal-scopes']);
-      toast({ title: "Success", description: "Seasonal scope created successfully" });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/seasonal-scopes'] });
+      toast({ 
+        title: "Success", 
+        description: "Seasonal scope created successfully",
+        variant: "default"
+      });
       resetForm();
     },
+    onError: (error) => {
+      toast({ 
+        title: "Error", 
+        description: error instanceof Error ? error.message : "Failed to create seasonal scope",
+        variant: "destructive"
+      });
+    }
   });
 
   const resetForm = () => {
@@ -75,24 +111,28 @@ export function SeasonalScopeSettings() {
     if (endYear) {
       const year = parseInt(endYear);
       const initialMappings: AgeGroup[] = [];
-      
+
       // Generate 15 years of age groups (U4 to U19)
       for (let i = 0; i < 15; i++) {
         const birthYear = year - (4 + i);
         const ageGroup = calculateAgeGroup(birthYear, year);
-        
+
         // Add both boys and girls divisions
         initialMappings.push({
           birthYear,
           ageGroup,
           gender: 'Boys',
-          divisionCode: `B${birthYear}`
+          divisionCode: `B${birthYear}`,
+          minBirthYear: birthYear,
+          maxBirthYear: birthYear
         });
         initialMappings.push({
           birthYear,
           ageGroup,
           gender: 'Girls',
-          divisionCode: `G${birthYear}`
+          divisionCode: `G${birthYear}`,
+          minBirthYear: birthYear,
+          maxBirthYear: birthYear
         });
       }
       setAgeGroupMappings(initialMappings);
@@ -100,28 +140,39 @@ export function SeasonalScopeSettings() {
   };
 
   const handleSubmit = async () => {
-    if (!scopeName || !selectedStartYear || !selectedEndYear) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      });
-      return;
-    }
-
     try {
-      await createScopeMutation.mutateAsync({
+      // Validate the form data
+      const validatedData = seasonalScopeSchema.parse({
         name: scopeName,
         startYear: parseInt(selectedStartYear),
-        endYear: parseInt(selectedEndYear),
+        endYear: parseInt(selectedEndYear)
+      });
+
+      if (ageGroupMappings.length === 0) {
+        throw new Error("Please generate age groups first");
+      }
+
+      await createScopeMutation.mutateAsync({
+        name: validatedData.name,
+        startYear: validatedData.startYear,
+        endYear: validatedData.endYear,
+        isActive: true,
         ageGroups: ageGroupMappings
       });
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create seasonal scope",
-        variant: "destructive"
-      });
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to create seasonal scope",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -191,13 +242,22 @@ export function SeasonalScopeSettings() {
           <Button 
             onClick={handleSubmit}
             className="w-full mt-4"
-            disabled={createScopeMutation.isLoading}
+            disabled={createScopeMutation.isPending}
           >
-            <Plus className="h-4 w-4 mr-2" />
-            {createScopeMutation.isLoading ? "Adding..." : "Add Scope"}
+            {createScopeMutation.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Adding...
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Scope
+              </>
+            )}
           </Button>
 
-          {scopesQuery.data?.map((scope: any) => (
+          {scopesQuery.data?.map((scope: SeasonalScope) => (
             <Card key={scope.id} className="mt-4">
               <CardContent className="p-4">
                 <h3 className="text-lg font-semibold mb-4">{scope.name}</h3>
