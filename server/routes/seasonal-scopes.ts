@@ -16,9 +16,9 @@ router.get('/', async (req, res) => {
             id: true,
             seasonalScopeId: true,
             ageGroup: true,
-            birthYear: true,
             gender: true,
             divisionCode: true,
+            birthYear: true,
             minBirthYear: true,
             maxBirthYear: true,
             createdAt: true,
@@ -69,8 +69,8 @@ router.post('/', async (req, res) => {
       }) => ({
         seasonalScopeId: scope.id,
         ageGroup: group.ageGroup,
-        birthYear: group.birthYear,
         gender: group.gender,
+        birthYear: group.birthYear,
         divisionCode: group.divisionCode,
         minBirthYear: group.minBirthYear,
         maxBirthYear: group.maxBirthYear,
@@ -86,7 +86,20 @@ router.post('/', async (req, res) => {
     const createdScope = await db.query.seasonalScopes.findFirst({
       where: eq(seasonalScopes.id, scope.id),
       with: {
-        ageGroups: true
+        ageGroups: {
+          columns: {
+            id: true,
+            seasonalScopeId: true,
+            ageGroup: true,
+            gender: true,
+            divisionCode: true,
+            birthYear: true,
+            minBirthYear: true,
+            maxBirthYear: true,
+            createdAt: true,
+            updatedAt: true,
+          }
+        }
       }
     });
 
@@ -129,9 +142,9 @@ router.patch('/:id', async (req, res) => {
             id: true,
             seasonalScopeId: true,
             ageGroup: true,
-            birthYear: true,
             gender: true,
             divisionCode: true,
+            birthYear: true,
             minBirthYear: true,
             maxBirthYear: true,
             createdAt: true,
