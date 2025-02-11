@@ -62,6 +62,7 @@ export function SeasonalScopeSettings() {
       return;
     }
     console.log('Opening view modal for scope:', scope);
+    console.log('Age groups data:', scope.ageGroups);
     setViewingScope(scope);
     setIsViewModalOpen(true);
   };
@@ -453,7 +454,7 @@ export function SeasonalScopeSettings() {
             )}
           </div>
 
-          {/* Updated View Modal with proper error handling */}
+          {/* Updated View Modal with proper error handling and debugging */}
           <Dialog open={isViewModalOpen} onOpenChange={handleCloseViewModal}>
             <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
               {viewingScope && (
@@ -485,13 +486,12 @@ export function SeasonalScopeSettings() {
                         </TableHeader>
                         <TableBody>
                           {viewingScope.ageGroups
-                            .filter(group => group && typeof group.birthYear === 'number' && typeof group.gender === 'string')
+                            .filter(group => group && typeof group.birthYear === 'number' && group.gender)
                             .sort((a, b) => {
-                              // Safe sorting with type checks
+                              // Sort by birth year (descending) and then by gender
                               if (!a || !b) return 0;
-                              if (a.birthYear !== b.birthYear) {
-                                return b.birthYear - a.birthYear;
-                              }
+                              const yearDiff = b.birthYear - a.birthYear;
+                              if (yearDiff !== 0) return yearDiff;
                               return (a.gender || '').localeCompare(b.gender || '');
                             })
                             .map((group) => (
