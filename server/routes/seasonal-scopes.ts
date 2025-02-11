@@ -25,9 +25,15 @@ router.get('/', async (req, res) => {
             updatedAt: true,
           }
         }
-      }
+      },
+      orderBy: (seasonalScopes, { desc }) => [desc(seasonalScopes.createdAt)]
     });
-    console.log('Fetched scopes:', JSON.stringify(scopes, null, 2));
+
+    // Log the first scope for debugging
+    if (scopes.length > 0) {
+      console.log('Sample scope data:', JSON.stringify(scopes[0], null, 2));
+    }
+
     res.json(scopes);
   } catch (error) {
     console.error('Error fetching seasonal scopes:', error);

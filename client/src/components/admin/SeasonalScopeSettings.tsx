@@ -501,19 +501,22 @@ export function SeasonalScopeSettings() {
                           {viewingScope.ageGroups
                             .filter(group => group !== null)
                             .sort((a, b) => {
-                              // Sort by birth year (ascending) and then by gender
+                              // Sort by birth year (descending) and then by gender
                               const yearDiff = b.birthYear - a.birthYear;
                               if (yearDiff !== 0) return yearDiff;
                               return a.gender.localeCompare(b.gender);
                             })
-                            .map((group) => (
-                              <TableRow key={`${group.id}-${group.gender}-${group.birthYear}`}>
-                                <TableCell className="font-medium">{group.birthYear}</TableCell>
-                                <TableCell>{group.divisionCode}</TableCell>
-                                <TableCell>{group.ageGroup}</TableCell>
-                                <TableCell>{group.gender}</TableCell>
-                              </TableRow>
-                            ))}
+                            .map((group) => {
+                              console.log('Rendering group:', group); // Debug log
+                              return (
+                                <TableRow key={`${group.id}-${group.gender}-${group.birthYear}`}>
+                                  <TableCell className="font-medium">{group.birthYear}</TableCell>
+                                  <TableCell>{group.divisionCode}</TableCell>
+                                  <TableCell>{group.ageGroup}</TableCell>
+                                  <TableCell>{group.gender}</TableCell>
+                                </TableRow>
+                              );
+                            })}
                         </TableBody>
                       </Table>
                     ) : (
