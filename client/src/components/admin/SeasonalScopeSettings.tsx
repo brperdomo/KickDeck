@@ -463,14 +463,14 @@ export function SeasonalScopeSettings() {
                     <DialogTitle>{viewingScope.name}</DialogTitle>
                   </DialogHeader>
                   <div className="mt-4">
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <span className="text-sm text-muted-foreground">Start Year:</span>
-                        <span className="ml-2 font-medium">{viewingScope.startYear}</span>
+                    <div className="mb-4 flex gap-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">Start Year:</span>
+                        <span>{viewingScope.startYear}</span>
                       </div>
-                      <div>
-                        <span className="text-sm text-muted-foreground">End Year:</span>
-                        <span className="ml-2 font-medium">{viewingScope.endYear}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">End Year:</span>
+                        <span>{viewingScope.endYear}</span>
                       </div>
                     </div>
 
@@ -488,13 +488,14 @@ export function SeasonalScopeSettings() {
                           {viewingScope.ageGroups
                             .filter(group => group !== null)
                             .sort((a, b) => {
-                              if (!a || !b) return 0;
+                              // Sort by birth year (ascending) and then by gender
                               const yearDiff = b.birthYear - a.birthYear;
-                              return yearDiff !== 0 ? yearDiff : (a.gender || '').localeCompare(b.gender || '');
+                              if (yearDiff !== 0) return yearDiff;
+                              return a.gender.localeCompare(b.gender);
                             })
                             .map((group) => (
-                              <TableRow key={`${group.gender}-${group.birthYear}-${group.id}`}>
-                                <TableCell>{group.birthYear}</TableCell>
+                              <TableRow key={`${group.gender}-${group.birthYear}`}>
+                                <TableCell className="font-medium">{group.birthYear}</TableCell>
                                 <TableCell>{group.divisionCode}</TableCell>
                                 <TableCell>{group.ageGroup}</TableCell>
                                 <TableCell>{group.gender}</TableCell>
