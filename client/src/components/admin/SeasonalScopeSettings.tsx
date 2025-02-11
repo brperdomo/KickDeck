@@ -456,11 +456,14 @@ export function SeasonalScopeSettings() {
 
           {/* View Modal */}
           <Dialog open={isViewModalOpen} onOpenChange={handleCloseViewModal}>
-            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto" aria-describedby="scope-view-description">
               {viewingScope && (
                 <>
                   <DialogHeader>
                     <DialogTitle>{viewingScope.name}</DialogTitle>
+                    <p id="scope-view-description" className="text-sm text-muted-foreground">
+                      View age groups and divisions for this seasonal scope
+                    </p>
                   </DialogHeader>
                   <div className="mt-4">
                     <div className="mb-4 flex gap-4">
@@ -494,7 +497,7 @@ export function SeasonalScopeSettings() {
                               return a.gender.localeCompare(b.gender);
                             })
                             .map((group) => (
-                              <TableRow key={`${group.gender}-${group.birthYear}`}>
+                              <TableRow key={`${group.id}-${group.gender}-${group.birthYear}`}>
                                 <TableCell className="font-medium">{group.birthYear}</TableCell>
                                 <TableCell>{group.divisionCode}</TableCell>
                                 <TableCell>{group.ageGroup}</TableCell>
