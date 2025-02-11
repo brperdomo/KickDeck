@@ -486,23 +486,15 @@ export function SeasonalScopeSettings() {
                         </TableHeader>
                         <TableBody>
                           {viewingScope.ageGroups
-                            .sort((a, b) => {
-                              // First sort by birth year
-                              const yearDiff = (b?.birthYear || 0) - (a?.birthYear || 0);
-                              // If birth years are the same, sort by gender
-                              return yearDiff !== 0 ? yearDiff : (a?.gender || '').localeCompare(b?.gender || '');
-                            })
-                            .map((group) => {
-                              if (!group) return null;
-                              return (
-                                <TableRow key={`${group.gender || 'unknown'}-${group.birthYear || 0}-${group.id}`}>
-                                  <TableCell>{group.birthYear || 'N/A'}</TableCell>
-                                  <TableCell>{group.divisionCode || 'N/A'}</TableCell>
-                                  <TableCell>{group.ageGroup || 'N/A'}</TableCell>
-                                  <TableCell>{group.gender || 'N/A'}</TableCell>
-                                </TableRow>
-                              );
-                            })}
+                            .sort((a, b) => b.birthYear - a.birthYear || a.gender.localeCompare(b.gender))
+                            .map((group) => (
+                              <TableRow key={`${group.gender}-${group.birthYear}-${group.id}`}>
+                                <TableCell>{group.birthYear}</TableCell>
+                                <TableCell>{group.divisionCode}</TableCell>
+                                <TableCell>{group.ageGroup}</TableCell>
+                                <TableCell>{group.gender}</TableCell>
+                              </TableRow>
+                            ))}
                         </TableBody>
                       </Table>
                     ) : (
