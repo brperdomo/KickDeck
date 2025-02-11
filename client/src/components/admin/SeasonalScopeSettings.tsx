@@ -454,7 +454,7 @@ export function SeasonalScopeSettings() {
             )}
           </div>
 
-          {/* Updated View Modal with proper error handling and debugging */}
+          {/* View Modal */}
           <Dialog open={isViewModalOpen} onOpenChange={handleCloseViewModal}>
             <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
               {viewingScope && (
@@ -486,13 +486,11 @@ export function SeasonalScopeSettings() {
                         </TableHeader>
                         <TableBody>
                           {viewingScope.ageGroups
-                            .filter(group => group && typeof group.birthYear === 'number' && group.gender)
+                            .filter(group => group && group.birthYear)
                             .sort((a, b) => {
-                              // Sort by birth year (descending) and then by gender
                               if (!a || !b) return 0;
                               const yearDiff = b.birthYear - a.birthYear;
-                              if (yearDiff !== 0) return yearDiff;
-                              return (a.gender || '').localeCompare(b.gender || '');
+                              return yearDiff !== 0 ? yearDiff : (a.gender || '').localeCompare(b.gender || '');
                             })
                             .map((group) => (
                               <TableRow key={`${group.gender}-${group.birthYear}-${group.id}`}>
