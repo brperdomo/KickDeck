@@ -879,7 +879,6 @@ export default function CreateEvent() {
         }
       };
 
-      // Create FormData instance
       const formData = new FormData();
       if (logo) {
         formData.append('logo', logo);
@@ -981,19 +980,26 @@ export default function CreateEvent() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-12"></TableHead>
-                      <TableHead>Age Group</TableHead>
-                      <TableHead>Birth Year</TableHead>
-                      <TableHead>Gender</TableHead>
-                      <TableHead>Division Code</TableHead>
+                      <TableHead className="w-[50px]"></TableHead>
+                      <TableHead className="w-[100px]">Birth Year</TableHead>
+                      <TableHead className="w-[120px]">Division Code</TableHead>
+                      <TableHead className="w-[100px]">Age Group</TableHead>
+                      <TableHead className="w-[100px]">Gender</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {seasonalScopesQuery.data
                       ?.find(scope => scope.id === selectedScopeId)
-                      ?.ageGroups.map((group) => (
-                        <TableRow key={group.id}>
-                          <TableCell>
+                      ?.ageGroups
+                      .sort((a, b) => {
+                        // Sort by birth year (descending) and then by gender
+                        const yearDiff = b.birthYear - a.birthYear;
+                        if (yearDiff !== 0) return yearDiff;
+                        return a.gender.localeCompare(b.gender);
+                      })
+                      .map((group) => (
+                        <TableRow key={group.id} className="hover:bg-muted/50">
+                          <TableCell className="text-center">
                             <Checkbox
                               checked={selectedAgeGroupIds.includes(group.id)}
                               onCheckedChange={(checked) => {
@@ -1005,10 +1011,10 @@ export default function CreateEvent() {
                               }}
                             />
                           </TableCell>
-                          <TableCell>{group.ageGroup}</TableCell>
                           <TableCell>{group.birthYear}</TableCell>
-                          <TableCell>{group.gender}</TableCell>
                           <TableCell>{group.divisionCode}</TableCell>
+                          <TableCell>{group.ageGroup}</TableCell>
+                          <TableCell>{group.gender}</TableCell>
                         </TableRow>
                       ))}
                   </TableBody>
@@ -1020,6 +1026,2109 @@ export default function CreateEvent() {
       </Card>
     </div>
   );
+
+  const renderScoringTab = () => (    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h3 className="text-lg font-semibold">Scoring Rules</h3>
+        </div>
+        <Button onClick={() => {
+          scoringForm.reset();
+          setIsScoringModalOpen(true);
+          setEditingScoringRule(null);
+        }}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create New Rule
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Rule Name</TableHead>
+                <TableHead className="text-center">Win</TableHead>
+                <TableHead className="text-center">Tie</TableHead>
+                <TableHead className="text-center">Loss</TableHead>
+                <TableHead className="text-center">Goal Cap</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {scoringRules.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-4">
+                    No scoring rules created yet
+                  </TableCell>
+                </TableRow>
+              ) : (
+                scoringRules.map((rule) => (
+                  <TableRow key={rule.id}>
+                    <TableCell>{rule.title}</TableCell>
+                    <TableCell className="text-center">{rule.win}</TableCell>
+                    <TableCell className="text-center">{rule.tie}</TableCell>
+                    <TableCell className="text-center">{rule.loss}</TableCell>
+                    <TableCell className="text-center">{rule.goalCapped}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditScoringRule(rule)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteScoringRule(rule.id)}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <div className="mt-8">
+        <h3 className="text-lg font-semibold mb-4">Age Group Scoring Rules</h3>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Age Group</TableHead>
+                  <TableHead>Gender</TableHead>
+                  <TableHead>Field Size</TableHead>
+                  <TableHead>Current Rule</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {ageGroups.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-4">
+                      No age groups created yet. Create age groups first to assign scoring rules.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  ageGroups.map((group) => (
+                    <TableRow key={group.id}>
+                      <TableCell>{group.ageGroup}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{group.gender}</Badge>
+                      </TableCell>
+                      <TableCell>{group.fieldSize}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-center">
+                          <Select
+                            value={group.scoringRule || "none"}
+                            onValueChange={(value) => {
+                              setAgeGroups(groups =>
+                                groups.map(g =>
+                                  g.id === group.id
+                                    ? { ...g, scoringRule: value === "none" ? null : value }
+                                    : g
+                                )
+                              );
+                            }}
+                          >
+                            <SelectTrigger className="w-[200px]">
+                              <SelectValue placeholder="Select a rule" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">No Rule</SelectItem>
+                              {scoringRules.map((rule) => (
+                                <SelectItem key={rule.id} value={rule.id}>
+                                  {rule.title}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="flex justify-end mt-4">
+        <Button onClick={() => navigateTab('next')}>Continue
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const renderComplexesTab = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h3 className="text-lg font-semibold">Select Complexes for Event</h3>
+        </div>
+        <Button variant="outline" onClick={() => navigateTab('next')}>
+          Continue
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <ComplexSelector
+            selectedComplexes={selectedComplexes.map(complex => complex.id)}
+            onComplexSelect={(ids) => {
+              const selectedComplexData = complexesQuery.data?.filter(complex =>
+                ids.includes(complex.id)
+              ).map(complex => ({
+                ...complex,
+                selected: true
+              })) || [];
+              setSelectedComplexes(selectedComplexData);
+              setSelectedComplexIds(ids);
+            }}
+          />
+        </CardContent>
+      </Card>
+
+      {selectedComplexes.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {selectedComplexes.map((complex) => (
+            <Card key={complex.id} className="p-4">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h4 className="font-semibold">{complex.name}</h4>
+                  <p className="text-sm text-gray-500">{complex.address}</p>
+                  <p className="text-sm text-gray-500">{complex.city}, {complex.state}</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleViewFields(complex.id)}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-sm text-gray-500">Status:</span>
+                <Badge variant={complex.isOpen ? "outline" : "destructive"}>
+                  {complex.isOpen ? "Open" : "Closed"}
+                </Badge>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={!!viewingComplexId} onOpenChange={(open) => !open && setViewingComplexId(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>
+              Fields in {complexesQuery.data?.find(c => c.id === viewingComplexId)?.name}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="mt-4">
+            {fieldsQuery.isLoading ? (
+              <div>Loading fields...</div>
+            ) : !fieldsQuery.data?.length ? (
+              <div>No fields available in this complex</div>
+            ) : (
+              <div className="space-y-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Field Name</TableHead>
+                      <TableHead className="text-center">Features</TableHead>
+                      <TableHead>Special Instructions</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-center">Event Field Size</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {fieldsQuery.data.map((field) => (
+                      <TableRow key={field.id}>
+                        <TableCell className="font-medium">{field.name}</TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex gap-2 justify-center">
+                            {field.hasLights && <Badge variant="secondary">Lights</Badge>}
+                            {field.hasParking && <Badge variant="secondary">Parking</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell>{field.specialInstructions || 'N/A'}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={field.isOpen ? "outline" : "destructive"}>
+                            {field.isOpen ? "Open" : "Closed"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Select
+                            value={eventFieldSizes[field.id] || ''}
+                            onValueChange={(value: FieldSize) => {
+                              setEventFieldSizes(prev => ({
+                                ...prev,
+                                [field.id]: value
+                              }));
+                            }}
+                          >
+                            <SelectTrigger className="w-[120px]">
+                              <SelectValue placeholder="Select size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {['3v3', '4v4', '5v5', '6v6', '7v7', '8v8', '9v9', '10v10', '11v11', 'N/A'].map((size) => (
+                                <SelectItem key={size} value={size}>
+                                  {size}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+
+  const handleCreateEvent = async () => {
+    setIsSaving(true);
+    try {
+      const formValues = form.getValues();
+      const selectedScope = seasonalScopesQuery.data?.find(scope => scope.id === selectedScopeId);
+      const selectedAgeGroups = selectedScope?.ageGroups.filter(group =>
+        selectedAgeGroupIds.includes(group.id)
+      ) || [];
+
+      const eventData = {
+        name: formValues.name || "",
+        startDate: formValues.startDate || "",
+        endDate: formValues.endDate || "",
+        timezone: formValues.timezone || "",
+        applicationDeadline: formValues.applicationDeadline || "",
+        details: formValues.details || "",
+        agreement: formValues.agreement || "",
+        refundPolicy: formValues.refundPolicy || "",
+        ageGroups: selectedAgeGroups.map(group => ({
+          gender: group.gender as "Male" | "Female" | "Coed",
+          projectedTeams: 0,
+          birthDateStart: new Date(group.birthYear, 0, 1).toISOString(),
+          birthDateEnd: new Date(group.birthYear, 11, 31).toISOString(),
+          scoringRule: "",
+          ageGroup: group.ageGroup,
+          fieldSize: "11v11" as FieldSize,
+          amountDue: null
+        })),
+        complexFieldSizes: eventFieldSizes,
+        selectedComplexIds: selectedComplexes.map(complex => complex.id),
+        branding: {
+          primaryColor,
+          secondaryColor,
+          logoUrl: previewUrl,
+        }
+      };
+
+      const formData = new FormData();
+      if (logo) {
+        formData.append('logo', logo);
+      }
+      formData.append('data', JSON.stringify(eventData));
+
+      const response = await fetch('/api/admin/events', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create event');
+      }
+
+      toast({
+        title: "Success",
+        description: "Event created successfully! Redirecting to dashboard...",
+        variant: "default",
+      });
+
+      setTimeout(() => {
+        navigate("/admin");
+      }, 1500);
+    } catch (error) {
+      console.error('Error creating event:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create event",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    const validateTabs = () => {
+      const formValues = form.getValues();
+      const errors: Record<EventTab, boolean> = {
+        information: !formValues.name || !formValues.startDate || !formValues.endDate || !formValues.timezone,
+        'age-groups': !selectedScopeId || selectedAgeGroupIds.length === 0,
+        scoring: scoringRules.length === 0,
+        complexes: selectedComplexIds.length === 0,
+        settings: false,
+        administrators: false,
+      };
+      setTabErrors(errors);
+    };
+
+    validateTabs();
+    form.watch(validateTabs);
+  }, [form, selectedScopeId, selectedAgeGroupIds, scoringRules, selectedComplexIds]);
+
+  const renderAgeGroupsTab = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h3 className="text-lg font-semibold">Select Age Groups</h3>
+        </div>
+        <Button variant="outline" onClick={() => navigateTab('next')}>
+          Continue
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            <div>
+              <Label>Select Seasonal Scope</Label>
+              <Select
+                value={selectedScopeId?.toString() || ""}
+                onValueChange={(value) => {
+                  setSelectedScopeId(parseInt(value));
+                  setSelectedAgeGroupIds([]); // Reset selections when scope changes
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choose a seasonal scope" />
+                </SelectTrigger>
+                <SelectContent>
+                  {seasonalScopesQuery.data?.map((scope) => (
+                    <SelectItem key={scope.id} value={scope.id.toString()}>
+                      {scope.name} ({scope.startYear}-{scope.endYear})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedScopeId && (
+              <div className="border rounded-lg p-4 mt-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[50px]"></TableHead>
+                      <TableHead className="w-[100px]">Birth Year</TableHead>
+                      <TableHead className="w-[120px]">Division Code</TableHead>
+                      <TableHead className="w-[100px]">Age Group</TableHead>
+                      <TableHead className="w-[100px]">Gender</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {seasonalScopesQuery.data
+                      ?.find(scope => scope.id === selectedScopeId)
+                      ?.ageGroups
+                      .sort((a, b) => {
+                        // Sort by birth year (descending) and then by gender
+                        const yearDiff = b.birthYear - a.birthYear;
+                        if (yearDiff !== 0) return yearDiff;
+                        return a.gender.localeCompare(b.gender);
+                      })
+                      .map((group) => (
+                        <TableRow key={group.id} className="hover:bg-muted/50">
+                          <TableCell className="text-center">
+                            <Checkbox
+                              checked={selectedAgeGroupIds.includes(group.id)}
+                              onCheckedChange={(checked) => {
+                                setSelectedAgeGroupIds(prev =>
+                                  checked
+                                    ? [...prev, group.id]
+                                    : prev.filter(id => id !== group.id)
+                                );
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>{group.birthYear}</TableCell>
+                          <TableCell>{group.divisionCode}</TableCell>
+                          <TableCell>{group.ageGroup}</TableCell>
+                          <TableCell>{group.gender}</TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderSettingsTab = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h3 className="text-lg font-semibold">Event Settings</h3>
+        </div>
+        <Button variant="outline" onClick={() => handleCreateEvent()}>
+          Create Event
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6 space-y-6">
+          <div>
+            <h4 className="text-sm font-medium mb-4">Event Branding</h4>
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-lg p-6 cursor-pointer transition-colors ${
+                isDragActive ? 'border-primary bg-primary/5' : 'border-border'
+              }`}
+            >
+              <input {...getInputProps()} />
+              <div className="flex flex-col items-center justify-center gap-2">
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="Event logo"
+                    className="h-20 w-20 object-contain"
+                  />
+                ) : (
+                  <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                )}
+                <p className="text-sm text-muted-foreground text-center">
+                  {isDragActive
+                    ? "Drop the event logo here"
+                    : "Drag & drop your event logo here, or click to select"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="primaryColor">Primary Color</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="primaryColor"
+                  type="color"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="w-12 h-12 p-1"
+                />
+                <Input
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="font-mono"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="secondaryColor">Secondary Color</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="secondaryColor"
+                  type="color"
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  className="w-12 h-12 p-1"
+                />
+                <Input
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  className="font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="border rounded-lg p-4">
+            <h4 className="text-sm font-medium mb-4">Brand Preview</h4>
+            <div className="space-y-4">
+              {previewUrl && (
+                <div className="flex justify-center p-4 bg-background rounded-lg">
+                  <img
+                    src={previewUrl}
+                    alt="Event logo preview"
+                    className="h-20 w-20 object-contain"
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-4">
+                <div>
+                  <div
+                    className="w-8 h-8 rounded"
+                    style={{ backgroundColor: primaryColor }}
+                  />
+                  <span className="text-sm">Primary</span>
+                </div>
+                <div>
+                  <div
+                    className="w-8 h-8 rounded"
+                    style={{ backgroundColor: secondaryColor }}
+                  />
+                  <span className="text-sm">Secondary</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderComplexesTab = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h3 className="text-lg font-semibold">Select Complexes for Event</h3>
+        </div>
+        <Button variant="outline" onClick={() => navigateTab('next')}>
+          Continue
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <ComplexSelector
+            selectedComplexes={selectedComplexes.map(complex => complex.id)}
+            onComplexSelect={(ids) => {
+              const selectedComplexData = complexesQuery.data?.filter(complex =>
+                ids.includes(complex.id)
+              ).map(complex => ({
+                ...complex,
+                selected: true
+              })) || [];
+              setSelectedComplexes(selectedComplexData);
+              setSelectedComplexIds(ids);
+            }}
+          />
+        </CardContent>
+      </Card>
+
+      {selectedComplexes.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {selectedComplexes.map((complex) => (
+            <Card key={complex.id} className="p-4">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h4 className="font-semibold">{complex.name}</h4>
+                  <p className="text-sm text-gray-500">{complex.address}</p>
+                  <p className="text-sm text-gray-500">{complex.city}, {complex.state}</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleViewFields(complex.id)}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-sm text-gray-500">Status:</span>
+                <Badge variant={complex.isOpen ? "outline" : "destructive"}>
+                  {complex.isOpen ? "Open" : "Closed"}
+                </Badge>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={!!viewingComplexId} onOpenChange={(open) => !open && setViewingComplexId(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>
+              Fields in {complexesQuery.data?.find(c => c.id === viewingComplexId)?.name}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="mt-4">
+            {fieldsQuery.isLoading ? (
+              <div>Loading fields...</div>
+            ) : !fieldsQuery.data?.length ? (
+              <div>No fields available in this complex</div>
+            ) : (
+              <div className="space-y-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Field Name</TableHead>
+                      <TableHead className="text-center">Features</TableHead>
+                      <TableHead>Special Instructions</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-center">Event Field Size</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {fieldsQuery.data.map((field) => (
+                      <TableRow key={field.id}>
+                        <TableCell className="font-medium">{field.name}</TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex gap-2 justify-center">
+                            {field.hasLights && <Badge variant="secondary">Lights</Badge>}
+                            {field.hasParking && <Badge variant="secondary">Parking</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell>{field.specialInstructions || 'N/A'}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={field.isOpen ? "outline" : "destructive"}>
+                            {field.isOpen ? "Open" : "Closed"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Select
+                            value={eventFieldSizes[field.id] || ''}
+                            onValueChange={(value: FieldSize) => {
+                              setEventFieldSizes(prev => ({
+                                ...prev,
+                                [field.id]: value
+                              }));
+                            }}
+                          >
+                            <SelectTrigger className="w-[120px]">
+                              <SelectValue placeholder="Select size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {['3v3', '4v4', '5v5', '6v6', '7v7', '8v8', '9v9', '10v10', '11v11', 'N/A'].map((size) => (
+                                <SelectItem key={size} value={size}>
+                                  {size}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+
+  useEffect(() => {
+    const validateTabs = () => {
+      const formValues = form.getValues();
+      const errors: Record<EventTab, boolean> = {
+        information: !formValues.name || !formValues.startDate || !formValues.endDate || !formValues.timezone,
+        'age-groups': !selectedScopeId || selectedAgeGroupIds.length === 0,
+        scoring: scoringRules.length === 0,
+        complexes: selectedComplexIds.length === 0,
+        settings: false,
+        administrators: false,
+      };
+      setTabErrors(errors);
+    };
+
+    validateTabs();
+    form.watch(validateTabs);
+  }, [form, selectedScopeId, selectedAgeGroupIds, scoringRules, selectedComplexIds]);
+
+  const renderAgeGroupsTab = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h3 className="text-lg font-semibold">Select Age Groups</h3>
+        </div>
+        <Button variant="outline" onClick={() => navigateTab('next')}>
+          Continue
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            <div>
+              <Label>Select Seasonal Scope</Label>
+              <Select
+                value={selectedScopeId?.toString() || ""}
+                onValueChange={(value) => {
+                  setSelectedScopeId(parseInt(value));
+                  setSelectedAgeGroupIds([]); // Reset selections when scope changes
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choose a seasonal scope" />
+                </SelectTrigger>
+                <SelectContent>
+                  {seasonalScopesQuery.data?.map((scope) => (
+                    <SelectItem key={scope.id} value={scope.id.toString()}>
+                      {scope.name} ({scope.startYear}-{scope.endYear})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedScopeId && (
+              <div className="border rounded-lg p-4 mt-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[50px]"></TableHead>
+                      <TableHead className="w-[100px]">Birth Year</TableHead>
+                      <TableHead className="w-[120px]">Division Code</TableHead>
+                      <TableHead className="w-[100px]">Age Group</TableHead>
+                      <TableHead className="w-[100px]">Gender</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {seasonalScopesQuery.data
+                      ?.find(scope => scope.id === selectedScopeId)
+                      ?.ageGroups
+                      .sort((a, b) => {
+                        // Sort by birth year (descending) and then by gender
+                        const yearDiff = b.birthYear - a.birthYear;
+                        if (yearDiff !== 0) return yearDiff;
+                        return a.gender.localeCompare(b.gender);
+                      })
+                      .map((group) => (
+                        <TableRow key={group.id} className="hover:bg-muted/50">
+                          <TableCell className="text-center">
+                            <Checkbox
+                              checked={selectedAgeGroupIds.includes(group.id)}
+                              onCheckedChange={(checked) => {
+                                setSelectedAgeGroupIds(prev =>
+                                  checked
+                                    ? [...prev, group.id]
+                                    : prev.filter(id => id !== group.id)
+                                );
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>{group.birthYear}</TableCell>
+                          <TableCell>{group.divisionCode}</TableCell>
+                          <TableCell>{group.ageGroup}</TableCell>
+                          <TableCell>{group.gender}</TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderScoringTab = () => (    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h3 className="text-lg font-semibold">Scoring Rules</h3>
+        </div>
+        <Button onClick={() => {
+          scoringForm.reset();
+          setIsScoringModalOpen(true);
+          setEditingScoringRule(null);
+        }}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create New Rule
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Rule Name</TableHead>
+                <TableHead className="text-center">Win</TableHead>
+                <TableHead className="text-center">Tie</TableHead>
+                <TableHead className="text-center">Loss</TableHead>
+                <TableHead className="text-center">Goal Cap</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {scoringRules.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-4">
+                    No scoring rules created yet
+                  </TableCell>
+                </TableRow>
+              ) : (
+                scoringRules.map((rule) => (
+                  <TableRow key={rule.id}>
+                    <TableCell>{rule.title}</TableCell>
+                    <TableCell className="text-center">{rule.win}</TableCell>
+                    <TableCell className="text-center">{rule.tie}</TableCell>
+                    <TableCell className="text-center">{rule.loss}</TableCell>
+                    <TableCell className="text-center">{rule.goalCapped}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditScoringRule(rule)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteScoringRule(rule.id)}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <div className="mt-8">
+        <h3 className="text-lg font-semibold mb-4">Age Group Scoring Rules</h3>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Age Group</TableHead>
+                  <TableHead>Gender</TableHead>
+                  <TableHead>Field Size</TableHead>
+                  <TableHead>Current Rule</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {ageGroups.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-4">
+                      No age groups created yet. Create age groups first to assign scoring rules.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  ageGroups.map((group) => (
+                    <TableRow key={group.id}>
+                      <TableCell>{group.ageGroup}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{group.gender}</Badge>
+                      </TableCell>
+                      <TableCell>{group.fieldSize}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-center">
+                          <Select
+                            value={group.scoringRule || "none"}
+                            onValueChange={(value) => {
+                              setAgeGroups(groups =>
+                                groups.map(g =>
+                                  g.id === group.id
+                                    ? { ...g, scoringRule: value === "none" ? null : value }
+                                    : g
+                                )
+                              );
+                            }}
+                          >
+                            <SelectTrigger className="w-[200px]">
+                              <SelectValue placeholder="Select a rule" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">No Rule</SelectItem>
+                              {scoringRules.map((rule) => (
+                                <SelectItem key={rule.id} value={rule.id}>
+                                  {rule.title}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="flex justify-end mt-4">
+        <Button onClick={() => navigateTab('next')}>Continue
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  const renderComplexesTab = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h3 className="text-lg font-semibold">Select Complexes for Event</h3>
+        </div>
+        <Button variant="outline" onClick={() => navigateTab('next')}>
+          Continue
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <ComplexSelector
+            selectedComplexes={selectedComplexes.map(complex => complex.id)}
+            onComplexSelect={(ids) => {
+              const selectedComplexData = complexesQuery.data?.filter(complex =>
+                ids.includes(complex.id)
+              ).map(complex => ({
+                ...complex,
+                selected: true
+              })) || [];
+              setSelectedComplexes(selectedComplexData);
+              setSelectedComplexIds(ids);
+            }}
+          />
+        </CardContent>
+      </Card>
+
+      {selectedComplexes.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {selectedComplexes.map((complex) => (
+            <Card key={complex.id} className="p-4">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h4 className="font-semibold">{complex.name}</h4>
+                  <p className="text-sm text-gray-500">{complex.address}</p>
+                  <p className="text-sm text-gray-500">{complex.city}, {complex.state}</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleViewFields(complex.id)}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-sm text-gray-500">Status:</span>
+                <Badge variant={complex.isOpen ? "outline" : "destructive"}>
+                  {complex.isOpen ? "Open" : "Closed"}
+                </Badge>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={!!viewingComplexId} onOpenChange={(open) => !open && setViewingComplexId(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>
+              Fields in {complexesQuery.data?.find(c => c.id === viewingComplexId)?.name}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="mt-4">
+            {fieldsQuery.isLoading ? (
+              <div>Loading fields...</div>
+            ) : !fieldsQuery.data?.length ? (
+              <div>No fields available in this complex</div>
+            ) : (
+              <div className="space-y-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Field Name</TableHead>
+                      <TableHead className="text-center">Features</TableHead>
+                      <TableHead>Special Instructions</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-center">Event Field Size</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {fieldsQuery.data.map((field) => (
+                      <TableRow key={field.id}>
+                        <TableCell className="font-medium">{field.name}</TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex gap-2 justify-center">
+                            {field.hasLights && <Badge variant="secondary">Lights</Badge>}
+                            {field.hasParking && <Badge variant="secondary">Parking</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell>{field.specialInstructions || 'N/A'}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={field.isOpen ? "outline" : "destructive"}>
+                            {field.isOpen ? "Open" : "Closed"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Select
+                            value={eventFieldSizes[field.id] || ''}
+                            onValueChange={(value: FieldSize) => {
+                              setEventFieldSizes(prev => ({
+                                ...prev,
+                                [field.id]: value
+                              }));
+                            }}
+                          >
+                            <SelectTrigger className="w-[120px]">
+                              <SelectValue placeholder="Select size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {['3v3', '4v4', '5v5', '6v6', '7v7', '8v8', '9v9', '10v10', '11v11', 'N/A'].map((size) => (
+                                <SelectItem key={size} value={size}>
+                                  {size}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+
+  useEffect(() => {
+    const validateTabs = () => {
+      const formValues = form.getValues();
+      const errors: Record<EventTab, boolean> = {
+        information: !formValues.name || !formValues.startDate || !formValues.endDate || !formValues.timezone,
+        'age-groups': !selectedScopeId || selectedAgeGroupIds.length === 0,
+        scoring: scoringRules.length === 0,
+        complexes: selectedComplexIds.length === 0,
+        settings: false,
+        administrators: false,
+      };
+      setTabErrors(errors);
+    };
+
+    validateTabs();
+    form.watch(validateTabs);
+  }, [form, selectedScopeId, selectedAgeGroupIds, scoringRules, selectedComplexIds]);
+
+  const renderAgeGroupsTab = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h3 className="text-lg font-semibold">Select Age Groups</h3>
+        </div>
+        <Button variant="outline" onClick={() => navigateTab('next')}>
+          Continue
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            <div>
+              <Label>Select Seasonal Scope</Label>
+              <Select
+                value={selectedScopeId?.toString() || ""}
+                onValueChange={(value) => {
+                  setSelectedScopeId(parseInt(value));
+                  setSelectedAgeGroupIds([]); // Reset selections when scope changes
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choose a seasonal scope" />
+                </SelectTrigger>
+                <SelectContent>
+                  {seasonalScopesQuery.data?.map((scope) => (
+                    <SelectItem key={scope.id} value={scope.id.toString()}>
+                      {scope.name} ({scope.startYear}-{scope.endYear})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedScopeId && (
+              <div className="border rounded-lg p-4 mt-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[50px]"></TableHead>
+                      <TableHead className="w-[100px]">Birth Year</TableHead>
+                      <TableHead className="w-[120px]">Division Code</TableHead>
+                      <TableHead className="w-[100px]">Age Group</TableHead>
+                      <TableHead className="w-[100px]">Gender</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {seasonalScopesQuery.data
+                      ?.find(scope => scope.id === selectedScopeId)
+                      ?.ageGroups
+                      .sort((a, b) => {
+                        // Sort by birth year (descending) and then by gender
+                        const yearDiff = b.birthYear - a.birthYear;
+                        if (yearDiff !== 0) return yearDiff;
+                        return a.gender.localeCompare(b.gender);
+                      })
+                      .map((group) => (
+                        <TableRow key={group.id} className="hover:bg-muted/50">
+                          <TableCell className="text-center">
+                            <Checkbox
+                              checked={selectedAgeGroupIds.includes(group.id)}
+                              onCheckedChange={(checked) => {
+                                setSelectedAgeGroupIds(prev =>
+                                  checked
+                                    ? [...prev, group.id]
+                                    : prev.filter(id => id !== group.id)
+                                );
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>{group.birthYear}</TableCell>
+                          <TableCell>{group.divisionCode}</TableCell>
+                          <TableCell>{group.ageGroup}</TableCell>
+                          <TableCell>{group.gender}</TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderSettingsTab = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h3 className="text-lg font-semibold">Event Settings</h3>
+        </div>
+        <Button variant="outline" onClick={() => handleCreateEvent()}>
+          Create Event
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6 space-y-6">
+          <div>
+            <h4 className="text-sm font-medium mb-4">Event Branding</h4>
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-lg p-6 cursor-pointer transition-colors ${
+                isDragActive ? 'border-primary bg-primary/5' : 'border-border'
+              }`}
+            >
+              <input {...getInputProps()} />
+              <div className="flex flex-col items-center justify-center gap-2">
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="Event logo"
+                    className="h-20 w-20 object-contain"
+                  />
+                ) : (
+                  <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                )}
+                <p className="text-sm text-muted-foreground text-center">
+                  {isDragActive
+                    ? "Drop the event logo here"
+                    : "Drag & drop your event logo here, or click to select"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="primaryColor">Primary Color</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="primaryColor"
+                  type="color"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="w-12 h-12 p-1"
+                />
+                <Input
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="font-mono"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="secondaryColor">Secondary Color</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="secondaryColor"
+                  type="color"
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  className="w-12 h-12 p-1"
+                />
+                <Input
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  className="font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="border rounded-lg p-4">
+            <h4 className="text-sm font-medium mb-4">Brand Preview</h4>
+            <div className="space-y-4">
+              {previewUrl && (
+                <div className="flex justify-center p-4 bg-background rounded-lg">
+                  <img
+                    src={previewUrl}
+                    alt="Event logo preview"
+                    className="h-20 w-20 object-contain"
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-4">
+                <div>
+                  <div
+                    className="w-8 h-8 rounded"
+                    style={{ backgroundColor: primaryColor }}
+                  />
+                  <span className="text-sm">Primary</span>
+                </div>
+                <div>
+                  <div
+                    className="w-8 h-8 rounded"
+                    style={{ backgroundColor: secondaryColor }}
+                  />
+                  <span className="text-sm">Secondary</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderComplexesTab = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h3 className="text-lg font-semibold">Select Complexes for Event</h3>
+        </div>
+        <Button variant="outline" onClick={() => navigateTab('next')}>
+          Continue
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <ComplexSelector
+            selectedComplexes={selectedComplexes.map(complex => complex.id)}
+            onComplexSelect={(ids) => {
+              const selectedComplexData = complexesQuery.data?.filter(complex =>
+                ids.includes(complex.id)
+              ).map(complex => ({
+                ...complex,
+                selected: true
+              })) || [];
+              setSelectedComplexes(selectedComplexData);
+              setSelectedComplexIds(ids);
+            }}
+          />
+        </CardContent>
+      </Card>
+
+      {selectedComplexes.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {selectedComplexes.map((complex) => (
+            <Card key={complex.id} className="p-4">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h4 className="font-semibold">{complex.name}</h4>
+                  <p className="text-sm text-gray-500">{complex.address}</p>
+                  <p className="text-sm text-gray-500">{complex.city}, {complex.state}</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleViewFields(complex.id)}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-sm text-gray-500">Status:</span>
+                <Badge variant={complex.isOpen ? "outline" : "destructive"}>
+                  {complex.isOpen ? "Open" : "Closed"}
+                </Badge>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={!!viewingComplexId} onOpenChange={(open) => !open && setViewingComplexId(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>
+              Fields in {complexesQuery.data?.find(c => c.id === viewingComplexId)?.name}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="mt-4">
+            {fieldsQuery.isLoading ? (
+              <div>Loading fields...</div>
+            ) : !fieldsQuery.data?.length ? (
+              <div>No fields available in this complex</div>
+            ) : (
+              <div className="space-y-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Field Name</TableHead>
+                      <TableHead className="text-center">Features</TableHead>
+                      <TableHead>Special Instructions</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-center">Event Field Size</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {fieldsQuery.data.map((field) => (
+                      <TableRow key={field.id}>
+                        <TableCell className="font-medium">{field.name}</TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex gap-2 justify-center">
+                            {field.hasLights && <Badge variant="secondary">Lights</Badge>}
+                            {field.hasParking && <Badge variant="secondary">Parking</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell>{field.specialInstructions || 'N/A'}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={field.isOpen ? "outline" : "destructive"}>
+                            {field.isOpen ? "Open" : "Closed"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Select
+                            value={eventFieldSizes[field.id] || ''}
+                            onValueChange={(value: FieldSize) => {
+                              setEventFieldSizes(prev => ({
+                                ...prev,
+                                [field.id]: value
+                              }));
+                            }}
+                          >
+                            <SelectTrigger className="w-[120px]">
+                              <SelectValue placeholder="Select size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {['3v3', '4v4', '5v5', '6v6', '7v7', '8v8', '9v9', '10v10', '11v11', 'N/A'].map((size) => (
+                                <SelectItem key={size} value={size}>
+                                  {size}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+
+  useEffect(() => {
+    const validateTabs = () => {
+      const formValues = form.getValues();
+      const errors: Record<EventTab, boolean> = {
+        information: !formValues.name || !formValues.startDate || !formValues.endDate || !formValues.timezone,
+        'age-groups': !selectedScopeId || selectedAgeGroupIds.length === 0,
+        scoring: scoringRules.length === 0,
+        complexes: selectedComplexIds.length === 0,
+        settings: false,
+        administrators: false,
+      };
+      setTabErrors(errors);
+    };
+
+    validateTabs();
+    form.watch(validateTabs);
+  }, [form, selectedScopeId, selectedAgeGroupIds, scoringRules, selectedComplexIds]);
+
+  const renderAgeGroupsTab = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h3 className="text-lg font-semibold">Select Age Groups</h3>
+        </div>
+        <Button variant="outline" onClick={() => navigateTab('next')}>
+          Continue
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            <div>
+              <Label>Select Seasonal Scope</Label>
+              <Select
+                value={selectedScopeId?.toString() || ""}
+                onValueChange={(value) => {
+                  setSelectedScopeId(parseInt(value));
+                  setSelectedAgeGroupIds([]); // Reset selections when scope changes
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choose a seasonal scope" />
+                </SelectTrigger>
+                <SelectContent>
+                  {seasonalScopesQuery.data?.map((scope) => (
+                    <SelectItem key={scope.id} value={scope.id.toString()}>
+                      {scope.name} ({scope.startYear}-{scope.endYear})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedScopeId && (
+              <div className="border rounded-lg p-4 mt-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[50px]"></TableHead>
+                      <TableHead className="w-[100px]">Birth Year</TableHead>
+                      <TableHead className="w-[120px]">Division Code</TableHead>
+                      <TableHead className="w-[100px]">Age Group</TableHead>
+                      <TableHead className="w-[100px]">Gender</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {seasonalScopesQuery.data
+                      ?.find(scope => scope.id === selectedScopeId)
+                      ?.ageGroups
+                      .sort((a, b) => {
+                        // Sort by birth year (descending) and then by gender
+                        const yearDiff = b.birthYear - a.birthYear;
+                        if (yearDiff !== 0) return yearDiff;
+                        return a.gender.localeCompare(b.gender);
+                      })
+                      .map((group) => (
+                        <TableRow key={group.id} className="hover:bg-muted/50">
+                          <TableCell className="text-center">
+                            <Checkbox
+                              checked={selectedAgeGroupIds.includes(group.id)}
+                              onCheckedChange={(checked) => {
+                                setSelectedAgeGroupIds(prev =>
+                                  checked
+                                    ? [...prev, group.id]
+                                    : prev.filter(id => id !== group.id)
+                                );
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>{group.birthYear}</TableCell>
+                          <TableCell>{group.divisionCode}</TableCell>
+                          <TableCell>{group.ageGroup}</TableCell>
+                          <TableCell>{group.gender}</TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderSettingsTab = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h3 className="text-lg font-semibold">Event Settings</h3>
+        </div>
+        <Button variant="outline" onClick={() => handleCreateEvent()}>
+          Create Event
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6 space-y-6">
+          <div>
+            <h4 className="text-sm font-medium mb-4">Event Branding</h4>
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-lg p-6 cursor-pointer transition-colors ${
+                isDragActive ? 'border-primary bg-primary/5' : 'border-border'
+              }`}
+            >
+              <input {...getInputProps()} />
+              <div className="flex flex-col items-center justify-center gap-2">
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="Event logo"
+                    className="h-20 w-20 object-contain"
+                  />
+                ) : (
+                  <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                )}
+                <p className="text-sm text-muted-foreground text-center">
+                  {isDragActive
+                    ? "Drop the event logo here"
+                    : "Drag & drop your event logo here, or click to select"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="primaryColor">Primary Color</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="primaryColor"
+                  type="color"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="w-12 h-12 p-1"
+                />
+                <Input
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="font-mono"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="secondaryColor">Secondary Color</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="secondaryColor"
+                  type="color"
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  className="w-12 h-12 p-1"
+                />
+                <Input
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  className="font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="border rounded-lg p-4">
+            <h4 className="text-sm font-medium mb-4">Brand Preview</h4>
+            <div className="space-y-4">
+              {previewUrl && (
+                <div className="flex justify-center p-4 bg-background rounded-lg">
+                  <img
+                    src={previewUrl}
+                    alt="Event logo preview"
+                    className="h-20 w-20 object-contain"
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-4">
+                <div>
+                  <div
+                    className="w-8 h-8 rounded"
+                    style={{ backgroundColor: primaryColor }}
+                  />
+                  <span className="text-sm">Primary</span>
+                </div>
+                <div>
+                  <div
+                    className="w-8 h-8 rounded"
+                    style={{ backgroundColor: secondaryColor }}
+                  />
+                  <span className="text-sm">Secondary</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+const renderComplexesTab = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h3 className="text-lg font-semibold">Select Complexes for Event</h3>
+        </div>
+        <Button variant="outline" onClick={() => navigateTab('next')}>
+          Continue
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <ComplexSelector
+            selectedComplexes={selectedComplexes.map(complex => complex.id)}
+            onComplexSelect={(ids) => {
+              const selectedComplexData = complexesQuery.data?.filter(complex =>
+                ids.includes(complex.id)
+              ).map(complex => ({
+                ...complex,
+                selected: true
+              })) || [];
+              setSelectedComplexes(selectedComplexData);
+              setSelectedComplexIds(ids);
+            }}
+          />
+        </CardContent>
+      </Card>
+
+      {selectedComplexes.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {selectedComplexes.map((complex) => (
+            <Card key={complex.id} className="p-4">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h4 className="font-semibold">{complex.name}</h4>
+                  <p className="text-sm text-gray-500">{complex.address}</p>
+                  <p className="text-sm text-gray-500">{complex.city}, {complex.state}</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleViewFields(complex.id)}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-sm text-gray-500">Status:</span>
+                <Badge variant={complex.isOpen ? "outline" : "destructive"}>
+                  {complex.isOpen ? "Open" : "Closed"}
+                </Badge>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={!!viewingComplexId} onOpenChange={(open) => !open && setViewingComplexId(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>
+              Fields in {complexesQuery.data?.find(c => c.id === viewingComplexId)?.name}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="mt-4">
+            {fieldsQuery.isLoading ? (
+              <div>Loading fields...</div>
+            ) : !fieldsQuery.data?.length ? (
+              <div>No fields available in this complex</div>
+            ) : (
+              <div className="space-y-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Field Name</TableHead>
+                      <TableHead className="text-center">Features</TableHead>
+                      <TableHead>Special Instructions</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-center">Event Field Size</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {fieldsQuery.data.map((field) => (
+                      <TableRow key={field.id}>
+                        <TableCell className="font-medium">{field.name}</TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex gap-2 justify-center">
+                            {field.hasLights && <Badge variant="secondary">Lights</Badge>}
+                            {field.hasParking && <Badge variant="secondary">Parking</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell>{field.specialInstructions || 'N/A'}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={field.isOpen ? "outline" : "destructive"}>
+                            {field.isOpen ? "Open" : "Closed"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Select
+                            value={eventFieldSizes[field.id] || ''}
+                            onValueChange={(value: FieldSize) => {
+                              setEventFieldSizes(prev => ({
+                                ...prev,
+                                [field.id]: value
+                              }));
+                            }}
+                          >
+                            <SelectTrigger className="w-[120px]">
+                              <SelectValue placeholder="Select size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {['3v3', '4v4', '5v5', '6v6', '7v7', '8v8', '9v9', '10v10', '11v11', 'N/A'].map((size) => (
+                                <SelectItem key={size} value={size}>
+                                  {size}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+
+  useEffect(() => {
+    const validateTabs = () => {
+      const formValues = form.getValues();
+      const errors: Record<EventTab, boolean> = {
+        information: !formValues.name || !formValues.startDate || !formValues.endDate || !formValues.timezone,
+        'age-groups': !selectedScopeId || selectedAgeGroupIds.length === 0,
+        scoring: scoringRules.length === 0,
+        complexes: selectedComplexIds.length === 0,
+        settings: false,
+        administrators: false,
+      };
+      setTabErrors(errors);
+    };
+
+    validateTabs();
+    form.watch(validateTabs);
+  }, [form, selectedScopeId, selectedAgeGroupIds, scoringRules, selectedComplexIds]);
+
+  const renderAgeGroupsTab = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h3 className="text-lg font-semibold">Select Age Groups</h3>
+        </div>
+        <Button variant="outline" onClick={() => navigateTab('next')}>
+          Continue
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            <div>
+              <Label>Select Seasonal Scope</Label>
+              <Select
+                value={selectedScopeId?.toString() || ""}
+                onValueChange={(value) => {
+                  setSelectedScopeId(parseInt(value));
+                  setSelectedAgeGroupIds([]); // Reset selections when scope changes
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choose a seasonal scope" />
+                </SelectTrigger>
+                <SelectContent>
+                  {seasonalScopesQuery.data?.map((scope) => (
+                    <SelectItem key={scope.id} value={scope.id.toString()}>
+                      {scope.name} ({scope.startYear}-{scope.endYear})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedScopeId && (
+              <div className="border rounded-lg p-4 mt-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[50px]"></TableHead>
+                      <TableHead className="w-[100px]">Birth Year</TableHead>
+                      <TableHead className="w-[120px]">Division Code</TableHead>
+                      <TableHead className="w-[100px]">Age Group</TableHead>
+                      <TableHead className="w-[100px]">Gender</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {seasonalScopesQuery.data
+                      ?.find(scope => scope.id === selectedScopeId)
+                      ?.ageGroups
+                      .sort((a, b) => {
+                        // Sort by birth year (descending) and then by gender
+                        const yearDiff = b.birthYear - a.birthYear;
+                        if (yearDiff !== 0) return yearDiff;
+                        return a.gender.localeCompare(b.gender);
+                      })
+                      .map((group) => (
+                        <TableRow key={group.id} className="hover:bg-muted/50">
+                          <TableCell className="text-center">
+                            <Checkbox
+                              checked={selectedAgeGroupIds.includes(group.id)}
+                              onCheckedChange={(checked) => {
+                                setSelectedAgeGroupIds(prev =>
+                                  checked
+                                    ? [...prev, group.id]
+                                    : prev.filter(id => id !== group.id)
+                                );
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>{group.birthYear}</TableCell>
+                          <TableCell>{group.divisionCode}</TableCell>
+                          <TableCell>{group.ageGroup}</TableCell>
+                          <TableCell>{group.gender}</TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderSettingsTab = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h3 className="text-lg font-semibold">Event Settings</h3>
+        </div>
+        <Button variant="outline" onClick={() => handleCreateEvent()}>
+          Create Event
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6 space-y-6">
+          <div>
+            <h4 className="text-sm font-medium mb-4">Event Branding</h4>
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-lg p-6 cursor-pointer transition-colors ${
+                isDragActive ? 'border-primary bg-primary/5' : 'border-border'
+              }`}
+            >
+              <input {...getInputProps()} />
+              <div className="flex flex-col items-center justify-center gap-2">
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="Event logo"
+                    className="h-20 w-20 object-contain"
+                  />
+                ) : (
+                  <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                )}
+                <p className="text-sm text-muted-foreground text-center">
+                  {isDragActive
+                    ? "Drop the event logo here"
+                    : "Drag & drop your event logo here, or click to select"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="primaryColor">Primary Color</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="primaryColor"
+                  type="color"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="w-12 h-12 p-1"
+                />
+                <Input
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="font-mono"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="secondaryColor">Secondary Color</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="secondaryColor"
+                  type="color"
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  className="w-12 h-12 p-1"
+                />
+                <Input
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  className="font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="border rounded-lg p-4">
+            <h4 className="text-sm font-medium mb-4">Brand Preview</h4>
+            <div className="space-y-4">
+              {previewUrl && (
+                <div className="flex justify-center p-4 bg-background rounded-lg">
+                  <img
+                    src={previewUrl}
+                    alt="Event logo preview"
+                    className="h-20 w-20 object-contain"
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-4">
+                <div>
+                  <div
+                    className="w-8 h-8 rounded"
+                    style={{ backgroundColor: primaryColor }}
+                  />
+                  <span className="text-sm">Primary</span>
+                </div>
+                <div>
+                  <div
+                    className="w-8 h-8 rounded"
+                    style={{ backgroundColor: secondaryColor }}
+                  />
+                  <span className="text-sm">Secondary</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  useEffect(() => {
+    const validateTabs = () => {
+      const formValues = form.getValues();
+      const errors: Record<EventTab, boolean> = {
+        information: !formValues.name || !formValues.startDate || !formValues.endDate || !formValues.timezone,
+        'age-groups': !selectedScopeId || selectedAgeGroupIds.length === 0,
+        scoring: scoringRules.length === 0,
+        complexes: selectedComplexIds.length === 0,
+        settings: false,
+        administrators: false,
+      };
+      setTabErrors(errors);
+    };
+
+    validateTabs();
+    form.watch(validateTabs);
+  }, [form, selectedScopeId, selectedAgeGroupIds, scoringRules, selectedComplexIds]);
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -1038,7 +3147,9 @@ export default function CreateEvent() {
         <CardContent className="p-6">
           <ProgressIndicator
             tabs={TAB_ORDER}
-            completedTabs={TAB_ORDER.filter(tab => !tabErrors[tab])}
+            completedTabs={Object.entries(tabErrors)
+              .filter(([, hasError]) => !hasError)
+              .map(([tab]) => tab as EventTab)}
           />
           <Tabs
             value={activeTab}
@@ -1206,7 +3317,7 @@ export default function CreateEvent() {
                             init={{
                               height: 300,
                               menubar: true,
-                              document_base_url: 'https://matchpro.replit.app',
+                              document_baseurl: 'https://matchpro.replit.app',
                               plugins: [
                                 'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
                                 'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
@@ -1270,151 +3381,7 @@ export default function CreateEvent() {
             </TabsContent>
 
             <TabsContent value="scoring">
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" onClick={() => navigateTab('prev')}>
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      Back
-                    </Button>
-                    <h3 className="text-lg font-semibold">Scoring Rules</h3>
-                  </div>
-                  <Button onClick={() => {
-                    scoringForm.reset();
-                    setIsScoringModalOpen(true);
-                    setEditingScoringRule(null);
-                  }}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create New Rule
-                  </Button>
-                </div>
-
-                <Card>
-                  <CardContent className="p-0">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Rule Name</TableHead>
-                          <TableHead className="text-center">Win</TableHead>
-                          <TableHead className="text-center">Tie</TableHead>
-                          <TableHead className="text-center">Loss</TableHead>
-                          <TableHead className="text-center">Goal Cap</TableHead>
-                          <TableHead className="text-center">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {scoringRules.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={6} className="text-center py-4">
-                              No scoring rules created yet
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          scoringRules.map((rule) => (
-                            <TableRow key={rule.id}>
-                              <TableCell>{rule.title}</TableCell>
-                              <TableCell className="text-center">{rule.win}</TableCell>
-                              <TableCell className="text-center">{rule.tie}</TableCell>
-                              <TableCell className="text-center">{rule.loss}</TableCell>
-                              <TableCell className="text-center">{rule.goalCapped}</TableCell>
-                              <TableCell>
-                                <div className="flex items-center justify-center gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleEditScoringRule(rule)}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => handleDeleteScoringRule(rule.id)}
-                                  >
-                                    <Trash className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-
-                <div className="mt-8">
-                  <h3 className="text-lg font-semibold mb-4">Age Group Scoring Rules</h3>
-                  <Card>
-                    <CardContent className="p-0">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Age Group</TableHead>
-                            <TableHead>Gender</TableHead>
-                            <TableHead>Field Size</TableHead>
-                            <TableHead>Current Rule</TableHead>
-                            <TableHead className="text-center">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {ageGroups.length === 0 ? (
-                            <TableRow>
-                              <TableCell colSpan={5} className="text-center py-4">
-                                No age groups created yet. Create age groups first to assign scoring rules.
-                              </TableCell>
-                            </TableRow>
-                          ) : (
-                            ageGroups.map((group) => (
-                              <TableRow key={group.id}>
-                                <TableCell>{group.ageGroup}</TableCell>
-                                <TableCell>
-                                  <Badge variant="outline">{group.gender}</Badge>
-                                </TableCell>
-                                <TableCell>{group.fieldSize}</TableCell>
-                                <TableCell>
-                                  <div className="flex items-center justify-center">
-                                    <Select
-                                      value={group.scoringRule || "none"}
-                                      onValueChange={(value) => {
-                                        setAgeGroups(groups =>
-                                          groups.map(g =>
-                                            g.id === group.id
-                                              ? { ...g, scoringRule: value === "none" ? null : value }
-                                              : g
-                                          )
-                                        );
-                                      }}
-                                    >
-                                      <SelectTrigger className="w-[200px]">
-                                        <SelectValue placeholder="Select a rule" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="none">No Rule</SelectItem>
-                                        {scoringRules.map((rule) => (
-                                          <SelectItem key={rule.id} value={rule.id}>
-                                            {rule.title}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            ))
-                          )}
-                        </TableBody>
-                      </Table>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div className="flex justify-end mt-4">
-                  <Button onClick={() => navigateTab('next')}>Continue
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+              {renderScoringTab()}
             </TabsContent>
 
             <TabsContent value="complexes">
@@ -1424,7 +3391,6 @@ export default function CreateEvent() {
             <TabsContent value="settings">
               {renderSettingsTab()}
             </TabsContent>
-
             <TabsContent value="administrators">
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
