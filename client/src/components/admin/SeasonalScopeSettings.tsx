@@ -278,25 +278,9 @@ export function SeasonalScopeSettings() {
     setEditForm({});
   };
 
-  // Helper function to safely sort age groups
-  const sortAgeGroups = (groups: AgeGroupSettings[]) => {
-    if (!Array.isArray(groups)) return [];
 
-    return [...groups].sort((a, b) => {
-      if (!a || !b) return 0;
-      if (typeof a.birthYear !== 'number' || typeof b.birthYear !== 'number') return 0;
-
-      const yearDiff = b.birthYear - a.birthYear;
-      if (yearDiff !== 0) return yearDiff;
-
-      if (!a.gender || !b.gender) return 0;
-      return a.gender.localeCompare(b.gender);
-    });
-  };
-
-  // Helper function to render the age groups table
   const renderAgeGroupsTable = (scope: SeasonalScope | null) => {
-    if (!scope || !Array.isArray(scope.ageGroups)) {
+    if (!scope || !Array.isArray(scope.ageGroups) || scope.ageGroups.length === 0) {
       return (
         <div className="text-center py-4">
           <p className="text-sm text-muted-foreground">No age groups found for this seasonal scope.</p>
@@ -304,32 +288,43 @@ export function SeasonalScopeSettings() {
       );
     }
 
-    const sortedGroups = sortAgeGroups(scope.ageGroups);
+    const sortedGroups = scope.ageGroups
+      .filter(group => group !== null)
+      .sort((a, b) => {
+        // Sort by birthYear (descending) and then by gender
+        if (a.birthYear !== b.birthYear) {
+          return b.birthYear - a.birthYear;
+        }
+        return a.gender.localeCompare(b.gender);
+      });
+
+    console.log('Sorted age groups:', sortedGroups); // Debug log
 
     return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Birth Year</TableHead>
-            <TableHead>Division Code</TableHead>
-            <TableHead>Age Group</TableHead>
-            <TableHead>Gender</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sortedGroups.map((group) => (
-            <TableRow key={`${group.gender}-${group.birthYear}-${group.id}`}>
-              <TableCell>{group.birthYear}</TableCell>
-              <TableCell>{group.divisionCode}</TableCell>
-              <TableCell>{group.ageGroup}</TableCell>
-              <TableCell>{group.gender}</TableCell>
+      <div className="mt-4 overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-24">Age Group</TableHead>
+              <TableHead className="w-24">Birth Year</TableHead>
+              <TableHead className="w-32">Division Code</TableHead>
+              <TableHead className="w-24">Gender</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {sortedGroups.map((group) => (
+              <TableRow key={`${group.gender}-${group.birthYear}-${group.id}`}>
+                <TableCell className="font-medium">{group.ageGroup}</TableCell>
+                <TableCell>{group.birthYear}</TableCell>
+                <TableCell>{group.divisionCode}</TableCell>
+                <TableCell>{group.gender}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     );
   };
-
 
   return (
     <Card>
@@ -503,7 +498,6 @@ export function SeasonalScopeSettings() {
             )}
           </div>
 
-          {/* View Modal */}
           <Dialog open={isViewModalOpen} onOpenChange={handleCloseViewModal}>
             <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
               {viewingScope && (
@@ -522,7 +516,6 @@ export function SeasonalScopeSettings() {
                         <span className="ml-2 font-medium">{viewingScope.endYear}</span>
                       </div>
                     </div>
-
                     {renderAgeGroupsTable(viewingScope)}
                   </div>
                 </>
