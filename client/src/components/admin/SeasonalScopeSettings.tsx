@@ -296,32 +296,23 @@ export function SeasonalScopeSettings() {
         );
       }
 
-      const validGroups = scope.ageGroups.filter(group => 
-        group && 
-        typeof group.birthYear === 'number' && 
-        typeof group.gender === 'string'
-      );
+      // Simple null check for age groups
+      const validGroups = scope.ageGroups.filter(Boolean);
+      console.log('Valid groups:', validGroups);
 
-      console.log('Valid groups for sorting:', validGroups);
-
-      const sortedGroups = [...validGroups].sort((a, b) => {
-        // First sort by birth year (descending)
-        const yearDiff = b.birthYear - a.birthYear;
-        if (yearDiff !== 0) return yearDiff;
-
-        // Then by gender
-        return a.gender.localeCompare(b.gender);
-      });
-
-      console.log('Sorted groups:', sortedGroups);
-
-      if (sortedGroups.length === 0) {
+      if (validGroups.length === 0) {
         return (
           <div className="text-center py-4">
-            <p className="text-sm text-muted-foreground">No valid age groups found for this seasonal scope.</p>
+            <p className="text-sm text-muted-foreground">No age groups found for this seasonal scope.</p>
           </div>
         );
       }
+
+      // Sort the age groups by birth year (descending) and gender
+      const sortedGroups = [...validGroups].sort((a, b) => {
+        const yearDiff = b.minBirthYear - a.minBirthYear;
+        return yearDiff !== 0 ? yearDiff : a.gender.localeCompare(b.gender);
+      });
 
       return (
         <div className="mt-4 overflow-hidden">
@@ -336,9 +327,9 @@ export function SeasonalScopeSettings() {
             </TableHeader>
             <TableBody>
               {sortedGroups.map((group) => (
-                <TableRow key={`${group.gender}-${group.birthYear}-${group.id}`}>
+                <TableRow key={`${group.gender}-${group.minBirthYear}-${group.id}`}>
                   <TableCell className="font-medium">{group.ageGroup}</TableCell>
-                  <TableCell>{group.birthYear}</TableCell>
+                  <TableCell>{group.minBirthYear}</TableCell>
                   <TableCell>{group.divisionCode}</TableCell>
                   <TableCell>{group.gender}</TableCell>
                 </TableRow>
