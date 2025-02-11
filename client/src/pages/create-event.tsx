@@ -213,6 +213,28 @@ const ProgressIndicator = ({ tabs, completedTabs }: { tabs: EventTab[], complete
   );
 };
 
+interface SeasonalScope {
+  id: number;
+  name: string;
+  startYear: number;
+  endYear: number;
+  isActive: boolean;
+  ageGroups: AgeGroupSettings[];
+}
+
+interface AgeGroupSettings {
+  id: number;
+  seasonalScopeId: number;
+  ageGroup: string;
+  birthYear: number;
+  gender: string;
+  divisionCode: string;
+  minBirthYear: number;
+  maxBirthYear: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function CreateEvent() {
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<EventTab>('information');
@@ -243,6 +265,8 @@ export default function CreateEvent() {
     administrators: false,
   });
   const [selectedComplexIds, setSelectedComplexIds] = useState<number[]>([]);
+  const [selectedScopeId, setSelectedScopeId] = useState<number | null>(null);
+  const [selectedAgeGroupIds, setSelectedAgeGroupIds] = useState<number[]>([]);
 
 
   const complexesQuery = useQuery({
@@ -279,6 +303,15 @@ export default function CreateEvent() {
         console.error('Error fetching fields:', error);
         throw error;
       }
+    }
+  });
+
+  const seasonalScopesQuery = useQuery({
+    queryKey: ['/api/admin/seasonal-scopes'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/seasonal-scopes');
+      if (!response.ok) throw new Error('Failed to fetch seasonal scopes');
+      return response.json() as Promise<SeasonalScope[]>;
     }
   });
 
@@ -813,6 +846,11 @@ export default function CreateEvent() {
     setIsSaving(true);
     try {
       const formValues = form.getValues();
+      const selectedScope = seasonalScopesQuery.data?.find(scope => scope.id === selectedScopeId);
+      const selectedAgeGroups = selectedScope?.ageGroups.filter(group =>
+        selectedAgeGroupIds.includes(group.id)
+      ) || [];
+
       const eventData = {
         name: formValues.name || "",
         startDate: formValues.startDate || "",
@@ -822,9 +860,15 @@ export default function CreateEvent() {
         details: formValues.details || "",
         agreement: formValues.agreement || "",
         refundPolicy: formValues.refundPolicy || "",
-        ageGroups: ageGroups.map(({ id, ...rest }) => ({
-          ...rest,
-          scoringRule: rest.scoringRule || null
+        ageGroups: selectedAgeGroups.map(group => ({
+          gender: group.gender as "Male" | "Female" | "Coed",
+          projectedTeams: 0,
+          birthDateStart: new Date(group.birthYear, 0, 1).toISOString(),
+          birthDateEnd: new Date(group.birthYear, 11, 31).toISOString(),
+          scoringRule: "",
+          ageGroup: group.ageGroup,
+          fieldSize: "11v11" as FieldSize,
+          amountDue: null
         })),
         complexFieldSizes: eventFieldSizes,
         selectedComplexIds: selectedComplexes.map(complex => complex.id),
@@ -878,7 +922,7 @@ export default function CreateEvent() {
       const formValues = form.getValues();
       const errors: Record<EventTab, boolean> = {
         information: !formValues.name || !formValues.startDate || !formValues.endDate || !formValues.timezone,
-        'age-groups': ageGroups.length === 0,
+        'age-groups': !selectedScopeId || selectedAgeGroupIds.length === 0,
         scoring: scoringRules.length === 0,
         complexes: selectedComplexIds.length === 0,
         settings: false,
@@ -889,7 +933,93 @@ export default function CreateEvent() {
 
     validateTabs();
     form.watch(validateTabs);
-  }, [form, ageGroups, scoringRules, selectedComplexIds]);
+  }, [form, selectedScopeId, selectedAgeGroupIds, scoringRules, selectedComplexIds]);
+
+  const renderAgeGroupsTab = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigateTab('prev')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h3 className="text-lg font-semibold">Select Age Groups</h3>
+        </div>
+        <Button variant="outline" onClick={() => navigateTab('next')}>
+          Continue
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            <div>
+              <Label>Select Seasonal Scope</Label>
+              <Select
+                value={selectedScopeId?.toString() || ""}
+                onValueChange={(value) => {
+                  setSelectedScopeId(parseInt(value));
+                  setSelectedAgeGroupIds([]); // Reset selections when scope changes
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choose a seasonal scope" />
+                </SelectTrigger>
+                <SelectContent>
+                  {seasonalScopesQuery.data?.map((scope) => (
+                    <SelectItem key={scope.id} value={scope.id.toString()}>
+                      {scope.name} ({scope.startYear}-{scope.endYear})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedScopeId && (
+              <div className="border rounded-lg p-4 mt-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12"></TableHead>
+                      <TableHead>Age Group</TableHead>
+                      <TableHead>Birth Year</TableHead>
+                      <TableHead>Gender</TableHead>
+                      <TableHead>Division Code</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {seasonalScopesQuery.data
+                      ?.find(scope => scope.id === selectedScopeId)
+                      ?.ageGroups.map((group) => (
+                        <TableRow key={group.id}>
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedAgeGroupIds.includes(group.id)}
+                              onCheckedChange={(checked) => {
+                                setSelectedAgeGroupIds(prev =>
+                                  checked
+                                    ? [...prev, group.id]
+                                    : prev.filter(id => id !== group.id)
+                                );
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>{group.ageGroup}</TableCell>
+                          <TableCell>{group.birthYear}</TableCell>
+                          <TableCell>{group.gender}</TableCell>
+                          <TableCell>{group.divisionCode}</TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -1136,308 +1266,7 @@ export default function CreateEvent() {
             </TabsContent>
 
             <TabsContent value="age-groups">
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" onClick={() => navigateTab('prev')}>
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      Back
-                    </Button>
-                    <h3 className="text-lg font-semibold">Age Groups</h3>
-                  </div>
-                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button onClick={() => {
-                        setEditingAgeGroup(null);
-                        ageGroupForm.reset();
-                      }}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add New Age Group
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle>
-                          {editingAgeGroup ? 'Edit Age Group' : 'Add New Age Group'}
-                        </DialogTitle>
-                      </DialogHeader>
-                      <Form {...ageGroupForm}>
-                        <form onSubmit={ageGroupForm.handleSubmit(handleAddAgeGroup)} className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                              control={ageGroupForm.control}
-                              name="gender"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Gender</FormLabel>
-                                  <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select gender" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      <SelectItem value="Male">Male</SelectItem>
-                                      <SelectItem value="Female">Female</SelectItem>
-                                      <SelectItem value="Coed">Coed</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={ageGroupForm.control}
-                              name="projectedTeams"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Projected # of Teams</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      type="number"
-                                      min="0"
-                                      max="200"
-                                      className="w-32"
-                                      placeholder="0"
-                                      {...field}
-                                      onChange={e => field.onChange(Number(e.target.value))}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <FormField
-                                control={ageGroupForm.control}
-                                name="birthDateStart"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Birth Date Range (Start)</FormLabel>
-                                    <FormControl>
-                                      <Input type="date" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <FormField
-                                control={ageGroupForm.control}
-                                name="birthDateEnd"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Birth Date Range (End)</FormLabel>
-                                    <FormControl>
-                                      <Input type="date" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                              control={ageGroupForm.control}
-                              name="scoringRule"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Scoring Rule</FormLabel>
-                                  <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select scoring rule" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      <SelectItem value="default">Default Scoring</SelectItem>
-                                      {scoringRules.map(rule => (
-                                        <SelectItem key={rule.id} value={rule.id}>{rule.title}</SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={ageGroupForm.control}
-                              name="ageGroup"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Age Group</FormLabel>
-                                  <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select age group" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {Array.from({ length: 22 }, (_, i) => i + 4).map((age) => (
-                                        <SelectItem key={age} value={`U${age}`}>
-                                          U{age}
-                                        </SelectItem>
-                                      ))}
-                                      <SelectItem value="Open">Open</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                              control={ageGroupForm.control}
-                              name="fieldSize"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Field Size</FormLabel>
-                                  <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select field size" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {['3v3', '4v4', '5v5', '6v6', '7v7', '8v8', '9v9', '10v10', '11v11', 'N/A'].map((size) => (
-                                        <SelectItem key={size} value={size}>
-                                          {size}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={ageGroupForm.control}
-                              name="amountDue"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Amount Due (optional)</FormLabel>
-                                  <FormControl>
-                                    <div className="relative">
-                                      <span className="absolute left-3 top-2.5">$</span>
-                                      <Input
-                                        type="number"
-                                        className="pl-7"
-                                        placeholder="0.00"
-                                        step="0.01"
-                                        min="0"
-                                        {...field}
-                                        value={field.value ?? ''}
-                                        onChange={(e) => {
-                                          const value = e.target.value;
-                                          field.onChange(value === '' ? null : Number(value));
-                                        }}
-                                      />
-                                    </div>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-
-                          <div className="flex justify-end space-x-2 pt-4">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => {
-                                setIsDialogOpen(false);
-                                setEditingAgeGroup(null);
-                                ageGroupForm.reset();
-                              }}
-                            >
-                              Cancel
-                            </Button>
-                            <Button type="submit">
-                              {editingAgeGroup ? 'Update Age Group' : 'Add Age Group'}
-                            </Button>
-                          </div>
-                        </form>
-                      </Form>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-
-                <Card>
-                  <CardContent className="p-0">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Age Group</TableHead>
-                          <TableHead>Gender</TableHead>
-                          <TableHead>Field Size</TableHead>
-                          <TableHead>Birth Date Range</TableHead>
-                          <TableHead>Teams</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {ageGroups.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={7} className="text-center py-4">
-                              No age groups added yet
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          ageGroups.map((group) => (
-                            <TableRow key={group.id}>
-                              <TableCell>{group.ageGroup}</TableCell>
-                              <TableCell>
-                                <Badge variant="outline">{group.gender}</Badge>
-                              </TableCell>
-                              <TableCell>{group.fieldSize}</TableCell>
-                              <TableCell>
-                                {new Date(group.birthDateStart).toLocaleDateString()} - {new Date(group.birthDateEnd).toLocaleDateString()}
-                              </TableCell>
-                              <TableCell>
-                                <Badge>{group.projectedTeams} Teams</Badge>
-                              </TableCell>
-                              <TableCell>
-                                {group.amountDue ? `$${group.amountDue.toFixed(2)}` : 'N/A'}
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex items-center space-x-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleEditAgeGroup(group)}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="text-destructive"
-                                    onClick={() => handleDeleteAgeGroup(group.id)}
-                                  >
-                                    <Trash className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-                <div className="flex justify-end mt-4">
-                  <Button onClick={() => navigateTab('next')}>Save & Continue</Button>
-                </div>
-              </div>
+              {renderAgeGroupsTab()}
             </TabsContent>
 
             <TabsContent value="scoring">
