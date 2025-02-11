@@ -8,7 +8,6 @@ const router = Router();
 // Get all seasonal scopes with their age groups
 router.get('/', async (req, res) => {
   try {
-    console.log('Fetching seasonal scopes...');
     const scopes = await db.query.seasonalScopes.findMany({
       with: {
         ageGroups: {
@@ -29,11 +28,6 @@ router.get('/', async (req, res) => {
       orderBy: (seasonalScopes, { desc }) => [desc(seasonalScopes.createdAt)]
     });
 
-    // Log the first scope for debugging
-    if (scopes.length > 0) {
-      console.log('Sample scope data:', JSON.stringify(scopes[0], null, 2));
-    }
-
     res.json(scopes);
   } catch (error) {
     console.error('Error fetching seasonal scopes:', error);
@@ -45,7 +39,6 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { name, startYear, endYear, ageGroups } = req.body;
-    console.log('Creating seasonal scope with data:', { name, startYear, endYear, ageGroups });
 
     // Create the seasonal scope
     const [scope] = await db.insert(seasonalScopes).values({
@@ -78,7 +71,6 @@ router.post('/', async (req, res) => {
         updatedAt: new Date()
       }));
 
-      console.log('Inserting age groups:', JSON.stringify(ageGroupsToInsert, null, 2));
       await db.insert(ageGroupSettings).values(ageGroupsToInsert);
     }
 
@@ -103,7 +95,6 @@ router.post('/', async (req, res) => {
       }
     });
 
-    console.log('Created scope with age groups:', JSON.stringify(createdScope, null, 2));
     res.status(200).json(createdScope);
   } catch (error) {
     console.error('Error creating seasonal scope:', error);
@@ -159,6 +150,28 @@ router.patch('/:id', async (req, res) => {
     console.error('Error updating seasonal scope:', error);
     console.error('Detailed error:', error instanceof Error ? error.message : error);
     res.status(500).json({ message: 'Failed to update seasonal scope' });
+  }
+});
+
+// Delete a seasonal scope
+router.delete('/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+
+    // Due to cascade delete setup in schema, deleting the seasonal scope
+    // will automatically delete associated age groups
+    const [deletedScope] = await db.delete(seasonalScopes)
+      .where(eq(seasonalScopes.id, id))
+      .returning();
+
+    if (!deletedScope) {
+      return res.status(404).json({ message: 'Seasonal scope not found' });
+    }
+
+    res.status(200).json({ message: 'Seasonal scope deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting seasonal scope:', error);
+    res.status(500).json({ message: 'Failed to delete seasonal scope' });
   }
 });
 
