@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Loader2, Edit, Eye, Save, X } from "lucide-react";
+import { Plus, Loader2, Edit, Eye } from "lucide-react";
 import { z } from "zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -32,21 +32,6 @@ interface SeasonalScope {
   ageGroups: AgeGroupSettings[];
 }
 
-const seasonalScopeSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  startYear: z.number().min(2000).max(2100),
-  endYear: z.number().min(2000).max(2100),
-});
-
-// Add type safety check function
-const isValidAgeGroup = (group: any): group is AgeGroupSettings => {
-  return group && 
-    typeof group.divisionCode === 'string' &&
-    typeof group.birthYear === 'number' &&
-    typeof group.ageGroup === 'string' &&
-    typeof group.gender === 'string';
-};
-
 export function SeasonalScopeSettings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -54,64 +39,26 @@ export function SeasonalScopeSettings() {
   const [selectedEndYear, setSelectedEndYear] = useState<string>("");
   const [scopeName, setScopeName] = useState<string>("");
   const [ageGroupMappings, setAgeGroupMappings] = useState<AgeGroupSettings[]>([]);
-  const [editingScope, setEditingScope] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState<Partial<SeasonalScope>>({});
   const [viewingScope, setViewingScope] = useState<SeasonalScope | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
-  // Helper function to safely handle scope viewing
-  const handleViewScope = (scope: SeasonalScope) => {
-    if (!scope || !Array.isArray(scope.ageGroups)) {
-      console.error('Invalid scope data:', scope);
-      toast({
-        title: "Error",
-        description: "Invalid scope data",
-        variant: "destructive"
-      });
-      return;
-    }
-    setViewingScope(scope);
-    setIsViewModalOpen(true);
-  };
-
-  const handleCloseViewModal = () => {
-    setIsViewModalOpen(false);
-    setViewingScope(null);
-  };
-
+  // Query to fetch all seasonal scopes
   const scopesQuery = useQuery({
     queryKey: ['/api/admin/seasonal-scopes'],
     queryFn: async () => {
       const response = await fetch('/api/admin/seasonal-scopes');
       if (!response.ok) throw new Error('Failed to fetch seasonal scopes');
-      const data = await response.json();
-      return data as SeasonalScope[];
+      return response.json() as Promise<SeasonalScope[]>;
     }
   });
 
+  // Mutation to create a new seasonal scope
   const createScopeMutation = useMutation({
     mutationFn: async (data: SeasonalScope) => {
       const response = await fetch('/api/admin/seasonal-scopes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: data.name,
-          startYear: data.startYear,
-          endYear: data.endYear,
-          isActive: true,
-          ageGroups: data.ageGroups.map(group => ({
-            ageGroup: group.ageGroup,
-            birthYear: group.birthYear,
-            gender: group.gender,
-            divisionCode: group.divisionCode,
-            minBirthYear: group.minBirthYear,
-            maxBirthYear: group.maxBirthYear,
-            seasonalScopeId: data.id || 0,
-            id: group.id,
-            createdAt: group.createdAt,
-            updatedAt: group.updatedAt,
-          }))
-        }),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
@@ -126,7 +73,6 @@ export function SeasonalScopeSettings() {
       toast({
         title: "Success",
         description: "Seasonal scope created successfully",
-        variant: "default"
       });
       resetForm();
     },
@@ -134,40 +80,6 @@ export function SeasonalScopeSettings() {
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to create seasonal scope",
-        variant: "destructive"
-      });
-    }
-  });
-
-  const updateScopeMutation = useMutation({
-    mutationFn: async (data: { id: number; scope: Partial<SeasonalScope> }) => {
-      const response = await fetch(`/api/admin/seasonal-scopes/${data.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data.scope),
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Failed to update seasonal scope');
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/seasonal-scopes'] });
-      toast({
-        title: "Success",
-        description: "Seasonal scope updated successfully",
-        variant: "default"
-      });
-      setEditingScope(null);
-      setEditForm({});
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update seasonal scope",
         variant: "destructive"
       });
     }
@@ -235,65 +147,43 @@ export function SeasonalScopeSettings() {
 
   const handleSubmit = async () => {
     try {
-      // Validate the form data
-      const validatedData = seasonalScopeSchema.parse({
+      const seasonalScope: SeasonalScope = {
         name: scopeName,
         startYear: parseInt(selectedStartYear),
-        endYear: parseInt(selectedEndYear)
-      });
-
-      if (ageGroupMappings.length === 0) {
-        throw new Error("Please generate age groups first");
-      }
-
-      await createScopeMutation.mutateAsync({
-        name: validatedData.name,
-        startYear: validatedData.startYear,
-        endYear: validatedData.endYear,
+        endYear: parseInt(selectedEndYear),
         isActive: true,
         ageGroups: ageGroupMappings
-      });
+      };
+
+      await createScopeMutation.mutateAsync(seasonalScope);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        toast({
-          title: "Validation Error",
-          description: error.errors[0].message,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: error instanceof Error ? error.message : "Failed to create seasonal scope",
-          variant: "destructive"
-        });
-      }
+      console.error('Error creating seasonal scope:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create seasonal scope",
+        variant: "destructive"
+      });
     }
   };
 
-  const handleEdit = (scope: SeasonalScope) => {
-    setEditingScope(scope.id ?? null);
-    setEditForm({
-      name: scope.name,
-      startYear: scope.startYear,
-      endYear: scope.endYear
-    });
+  const handleViewScope = (scope: SeasonalScope) => {
+    setViewingScope(scope);
+    setIsViewModalOpen(true);
   };
 
-  const handleUpdate = async (id: number) => {
-    try {
-      await updateScopeMutation.mutateAsync({
-        id,
-        scope: editForm
-      });
-    } catch (error) {
-      console.error('Failed to update scope:', error);
-    }
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false);
+    setViewingScope(null);
   };
 
-  const handleCancelEdit = () => {
-    setEditingScope(null);
-    setEditForm({});
+  const isValidAgeGroup = (group: any): group is AgeGroupSettings => {
+    return group &&
+      typeof group.divisionCode === 'string' &&
+      typeof group.birthYear === 'number' &&
+      typeof group.ageGroup === 'string' &&
+      typeof group.gender === 'string';
   };
+
 
   return (
     <Card>
@@ -331,9 +221,9 @@ export function SeasonalScopeSettings() {
             </div>
           </div>
 
-          {selectedEndYear && (
+          {ageGroupMappings.length > 0 && (
             <Card className="mt-4">
-              <CardContent className="p-4">
+              <CardContent className="pt-6">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -376,99 +266,41 @@ export function SeasonalScopeSettings() {
             )}
           </Button>
 
-          {/* Existing Seasonal Scopes Section */}
           <div className="mt-8">
             <h3 className="text-lg font-semibold mb-4">Existing Seasonal Scopes</h3>
-            {scopesQuery.data?.length === 0 ? (
+            {scopesQuery.isLoading ? (
+              <p>Loading...</p>
+            ) : scopesQuery.data?.length === 0 ? (
               <p className="text-sm text-muted-foreground">No seasonal scopes created yet.</p>
             ) : (
               <div className="space-y-2">
                 {scopesQuery.data?.map((scope: SeasonalScope) => (
                   <Card key={scope.id} className="p-4">
-                    {editingScope === scope.id ? (
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-3 gap-4">
-                          <div>
-                            <Label>Name</Label>
-                            <Input
-                              value={editForm.name}
-                              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                            />
-                          </div>
-                          <div>
-                            <Label>Start Year</Label>
-                            <Input
-                              type="number"
-                              value={editForm.startYear}
-                              onChange={(e) => setEditForm({ ...editForm, startYear: parseInt(e.target.value) })}
-                            />
-                          </div>
-                          <div>
-                            <Label>End Year</Label>
-                            <Input
-                              type="number"
-                              value={editForm.endYear}
-                              onChange={(e) => setEditForm({ ...editForm, endYear: parseInt(e.target.value) })}
-                            />
-                          </div>
-                        </div>
-                        <div className="flex justify-end space-x-2">
-                          <Button
-                            variant="outline"
-                            onClick={handleCancelEdit}
-                            disabled={updateScopeMutation.isPending}
-                          >
-                            <X className="h-4 w-4 mr-2" />
-                            Cancel
-                          </Button>
-                          <Button
-                            onClick={() => handleUpdate(scope.id!)}
-                            disabled={updateScopeMutation.isPending}
-                          >
-                            {updateScopeMutation.isPending ? (
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            ) : (
-                              <Save className="h-4 w-4 mr-2" />
-                            )}
-                            Save
-                          </Button>
-                        </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold">{scope.name}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {scope.startYear} - {scope.endYear}
+                        </p>
                       </div>
-                    ) : (
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-semibold">{scope.name}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {scope.startYear} - {scope.endYear}
-                          </p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleViewScope(scope)}
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            View
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(scope)}
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </Button>
-                        </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewScope(scope)}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </Button>
                       </div>
-                    )}
+                    </div>
                   </Card>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Enhanced View Modal with Demographics */}
+
           <Dialog open={isViewModalOpen} onOpenChange={handleCloseViewModal}>
             <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
               {viewingScope && (

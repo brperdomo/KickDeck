@@ -1,8 +1,10 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { log } from "./vite";
 import { db } from "@db";
+import seasonalScopesRouter from "./routes/seasonal-scopes";
+import { sql, eq, and, or } from "drizzle-orm";
 import {
   users,
   organizationSettings,
@@ -23,7 +25,6 @@ import {
   roles,
   adminRoles,
 } from "@db/schema";
-import { sql, eq, and, or } from "drizzle-orm";
 import fs from "fs/promises";
 import path from "path";
 import { crypto } from "./crypto";
@@ -32,8 +33,7 @@ import passport from "passport";
 import { setupWebSocketServer } from "./websocket";
 import { randomBytes } from "crypto";
 
-
-// Admin middleware
+// Admin middleware (unchanged)
 const isAdmin = (req: Request, res: Response, next: Function) => {
   if (!req.isAuthenticated()) {
     return res.status(401).send("Not authenticated");
@@ -55,6 +55,8 @@ export function registerRoutes(app: Express): Server {
     setupAuth(app);
     log("Authentication routes registered successfully");
 
+    // Register seasonal scopes routes with admin middleware
+    app.use('/api/admin/seasonal-scopes', isAdmin, seasonalScopesRouter);
 
     // Public event endpoint
     app.get('/api/events/:id', async (req, res) => {
@@ -974,7 +976,7 @@ export function registerRoutes(app: Express): Server {
       }
     });
 
-    // Add field deletion endpoint
+    // Delete field endpoint (fixed syntax error)
     app.delete('/api/admin/fields/:id', isAdmin, async (req, res) => {
       try {
         const fieldId = parseInt(req.params.id);
@@ -990,8 +992,7 @@ export function registerRoutes(app: Express): Server {
         res.json(deletedField);
       } catch (error) {
         console.error('Error deleting field:', error);
-        // Added basic error logging for white screen debugging.
-        console.error("Error details:", error);        res.status(500).send("Failed to delete field");
+        res.status(500).send("Failed to delete field");
       }
     });
 
@@ -1232,7 +1233,7 @@ export function registerRoutes(app: Express): Server {
       try {
         const eventId = req.params.id;
         let eventData;
-        
+
         if (req.headers['content-type']?.includes('multipart/form-data')) {
           eventData = JSON.parse(req.body.data);
         } else {
@@ -2276,7 +2277,7 @@ export function registerRoutes(app: Express): Server {
 
     return httpServer;
   } catch (error) {
-    log("Error registering routes:", error);
+    console.error('Error registering routes:', error);
     throw error;
   }
 }

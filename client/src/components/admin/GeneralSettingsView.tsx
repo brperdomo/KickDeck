@@ -17,7 +17,6 @@ export function GeneralSettingsView() {
       </Card>
 
       <div className="pt-6">
-        <h3 className="text-lg font-semibold mb-4">Seasonal Settings</h3>
         <SeasonalScopeSettings />
       </div>
     </div>

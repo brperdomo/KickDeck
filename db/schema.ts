@@ -435,6 +435,69 @@ export const roles = pgTable("roles", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Add seasonal scopes tables
+export const seasonalScopes = pgTable("seasonal_scopes", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  startYear: integer("start_year").notNull(),
+  endYear: integer("end_year").notNull(),
+  isActive: boolean("is_active").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const ageGroupSettings = pgTable("age_group_settings", {
+  id: serial("id").primaryKey(),
+  seasonalScopeId: integer("seasonal_scope_id")
+    .notNull()
+    .references(() => seasonalScopes.id, { onDelete: 'cascade' }),
+  ageGroup: text("age_group").notNull(),
+  birthYear: integer("birth_year").notNull(),
+  gender: text("gender").notNull(),
+  divisionCode: text("division_code").notNull(),
+  minBirthYear: integer("min_birth_year").notNull(),
+  maxBirthYear: integer("max_birth_year").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Add relations
+export const seasonalScopesRelations = relations(seasonalScopes, ({ many }) => ({
+  ageGroups: many(ageGroupSettings),
+}));
+
+export const ageGroupSettingsRelations = relations(ageGroupSettings, ({ one }) => ({
+  seasonalScope: one(seasonalScopes, {
+    fields: [ageGroupSettings.seasonalScopeId],
+    references: [seasonalScopes.id],
+  }),
+}));
+
+// Add insert/select schemas
+export const insertSeasonalScopeSchema = createInsertSchema(seasonalScopes, {
+  name: z.string().min(1, "Name is required"),
+  startYear: z.number().int().min(2000).max(2100),
+  endYear: z.number().int().min(2000).max(2100),
+  isActive: z.boolean(),
+});
+
+export const insertAgeGroupSettingSchema = createInsertSchema(ageGroupSettings, {
+  ageGroup: z.string().min(1, "Age group is required"),
+  birthYear: z.number().int("Birth year must be a valid year"),
+  gender: z.enum(["Boys", "Girls"]),
+  divisionCode: z.string().min(1, "Division code is required"),
+  minBirthYear: z.number().int("Min birth year must be a valid year"),
+  maxBirthYear: z.number().int("Max birth year must be a valid year"),
+});
+
+export const selectSeasonalScopeSchema = createSelectSchema(seasonalScopes);
+export const selectAgeGroupSettingSchema = createSelectSchema(ageGroupSettings);
+
+export type InsertSeasonalScope = typeof seasonalScopes.$inferInsert;
+export type SelectSeasonalScope = typeof seasonalScopes.$inferSelect;
+export type InsertAgeGroupSetting = typeof ageGroupSettings.$inferInsert;
+export type SelectAgeGroupSetting = typeof ageGroupSettings.$inferSelect;
+
 export const adminRoles = pgTable("admin_roles", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
@@ -482,5 +545,3 @@ export const selectUpdateSchema = createSelectSchema(updates);
 
 export type InsertUpdate = typeof updates.$inferInsert;
 export type SelectUpdate = typeof updates.$inferSelect;
-
-//Removed seasonalScopes and ageGroupSettings tables and related schemas.
