@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Loader2, Trash2, Eye } from "lucide-react";
 import { z } from "zod";
@@ -381,15 +381,15 @@ export function SeasonalScopeSettings() {
           </AlertDialog>
 
           <Dialog open={!!viewingScope} onOpenChange={(open) => !open && setViewingScope(null)}>
-            <DialogContent className="max-w-3xl">
+            <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
               <DialogHeader>
                 <DialogTitle>
                   {viewingScope?.name} ({viewingScope?.startYear}-{viewingScope?.endYear})
                 </DialogTitle>
               </DialogHeader>
-              <div className="mt-4">
+              <div className="mt-4 overflow-y-auto flex-1">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="sticky top-0 bg-background">
                     <TableRow>
                       <TableHead>Age Group</TableHead>
                       <TableHead>Division Code</TableHead>
@@ -408,6 +408,14 @@ export function SeasonalScopeSettings() {
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+              <div className="mt-6 flex justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setViewingScope(null)}
+                >
+                  Close
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
