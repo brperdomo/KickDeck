@@ -491,17 +491,19 @@ export function SeasonalScopeSettings() {
                         <Table>
                           <TableHeader>
                             <TableRow className="bg-muted/50">
-                              <TableHead className="font-semibold">Age Group</TableHead>
                               <TableHead className="font-semibold">Birth Year</TableHead>
                               <TableHead className="font-semibold">Division Code</TableHead>
+                              <TableHead className="font-semibold">Age Group</TableHead>
                               <TableHead className="font-semibold">Gender</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {viewingScope.ageGroups
                               .sort((a, b) => {
+                                // Sort by birth year first (descending)
                                 const yearDiff = b.birthYear - a.birthYear;
                                 if (yearDiff !== 0) return yearDiff;
+                                // Then by gender
                                 return (a.gender || '').localeCompare(b.gender || '');
                               })
                               .map((group) => (
@@ -509,10 +511,10 @@ export function SeasonalScopeSettings() {
                                   key={`${group.id}-${group.gender}-${group.birthYear}`}
                                   className="hover:bg-muted/50"
                                 >
-                                  <TableCell className="font-medium">{group.ageGroup}</TableCell>
                                   <TableCell>{group.birthYear}</TableCell>
                                   <TableCell>{group.divisionCode}</TableCell>
-                                  <TableCell>{group.gender || 'N/A'}</TableCell>
+                                  <TableCell>{group.ageGroup}</TableCell>
+                                  <TableCell>{group.gender}</TableCell>
                                 </TableRow>
                               ))}
                           </TableBody>
