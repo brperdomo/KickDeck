@@ -487,8 +487,8 @@ export function SeasonalScopeSettings() {
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead>Birth Year</TableHead>
                               <TableHead>Division Code</TableHead>
+                              <TableHead>Birth Year</TableHead>
                               <TableHead>Age Group</TableHead>
                               <TableHead>Gender</TableHead>
                             </TableRow>
@@ -496,17 +496,20 @@ export function SeasonalScopeSettings() {
                           <TableBody>
                             {viewingScope.ageGroups
                               .sort((a, b) => {
-                                const yearDiff = b.birthYear - a.birthYear;
-                                if (yearDiff !== 0) return yearDiff;
-                                return a.gender.localeCompare(b.gender);
+                                // Sort by birth year first (descending)
+                                const yearDiffA = parseInt(a.divisionCode.slice(1));
+                                const yearDiffB = parseInt(b.divisionCode.slice(1));
+                                if (yearDiffB - yearDiffA !== 0) return yearDiffB - yearDiffA;
+                                // Then by gender (B before G)
+                                return a.divisionCode.slice(0, 1).localeCompare(b.divisionCode.slice(0, 1));
                               })
                               .map((group) => (
                                 <TableRow
-                                  key={`${group.divisionCode}`}
+                                  key={group.divisionCode}
                                   className="hover:bg-muted/50"
                                 >
-                                  <TableCell>{group.birthYear}</TableCell>
                                   <TableCell>{group.divisionCode}</TableCell>
+                                  <TableCell>{group.birthYear}</TableCell>
                                   <TableCell>{group.ageGroup}</TableCell>
                                   <TableCell>{group.gender}</TableCell>
                                 </TableRow>
