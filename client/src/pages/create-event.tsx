@@ -76,7 +76,7 @@ interface EventData {
   branding?: EventBranding;
 }
 
-const validateEventData = (data: Partial<EventData>): { isValid: boolean; errors: string[] } => {
+const validateEventData = (data: Partial<EventData>, selectedScopeId: number | null, selectedAgeGroupIds: number[]): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
 
   // Validate basic event information
@@ -86,28 +86,18 @@ const validateEventData = (data: Partial<EventData>): { isValid: boolean; errors
   if (!data.timezone) errors.push("Timezone is required");
   if (!data.applicationDeadline) errors.push("Application deadline is required");
 
-  // Validate age groups
-  if (!data.ageGroups || data.ageGroups.length === 0) {
-    errors.push("At least one age group is required");
-  } else {
-    data.ageGroups.forEach((group, index) => {
-      if (!group.gender) errors.push(`Gender is required for age group ${index + 1}`);
-      if (!group.ageGroup) errors.push(`Age group name is required for group ${index + 1}`);
-      if (!group.fieldSize) errors.push(`Field size is required for age group ${index + 1}`);
-      if (!group.birthDateStart) errors.push(`Birth date start is required for age group ${index + 1}`);
-      if (!group.birthDateEnd) errors.push(`Birth date end is required for age group ${index + 1}`);
-      if (typeof group.projectedTeams !== 'number') errors.push(`Projected teams count is required for age group ${index + 1}`);
-    });
+  // Validate seasonal scope and age groups
+  if (!selectedScopeId) {
+    errors.push("A seasonal scope must be selected");
+  }
+
+  if (selectedAgeGroupIds.length === 0) {
+    errors.push("At least one age group must be selected from the chosen seasonal scope");
   }
 
   // Validate complex selection
   if (!data.selectedComplexIds || data.selectedComplexIds.length === 0) {
     errors.push("At least one complex must be selected");
-  }
-
-  // Validate field sizes for selected complexes
-  if (Object.keys(data.complexFieldSizes || {}).length === 0) {
-    errors.push("Field sizes must be specified for selected complexes");
   }
 
   return {
@@ -876,26 +866,26 @@ export default function CreateEvent() {
   );
 
   const handleCreateEvent = async () => {
-    if (!selectedScopeId) {
-      toast({
-        title: "Error",
-        description: "Please select a seasonal scope first",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (selectedAgeGroupIds.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please select at least one age group from the seasonal scope",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSaving(true);
     try {
+      if (!selectedScopeId) {
+        toast({
+          title: "Error",
+          description: "Please select a seasonal scope first",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (selectedAgeGroupIds.length === 0) {
+        toast({
+          title: "Error",
+          description: "Please select at least one age group from the chosen seasonal scope",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsSaving(true);
       const formValues = form.getValues();
       const selectedScope = seasonalScopesQuery.data?.find(scope => scope.id === selectedScopeId);
       const selectedAgeGroups = selectedScope?.ageGroups.filter(group =>
@@ -913,20 +903,18 @@ export default function CreateEvent() {
         agreement: formValues.agreement || "",
         refundPolicy: formValues.refundPolicy || "",
         ageGroups: selectedAgeGroups.map(group => {
-          const scoringRule = scoringRules.find(rule => 
+          const scoringRule = scoringRules.find(rule =>
             rule.id === (editingScoringRule?.id || scoringRules[0]?.id)
           )?.id || '';
 
-          // Ensure all required fields are present
           return {
-            id: generateId(), // Add required id field
-            gender: group.gender as "Male" | "Female" | "Coed",
-            projectedTeams: 20, // Set a reasonable default
+            id: generateId(),
+            gender: group.gender as "Male" | "Female" | "Coed",            projectedTeams: 20,
             birthDateStart: new Date(group.minBirthYear, 0, 1).toISOString(),
             birthDateEnd: new Date(group.maxBirthYear, 11, 31).toISOString(),
             scoringRule,
             ageGroup: group.ageGroup,
-            fieldSize: "11v11" as FieldSize, // Set default field size
+            fieldSize: "11v11" as FieldSize,
             amountDue: 0
           };
         }),
@@ -935,12 +923,12 @@ export default function CreateEvent() {
         branding: {
           primaryColor,
           secondaryColor,
-          logoUrl: previewUrl,
+          logoUrl: previewUrl || undefined,
         }
       };
 
-      // Validate the event data
-      const validation = validateEventData(eventData);
+      // Validate the event data with seasonal scope context
+      const validation = validateEventData(eventData, selectedScopeId, selectedAgeGroupIds);
       if (!validation.isValid) {
         throw new Error(`Validation failed:\n${validation.errors.join('\n')}`);
       }
@@ -1029,7 +1017,7 @@ export default function CreateEvent() {
                 value={selectedScopeId?.toString() || ""}
                 onValueChange={(value) => {
                   setSelectedScopeId(parseInt(value));
-                  setSelectedAgeGroupIds([]); // Reset selections when scope changes
+                  setSelectedAgeGroupIds([]);
                 }}
               >
                 <SelectTrigger className="w-full">
