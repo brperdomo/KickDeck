@@ -38,13 +38,16 @@ const seasonalScopeSchema = z.object({
   endYear: z.number().min(2000).max(2100),
 });
 
-// Add type safety check function
+// Add type safety check function with more specific validation
 const isValidAgeGroup = (group: any): group is AgeGroupSettings => {
   return group && 
     typeof group.divisionCode === 'string' &&
     typeof group.birthYear === 'number' &&
     typeof group.ageGroup === 'string' &&
-    typeof group.gender === 'string';
+    typeof group.gender === 'string' &&
+    group.divisionCode.length > 0 &&
+    group.ageGroup.length > 0 &&
+    group.gender.length > 0;
 };
 
 export function SeasonalScopeSettings() {
@@ -70,6 +73,11 @@ export function SeasonalScopeSettings() {
       });
       return;
     }
+
+    // Log the data we're about to display
+    console.log('Viewing scope:', scope);
+    console.log('Age groups:', scope.ageGroups);
+
     setViewingScope(scope);
     setIsViewModalOpen(true);
   };
@@ -518,7 +526,7 @@ export function SeasonalScopeSettings() {
                                   key={group.divisionCode}
                                   className="hover:bg-muted/50"
                                 >
-                                  <TableCell>{group.divisionCode}</TableCell>
+                                  <TableCell className="font-medium">{group.divisionCode}</TableCell>
                                   <TableCell>{group.birthYear}</TableCell>
                                   <TableCell>{group.ageGroup}</TableCell>
                                   <TableCell>{group.gender}</TableCell>
