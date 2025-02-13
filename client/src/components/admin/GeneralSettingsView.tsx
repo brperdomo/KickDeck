@@ -1,11 +1,12 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OrganizationSettingsForm } from "./OrganizationSettingsForm";
+import { SeasonalScopeSettings } from "./SeasonalScopeSettings";
 
 export function GeneralSettingsView() {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">General Settings</h2>
+
       <Card>
         <CardHeader>
           <CardTitle>Organization Settings</CardTitle>
@@ -14,6 +15,11 @@ export function GeneralSettingsView() {
           <OrganizationSettingsForm />
         </CardContent>
       </Card>
+
+      <div className="pt-6">
+        <h3 className="text-lg font-semibold mb-4">Seasonal Settings</h3>
+        <SeasonalScopeSettings />
+      </div>
     </div>
   );
 }

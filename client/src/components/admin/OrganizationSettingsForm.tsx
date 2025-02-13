@@ -1,10 +1,8 @@
-
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useOrganizationSettings } from "@/hooks/use-organization-settings";
-import { SeasonalScopeSettings } from "./SeasonalScopeSettings";
 
 export function OrganizationSettingsForm() {
   const form = useForm({
@@ -15,7 +13,7 @@ export function OrganizationSettingsForm() {
     },
   });
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: any) => {
     // Handle form submission
     console.log(data);
   };
@@ -36,7 +34,7 @@ export function OrganizationSettingsForm() {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="contactEmail"
@@ -49,7 +47,7 @@ export function OrganizationSettingsForm() {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="phoneNumber"
@@ -66,11 +64,6 @@ export function OrganizationSettingsForm() {
           <Button type="submit">Save Changes</Button>
         </form>
       </Form>
-
-      <div className="pt-6 border-t">
-        <h3 className="text-lg font-semibold mb-4">Seasonal Settings</h3>
-        <SeasonalScopeSettings />
-      </div>
     </div>
   );
 }
