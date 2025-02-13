@@ -38,6 +38,15 @@ const seasonalScopeSchema = z.object({
   endYear: z.number().min(2000).max(2100),
 });
 
+// Add type safety check function
+const isValidAgeGroup = (group: any): group is AgeGroupSettings => {
+  return group && 
+    typeof group.divisionCode === 'string' &&
+    typeof group.birthYear === 'number' &&
+    typeof group.ageGroup === 'string' &&
+    typeof group.gender === 'string';
+};
+
 export function SeasonalScopeSettings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -52,7 +61,7 @@ export function SeasonalScopeSettings() {
 
   // Helper function to safely handle scope viewing
   const handleViewScope = (scope: SeasonalScope) => {
-    if (!scope || !scope.ageGroups) {
+    if (!scope || !Array.isArray(scope.ageGroups)) {
       console.error('Invalid scope data:', scope);
       toast({
         title: "Error",
@@ -495,10 +504,11 @@ export function SeasonalScopeSettings() {
                           </TableHeader>
                           <TableBody>
                             {viewingScope.ageGroups
+                              .filter(isValidAgeGroup)
                               .sort((a, b) => {
                                 // Sort by birth year first (descending)
-                                const yearDiffA = parseInt(a.divisionCode.slice(1));
                                 const yearDiffB = parseInt(b.divisionCode.slice(1));
+                                const yearDiffA = parseInt(a.divisionCode.slice(1));
                                 if (yearDiffB - yearDiffA !== 0) return yearDiffB - yearDiffA;
                                 // Then by gender (B before G)
                                 return a.divisionCode.slice(0, 1).localeCompare(b.divisionCode.slice(0, 1));
