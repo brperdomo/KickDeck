@@ -2,14 +2,25 @@ import { useState, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter
+  DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -52,6 +63,8 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
   const queryClient = useQueryClient();
   const [emailToCheck, setEmailToCheck] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showRoleChangeConfirm, setShowRoleChangeConfirm] = useState(false);
+  const [pendingRoleChange, setPendingRoleChange] = useState<string[]>([]);
 
   const form = useForm<AdminFormValues>({
     resolver: zodResolver(adminFormSchema),
@@ -100,93 +113,36 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
   }, []);
 
   const updateAdminMutation = useMutation({
-    mutationFn: async (data: AdminFormValues) => {
-      if (!adminToEdit) throw new Error("No administrator to update");
+    mutationFn: async (data: AdminFormValues & { id: number }) => {
       setIsSubmitting(true);
-
       try {
-        const response = await fetch(`/api/admin/administrators/${adminToEdit.id}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
+        const response = await fetch(`/api/admin/administrators/${data.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             firstName: data.firstName,
             lastName: data.lastName,
             email: data.email,
             roles: data.roles,
-            currentRoles: adminToEdit.roles, // Send current roles for validation
           }),
         });
 
-        const responseData = await response.json();
-
+        const result = await response.json();
         if (!response.ok) {
-          throw new Error(responseData.error || "Failed to update administrator");
+          throw new Error(result.error || 'Failed to update administrator');
         }
 
-        return responseData;
+        return result;
       } finally {
         setIsSubmitting(false);
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/administrators"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/administrators'] });
       toast({
         title: "Success",
         description: "Administrator updated successfully",
       });
-      onOpenChange(false);
-    },
-    onError: (error: Error) => {
-      console.error('Update error:', error);
-
-      if (error.message.includes("LAST_SUPER_ADMIN")) {
-        toast({
-          title: "Cannot Update Role",
-          description: "You cannot remove the super_admin role from the last super administrator",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: error.message || "Failed to update administrator",
-          variant: "destructive",
-        });
-      }
-    },
-  });
-
-  const createAdminMutation = useMutation({
-    mutationFn: async (data: AdminFormValues) => {
-      setIsSubmitting(true);
-      try {
-        const response = await fetch("/api/admin/administrators", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        });
-
-        const responseData = await response.json();
-
-        if (!response.ok) {
-          throw new Error(responseData.error || "Failed to create administrator");
-        }
-
-        return responseData;
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/administrators"] });
-      toast({
-        title: "Success",
-        description: "Administrator created successfully",
-      });
-      form.reset();
       onOpenChange(false);
     },
     onError: (error: Error) => {
@@ -198,33 +154,53 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
     },
   });
 
-  const onSubmit = async (data: AdminFormValues) => {
-    if (emailCheckQuery.data?.exists && data.email !== adminToEdit?.email) {
-      form.setError('email', {
-        type: 'manual',
-        message: 'This email is already registered'
-      });
-      return;
-    }
-
-    try {
-      if (adminToEdit) {
-        // Send current roles along with the update
-        await updateAdminMutation.mutateAsync({
-          ...data,
-          roles: data.roles,
+  const createAdminMutation = useMutation({
+    mutationFn: async (data: AdminFormValues) => {
+      setIsSubmitting(true);
+      try {
+        const response = await fetch('/api/admin/administrators', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
         });
-      } else {
-        await createAdminMutation.mutateAsync(data);
-      }
-    } catch (error) {
-      console.error('Form submission error:', error);
-    }
-  };
 
-  const toggleRole = (roleId: string) => {
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to create administrator');
+        }
+
+        return result;
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/administrators'] });
+      toast({
+        title: "Success",
+        description: "Administrator created successfully",
+      });
+      onOpenChange(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleRoleChange = (roleId: string) => {
     const currentRoles = form.getValues("roles");
     let newRoles: string[];
+
+    // If current admin is a super_admin and we're changing roles
+    if (adminToEdit?.roles.includes("super_admin") && !currentRoles.includes(roleId)) {
+      setPendingRoleChange([roleId]);
+      setShowRoleChangeConfirm(true);
+      return;
+    }
 
     if (roleId === "super_admin") {
       newRoles = currentRoles.includes("super_admin") ? [] : ["super_admin"];
@@ -241,24 +217,58 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
     form.setValue("roles", newRoles, { shouldValidate: true });
   };
 
+  const handleRoleChangeConfirm = () => {
+    if (pendingRoleChange.length > 0) {
+      form.setValue("roles", pendingRoleChange, { shouldValidate: true });
+    }
+    setShowRoleChangeConfirm(false);
+    setPendingRoleChange([]);
+  };
+
+  const onSubmit = async (data: AdminFormValues) => {
+    if (emailCheckQuery.data?.exists && data.email !== adminToEdit?.email) {
+      form.setError('email', {
+        type: 'manual',
+        message: 'This email is already registered'
+      });
+      return;
+    }
+
+    try {
+      if (adminToEdit) {
+        await updateAdminMutation.mutateAsync({
+          ...data,
+          id: adminToEdit.id,
+        });
+      } else {
+        await createAdminMutation.mutateAsync(data);
+      }
+    } catch (error) {
+      console.error('Form submission error:', error);
+    }
+  };
+
   const currentRoles = form.watch("roles");
   const isSuperAdmin = currentRoles.includes("super_admin");
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="px-6 pt-6 pb-4 sticky top-0 bg-background z-10 border-b">
-          <DialogTitle>{adminToEdit ? 'Edit Administrator' : 'Add New Administrator'}</DialogTitle>
-          <DialogDescription>
-            {adminToEdit 
-              ? 'Update the administrator details and roles below.' 
-              : 'Create a new administrator by filling out the information below.'}
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="px-6">
-            <div className="py-4 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {adminToEdit ? 'Edit Administrator' : 'Add New Administrator'}
+            </DialogTitle>
+            <DialogDescription>
+              {adminToEdit
+                ? 'Update the administrator details and roles below.'
+                : 'Create a new administrator by filling out the information below.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="firstName"
@@ -266,12 +276,13 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
                     <FormItem>
                       <FormLabel>First Name</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="John" />
+                        <Input {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
                 <FormField
                   control={form.control}
                   name="lastName"
@@ -279,7 +290,7 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
                     <FormItem>
                       <FormLabel>Last Name</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Doe" />
+                        <Input {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -294,28 +305,15 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Input 
-                          {...field} 
-                          type="email" 
-                          placeholder="john.doe@example.com"
-                          onChange={(e) => {
-                            field.onChange(e);
-                            handleEmailChange(e.target.value);
-                          }}
-                        />
-                        {emailCheckQuery.isLoading && (
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
+                      <Input
+                        {...field}
+                        type="email"
+                        onChange={(e) => {
+                          field.onChange(e);
+                          handleEmailChange(e.target.value);
+                        }}
+                      />
                     </FormControl>
-                    {emailCheckQuery.data?.exists && field.value !== adminToEdit?.email && (
-                      <p className="text-sm font-medium text-destructive">
-                        This email is already registered
-                      </p>
-                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -326,46 +324,38 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
                 name="roles"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Administrator Roles</FormLabel>
+                    <FormLabel>Roles</FormLabel>
                     <FormDescription>
-                      {isSuperAdmin 
-                        ? "Super Admin role provides full access and overrides all other roles."
-                        : "Select one or more roles. Super Admin overrides all other roles if selected."}
+                      Select one or more roles for this administrator
                     </FormDescription>
-                    <FormControl>
-                      <div className="space-y-2">
-                        {availableRoles.map((role) => {
-                          const isSelected = field.value.includes(role.id);
-                          const isDisabled = isSuperAdmin && role.id !== "super_admin";
-
-                          return (
-                            <div
-                              key={role.id}
-                              className={`p-3 rounded-lg border transition-colors ${
-                                isDisabled
-                                  ? "opacity-50 cursor-not-allowed border-input"
-                                  : isSelected
-                                  ? "border-primary bg-primary/5 cursor-pointer"
-                                  : "border-input hover:bg-accent cursor-pointer"
-                              }`}
-                              onClick={() => !isDisabled && toggleRole(role.id)}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="font-medium">{role.name}</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {role.description}
-                                  </p>
-                                </div>
-                                {isSelected && (
-                                  <Badge variant="secondary">Selected</Badge>
-                                )}
+                    <div className="space-y-2">
+                      {availableRoles.map((role) => {
+                        const isSelected = field.value.includes(role.id);
+                        return (
+                          <div
+                            key={role.id}
+                            className={`p-4 rounded-lg border cursor-pointer transition-colors ${
+                              isSelected
+                                ? "border-primary bg-primary/5"
+                                : "border-input hover:bg-accent"
+                            }`}
+                            onClick={() => handleRoleChange(role.id)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium">{role.name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {role.description}
+                                </p>
                               </div>
+                              {isSelected && (
+                                <Badge variant="secondary">Selected</Badge>
+                              )}
                             </div>
-                          );
-                        })}
-                      </div>
-                    </FormControl>
+                          </div>
+                        );
+                      })}
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -379,39 +369,56 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
                     <FormItem>
                       <FormLabel>Temporary Password</FormLabel>
                       <FormControl>
-                        <Input {...field} type="password" placeholder="Minimum 8 characters" />
+                        <Input {...field} type="password" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               )}
-            </div>
 
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={
-                  isSubmitting ||
-                  emailCheckQuery.isLoading || 
-                  (emailCheckQuery.data?.exists && form.getValues("email") !== adminToEdit?.email)
-                }
-              >
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {adminToEdit ? "Update Administrator" : "Create Administrator"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {adminToEdit ? 'Update Administrator' : 'Create Administrator'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={showRoleChangeConfirm} onOpenChange={setShowRoleChangeConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Role Change</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove the Super Admin role? This action will change the administrator's permissions.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setShowRoleChangeConfirm(false);
+              setPendingRoleChange([]);
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleRoleChangeConfirm}>
+              Confirm Change
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
