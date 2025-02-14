@@ -902,22 +902,17 @@ export default function CreateEvent() {
         details: formValues.details || "",
         agreement: formValues.agreement || "",
         refundPolicy: formValues.refundPolicy || "",
-        ageGroups: selectedAgeGroups.map(group => {
-          const scoringRule = scoringRules.find(rule =>
-            rule.id === (editingScoringRule?.id || scoringRules[0]?.id)
-          )?.id || '';
-
-          return {
-            id: generateId(),
-            gender: group.gender as "Male" | "Female" | "Coed",            projectedTeams: 20,
-            birthDateStart: new Date(group.minBirthYear, 0, 1).toISOString(),
-            birthDateEnd: new Date(group.maxBirthYear, 11, 31).toISOString(),
-            scoringRule,
-            ageGroup: group.ageGroup,
-            fieldSize: "11v11" as FieldSize,
-            amountDue: 0
-          };
-        }),
+        ageGroups: selectedAgeGroups.map(group => ({
+          id: generateId(),
+          gender: group.gender as "Male" | "Female" | "Coed",
+          projectedTeams: 20,
+          birthDateStart: new Date(group.minBirthYear, 0, 1).toISOString(),
+          birthDateEnd: new Date(group.maxBirthYear, 11, 31).toISOString(),
+          scoringRule: scoringRules[0]?.id || '',
+          ageGroup: group.ageGroup,
+          fieldSize: "11v11" as FieldSize,
+          amountDue: 0
+        })),
         complexFieldSizes: eventFieldSizes,
         selectedComplexIds: selectedComplexes.map(complex => complex.id),
         branding: {
@@ -943,14 +938,39 @@ export default function CreateEvent() {
       // Log the data being sent
       console.log('Submitting event data:', eventData);
 
+      // Validate required event data before making request
+      if (!selectedScopeId) {
+        throw new Error("Please select a seasonal scope first");
+      }
+
+      if (selectedAgeGroupIds.length === 0) {
+        throw new Error("Please select at least one age group from the chosen seasonal scope");
+      }
+
+      if (!eventData.name || !eventData.startDate || !eventData.endDate || !eventData.timezone || !eventData.applicationDeadline) {
+        throw new Error("Please fill in all required event information fields");
+      }
+
+      if (selectedComplexIds.length === 0) {
+        throw new Error("Please select at least one complex for the event");
+      }
+
+      // Ensure age groups are selected
+      if (!selectedAgeGroupIds.length) {
+        throw new Error("Please select at least one age group from the chosen seasonal scope");
+      }
+
       const response = await fetch('/api/admin/events', {
         method: 'POST',
         body: formData,
+        headers: {
+          'Accept': 'application/json',
+        }
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create event');
+        throw new Error(errorData.error || 'Failed to create event. Please check all required fields.');
       }
 
       toast({
@@ -1035,6 +1055,20 @@ export default function CreateEvent() {
 
             {selectedScopeId && (
               <div className="border rounded-lg p-4 mt-4">
+                <div className="mb-4 flex items-center gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="select-all"
+                      checked={selectedAgeGroupIds.length === seasonalScopesQuery.data?.find(scope => scope.id === selectedScopeId)?.ageGroups.length}
+                      onCheckedChange={(checked) => {
+                        const scope = seasonalScopesQuery.data?.find(scope => scope.id === selectedScopeId);
+                        if (!scope) return;
+                        setSelectedAgeGroupIds(checked ? scope.ageGroups.map(group => group.id) : []);
+                      }}
+                    />
+                    <Label htmlFor="select-all">Select All</Label>
+                  </div>
+                </div>
                 <Table>
                   <TableHeader>
                     <TableRow>
