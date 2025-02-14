@@ -89,7 +89,6 @@ import { UpdatesLogModal } from "@/components/admin/UpdatesLogModal";
 import { useDropzone } from 'react-dropzone';
 
 
-// Add banner component at the top of the file content
 function AdminBanner() {
   return (
     <div className="w-full bg-white shadow-sm border-b">
@@ -995,7 +994,7 @@ function ComplexesView() {
     onError: (error) => {
       toast({
         title: "Error",
-description: error instanceof Error ? error.message : "Failed to update field",
+        description: error instanceof Error ? error.message : "Failed to update field",
         variant: "destructive",
       });
     },
@@ -1120,7 +1119,7 @@ description: error instanceof Error ? error.message : "Failed to update field",
 
               {viewingComplexId === complex.id && (
                 <div className="mt-4 border-t pt-4">
-                  <div className="flex justifybetween items-center mb-4">
+                  <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold">Fields</h3>
                     <Button onClick={handleAddField} size="sm">
                       <Plus className="mr-2 h-4 w-4" />
@@ -1646,7 +1645,7 @@ function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto p-8">
+      <div className="flex-1 p-8 overflow-auto">
         {/* Welcome Card */}
         <Card className="mb-6">
           <CardContent className="p-6">
