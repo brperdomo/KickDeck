@@ -936,7 +936,7 @@ export function registerRoutes(app: Express): Server {
 
         const updatedSettings = {
           ...req.body,
-          updatedAt: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         };
 
         let settings;
@@ -951,7 +951,7 @@ export function registerRoutes(app: Express): Server {
             .insert(organizationSettings)
             .values({
               ...updatedSettings,
-              createdAt: new Date().toISOString(),
+              created_at: new Date().toISOString(),
             })
             .returning();
         }
