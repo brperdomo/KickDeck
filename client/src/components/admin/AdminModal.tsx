@@ -51,6 +51,7 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [emailToCheck, setEmailToCheck] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize form with adminToEdit data or empty values
   const form = useForm<AdminFormValues>({
@@ -107,26 +108,31 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
   const updateAdminMutation = useMutation({
     mutationFn: async (data: AdminFormValues) => {
       if (!adminToEdit) throw new Error("No administrator to update");
+      setIsSubmitting(true);
 
-      const response = await fetch(`/api/admin/administrators/${adminToEdit.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: data.email,
-          roles: data.roles,
-        }),
-      });
+      try {
+        const response = await fetch(`/api/admin/administrators/${adminToEdit.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+            roles: data.roles,
+          }),
+        });
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || "Failed to update administrator");
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to update administrator");
+        }
+
+        return response.json();
+      } finally {
+        setIsSubmitting(false);
       }
-
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/administrators"] });
@@ -136,31 +142,46 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
       });
       onOpenChange(false);
     },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update administrator",
-        variant: "destructive",
-      });
+    onError: (error: Error) => {
+      const errorMessage = error.message;
+
+      if (errorMessage.includes("LAST_SUPER_ADMIN")) {
+        toast({
+          title: "Cannot Update Role",
+          description: "You cannot remove the super_admin role from the last super administrator",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     },
   });
 
   const createAdminMutation = useMutation({
     mutationFn: async (data: AdminFormValues) => {
-      const response = await fetch("/api/admin/administrators", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      setIsSubmitting(true);
+      try {
+        const response = await fetch("/api/admin/administrators", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to create administrator");
+        }
+
+        return response.json();
+      } finally {
+        setIsSubmitting(false);
       }
-
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/administrators"] });
@@ -171,10 +192,10 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
       form.reset();
       onOpenChange(false);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create administrator",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -380,20 +401,19 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
                 type="button" 
                 variant="outline" 
                 onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
               >
                 Cancel
               </Button>
               <Button 
                 type="submit" 
                 disabled={
-                  (createAdminMutation.isPending || updateAdminMutation.isPending) ||
+                  isSubmitting ||
                   emailCheckQuery.isLoading || 
                   (emailCheckQuery.data?.exists && form.getValues("email") !== adminToEdit?.email)
                 }
               >
-                {(createAdminMutation.isPending || updateAdminMutation.isPending) ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {adminToEdit ? "Update Administrator" : "Create Administrator"}
               </Button>
             </div>
