@@ -11,13 +11,13 @@ export function useOrganizationSettings() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: FormData | Partial<SelectOrganizationSettings>) => {
+    mutationFn: async (newSettings: Partial<SelectOrganizationSettings>) => {
       const response = await fetch('/api/admin/organization-settings', {
         method: 'POST',
-        headers: data instanceof FormData ? {} : {
+        headers: {
           'Content-Type': 'application/json',
         },
-        body: data instanceof FormData ? data : JSON.stringify(data),
+        body: JSON.stringify(newSettings),
         credentials: 'include',
       });
 
@@ -35,7 +35,7 @@ export function useOrganizationSettings() {
   return {
     settings,
     isLoading,
-    updateSettings: updateMutation.mutate,
+    updateSettings: updateMutation.mutateAsync,
     isUpdating: updateMutation.isPending,
     error: updateMutation.error,
   };

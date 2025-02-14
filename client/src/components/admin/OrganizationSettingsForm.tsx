@@ -6,9 +6,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { useOrganizationSettings } from "@/hooks/use-organization-settings";
 import { useToast } from "@/hooks/use-toast";
-import { ImageIcon, Loader2 } from "lucide-react";
-import { useState, useEffect } from 'react';
-import { useDropzone } from 'react-dropzone';
+import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(1, "Organization name is required"),
@@ -22,14 +20,6 @@ type FormValues = z.infer<typeof formSchema>;
 export function OrganizationSettingsForm() {
   const { settings, isLoading, updateSettings, isUpdating } = useOrganizationSettings();
   const { toast } = useToast();
-  const [logo, setLogo] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (settings?.logoUrl) {
-      setPreviewUrl(settings.logoUrl);
-    }
-  }, [settings]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -41,36 +31,9 @@ export function OrganizationSettingsForm() {
     },
   });
 
-  const onDrop = (acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
-    if (file) {
-      setLogo(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
-  };
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.svg']
-    },
-    maxFiles: 1,
-    multiple: false
-  });
-
   const onSubmit = async (data: FormValues) => {
     try {
-      const formData = new FormData();
-      formData.append('name', data.name);
-      formData.append('email', data.email || '');
-      formData.append('phone', data.phone || '');
-      formData.append('address', data.address || '');
-
-      if (logo) {
-        formData.append('logo', logo);
-      }
-
-      await updateSettings(formData);
+      await updateSettings(data);
       toast({
         title: "Success",
         description: "Organization settings updated successfully",
@@ -94,32 +57,7 @@ export function OrganizationSettingsForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" encType="multipart/form-data">
-        <div
-          {...getRootProps()}
-          className={`border-2 border-dashed rounded-lg p-6 cursor-pointer transition-colors ${
-            isDragActive ? 'border-primary bg-primary/5' : 'border-border'
-          }`}
-        >
-          <input {...getInputProps()} />
-          <div className="flex flex-col items-center justify-center gap-2">
-            {previewUrl ? (
-              <img
-                src={previewUrl}
-                alt="Organization logo"
-                className="h-20 w-20 object-contain"
-              />
-            ) : (
-              <ImageIcon className="h-10 w-10 text-muted-foreground" />
-            )}
-            <p className="text-sm text-muted-foreground text-center">
-              {isDragActive
-                ? "Drop the logo here"
-                : "Drag & drop your logo here, or click to select"}
-            </p>
-          </div>
-        </div>
-
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="name"
