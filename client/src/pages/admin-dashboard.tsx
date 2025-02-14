@@ -161,6 +161,7 @@ interface FieldFormValues {
 function AdministratorsView() {
   const { toast } = useToast();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedTab, setSelectedTab] = useState("super_admin");
   const [selectedAdmin, setSelectedAdmin] = useState<{
     id: number;
     email: string;
@@ -189,32 +190,44 @@ function AdministratorsView() {
       };
     }
 
-    return administratorsQuery.data.reduce((groups: any, admin: any) => {
-      // Initialize with empty arrays if not exists
-      Object.keys(groups).forEach(key => {
-        if (!groups[key]) groups[key] = [];
-      });
-
-      // If admin has no roles, skip them
-      if (!admin.roles || !Array.isArray(admin.roles)) return groups;
-
-      // Add admin to each of their role groups
-      admin.roles.forEach((role: string) => {
-        if (role && role in groups) {
-          // Avoid duplicates
-          if (!groups[role].some((a: any) => a.id === admin.id)) {
-            groups[role].push(admin);
-          }
-        }
-      });
-
-      return groups;
-    }, {
+    // Initialize with empty arrays for each role type
+    const groupedAdmins: RoleGroup = {
       super_admin: [],
       tournament_admin: [],
       score_admin: [],
       finance_admin: []
+    };
+
+    // Group administrators by their roles
+    administratorsQuery.data.forEach((admin: any) => {
+      // If admin has no roles or roles is null/undefined, add to super_admin
+      if (!admin.roles || !Array.isArray(admin.roles) || admin.roles.length === 0 || admin.roles[0] === null) {
+        if (!groupedAdmins.super_admin.some(a => a.id === admin.id)) {
+          groupedAdmins.super_admin.push({ ...admin, roles: ['super_admin'] });
+        }
+        return;
+      }
+
+      // Add admin to each role group they belong to
+      admin.roles.forEach((role: string) => {
+        if (role === null) return; // Skip null roles
+
+        // Only add if it's a valid role group
+        if (role in groupedAdmins) {
+          // Avoid duplicate entries
+          if (!groupedAdmins[role].some((a: any) => a.id === admin.id)) {
+            groupedAdmins[role].push(admin);
+          }
+        } else {
+          // If role is not recognized, add to super_admin
+          if (!groupedAdmins.super_admin.some(a => a.id === admin.id)) {
+            groupedAdmins.super_admin.push(admin);
+          }
+        }
+      });
     });
+
+    return groupedAdmins;
   }, [administratorsQuery.data]);
 
   const handleEditAdmin = (admin: any) => {
@@ -232,47 +245,6 @@ function AdministratorsView() {
     setIsAddModalOpen(false);
     setSelectedAdmin(null);
   };
-
-  const updateAdminMutation = useMutation({
-    mutationFn: async (data: {
-      id: number;
-      email: string;
-      firstName: string;
-      lastName: string;
-      roles: string[];
-    }) => {
-      const response = await fetch(`/api/admin/administrators/${data.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to update administrator');
-      }
-
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/administrators'] });
-      toast({
-        title: "Success",
-        description: "Administrator updated successfully",
-      });
-      setIsAddModalOpen(false);
-      setSelectedAdmin(null);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update administrator",
-        variant: "destructive"
-      });
-    }
-  });
-
-  const [selectedTab, setSelectedTab] = useState<RoleType>("super_admin");
 
   const getBadgeColor = (type: string) => {
     switch (type) {
@@ -304,6 +276,64 @@ function AdministratorsView() {
     }
   };
 
+  const updateAdminMutation = useMutation({
+    mutationFn: async (data: {
+      id: number;
+      email: string;
+      firstName: string;
+      lastName: string;
+      roles: string[];
+    }) => {
+      const response = await fetch(`/api/admin/administrators/${data.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update administrator');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(['/api/admin/administrators']);
+      toast({
+        title: "Success",
+        description: "Administrator updated successfully",
+        variant: "default"
+      });
+      setIsAddModalOpen(false);
+      setSelectedAdmin(null);
+    },
+    onError: (error: Error) => {
+      const errorMessage = error.message;
+
+      // Provide specific error messages based on error codes
+      if (errorMessage.includes("LAST_SUPER_ADMIN")) {
+        toast({
+          title: "Cannot Update Role",
+          description: "You cannot remove the super_admin role from the last super administrator",
+          variant: "destructive"
+        });
+      } else if (errorMessage.includes("EMAIL_EXISTS")) {
+        toast({
+          title: "Email Already Exists",
+          description: "The email address is already registered",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: errorMessage || "Failed to update administrator",
+          variant: "destructive"
+        });
+      }
+    }
+  });
+
+
   if (administratorsQuery.isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
@@ -322,21 +352,37 @@ function AdministratorsView() {
         </Button>
       </div>
 
-      <Tabs value={selectedTab} onValueChange={(value) => setSelectedTab(value as RoleType)} className="space-y-4">
+      <Tabs
+        value={selectedTab}
+        onValueChange={setSelectedTab}
+        className="space-y-4"
+      >
         <TabsList className="grid w-full grid-cols-4 gap-4">
-          <TabsTrigger value="super_admin" className="data-[state=active]:bg-red-100 data-[state=active]:text-red-900">
+          <TabsTrigger
+            value="super_admin"
+            className="data-[state=active]:bg-red-100 data-[state=active]:text-red-900"
+          >
             <Shield className="mr-2 h-4 w-4" />
             Super Admins
           </TabsTrigger>
-          <TabsTrigger value="tournament_admin" className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900">
+          <TabsTrigger
+            value="tournament_admin"
+            className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900"
+          >
             <Trophy className="mr-2 h-4 w-4" />
             Tournament Admins
           </TabsTrigger>
-          <TabsTrigger value="score_admin" className="data-[state=active]:bg-green-100 data-[state=active]:text-green-900">
+          <TabsTrigger
+            value="score_admin"
+            className="data-[state=active]:bg-green-100 data-[state=active]:text-green-900"
+          >
             <ClipboardList className="mr-2 h-4 w-4" />
             Score Admins
           </TabsTrigger>
-          <TabsTrigger value="finance_admin" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-900">
+          <TabsTrigger
+            value="finance_admin"
+            className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-900"
+          >
             <DollarSign className="mr-2 h-4 w-4" />
             Finance Admins
           </TabsTrigger>
@@ -372,13 +418,11 @@ function AdministratorsView() {
                         </TableCell>
                         <TableCell>{admin.email}</TableCell>
                         <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {admin.roles?.map((role: string) => (
-                              <Badge key={role} variant="outline" className={`${getBadgeColor(role)} border-none`}>
-                                {getTypeLabel(role)}
-                              </Badge>
-                            ))}
-                          </div>
+                          {admin.roles?.map((role: string) => (
+                            <Badge key={role} variant="outline" className="mr-1">
+                              {role}
+                            </Badge>
+                          ))}
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary" className="bg-green-50 text-green-700">
@@ -397,6 +441,11 @@ function AdministratorsView() {
                                 <Edit className="mr-2 h-4 w-4" />
                                 Edit
                               </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="text-red-600">
+                                <Trash className="mr-2 h-4 w-4" />
+                                Remove
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -414,7 +463,6 @@ function AdministratorsView() {
         open={isAddModalOpen}
         onOpenChange={handleModalClose}
         adminToEdit={selectedAdmin}
-        updateAdminMutation={updateAdminMutation}
       />
     </>
   );
@@ -942,7 +990,7 @@ function ComplexesView() {
       if (selectedComplex) {
         await updateComplexMutation.mutateAsync({ id: selectedComplex.id, data });
       } else {
-        await createComplexMutation.mutateAsync(data);
+                await createComplexMutation.mutateAsync(data);
       }
     } catch (error) {
       console.error('Error submitting complex:', error);
@@ -1000,7 +1048,7 @@ function ComplexesView() {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">FieldComplexes</h2>
+        <h2 className="text-2xl font-bold">Field Complexes</h2>
         <Button onClick={() => setIsAddModalOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Add Complex

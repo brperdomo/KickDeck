@@ -2003,8 +2003,7 @@ export function registerRoutes(app: Express): Server {
                 .insert(roles)
                 .values({
                   name: roleName,
-                  description: `${roleName} role`,
-                  createdAt: new Date()
+                  description: `${roleName} role`
                 })
                 .returning();
             }
@@ -2013,8 +2012,7 @@ export function registerRoutes(app: Express): Server {
               .insert(adminRoles)
               .values({
                 userId: newAdmin.id,
-                roleId: role.id,
-                createdAt: new Date()
+                roleId: role.id
               });
           }
 
