@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  @font-face {
+    font-family: system-ui;
+    font-display: swap;
+  }
+}
+
 :root {
   --color-primary: #1E88E5;
   --color-secondary: #43A047;
@@ -13,6 +20,8 @@
 @font-face {
   font-family: 'Roboto';
   src: url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+  font-display: swap;
+  font-weight: 400 700;
 }
 
 body {
