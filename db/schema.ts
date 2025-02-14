@@ -9,8 +9,8 @@ export const organizationSettings = pgTable("organization_settings", {
   primaryColor: text("primary_color").notNull(),
   secondaryColor: text("secondary_color"),
   logoUrl: text("logo_url"),
-  createdAt: text("createdAt").notNull().default(new Date().toISOString()),
-  updatedAt: text("updatedAt").notNull().default(new Date().toISOString()),
+  createdAt: text("created_at").notNull().default(new Date().toISOString()),
+  updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
 });
 
 export const users = pgTable("users", {

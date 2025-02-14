@@ -914,7 +914,15 @@ export function registerRoutes(app: Express): Server {
     app.get('/api/admin/organization-settings', isAdmin, async (req, res) => {
       try {
         const [settings] = await db
-          .select()
+          .select({
+            id: organizationSettings.id,
+            name: organizationSettings.name,
+            primaryColor: organizationSettings.primaryColor,
+            secondaryColor: organizationSettings.secondaryColor,
+            logoUrl: organizationSettings.logoUrl,
+            createdAt: organizationSettings.createdAt,
+            updatedAt: organizationSettings.updatedAt,
+          })
           .from(organizationSettings)
           .limit(1);
 
@@ -988,7 +996,7 @@ export function registerRoutes(app: Express): Server {
     app.post('/api/theme', async (req, res) => {
       try {
         const themeData = req.body;
-        const themePath = path.resolve(process.cwd(), 'theme.json');
+        const themePath = path.resolve(processcwd(), 'theme.json');
 
         await fs.writeFile(themePath, JSON.stringify(themeData, null, 2));
 
@@ -1900,8 +1908,7 @@ export function registerRoutes(app: Express): Server {
           .from(eventAgeGroups)
           .where(and(
             eq(eventAgeGroups.eventId, eventId),
-            eq(eventAgeGroups.ageGroup, ageGroup)
-          ));
+            eq(eventAgeGroups.ageGroup, ageGroup)          ));
 
         if (!ageGroupRecord) {
           return res.status(404).send("Age group not found");
