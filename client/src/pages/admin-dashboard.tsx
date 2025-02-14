@@ -87,18 +87,17 @@ import { ComplexEditor } from "@/components/ComplexEditor";
 import { FieldEditor } from "@/components/FieldEditor";
 import { UpdatesLogModal } from "@/components/admin/UpdatesLogModal";
 import { useDropzone } from 'react-dropzone';
-import { RolesSettingsView } from "@/components/admin/RolesSettingsView";
 
 
 const MyAccount = lazy(() => import("./my-account"));
 
 // Type guard function to check if user is admin
-function isAdminUser(user: SelectUser | null): user is SelectUser & { roles?: string[] } {
-  return user !== null && Array.isArray(user.roles) && user.roles.includes('super_admin');
+function isAdminUser(user: SelectUser | null): user is SelectUser & { isAdmin: true } {
+  return user !== null && user.isAdmin === true;
 }
 
 type View = 'events' | 'teams' | 'administrators' | 'settings' | 'households' | 'reports' | 'account' | 'complexes' | 'scheduling' | 'chat';
-type SettingsView = 'branding' | 'general' | 'payments' | 'roles';
+type SettingsView = 'branding' | 'general' | 'payments';
 type ReportType = 'financial' | 'manager' | 'player' | 'schedule' | 'guest-player';
 type RoleType = 'super_admin' | 'tournament_admin' | 'score_admin' | 'finance_admin';
 
@@ -991,7 +990,8 @@ function ComplexesView() {
       if (selectedComplex) {
         await updateComplexMutation.mutateAsync({ id: selectedComplex.id, data });
       } else {
-        await createComplexMutation.mutateAsync(data);      }
+                await createComplexMutation.mutateAsync(data);
+      }
     } catch (error) {
       console.error('Error submitting complex:', error);
     }
@@ -1439,7 +1439,10 @@ function AdminDashboard() {
       case 'scheduling':
         return <SchedulingView />;
       case 'settings':
-        return <SettingsContent/>;
+        if (activeSettingsView === 'general') {
+          return <GeneralSettingsView />;
+        }
+        return <SettingsView activeSettingsView={activeSettingsView} />;
       case 'reports':
         return <ReportsView />;
       case 'chat':
@@ -1579,7 +1582,7 @@ function AdminDashboard() {
                   Branding
                 </Button>
                 <Button
-                  variant={activeSettingsView === 'payments' ? 'secondary' : 'ghost'}
+                   variant={activeSettingsView === 'payments' ? 'secondary' : 'ghost'}
                   className="w-full justify-start"
                   onClick={() => {
                     setActiveView('settings');
@@ -1589,7 +1592,7 @@ function AdminDashboard() {
                   <CreditCard className="mr-2 h-4 w-4" />
                   Payments
                 </Button>
-                <Button
+                 <Button
                   variant={activeSettingsView === 'general' ? 'secondary' : 'ghost'}
                   className="w-full justify-start"
                   onClick={() => {
@@ -1597,14 +1600,14 @@ function AdminDashboard() {
                     setActiveSettingsView('general');
                   }}
                 >
-                  <Settings className="mr-2 h-4 w-4" />
+                   <Settings className="mr-2 h-4 w-4" />
                   General
                 </Button>
               </CollapsibleContent>
             </Collapsible>
 
             {/* Account */}
-            <Button
+             <Button
               variant={activeView === 'account' ? 'secondary' : 'ghost'}
               className="w-full justify-start"
               onClick={() => setActiveView('account')}
@@ -1613,7 +1616,7 @@ function AdminDashboard() {
               My Account
             </Button>
 
-            <Button
+             <Button
               variant="ghost"
               className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
               onClick={handleLogout}
@@ -1718,60 +1721,28 @@ function ChatView() {
   );
 }
 
-function SettingsContent() {
-  const [activeView, setActiveView] = useState<SettingsView>('general');
-  const { user } = useUser();
-
-  // Check if user has super_admin role
-  const isSuperAdmin = user?.roles?.includes('super_admin');
-
-  return (
-    <>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Settings</h2>
-      </div>
-
-      <Tabs value={activeView} onValueChange={(v) => setActiveView(v as SettingsView)}>
-        <TabsList className="grid w-full grid-cols-4 gap-4">
-          <TabsTrigger value="general">
-            <Settings className="mr-2 h-4 w-4" />
-            General
-          </TabsTrigger>
-          <TabsTrigger value="branding">
-            <Palette className="mr-2 h-4 w-4" />
-            Branding
-          </TabsTrigger>
-          <TabsTrigger value="payments">
-            <CreditCard className="mr-2 h-4 w-4" />
-            Payments
-          </TabsTrigger>
-          {isSuperAdmin && (
-            <TabsTrigger value="roles">
-              <Shield className="mr-2 h-4 w-4" />
-              Admin Roles
-            </TabsTrigger>
-          )}
-        </TabsList>
-
-        <TabsContent value="general">
-          <GeneralSettingsView />
-        </TabsContent>
-        <TabsContent value="branding">
-          <BrandingPreviewProvider>
-            <OrganizationSettingsForm />
-          </BrandingPreviewProvider>
-        </TabsContent>
-        <TabsContent value="payments">
-          {/* Payment settings content */}
-        </TabsContent>
-        {isSuperAdmin && (
-          <TabsContent value="roles">
-            <RolesSettingsView />
-          </TabsContent>
-        )}
-      </Tabs>
-    </>
-  );
+function SettingsView({ activeSettingsView }: { activeSettingsView: SettingsView }) {
+  switch (activeSettingsView) {
+    case 'branding':
+      return (
+        <BrandingPreviewProvider>
+          <OrganizationSettingsForm />
+        </BrandingPreviewProvider>
+      );
+    case 'general':
+      return <GeneralSettingsView />;
+    default:
+      return (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold">Settings</h2>
+          <Card>
+            <CardContent className="p-6">
+              <p>Settings content will be implemented here</p>
+            </CardContent>
+          </Card>
+        </div>
+      );
+  }
 }
 
 export default AdminDashboard;
