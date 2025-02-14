@@ -1726,7 +1726,9 @@ function SettingsView({ activeSettingsView }: { activeSettingsView: SettingsView
     case 'branding':
       return (
         <BrandingPreviewProvider>
-          <OrganizationSettingsForm />
+          <BrandingPreviewProvider>
+  <OrganizationSettingsForm />
+</BrandingPreviewProvider>
         </BrandingPreviewProvider>
       );
     case 'general':
