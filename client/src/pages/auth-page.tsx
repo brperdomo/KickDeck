@@ -85,8 +85,12 @@ export default function AuthPage() {
         <Card className="w-full bg-white/95 backdrop-blur-sm shadow-xl border-0">
           <CardHeader className="space-y-3 pb-6">
             <div className="flex justify-center">
-              <div className="rounded-full bg-green-50 p-3">
-                <Trophy className="h-8 w-8 sm:h-10 sm:w-10 text-green-600" />
+              <div className="w-20 h-20">
+                <img 
+                  src="/attached_assets/MatchPro.ai_Stacked_Color.png" 
+                  alt="MatchPro Logo" 
+                  className="w-full h-full object-contain"
+                />
               </div>
             </div>
             <CardTitle className="text-2xl sm:text-3xl font-bold text-center">
