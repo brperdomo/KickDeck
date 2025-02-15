@@ -15,9 +15,10 @@ export function VideoBackground({ className }: VideoBackgroundProps) {
     <div className={cn("fixed inset-0 -z-10 overflow-hidden", className)}>
       <video
         autoPlay
-        muted
+        muted={true}
         loop
         playsInline
+        preload="auto"
         className="absolute top-0 left-0 w-full h-full object-cover"
       >
         {videos.map((src, index) => (
