@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ interface ColorSection {
 
 interface LoginScreenSettings {
   logoUrl: string;
+  youtubeVideoId: string;
 }
 
 const colors = {
@@ -35,7 +35,8 @@ const colors = {
     description: "Customize the login and register page appearance",
     colors: {},
     settings: {
-      logoUrl: "/uploads/MatchProAI_Linear_Black.png"
+      logoUrl: "/uploads/MatchProAI_Linear_Black.png",
+      youtubeVideoId: "8DFc6wHHWPY"
     }
   },
   interface: {
@@ -105,9 +106,10 @@ export function StyleSettingsView() {
       await setColor(previewStyles.primary || colors.branding.colors.primary);
       const updatedStyles = {
         ...previewStyles,
-        logoUrl: previewStyles.logoUrl || colors.loginScreen.settings.logoUrl
+        logoUrl: previewStyles.logoUrl || colors.loginScreen.settings.logoUrl,
+        youtubeVideoId: previewStyles.youtubeVideoId || colors.loginScreen.settings.youtubeVideoId
       };
-      
+
       const response = await fetch('/api/admin/styling', {
         method: 'POST',
         headers: {
@@ -202,27 +204,51 @@ export function StyleSettingsView() {
                         onChange={(e) => handleColorChange('loginScreen', 'logoUrl', e.target.value)}
                       />
                     </div>
-                    <img 
+                    <img
                       src={previewStyles.logoUrl || colors.loginScreen.settings.logoUrl}
-                      alt="Login logo preview" 
+                      alt="Login logo preview"
                       className="h-16 w-16 object-contain bg-gray-50 rounded p-2"
                     />
                   </div>
-                  <Button 
-                    onClick={handleSave} 
-                    disabled={isLoading} 
-                    className="mt-4"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Saving Logo
-                      </>
-                    ) : (
-                      'Save Logo'
-                    )}
-                  </Button>
                 </div>
+
+                <div className="space-y-2">
+                  <Label>Background YouTube Video ID</Label>
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Enter YouTube video ID (e.g., 8DFc6wHHWPY)"
+                        value={previewStyles.youtubeVideoId || colors.loginScreen.settings.youtubeVideoId}
+                        onChange={(e) => handleColorChange('loginScreen', 'youtubeVideoId', e.target.value)}
+                      />
+                    </div>
+                    <div className="h-16 w-28 overflow-hidden rounded bg-gray-50">
+                      <img
+                        src={`https://img.youtube.com/vi/${previewStyles.youtubeVideoId || colors.loginScreen.settings.youtubeVideoId}/default.jpg`}
+                        alt="YouTube thumbnail preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Enter the YouTube video ID from the video URL. For example, in 'https://youtube.com/watch?v=8DFc6wHHWPY', the ID is '8DFc6wHHWPY'.
+                  </p>
+                </div>
+
+                <Button
+                  onClick={handleSave}
+                  disabled={isLoading}
+                  className="mt-4"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving Changes
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </Button>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-6">
