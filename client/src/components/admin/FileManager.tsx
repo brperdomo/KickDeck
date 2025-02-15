@@ -376,7 +376,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
                 <SelectValue placeholder="Filter by type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="images">Images</SelectItem>
                 <SelectItem value="documents">Documents</SelectItem>
                 <SelectItem value="videos">Videos</SelectItem>
