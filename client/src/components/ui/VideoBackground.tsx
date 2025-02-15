@@ -6,7 +6,7 @@ interface VideoBackgroundProps {
 
 export function VideoBackground({ className }: VideoBackgroundProps) {
   return (
-    <div className={cn("fixed inset-0 -z-10 overflow-hidden", className)}>
+    <div className={cn("fixed inset-0 z-0", className)}>
       <video
         autoPlay
         muted
@@ -17,7 +17,7 @@ export function VideoBackground({ className }: VideoBackgroundProps) {
         <source src="/videos/soccer1.mp4" type="video/mp4" />
         <source src="/videos/soccer2.mp4" type="video/mp4" />
       </video>
-      <div className="absolute inset-0 bg-black/30" /> {/* Darker overlay for better text readability */}
+      <div className="absolute inset-0 bg-black/20" />
     </div>
   );
 }
