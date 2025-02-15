@@ -24,7 +24,7 @@ export function VideoBackground({ className }: VideoBackgroundProps) {
           <source key={index} src={src} type="video/mp4" />
         ))}
       </video>
-      <div className="absolute inset-0 bg-black/20" /> {/* Overlay for better text readability */}
+      <div className="absolute inset-0 bg-black/10" /> {/* Overlay for better text readability */}
     </div>
   );
 }
