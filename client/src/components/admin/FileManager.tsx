@@ -47,6 +47,7 @@ import {
   ChevronRight,
   MoreVertical,
   Video,
+  File,
 } from "lucide-react";
 
 export function FileManager({ className, onFileSelect, allowMultiple = false }: FileManagerProps) {
@@ -54,7 +55,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
     selectedFiles: new Set(),
     currentFolder: null,
     filter: {},
-    view: 'grid'
+    view: 'list'  // Set default view to list
   });
   const [isUploading, setIsUploading] = useState(false);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
@@ -220,6 +221,16 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
     }));
   };
 
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   const renderFileList = () => {
     if (filesQuery.isLoading) {
       return (
@@ -237,68 +248,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
       );
     }
 
-    return state.view === 'grid' ? (
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filesQuery.data?.map((file) => (
-          <Card
-            key={file.id}
-            className={`cursor-pointer ${state.selectedFiles.has(file.id) ? 'ring-2 ring-primary' : ''}`}
-            draggable
-            onDragStart={() => handleDragStart(file.id)}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between">
-                <Checkbox
-                  checked={state.selectedFiles.has(file.id)}
-                  onCheckedChange={(checked) => handleFileSelection(file.id, checked as boolean)}
-                />
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => {
-                      setSelectedFile(file);
-                      setRenameDialogOpen(true);
-                    }}>
-                      Rename
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => window.open(file.url, '_blank')}>
-                      View
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => bulkActionMutation.mutate({
-                      action: 'delete',
-                      fileIds: [file.id]
-                    })}>
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              <div className="mt-4 text-center" onClick={() => onFileSelect?.(file)}>
-                {file.type.startsWith('video/') ? (
-                  <Video className="w-16 h-16 mx-auto text-muted-foreground" />
-                ) : file.type.startsWith('image/') ? (
-                  <img
-                    src={file.url}
-                    alt={file.name}
-                    className="w-full h-32 object-cover rounded-md"
-                  />
-                ) : (
-                  <div className="w-16 h-16 mx-auto bg-muted rounded-md flex items-center justify-center">
-                    {file.type}
-                  </div>
-                )}
-                <p className="mt-2 text-sm truncate">{file.name}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    ) : (
+    return (
       <Table>
         <TableHeader>
           <TableRow>
@@ -316,9 +266,10 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
               />
             </TableHead>
             <TableHead>Name</TableHead>
+            <TableHead>Created Date</TableHead>
+            <TableHead>Uploaded By</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Size</TableHead>
-            <TableHead>Modified</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -335,21 +286,60 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
                   onCheckedChange={(checked) => handleFileSelection(file.id, checked as boolean)}
                 />
               </TableCell>
-              <TableCell>{file.name}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  {file.type.startsWith('video/') ? (
+                    <Video className="h-4 w-4" />
+                  ) : file.type.startsWith('image/') ? (
+                    <img
+                      src={file.thumbnailUrl || file.url}
+                      alt={file.name}
+                      className="h-8 w-8 object-cover rounded"
+                    />
+                  ) : (
+                    <File className="h-4 w-4" />
+                  )}
+                  <span className="truncate">{file.name}</span>
+                </div>
+              </TableCell>
+              <TableCell>{formatDate(file.createdAt)}</TableCell>
+              <TableCell>{file.uploadedBy?.name || 'Unknown'}</TableCell>
               <TableCell>{file.type}</TableCell>
               <TableCell>{formatFileSize(file.size)}</TableCell>
-              <TableCell>{new Date(file.updatedAt).toLocaleDateString()}</TableCell>
               <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    window.open(file.url, '_blank');
-                    onFileSelect?.(file);
-                  }}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      window.open(file.url, '_blank');
+                      onFileSelect?.(file);
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => {
+                        setSelectedFile(file);
+                        setRenameDialogOpen(true);
+                      }}>
+                        Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => bulkActionMutation.mutate({
+                        action: 'delete',
+                        fileIds: [file.id]
+                      })}>
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </TableCell>
             </TableRow>
           ))}

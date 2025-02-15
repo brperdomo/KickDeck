@@ -10,6 +10,11 @@ export interface FileItem {
   updatedAt: string;
   folderId?: string | null;
   thumbnailUrl?: string;
+  uploadedBy?: {
+    id: number;
+    name: string;
+    email: string;
+  };
 }
 
 export interface Folder {
