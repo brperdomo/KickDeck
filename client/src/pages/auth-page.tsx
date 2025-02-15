@@ -3,7 +3,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { type InsertUser } from "@db/schema";
 import { useUser } from "@/hooks/use-user";
 import { useToast } from "@/hooks/use-toast";
-import { VideoBackground } from "@/components/ui/VideoBackground";
 import {
   Form,
   FormControl,
@@ -79,94 +78,111 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center">
-      <VideoBackground />
-      <div className="w-full max-w-[min(400px,100%-2rem)] mx-auto relative z-10">
-        <Card className="w-full bg-white/50 backdrop-blur-md shadow-xl border-0">
-          <CardHeader className="space-y-3 pb-6">
-            <div className="flex justify-center">
-              <div className="w-100 h-100">
-                <img 
-                  src="/uploads/MatchProAI_Linear_Black.png" 
-                  alt="MatchPro Logo" 
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            </div>
-            <CardTitle className="text-2xl sm:text-3xl font-bold text-center text-gray-900">
-              Sign In to MatchPro
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...loginForm}>
-              <form
-                onSubmit={loginForm.handleSubmit(onSubmit)}
-                className="space-y-5"
-                id="login-form"
-                name="login"
-                autoComplete="on"
-              >
-                <FormField
-                  control={loginForm.control}
-                  name="loginEmail"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base">Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          autoComplete="username email"
-                          className="h-11 text-base px-4"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={loginForm.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base">Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="password"
-                          autoComplete="current-password"
-                          className="h-11 text-base px-4"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button
-                  type="submit"
-                  className="w-full h-11 text-base bg-green-600 hover:bg-green-700 transition-colors"
-                >
-                  Login
-                </Button>
-                <Link href="/forgot-password">
-                  <Button variant="link" className="w-full text-sm text-green-600 p-0 h-auto font-semibold hover:text-green-700">
-                    Forgot Password?
-                  </Button>
-                </Link>
-                <div className="text-center">
-                  <p className="text-sm sm:text-base text-gray-600">
-                    New to MatchPro?{" "}
-                    <Link href="/register">
-                      <Button variant="link" className="p-0 h-auto font-semibold text-green-600 hover:text-green-700">
-                        Register Here
-                      </Button>
-                    </Link>
-                  </p>
+    <div className="min-h-screen w-full relative">
+      {/* Video Background */}
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+      >
+        <source src="/videos/soccer1.mp4" type="video/mp4" />
+        <source src="/videos/soccer2.mp4" type="video/mp4" />
+      </video>
+
+      {/* Overlay for better text visibility */}
+      <div className="absolute inset-0 bg-black/30" />
+
+      {/* Login Form Container */}
+      <div className="relative z-10 flex items-center justify-center min-h-screen">
+        <div className="w-full max-w-[min(400px,100%-2rem)] mx-auto">
+          <Card className="w-full bg-white/50 backdrop-blur-md shadow-xl border-0">
+            <CardHeader className="space-y-3 pb-6">
+              <div className="flex justify-center">
+                <div className="w-100 h-100">
+                  <img 
+                    src="/uploads/MatchProAI_Linear_Black.png" 
+                    alt="MatchPro Logo" 
+                    className="w-full h-full object-contain"
+                  />
                 </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+              </div>
+              <CardTitle className="text-2xl sm:text-3xl font-bold text-center text-gray-900">
+                Sign In to MatchPro
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Form {...loginForm}>
+                <form
+                  onSubmit={loginForm.handleSubmit(onSubmit)}
+                  className="space-y-5"
+                  id="login-form"
+                  name="login"
+                  autoComplete="on"
+                >
+                  <FormField
+                    control={loginForm.control}
+                    name="loginEmail"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base">Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email"
+                            autoComplete="username email"
+                            className="h-11 text-base px-4"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={loginForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base">Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            autoComplete="current-password"
+                            className="h-11 text-base px-4"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="submit"
+                    className="w-full h-11 text-base bg-green-600 hover:bg-green-700 transition-colors"
+                  >
+                    Login
+                  </Button>
+                  <Link href="/forgot-password">
+                    <Button variant="link" className="w-full text-sm text-green-600 p-0 h-auto font-semibold hover:text-green-700">
+                      Forgot Password?
+                    </Button>
+                  </Link>
+                  <div className="text-center">
+                    <p className="text-sm sm:text-base text-gray-600">
+                      New to MatchPro?{" "}
+                      <Link href="/register">
+                        <Button variant="link" className="p-0 h-auto font-semibold text-green-600 hover:text-green-700">
+                          Register Here
+                        </Button>
+                      </Link>
+                    </p>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
