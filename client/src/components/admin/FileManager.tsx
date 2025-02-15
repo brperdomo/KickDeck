@@ -75,10 +75,25 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
   const filesQuery = useQuery({
     queryKey: ['files', currentFolder],
     queryFn: async () => {
-      const response = await fetch(`/api/files${currentFolder ? `?folderId=${currentFolder}` : ''}`);
-      if (!response.ok) throw new Error('Failed to fetch files');
-      return response.json() as Promise<FileItem[]>;
+      try {
+        const response = await fetch(`/api/files${currentFolder ? `?folderId=${currentFolder}` : ''}`);
+        if (!response.ok) {
+          console.error('Failed to fetch files:', await response.text());
+          throw new Error('Failed to fetch files');
+        }
+        const data = await response.json();
+        return data as FileItem[];
+      } catch (error) {
+        console.error('Error fetching files:', error);
+        throw error;
+      }
     },
+    refetchOnWindowFocus: true,
+    refetchInterval: 5000,
+    retry: 3,
+    retryDelay: 1000,
+    staleTime: 30000,
+    cacheTime: 60000
   });
 
   const foldersQuery = useQuery({
