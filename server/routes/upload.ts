@@ -5,9 +5,8 @@ import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '@db';
 import { files, type InsertFile } from '@db/schema';
-import { eq, desc, inArray, sql } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { users } from '@db/schema';
-
 
 const router = Router();
 
@@ -73,13 +72,14 @@ router.post('/upload', (req, res) => {
         url: fileUrl,
         type: req.file.mimetype,
         size: req.file.size,
-        uploadedById: req.user?.id,
+        uploadedById: req.user?.id || null,
         folderId: null,
-        thumbnailUrl: null
+        thumbnailUrl: null,
       };
 
       // Store file information in database
       const [newFile] = await db.insert(files).values(fileData).returning();
+      console.log('File uploaded successfully:', newFile);
 
       res.status(200).json(newFile);
     } catch (error) {
@@ -99,12 +99,19 @@ router.post('/upload', (req, res) => {
 // Get all files with user information
 router.get('/', async (req, res) => {
   try {
+    console.log('Fetching files from database...');
     const allFiles = await db
       .select({
-        file: files,
+        id: files.id,
+        name: files.name,
+        url: files.url,
+        type: files.type,
+        size: files.size,
+        createdAt: files.createdAt,
+        updatedAt: files.updatedAt,
         uploadedBy: {
           id: users.id,
-          name: sql`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+          name: db.sql`CONCAT(${users.firstName}, ' ', ${users.lastName})`.as('fullName'),
           email: users.email
         }
       })
@@ -112,6 +119,7 @@ router.get('/', async (req, res) => {
       .leftJoin(users, eq(files.uploadedById, users.id))
       .orderBy(desc(files.createdAt));
 
+    console.log('Files fetched:', allFiles);
     res.json(allFiles);
   } catch (error) {
     console.error('Error fetching files:', error);
@@ -146,59 +154,16 @@ router.delete('/:id', async (req, res) => {
       }
     } catch (fsError) {
       console.error('Error deleting file from filesystem:', fsError);
-      // Continue with database deletion even if file system deletion fails
     }
 
     // Delete from database
     await db.delete(files).where(eq(files.id, id));
+    console.log('File deleted successfully:', id);
 
     res.json({ message: 'File deleted successfully' });
   } catch (error) {
     console.error('Error deleting file:', error);
     res.status(500).json({ error: 'Failed to delete file' });
-  }
-});
-
-// Bulk actions endpoint
-router.post('/bulk', async (req, res) => {
-  const { action, fileIds } = req.body;
-
-  if (!Array.isArray(fileIds) || fileIds.length === 0) {
-    return res.status(400).json({ error: 'No files selected' });
-  }
-
-  try {
-    if (action === 'delete') {
-      const filesToDelete = await db
-        .select()
-        .from(files)
-        .where(inArray(files.id, fileIds));
-
-      for (const file of filesToDelete) {
-        const filename = path.basename(file.url);
-        const filePath = path.join(uploadsDir, filename);
-
-        // Delete from filesystem
-        try {
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-          }
-        } catch (fsError) {
-          console.error(`Error deleting file ${filename} from filesystem:`, fsError);
-          // Continue with next file
-        }
-      }
-
-      // Delete all selected files from database
-      await db.delete(files).where(inArray(files.id, fileIds));
-
-      return res.json({ success: true, message: 'Files deleted successfully' });
-    }
-
-    res.status(400).json({ error: 'Invalid action' });
-  } catch (error) {
-    console.error('Error performing bulk action:', error);
-    res.status(500).json({ error: 'Failed to perform bulk action' });
   }
 });
 
