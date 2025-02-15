@@ -35,7 +35,7 @@ const colors = {
     description: "Customize the login and register page appearance",
     colors: {},
     settings: {
-      logoUrl: "/attached_assets/MatchPro.ai_Stacked_Color.png"
+      logoUrl: "/uploads/MatchProAI_Linear_Black.png"
     }
   },
   interface: {
@@ -103,12 +103,17 @@ export function StyleSettingsView() {
   const handleSave = async () => {
     try {
       await setColor(previewStyles.primary || colors.branding.colors.primary);
+      const updatedStyles = {
+        ...previewStyles,
+        logoUrl: previewStyles.logoUrl || colors.loginScreen.settings.logoUrl
+      };
+      
       const response = await fetch('/api/admin/styling', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(previewStyles),
+        body: JSON.stringify(updatedStyles),
       });
 
       if (!response.ok) {
@@ -203,6 +208,20 @@ export function StyleSettingsView() {
                       className="h-16 w-16 object-contain bg-gray-50 rounded p-2"
                     />
                   </div>
+                  <Button 
+                    onClick={handleSave} 
+                    disabled={isLoading} 
+                    className="mt-4"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving Logo
+                      </>
+                    ) : (
+                      'Save Logo'
+                    )}
+                  </Button>
                 </div>
               </div>
             ) : (

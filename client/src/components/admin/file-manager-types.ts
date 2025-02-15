@@ -23,6 +23,7 @@ export interface FileManagerProps {
 }
 
 export const ALLOWED_FILE_TYPES = {
-  images: ['.png', '.jpg', '.jpeg', '.svg', '.gif'],
-  documents: ['.txt', '.csv', '.json']
+  images: ['.png', '.jpg', '.jpeg', '.gif', '.svg'],
+  documents: ['.txt', '.csv', '.json'],
+  videos: ['.mp4', '.webm'],
 };

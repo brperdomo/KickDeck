@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { type InsertUser } from "@db/schema";
 import { useUser } from "@/hooks/use-user";
 import { useToast } from "@/hooks/use-toast";
-import { SoccerFieldBackground } from "@/components/ui/SoccerFieldBackground";
+import { VideoBackground } from "@/components/ui/VideoBackground";
 import {
   Form,
   FormControl,
@@ -80,14 +80,14 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6 md:p-8 overflow-hidden">
-      <SoccerFieldBackground className="opacity-50" />
+      <VideoBackground />
       <div className="w-full max-w-[min(400px,100%-2rem)] mx-auto relative z-10">
         <Card className="w-full bg-white/95 backdrop-blur-sm shadow-xl border-0">
           <CardHeader className="space-y-3 pb-6">
             <div className="flex justify-center">
-              <div className="w-20 h-20">
+              <div className="w-100 h-100">
                 <img 
-                  src="/attached_assets/MatchPro.ai_Stacked_Color.png" 
+                  src="/uploads/MatchProAI_Linear_Black.png" 
                   alt="MatchPro Logo" 
                   className="w-full h-full object-contain"
                 />

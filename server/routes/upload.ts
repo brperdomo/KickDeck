@@ -39,7 +39,9 @@ const ALLOWED_FILE_TYPES = [
   'image/gif',
   'text/plain',
   'text/csv',
-  'application/json'
+  'application/json',
+  'video/mp4',
+  'video/webm'
 ];
 
 const upload = multer({
