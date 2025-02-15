@@ -406,6 +406,7 @@ export type SelectMessage = typeof messages.$inferSelect;
 export type InsertChatParticipant = typeof chatParticipants.$inferInsert;
 export type SelectChatParticipant = typeof chatParticipants.$inferSelect;
 
+
 export const householdInvitations = pgTable("household_invitations", {
   id: serial("id").primaryKey(),
   householdId: integer("household_id").notNull().references(() => households.id),

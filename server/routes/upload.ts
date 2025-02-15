@@ -3,10 +3,6 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { db } from '@db';
-import { files, type InsertFile } from '@db/schema';
-import { eq, desc } from 'drizzle-orm';
-import { users } from '@db/schema';
 
 const router = Router();
 
@@ -22,11 +18,17 @@ const storage = multer.diskStorage({
     cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
-    const uniqueId = uuidv4();
+    const baseName = path.parse(file.originalname).name;
     const ext = path.extname(file.originalname);
-    const baseName = path.parse(file.originalname).name.replace(/[^a-zA-Z0-9-_.]/g, '_');
-    const fileName = `${baseName}-${uniqueId}${ext}`;
-    cb(null, fileName);
+    const safeFileName = `${baseName}${ext}`.replace(/[^a-zA-Z0-9-_.]/g, '_');
+    
+    // Check if file exists
+    if (fs.existsSync(path.join(uploadsDir, safeFileName))) {
+      cb(new Error('File already exists'), '');
+      return;
+    }
+    
+    cb(null, safeFileName);
   }
 });
 
@@ -46,7 +48,7 @@ const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
     if (!ALLOWED_FILE_TYPES.includes(file.mimetype)) {
-      cb(new Error('Invalid file type. Only PNG, JPG, JPEG, SVG, GIF, TXT, CSV, JSON, MP4 and WEBM files are allowed.'));
+      cb(new Error('Invalid file type. Only PNG, JPG, JPEG, SVG, GIF, TXT, CSV, and JSON files are allowed.'));
       return;
     }
     cb(null, true);
@@ -55,8 +57,11 @@ const upload = multer({
 
 // Handle file upload
 router.post('/upload', (req, res) => {
-  upload.single('file')(req, res, async (err) => {
+  upload.single('file')(req, res, (err) => {
     if (err) {
+      if (err.message === 'File already exists') {
+        return res.status(409).json({ error: 'A file with this name already exists' });
+      }
       return res.status(400).json({ error: err.message });
     }
 
@@ -66,27 +71,19 @@ router.post('/upload', (req, res) => {
 
     try {
       const fileUrl = `/uploads/${req.file.filename}`;
-      const fileData: InsertFile = {
+      const fileInfo = {
         id: uuidv4(),
         name: req.file.originalname,
         url: fileUrl,
         type: req.file.mimetype,
         size: req.file.size,
-        uploadedById: req.user?.id || null,
-        folderId: null,
-        thumbnailUrl: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
-      // Store file information in database
-      const [newFile] = await db.insert(files).values(fileData).returning();
-      console.log('File uploaded successfully:', newFile);
-
-      res.status(200).json(newFile);
+      res.setHeader('Content-Type', 'application/json');
+      res.status(200).json(fileInfo);
     } catch (error) {
-      // If database insertion fails, delete the uploaded file
-      if (req.file) {
-        fs.unlinkSync(path.join(uploadsDir, req.file.filename));
-      }
       console.error('File upload error:', error);
       res.status(500).json({ 
         error: 'Failed to upload file',
@@ -96,31 +93,23 @@ router.post('/upload', (req, res) => {
   });
 });
 
-// Get all files with user information
+// Get all files
 router.get('/', async (req, res) => {
   try {
-    console.log('Fetching files from database...');
-    const allFiles = await db
-      .select({
-        id: files.id,
-        name: files.name,
-        url: files.url,
-        type: files.type,
-        size: files.size,
-        createdAt: files.createdAt,
-        updatedAt: files.updatedAt,
-        uploadedBy: {
-          id: users.id,
-          name: db.sql`CONCAT(${users.firstName}, ' ', ${users.lastName})`.as('fullName'),
-          email: users.email
-        }
-      })
-      .from(files)
-      .leftJoin(users, eq(files.uploadedById, users.id))
-      .orderBy(desc(files.createdAt));
-
-    console.log('Files fetched:', allFiles);
-    res.json(allFiles);
+    // We'll implement database fetching here later
+    const files = fs.readdirSync(uploadsDir).map(filename => {
+      const stats = fs.statSync(path.join(uploadsDir, filename));
+      return {
+        id: path.parse(filename).name,
+        name: filename,
+        url: `/uploads/${filename}`,
+        type: path.extname(filename).slice(1),
+        size: stats.size,
+        createdAt: stats.birthtime.toISOString(),
+        updatedAt: stats.mtime.toISOString(),
+      };
+    });
+    res.json(files);
   } catch (error) {
     console.error('Error fetching files:', error);
     res.status(500).json({ error: 'Failed to fetch files' });
@@ -128,38 +117,52 @@ router.get('/', async (req, res) => {
 });
 
 // Delete file
-router.delete('/:id', async (req, res) => {
+router.patch('/:id/rename', (req, res) => {
   try {
     const { id } = req.params;
+    const { newName } = req.body;
+    
+    if (!newName) {
+      return res.status(400).json({ error: 'New name is required' });
+    }
 
-    // Get file information from database
-    const [fileToDelete] = await db
-      .select()
-      .from(files)
-      .where(eq(files.id, id))
-      .limit(1);
+    const files = fs.readdirSync(uploadsDir);
+    const fileToRename = files.find(f => path.parse(f).name.startsWith(id));
+
+    if (!fileToRename) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    const ext = path.extname(fileToRename);
+    const uniqueId = path.parse(fileToRename).name.split('-').pop();
+    const newFileName = `${newName}-${uniqueId}${ext}`.replace(/[^a-zA-Z0-9-_.]/g, '_');
+    
+    fs.renameSync(
+      path.join(uploadsDir, fileToRename),
+      path.join(uploadsDir, newFileName)
+    );
+
+    res.json({ 
+      message: 'File renamed successfully',
+      newFileName: newFileName
+    });
+  } catch (error) {
+    console.error('Error renaming file:', error);
+    res.status(500).json({ error: 'Failed to rename file' });
+  }
+});
+
+router.delete('/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const files = fs.readdirSync(uploadsDir);
+    const fileToDelete = files.find(f => path.parse(f).name.startsWith(id));
 
     if (!fileToDelete) {
       return res.status(404).json({ error: 'File not found' });
     }
 
-    // Extract filename from URL
-    const filename = path.basename(fileToDelete.url);
-    const filePath = path.join(uploadsDir, filename);
-
-    // Delete from filesystem first
-    try {
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    } catch (fsError) {
-      console.error('Error deleting file from filesystem:', fsError);
-    }
-
-    // Delete from database
-    await db.delete(files).where(eq(files.id, id));
-    console.log('File deleted successfully:', id);
-
+    fs.unlinkSync(path.join(uploadsDir, fileToDelete));
     res.json({ message: 'File deleted successfully' });
   } catch (error) {
     console.error('Error deleting file:', error);
