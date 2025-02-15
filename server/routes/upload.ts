@@ -74,8 +74,8 @@ router.post('/upload', (req, res) => {
         type: req.file.mimetype,
         size: req.file.size,
         uploadedById: req.user?.id,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        folderId: null,
+        thumbnailUrl: null
       };
 
       // Store file information in database
@@ -96,7 +96,7 @@ router.post('/upload', (req, res) => {
   });
 });
 
-// Get all files
+// Get all files with user information
 router.get('/', async (req, res) => {
   try {
     const allFiles = await db
