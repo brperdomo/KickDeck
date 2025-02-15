@@ -79,10 +79,10 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <VideoBackground className="z-0" />
+    <div className="min-h-screen w-full flex items-center justify-center">
+      <VideoBackground />
       <div className="w-full max-w-[min(400px,100%-2rem)] mx-auto relative z-10">
-        <Card className="w-full bg-white/60 backdrop-blur-sm shadow-xl border-0">
+        <Card className="w-full bg-white/50 backdrop-blur-md shadow-xl border-0">
           <CardHeader className="space-y-3 pb-6">
             <div className="flex justify-center">
               <div className="w-100 h-100">
