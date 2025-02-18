@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link2, Edit, FileQuestion, User, TagsIcon, Printer, AlertTriangle, MoreHorizontal, ChevronUp, ChevronDown, Search } from "lucide-react";
+import { Link2, Edit, FileQuestion, User, TagsIcon, Printer, AlertTriangle, MoreHorizontal, ChevronUp, ChevronDown, Search, Ticket } from "lucide-react";
 import { useLocation } from "wouter";
 import {
   Table,
@@ -214,8 +213,8 @@ export function EventsTable() {
                           : "outline"
                       }
                     >
-                      {calculateEventStatus(event.startDate, event.endDate).charAt(0).toUpperCase() + 
-                       calculateEventStatus(event.startDate, event.endDate).slice(1)}
+                      {calculateEventStatus(event.startDate, event.endDate).charAt(0).toUpperCase() +
+                        calculateEventStatus(event.startDate, event.endDate).slice(1)}
                     </Badge>
                   </TableCell>
                   <TableCell>{formatDate(event.applicationDeadline)}</TableCell>
@@ -240,6 +239,9 @@ export function EventsTable() {
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate(`/admin/events/${event.id}/discounts`)}>
                           <TagsIcon className="h-4 w-4 mr-2" /> Discounts
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/admin/events/${event.id}/coupons`)}>
+                          <Ticket className="h-4 w-4 mr-2" /> Coupons
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate(`/admin/events/${event.id}/game-cards`)}>
                           <Printer className="h-4 w-4 mr-2" /> Print Game Cards
