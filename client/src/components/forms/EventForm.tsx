@@ -766,6 +766,119 @@ export const EventForm = ({ initialData, onSubmit, isEdit = false }: EventFormPr
 
   const tabErrors = getTabValidationState();
 
+  const renderSettingsContent = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Event Settings</h3>
+        <Button onClick={() => {
+          setEditingSetting(null);
+          setIsSettingDialogOpen(true);
+        }}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Setting
+        </Button>
+      </div>
+
+      <div className="grid gap-4">
+        {settings.map((setting) => (
+          <Card key={setting.id}>
+            <CardContent className="p-4">
+              <div className="flex justify-between items-center">
+                <div className="space-y-1">
+                  <h4 className="font-semibold">{setting.key}</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Value: {setting.value}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setEditingSetting(setting);
+                      setIsSettingDialogOpen(true);
+                    }}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setSettings(settings.filter(s => s.id !== setting.id));
+                    }}
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {isEdit && (
+        <div className="flex justify-end mt-6">
+          <SaveButton />
+        </div>
+      )}
+
+      <Dialog open={isSettingDialogOpen} onOpenChange={setIsSettingDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingSetting ? 'Edit Setting' : 'Add Setting'}
+            </DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const newSetting = {
+                id: editingSetting?.id || Date.now().toString(),
+                key: formData.get('key') as string,
+                value: formData.get('value') as string,
+              };
+
+              if (editingSetting) {
+                setSettings(settings.map(s =>
+                  s.id === editingSetting.id ? newSetting : s
+                ));
+              } else {
+                setSettings([...settings, newSetting]);
+              }
+
+              setIsSettingDialogOpen(false);
+            }}
+            className="space-y-4"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="key">Setting Key</Label>
+              <Input
+                id="key"
+                name="key"
+                defaultValue={editingSetting?.key}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="value">Setting Value</Label>
+              <Input
+                id="value"
+                name="value"
+                defaultValue={editingSetting?.value}
+                required
+              />
+            </div>
+            <Button type="submit">
+              {editingSetting ? 'Update Setting' : 'Add Setting'}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-6">
       <Card className="bg-white shadow-sm border border-gray-200">
