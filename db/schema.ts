@@ -141,6 +141,8 @@ export const events = pgTable("events", {
   details: text("details"),
   agreement: text("agreement"),
   refundPolicy: text("refund_policy"),
+  isArchived: boolean("is_archived").default(false).notNull(),
+  scheduledDeletionDate: text("scheduled_deletion_date"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });

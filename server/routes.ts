@@ -1437,6 +1437,31 @@ export function registerRoutes(app: Express): Server {
     });
 
     // Add this new update endpoint after the existing event creation endpoint
+    app.post('/api/admin/events/:id/archive', isAdmin, async (req, res) => {
+      try {
+        const eventId = req.params.id;
+        const { archive } = req.body;
+        
+        const scheduledDeletionDate = archive ? 
+          new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() : 
+          null;
+
+        await db
+          .update(events)
+          .set({ 
+            isArchived: archive,
+            scheduledDeletionDate,
+            updatedAt: new Date().toISOString()
+          })
+          .where(eq(events.id, eventId));
+
+        res.json({ message: "Event archive status updated successfully" });
+      } catch (error) {
+        console.error('Error updating event archive status:', error);
+        res.status(500).json({ error: "Failed to update event archive status" });
+      }
+    });
+
     app.patch('/api/admin/events/:id', isAdmin, async (req, res) => {
       try {
         const eventId = req.params.id;

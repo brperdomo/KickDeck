@@ -1198,14 +1198,50 @@ function EventsView() {
   const [, navigate] = useLocation();
   const { user } = useUser();
   const { toast } = useToast();
+  const [filteredEvents, setFilteredEvents] = useState<any[]>([]);
+  const [showArchived, setShowArchived] = useState(false);
+  const queryClient = useQueryClient();
+  
   const eventsQuery = useQuery({
-    queryKey: ['/api/admin/events'],
+    queryKey: ['/api/admin/events', showArchived],
     queryFn: async () => {
-      const response = await fetch('/api/admin/events');
+      const response = await fetch(`/api/admin/events?archived=${showArchived}`);
       if (!response.ok) throw new Error('Failed to fetch events');
       return response.json();
     }
   });
+
+  const archiveEventMutation = useMutation({
+    mutationFn: async ({ eventId, archive }: { eventId: number, archive: boolean }) => {
+      const response = await fetch(`/api/admin/events/${eventId}/archive`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ archive }),
+      });
+      if (!response.ok) throw new Error('Failed to archive event');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['/api/admin/events']);
+      toast({
+        title: "Success",
+        description: "Event archive status updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update archive status",
+        variant: "destructive",
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (eventsQuery.data) {
+      setFilteredEvents(eventsQuery.data);
+    }
+  }, [eventsQuery.data]);
 
   if (eventsQuery.isLoading) {
     return (
@@ -1235,11 +1271,18 @@ function EventsView() {
                   placeholder="Search events..."
                   className="w-[300px]"
                 />
+                <Button
+                  variant="outline"
+                  onClick={() => setShowArchived(!showArchived)}
+                >
+                  {showArchived ? "Show Active Events" : "Show Archived Events"}
+                </Button>
                 <Select defaultValue="all" onValueChange={(value) => {
-                  const filteredEvents = eventsQuery.data?.filter((event: any) => {
+                  if (!eventsQuery.data) return;
+                  const now = new Date();
+                  const events = eventsQuery.data.filter((event: any) => {
                     if (value === 'all') return true;
                     
-                    const now = new Date();
                     const start = new Date(event.startDate);
                     const end = new Date(event.endDate);
                     end.setHours(23, 59, 59, 999);
@@ -1250,7 +1293,7 @@ function EventsView() {
                     
                     return false;
                   });
-                  eventsQuery.data = filteredEvents;
+                  setFilteredEvents(events);
                 }}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Status" />
@@ -1274,7 +1317,7 @@ function EventsView() {
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader><TableBody>
-                {eventsQuery.data?.map((event: any) => (
+                {filteredEvents.map((event: any) => (
                   <TableRow key={event.id}>
                     <TableCell className="font-medium">{event.name}</TableCell>
                     <TableCell>{event.startDate} - {event.endDate}</TableCell>
@@ -1339,6 +1382,31 @@ function EventsView() {
                             <Link2 className="mr-2 h-4 w-4" />
                             Generate Registration Link
                           </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={() => archiveEventMutation.mutate({ 
+                              eventId: event.id, 
+                              archive: !event.isArchived 
+                            })}
+                          >
+                            {event.isArchived ? (
+                              <>
+                                <Eye className="mr-2 h-4 w-4" />
+                                Unarchive Event
+                              </>
+                            ) : (
+                              <>
+                                <Archive className="mr-2 h-4 w-4" />
+                                Archive Event
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          {event.isArchived && (
+                            <DropdownMenuItem className="text-muted-foreground">
+                              <Clock className="mr-2 h-4 w-4" />
+                              Scheduled deletion: {new Date(event.scheduledDeletionDate).toLocaleDateString()}
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem className="text-red-600">
                             <Trash className="mr-2 h-4 w-4" />
