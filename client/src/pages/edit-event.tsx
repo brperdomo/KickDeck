@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
-// Importing all the necessary components from create-event
+// Importing all the necessary components for form
 import {
   Form,
   FormControl,
@@ -19,7 +19,21 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+
+// Form schema
+const formSchema = z.object({
+  name: z.string().min(1, "Event name is required"),
+  startDate: z.string().min(1, "Start date is required"),
+  endDate: z.string().min(1, "End date is required"),
+  applicationDeadline: z.string().min(1, "Application deadline is required"),
+  timezone: z.string().optional(),
+  details: z.string().optional(),
+  agreement: z.string().optional(),
+  refundPolicy: z.string().optional()
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 export default function EditEvent() {
   const { id } = useParams();
@@ -28,6 +42,7 @@ export default function EditEvent() {
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
 
+  // Query for fetching event data
   const eventQuery = useQuery({
     queryKey: ['event', id],
     queryFn: async () => {
@@ -41,8 +56,24 @@ export default function EditEvent() {
     },
   });
 
+  // Initialize form with event data
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: eventQuery.data?.name || "",
+      startDate: eventQuery.data?.startDate?.split('T')[0] || "",
+      endDate: eventQuery.data?.endDate?.split('T')[0] || "",
+      applicationDeadline: eventQuery.data?.applicationDeadline?.split('T')[0] || "",
+      timezone: eventQuery.data?.timezone || "",
+      details: eventQuery.data?.details || "",
+      agreement: eventQuery.data?.agreement || "",
+      refundPolicy: eventQuery.data?.refundPolicy || ""
+    }
+  });
+
+  // Mutation for updating event
   const updateEventMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: FormValues) => {
       setIsSaving(true);
       try {
         const response = await fetch(`/api/admin/events/${id}`, {
@@ -50,12 +81,7 @@ export default function EditEvent() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            name: data.name?.trim(),
-            startDate: data.startDate,
-            endDate: data.endDate,
-            applicationDeadline: data.applicationDeadline
-          })
+          body: JSON.stringify(data)
         });
 
         if (!response.ok) {
@@ -106,8 +132,8 @@ export default function EditEvent() {
     );
   }
 
-  const handleSubmit = async (formData: any) => {
-    await updateEventMutation.mutateAsync(formData);
+  const onSubmit = async (data: FormValues) => {
+    await updateEventMutation.mutateAsync(data);
   };
 
   return (
@@ -133,41 +159,80 @@ export default function EditEvent() {
             </TabsList>
 
             <TabsContent value="general">
-              {eventQuery.data && (
-                <Form {...eventQuery.data}>
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <FormField
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Event Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} defaultValue={eventQuery.data.name} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Event Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                    {/* Add other form fields here similar to create-event.tsx */}
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Start Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                    <Button 
-                      type="submit" 
-                      disabled={isSaving}
-                      className="w-full"
-                    >
-                      {isSaving ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Saving Changes
-                        </>
-                      ) : (
-                        'Save Changes'
-                      )}
-                    </Button>
-                  </form>
-                </Form>
-              )}
+                  <FormField
+                    control={form.control}
+                    name="endDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>End Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="applicationDeadline"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Registration Deadline</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button 
+                    type="submit" 
+                    disabled={isSaving}
+                    className="w-full"
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving Changes
+                      </>
+                    ) : (
+                      'Save Changes'
+                    )}
+                  </Button>
+                </form>
+              </Form>
             </TabsContent>
           </Tabs>
         </CardContent>
