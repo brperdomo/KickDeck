@@ -364,11 +364,6 @@ export function EventsTable() {
                             }
 
                             try {
-                              toast({
-                                title: "Deleting event...",
-                                description: "Please wait while the event is being deleted.",
-                              });
-
                               const response = await fetch(`/api/admin/events/${event.id}`, {
                                 method: 'DELETE',
                                 headers: {
@@ -385,10 +380,11 @@ export function EventsTable() {
                               toast({
                                 title: "Success",
                                 description: "Event deleted successfully",
+                                variant: "default"
                               });
 
-                              // Force refetch events
-                              await eventsQuery.refetch();
+                              // Invalidate and refetch events data
+                              eventsQuery.refetch();
                             } catch (error) {
                               console.error('Delete error:', error);
                               toast({
