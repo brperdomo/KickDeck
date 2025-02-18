@@ -40,6 +40,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ComplexEditor } from "@/components/ComplexEditor";
 import { ComplexSelector } from "@/components/events/ComplexSelector";
 import { useDropzone } from 'react-dropzone';
+import { QueryClient } from '@tanstack/react-query';
 
 interface Complex {
   id: number;
@@ -76,29 +77,14 @@ interface EventData {
   branding?: EventBranding;
 }
 
-const validateEventData = (data: Partial<EventData>, selectedScopeId: number | null, selectedAgeGroupIds: number[]): { isValid: boolean; errors: string[] } => {
+const validateEventData = (data: Partial<EventData>): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
 
-  // Validate basic event information
+  // Validate only the required fields
   if (!data.name) errors.push("Event name is required");
   if (!data.startDate) errors.push("Start date is required");
   if (!data.endDate) errors.push("End date is required");
-  if (!data.timezone) errors.push("Timezone is required");
-  if (!data.applicationDeadline) errors.push("Application deadline is required");
-
-  // Validate seasonal scope and age groups
-  if (!selectedScopeId) {
-    errors.push("A seasonal scope must be selected");
-  }
-
-  if (selectedAgeGroupIds.length === 0) {
-    errors.push("At least one age group must be selected from the chosen seasonal scope");
-  }
-
-  // Validate complex selection
-  if (!data.selectedComplexIds || data.selectedComplexIds.length === 0) {
-    errors.push("At least one complex must be selected");
-  }
+  if (!data.applicationDeadline) errors.push("Registration deadline is required");
 
   return {
     isValid: errors.length === 0,
@@ -273,7 +259,7 @@ export default function CreateEvent() {
   const { toast } = useToast();
   const [isComplexDialogOpen, setIsComplexDialogOpen] = useState(false);
   const [editingComplex, setEditingComplex] = useState<Complex | null>(null);
-  const queryClient = useQueryClient();
+  const queryClient = new QueryClient();
   const [logo, setLogo] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [primaryColor, setPrimaryColor] = useState('#000000');
@@ -503,7 +489,7 @@ export default function CreateEvent() {
       });
 
       setIsComplexDialogOpen(false);
-      await queryClient.invalidateQueries(['/api/admin/complexes']);
+      await queryClient.invalidateQueries({ queryKey: ['/api/admin/complexes'] });
     } catch (error) {
       console.error('Error creating complex:', error);
       toast({
@@ -537,7 +523,7 @@ export default function CreateEvent() {
 
       setIsComplexDialogOpen(false);
       setEditingComplex(null);
-      await queryClient.invalidateQueries(['/api/admin/complexes']);
+      await queryClient.invalidateQueries({ queryKey: ['/api/admin/complexes'] });
     } catch (error) {
       console.error('Error updating complex:', error);
       toast({
@@ -792,7 +778,7 @@ export default function CreateEvent() {
 
       <Dialog open={!!viewingComplexId} onOpenChange={(open) => !open && setViewingComplexId(null)}>
         <DialogContent className="max-w-3xl" aria-describedby="dialog-description">
-  <div id="dialog-description" className="sr-only">Field details and configuration options</div>
+          <div id="dialog-description" className="sr-only">Field details and configuration options</div>
           <DialogHeader>
             <DialogTitle>
               Fields in {complexesQuery.data?.find(c => c.id === viewingComplexId)?.name}
@@ -871,96 +857,67 @@ export default function CreateEvent() {
       setIsSaving(true);
       const formValues = form.getValues();
 
-      // Validate required fields
-      if (!formValues.name || !formValues.startDate || !formValues.endDate || !formValues.timezone || !formValues.applicationDeadline) {
+      // Validate only required fields
+      if (!formValues.name || !formValues.startDate || !formValues.endDate || !formValues.applicationDeadline) {
         setIsSaving(false);
         toast({
           title: "Error",
-          description: "Please fill in all required event information fields",
+          description: "Please fill in all required fields: Event Name, Start Date, End Date, and Registration Deadline",
           variant: "destructive",
         });
         return;
       }
 
+      // Get selected age groups if any are selected
       const selectedScope = seasonalScopesQuery.data?.find(scope => scope.id === selectedScopeId);
       const selectedAgeGroups = selectedScope?.ageGroups.filter(group =>
         selectedAgeGroupIds.includes(group.id)
       ) || [];
 
-      // Prepare event data
+      // Prepare event data with all fields (required and optional)
       const eventData = {
-        name: formValues.name || "",
-        startDate: formValues.startDate || "",
-        endDate: formValues.endDate || "",
-        timezone: formValues.timezone || "",
-        applicationDeadline: formValues.applicationDeadline || "",
+        name: formValues.name,
+        startDate: formValues.startDate,
+        endDate: formValues.endDate,
+        timezone: formValues.timezone || "America/New_York", // Default timezone
+        applicationDeadline: formValues.applicationDeadline,
         details: formValues.details || "",
         agreement: formValues.agreement || "",
         refundPolicy: formValues.refundPolicy || "",
         ageGroups: selectedAgeGroups.map(group => ({
           id: generateId(),
-          gender: group.gender as"Male" | "Female" | "Coed",
+          gender: group.gender as "Male" | "Female" | "Coed",
           projectedTeams: 20,
-          birthDateStart: new Date(group.minBirthYear, 0, 1).toISOString(),
-          birthDateEnd: new Date(group.maxBirthYear, 11, 31).toISOString(),
-          scoringRule: scoringRules[0]?.id || '',
+          birthDateStart: group.minBirthYear ? new Date(group.minBirthYear, 0, 1).toISOString() : undefined,
+          birthDateEnd: group.maxBirthYear ? new Date(group.maxBirthYear, 11, 31).toISOString() : undefined,
+          scoringRule: scoringRules[0]?.id || undefined,
           ageGroup: group.ageGroup,
-          fieldSize:"11v11" as FieldSize,
+          fieldSize: "11v11" as FieldSize,
           amountDue: 0
         })),
         complexFieldSizes: eventFieldSizes,
         selectedComplexIds: selectedComplexes.map(complex => complex.id),
         branding: {
           primaryColor,
-          secondaryColor,
-          logoUrl: previewUrl || undefined,
+          secondaryColor,          logoUrl: previewUrl || undefined,
         }
       };
 
-      // Validate the event data with seasonal scope context
-      const validation = validateEventData(eventData, selectedScopeId, selectedAgeGroupIds);
+      // Validate only the required fields
+      const validation = validateEventData(eventData);
       if (!validation.isValid) {
         setIsSaving(false);
         throw new Error(`Validation failed:\n${validation.errors.join('\n')}`);
       }
 
-      // Create FormData instance
+      // Create FormData instance for file upload
       const formData = new FormData();
       if (logo) {
         formData.append('logo', logo);
       }
       formData.append('data', JSON.stringify(eventData));
 
-      // Log the data being sent
-      console.log('Submitting event data:', eventData);
-
-      // Validate required event data before making request
-      if (!selectedScopeId) {
-        setIsSaving(false);
-        throw new Error("Please select a seasonal scope first");
-      }
-
-      if (selectedAgeGroupIds.length === 0) {
-        setIsSaving(false);
-        throw new Error("Please select at least one age group from the chosen seasonal scope");
-      }
-
-      if (!eventData.name || !eventData.startDate || !eventData.endDate || !eventData.timezone || !eventData.applicationDeadline) {
-        setIsSaving(false);
-        throw new Error("Please fill in all required event information fields");
-      }
-
-      if (selectedComplexIds.length === 0) {
-        setIsSaving(false);
-        throw new Error("Please select at least one complex for the event");
-      }
-
-      // Ensure age groups are selected
-      if (!selectedAgeGroupIds.length) {
-        setIsSaving(false);
-        throw new Error("Please select at least one age group from the chosen seasonal scope");
-      }
-
+      // Make the API request
       const response = await fetch('/api/admin/events', {
         method: 'POST',
         body: formData,
@@ -972,25 +929,25 @@ export default function CreateEvent() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        setIsSaving(false);
-        throw new Error(errorData.error || 'Failed to create event. Please check all required fields.');
+        throw new Error(errorData.message || 'Failed to create event');
       }
 
+      // Handle successful creation
+      const createdEvent = await response.json();
       toast({
         title: "Success",
-        description: "Event created successfully! Redirecting to dashboard...",
-        variant: "default",
+        description: "Event created successfully",
       });
 
-      setTimeout(() => {
-        navigate("/admin");
-      }, 1500);
+      // Navigate to admin dashboard
+      navigate("/admin");
+
     } catch (error) {
       console.error('Error creating event:', error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to create event",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSaving(false);
@@ -1001,7 +958,7 @@ export default function CreateEvent() {
     const validateTabs = () => {
       const formValues = form.getValues();
       const errors: Record<EventTab, boolean> = {
-        information: !formValues.name || !formValues.startDate || !formValues.endDate || !formValues.timezone || !formValues.applicationDeadline,
+        information: !formValues.name || !formValues.startDate || !formValues.endDate || !formValues.applicationDeadline,
         'age-groups': !selectedScopeId || selectedAgeGroupIds.length === 0,
         scoring: scoringRules.length === 0,
         complexes: selectedComplexIds.length === 0,
@@ -1423,7 +1380,7 @@ export default function CreateEvent() {
                               setAgeGroups(groups =>
                                 groups.map(g =>
                                   g.id === group.id
-                                    ? { ...g, scoringRule: value === "none" ? null : value }
+                                    ? { ...g, scoringRule: value === "none" ? undefined : value }
                                     : g
                                 )
                               );
