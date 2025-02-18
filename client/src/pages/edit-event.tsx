@@ -38,21 +38,25 @@ import { Badge } from "@/components/ui/badge";
 import { ComplexSelector } from "@/components/events/ComplexSelector";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useDropzone } from 'react-dropzone';
-import type {
-  EventTab,
-  AgeGroup,
-  Complex,
-  Field,
-  FieldSize,
-  EventInformationValues,
-  ScoringRuleValues,
-  EventData,
-  ScoringRule,
-  USA_TIMEZONES,
+import {
+  type EventTab,
+  type AgeGroup,
+  type Complex,
+  type Field,
+  type FieldSize,
+  type EventInformationValues,
+  type ScoringRuleValues,
+  type EventData,
+  type ScoringRule,
   TAB_ORDER,
-  eventInformationSchema,
-  scoringRuleSchema,
+  USA_TIMEZONES,
 } from "@/components/forms/event-form-types";
+import { 
+  createEventSchema,
+  ageGroupSchema,
+  scoringRuleSchema 
+} from "@/lib/validations/event";
+import { z } from "zod";
 
 const ProgressIndicator = ({ tabs, completedTabs }: { tabs: EventTab[], completedTabs: EventTab[] }) => {
   return (
@@ -166,7 +170,7 @@ export default function EditEvent() {
   });
 
   const form = useForm<EventInformationValues>({
-    resolver: zodResolver(eventInformationSchema),
+    resolver: zodResolver(createEventSchema),
     defaultValues: {
       name: eventQuery.data?.name || "",
       startDate: eventQuery.data?.startDate || "",
@@ -180,16 +184,13 @@ export default function EditEvent() {
   });
 
   const ageGroupForm = useForm({
-    resolver: zodResolver(eventInformationSchema),
+    resolver: zodResolver(ageGroupSchema),
     defaultValues: editingAgeGroup || {
       gender: 'Male',
       projectedTeams: 0,
-      birthDateStart: '',
-      birthDateEnd: '',
-      scoringRule: '',
       ageGroup: '',
       fieldSize: '11v11' as FieldSize,
-      amountDue: null,
+      amountDue: 0,
     },
   });
 
@@ -302,6 +303,29 @@ export default function EditEvent() {
     maxFiles: 1,
     multiple: false
   });
+
+  const handleEditScoringRule = (rule: ScoringRule) => {
+    setEditingScoringRule(rule);
+    scoringForm.reset(rule);
+    setIsScoringModalOpen(true);
+  };
+
+  const handleDeleteScoringRule = (ruleId: number) => {
+    setScoringRules(prev => prev.filter(rule => rule.id !== ruleId));
+  };
+
+  const handleScoringRuleSubmit = (data: ScoringRuleValues) => {
+    if (editingScoringRule) {
+      setScoringRules(prev => prev.map(rule =>
+        rule.id === editingScoringRule.id ? { ...data, id: rule.id } : rule
+      ));
+    } else {
+      setScoringRules(prev => [...prev, { ...data, id: Date.now() }]);
+    }
+    setEditingScoringRule(null);
+    setIsScoringModalOpen(false);
+    scoringForm.reset();
+  };
 
   if (eventQuery.isLoading) {
     return (
@@ -908,7 +932,6 @@ export default function EditEvent() {
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </div>
-
                   <Card>
                     <CardContent className="pt-6">
                       <div className="space-y-4">
