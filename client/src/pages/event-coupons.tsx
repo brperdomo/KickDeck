@@ -37,13 +37,15 @@ const couponFormSchema = z.object({
   description: z.string().optional(),
 });
 
+type CouponFormValues = z.infer<typeof couponFormSchema>;
+
 export default function EventCouponsPage() {
-  const [location, navigate] = useLocation();
+  const [, navigate] = useLocation();
   const { eventId } = useParams();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const { toast } = useToast();
 
-  const form = useForm({
+  const form = useForm<CouponFormValues>({
     resolver: zodResolver(couponFormSchema),
     defaultValues: {
       code: "",
@@ -64,7 +66,7 @@ export default function EventCouponsPage() {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof couponFormSchema>) => {
+  const onSubmit = async (values: CouponFormValues) => {
     try {
       const response = await fetch(`/api/admin/events/${eventId}/coupons`, {
         method: "POST",
@@ -96,10 +98,12 @@ export default function EventCouponsPage() {
     <div className="container mx-auto p-8">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => navigate("/admin")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
+          <Link href="/admin">
+            <Button variant="ghost">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+          </Link>
           <h1 className="text-2xl font-bold">Event Coupons</h1>
         </div>
         <Button onClick={() => setIsCreateModalOpen(true)}>
@@ -167,7 +171,7 @@ export default function EventCouponsPage() {
                         {...field}
                         type="number"
                         onChange={(e) => field.onChange(Number(e.target.value))}
-                        placeholder={field.value === "fixed" ? "Enter amount" : "Enter percentage"}
+                        placeholder={form.watch("discountType") === "fixed" ? "Enter amount" : "Enter percentage"}
                       />
                     </FormControl>
                     <FormMessage />
@@ -244,7 +248,7 @@ export default function EventCouponsPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {coupons?.map((coupon: any) => (
+          {coupons?.map((coupon) => (
             <TableRow key={coupon.id}>
               <TableCell className="font-medium">{coupon.code}</TableCell>
               <TableCell>
