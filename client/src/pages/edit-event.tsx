@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EventForm } from "@/components/forms/EventForm";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function EditEvent() {
   const { id } = useParams();
@@ -22,27 +23,6 @@ export default function EditEvent() {
       return response.json();
     },
   });
-
-  if (eventQuery.isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        <div className="flex items-center justify-center min-h-[200px]">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      </div>
-    );
-  }
-
-  if (eventQuery.error) {
-    return (
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        <div className="text-center text-destructive space-y-4">
-          <p>Failed to load event details</p>
-          <Button onClick={() => navigate("/admin")}>Return to Dashboard</Button>
-        </div>
-      </div>
-    );
-  }
 
   const handleSubmit = async (data: any) => {
     try {
@@ -74,24 +54,68 @@ export default function EditEvent() {
     }
   };
 
-  return (
-    <div className="container mx-auto px-4 py-6 max-w-7xl">
-      <div className="flex items-center gap-4 mb-6">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate("/admin")}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h2 className="text-2xl font-bold">Edit Event</h2>
+  if (eventQuery.isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
+    );
+  }
 
-      <EventForm
-        initialData={eventQuery.data}
-        onSubmit={handleSubmit}
-        isEdit={true}
-      />
+  if (eventQuery.error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center text-destructive space-y-4">
+                <p>Failed to load event details</p>
+                <Button onClick={() => navigate("/admin")}>Return to Dashboard</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        <Card className="mb-8">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/admin")}
+                className="rounded-full"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <CardTitle className="text-2xl font-bold">Edit Event</CardTitle>
+            </div>
+          </CardHeader>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <EventForm
+              initialData={eventQuery.data}
+              onSubmit={handleSubmit}
+              isEdit={true}
+            />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
