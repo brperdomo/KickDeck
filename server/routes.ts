@@ -28,6 +28,7 @@ import {
   eventComplexes,
   eventFieldSizes,
   files,
+  coupons,
 } from "@db/schema";
 import fs from "fs/promises";
 import path from "path";
@@ -994,7 +995,8 @@ export function registerRoutes(app: Express): Server {
             .returning();
         } else {
           [settings] = await db
-            .insert(organizationSettings)            .values({
+            .insert(organizationSettings)
+            .values({
               ...updatedSettings,
               createdAt: new Date().toISOString(),
             })
@@ -1007,6 +1009,150 @@ export function registerRoutes(app: Express): Server {
         // Added basic error logging for white screen debugging.
         console.error("Error details:", error);
         res.status(500).send("Internal server error");
+      }
+    });
+
+    // Coupon management endpoints
+    app.get('/api/admin/coupons', isAdmin, async (req, res) => {
+      try {
+        const eventId = req.query.eventId as string;
+        const query = db.select().from(coupons);
+
+        if (eventId) {
+          query.where(eq(coupons.eventId, eventId));
+        }
+
+        const allCoupons = await query;
+        res.json(allCoupons);
+      } catch (error) {
+        console.error('Error fetching coupons:', error);
+        res.status(500).json({ message: "Failed to fetch coupons" });
+      }
+    });
+
+    app.post('/api/admin/coupons', isAdmin, async (req, res) => {
+      try {
+        const {
+          code,
+          discountType,
+          amount,
+          expirationDate,
+          description,
+          eventId,
+          maxUses,
+        } = req.body;
+
+        // Verify if coupon code already exists
+        const [existingCoupon] = await db
+          .select()
+          .from(coupons)
+          .where(eq(coupons.code, code))
+          .limit(1);
+
+        if (existingCoupon) {
+          return res.status(400).json({ message: "Coupon code already exists" });
+        }
+
+        const [newCoupon] = await db
+          .insert(coupons)
+          .values({
+            code,
+            discountType,
+            amount,
+            expirationDate: expirationDate ? new Date(expirationDate) : null,
+            description,
+            eventId,
+            maxUses,
+            usageCount: 0,
+            isActive: true,
+          })
+          .returning();
+
+        res.json(newCoupon);
+      } catch (error) {
+        console.error('Error creating coupon:', error);
+        res.status(500).json({ message: "Failed to create coupon" });
+      }
+    });
+
+    app.patch('/api/admin/coupons/:id', isAdmin, async (req, res) => {
+      try {
+        const couponId = parseInt(req.params.id);
+        const {
+          code,
+          discountType,
+          amount,
+          expirationDate,
+          description,
+          eventId,
+          maxUses,
+          isActive
+        } = req.body;
+
+        // Check if the coupon exists
+        const [existingCoupon] = await db
+          .select()
+          .from(coupons)
+          .where(eq(coupons.id, couponId))
+          .limit(1);
+
+        if (!existingCoupon) {
+          return res.status(404).json({ message: "Coupon not found" });
+        }
+
+        // Check if the new code already exists (if code is being changed)
+        if (code !== existingCoupon.code) {
+          const [duplicateCoupon] = await db
+            .select()
+            .from(coupons)
+            .where(eq(coupons.code, code))
+            .limit(1);
+
+          if (duplicateCoupon) {
+            return res.status(400).json({ message: "Coupon code already exists" });
+          }
+        }
+
+        const [updatedCoupon] = await db
+          .update(coupons)
+          .set({
+            code,
+            discountType,
+            amount,
+            expirationDate: expirationDate ? new Date(expirationDate) : null,
+            description,
+            eventId,
+            maxUses,
+            isActive,
+            updatedAt: new Date()
+          })
+          .where(eq(coupons.id, couponId))
+          .returning();
+
+        res.json(updatedCoupon);
+      } catch (error) {
+        console.error('Error updating coupon:', error);
+        res.status(500).json({ message: "Failed to update coupon" });
+      }
+    });
+
+    app.delete('/api/admin/coupons/:id', isAdmin, async (req, res) => {
+      try {
+        const couponId = parseInt(req.params.id);
+
+        const [deletedCoupon] = await db
+          .delete(coupons)
+          .where(eq(coupons.id, couponId))
+          .returning();
+
+        if (!deletedCoupon) {
+          return res.status(404).json({ message: "Coupon not found" });
+        }
+
+        res.json({ message: "Coupon deleted successfully" });
+      } catch (error) {
+        console.error('Error deleting coupon:', error);
+        res.status(500).json({ message: "Failed to delete coupon" });
       }
     });
 
