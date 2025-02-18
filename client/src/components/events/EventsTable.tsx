@@ -70,9 +70,48 @@ export function EventsTable() {
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
+  const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
+  const [showBulkActions, setShowBulkActions] = useState(false);
+
   const eventsQuery = useQuery<Event[]>({
     queryKey: ["/api/admin/events"],
   });
+
+  const handleBulkDelete = async () => {
+    if (!confirm('Are you sure you want to delete these events? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/events/bulk', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ eventIds: selectedEvents }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete events');
+      }
+
+      toast({
+        title: "Success",
+        description: "Selected events deleted successfully",
+      });
+
+      setSelectedEvents([]);
+      eventsQuery.refetch();
+    } catch (error) {
+      console.error('Error deleting events:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete events",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -143,6 +182,22 @@ export function EventsTable() {
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-4">
+            {selectedEvents.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    Bulk Actions ({selectedEvents.length})
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={handleBulkDelete} className="text-destructive">
+                    <Trash className="mr-2 h-4 w-4" />
+                    Delete Selected
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -172,6 +227,19 @@ export function EventsTable() {
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
+                <TableHead className="w-[50px]">
+                  <Checkbox
+                    checked={selectedEvents.length === filteredEvents.length}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedEvents(filteredEvents.map(e => e.id.toString()));
+                      } else {
+                        setSelectedEvents([]);
+                      }
+                      setShowBulkActions(!!checked);
+                    }}
+                  />
+                </TableHead>
                 <TableHead 
                   className="font-semibold cursor-pointer"
                   onClick={() => handleSort("name")}
@@ -198,6 +266,19 @@ export function EventsTable() {
             <TableBody>
               {filteredEvents.map((event) => (
                 <TableRow key={event.id} className="hover:bg-muted/50">
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedEvents.includes(event.id.toString())}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedEvents([...selectedEvents, event.id.toString()]);
+                        } else {
+                          setSelectedEvents(selectedEvents.filter(id => id !== event.id.toString()));
+                        }
+                        setShowBulkActions(selectedEvents.length > 0);
+                      }}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">{event.name}</TableCell>
                   <TableCell>{formatDate(event.startDate)}</TableCell>
                   <TableCell>{formatDate(event.endDate)}</TableCell>
@@ -277,16 +358,30 @@ export function EventsTable() {
                           <Eye className="mr-2 h-4 w-4" />
                           View Registration Link
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           className="text-red-600"
                           onClick={async () => {
+                            if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+                              return;
+                            }
+                            
                             try {
+                              toast({
+                                title: "Deleting event...",
+                                description: "Please wait while the event is being deleted.",
+                              });
+                              
                               const response = await fetch(`/api/admin/events/${event.id}`, {
                                 method: 'DELETE',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                },
+                                credentials: 'include'
                               });
 
                               if (!response.ok) {
-                                throw new Error('Failed to delete event');
+                                const errorData = await response.json();
+                                throw new Error(errorData.message || 'Failed to delete event');
                               }
 
                               toast({
@@ -294,9 +389,10 @@ export function EventsTable() {
                                 description: "Event deleted successfully",
                               });
 
-                              // Refetch events
-                              eventsQuery.refetch();
+                              // Force refetch events
+                              await eventsQuery.refetch();
                             } catch (error) {
+                              console.error('Delete error:', error);
                               toast({
                                 title: "Error",
                                 description: error instanceof Error ? error.message : "Failed to delete event",

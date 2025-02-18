@@ -93,7 +93,7 @@ export function registerRoutes(app: Express): Server {
     app.get('/api/admin/events/:id', isAdmin, async (req, res) => {
       try {
         const eventId = req.params.id; // Remove parseInt since ID is string
-        
+
         // Simplified query to get basic event data
         const event = await db
           .select({
@@ -994,8 +994,7 @@ export function registerRoutes(app: Express): Server {
             .returning();
         } else {
           [settings] = await db
-            .insert(organizationSettings)
-            .values({
+            .insert(organizationSettings)            .values({
               ...updatedSettings,
               createdAt: new Date().toISOString(),
             })
@@ -1937,8 +1936,7 @@ export function registerRoutes(app: Express): Server {
                   endTime: endTime.toISOString(),
                   dayIndex,
                   createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString(),
-                });
+                  updatedAt: new Date().toISOString(),                });
 
                 // Add break time before next game
                 currentTime = new Date(endTime.getTime() + (breakBetweenGames * 60 * 1000));
@@ -2287,6 +2285,38 @@ export function registerRoutes(app: Express): Server {
         // Added basic error logging for white screen debugging.
         console.error("Error details:", error);
         res.status(500).send("Failed to fetch events");
+      }
+    });
+
+    // Bulk delete events endpoint
+    app.delete('/api/admin/events/bulk', isAdmin, async (req, res) => {
+      try {
+        const { eventIds } = req.body;
+
+        if (!Array.isArray(eventIds) || eventIds.length === 0) {
+          return res.status(400).json({ message: "No events selected" });
+        }
+
+        // Start a transaction to handle cascade deletion
+        await db.transaction(async (tx) => {
+          // Delete related records first
+          await tx.delete(eventAgeGroups).where(inArray(eventAgeGroups.eventId, eventIds));
+          await tx.execute(sql`DELETE FROM event_complexes WHERE event_id = ANY(${eventIds})`);
+          await tx.delete(eventFieldSizes).where(inArray(eventFieldSizes.eventId, eventIds));
+          await tx.delete(teams).where(inArray(teams.eventId, eventIds));
+
+          // Finally delete the events
+          await tx.delete(events).where(inArray(events.id, eventIds));
+        });
+
+        res.json({ message: "Events deleted successfully" });
+      } catch (error) {
+        console.error('Error deleting events:', error);
+        let errorMessage = "Failed to delete events";
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        res.status(500).send(errorMessage);
       }
     });
 
