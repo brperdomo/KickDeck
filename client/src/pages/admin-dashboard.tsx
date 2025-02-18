@@ -1235,7 +1235,23 @@ function EventsView() {
                   placeholder="Search events..."
                   className="w-[300px]"
                 />
-                <Select defaultValue="all">
+                <Select defaultValue="all" onValueChange={(value) => {
+                  const filteredEvents = eventsQuery.data?.filter((event: any) => {
+                    if (value === 'all') return true;
+                    
+                    const now = new Date();
+                    const start = new Date(event.startDate);
+                    const end = new Date(event.endDate);
+                    end.setHours(23, 59, 59, 999);
+
+                    if (value === 'past' && now > end) return true;
+                    if (value === 'active' && now >= start && now <= end) return true;
+                    if (value === 'upcoming' && now < start) return true;
+                    
+                    return false;
+                  });
+                  eventsQuery.data = filteredEvents;
+                }}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
@@ -1255,8 +1271,6 @@ function EventsView() {
                   <TableHead>Event Name</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Teams</TableHead>
-                  <TableHead>Location</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader><TableBody>
@@ -1265,16 +1279,30 @@ function EventsView() {
                     <TableCell className="font-medium">{event.name}</TableCell>
                     <TableCell>{event.startDate} - {event.endDate}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={
-                        event.status === 'open' ? "bg-green-50 text-green-700" :
-                          event.status === 'closed' ? "bg-red-50 text-red-700" :
-                            "bg-yellow-50 text-yellow-700"
-                      }>
-                        {event.status}
-                      </Badge>
+                      {(() => {
+                        const now = new Date();
+                        const start = new Date(event.startDate);
+                        const end = new Date(event.endDate);
+                        end.setHours(23, 59, 59, 999);
+
+                        let status = "Upcoming";
+                        let colorClass = "bg-yellow-50 text-yellow-700";
+
+                        if (now > end) {
+                          status = "Past";
+                          colorClass = "bg-red-50 text-red-700";
+                        } else if (now >= start && now <= end) {
+                          status = "Active";
+                          colorClass = "bg-green-50 text-green-700";
+                        }
+
+                        return (
+                          <Badge variant="outline" className={colorClass}>
+                            {status}
+                          </Badge>
+                        );
+                      })()}
                     </TableCell>
-                    <TableCell>{event.teamCount}/{event.maxTeams}</TableCell>
-                    <TableCell>{event.location}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
