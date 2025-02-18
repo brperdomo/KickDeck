@@ -92,8 +92,10 @@ export function registerRoutes(app: Express): Server {
     // Admin event details endpoint
     app.get('/api/admin/events/:id', isAdmin, async (req, res) => {
       try {
-        const eventId = req.params.id;
-        const [event] = await db
+        const eventId = req.params.id; // Remove parseInt since ID is string
+        
+        // Simplified query to get basic event data
+        const event = await db
           .select({
             id: events.id,
             name: events.name,
@@ -111,45 +113,11 @@ export function registerRoutes(app: Express): Server {
           .where(eq(events.id, eventId))
           .limit(1);
 
-        if (!event) {
+        if (!event || event.length === 0) {
           return res.status(404).json({ message: "Event not found" });
         }
 
-        // Get age groups
-        const ageGroups = await db
-          .select({
-            id: eventAgeGroups.id,
-            ageGroup: eventAgeGroups.ageGroup,
-            minAge: eventAgeGroups.minAge,
-            maxAge: eventAgeGroups.maxAge
-          })
-          .from(eventAgeGroups)
-          .where(eq(eventAgeGroups.eventId, eventId));
-
-        // Get complexes
-        const complexData = await db
-          .select({
-            complexId: eventComplexes.complexId,
-            fieldSize: eventFieldSizes.fieldSize
-          })
-          .from(eventComplexes)
-          .leftJoin(
-            eventFieldSizes,
-            and(
-              eq(eventFieldSizes.eventId, eventComplexes.eventId),
-              eq(eventFieldSizes.complexId, eventComplexes.complexId)
-            )
-          )
-          .where(eq(eventComplexes.eventId, eventId));
-
-        // Format the response
-        const response = {
-          ...event,
-          ageGroups,
-          complexes: complexData,
-        };
-
-        res.json(response);
+        res.json(event[0]);
       } catch (error) {
         console.error('Error fetching event details:', error);
         console.error("Error details:", error);
