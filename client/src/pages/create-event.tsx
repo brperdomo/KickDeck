@@ -859,72 +859,33 @@ export default function CreateEvent() {
       setIsSaving(true);
       const formValues = form.getValues();
 
-      // Validate required fields
-      if (!formValues.name?.trim()) {
-        throw new Error('Event name is required');
-      }
-      if (!formValues.startDate) {
-        throw new Error('Start date is required');
-      }
-      if (!formValues.endDate) {
-        throw new Error('End date is required');
-      }
-      if (!formValues.applicationDeadline) {
-        throw new Error('Registration deadline is required');
-      }
-
-      // Create the base event data with required fields
+      // Create a minimal event data object with only required fields
       const eventData = {
-        name: formValues.name.trim(),
-        startDate: new Date(formValues.startDate).toISOString(),
-        endDate: new Date(formValues.endDate).toISOString(),
-        applicationDeadline: new Date(formValues.applicationDeadline).toISOString(),
+        name: formValues.name?.trim(),
+        startDate: formValues.startDate,
+        endDate: formValues.endDate,
+        applicationDeadline: formValues.applicationDeadline
       };
 
-      // Add optional fields only if they have values
-      const optionalFields = {
-        timezone: formValues.timezone || undefined,
-        details: formValues.details || undefined,
-        agreement: formValues.agreement || undefined,
-        refundPolicy: formValues.refundPolicy || undefined,
-        ageGroups: [],
-        complexFieldSizes: Object.keys(eventFieldSizes).length > 0 ? eventFieldSizes : undefined,
-        selectedComplexIds: selectedComplexes.length > 0 ? selectedComplexes.map(complex => complex.id) : undefined,
-        branding: {
-          primaryColor: primaryColor || undefined,
-          secondaryColor: secondaryColor || undefined,
-          logoUrl: previewUrl || undefined,
-        }
-      };
+      console.log('Creating event with data:', JSON.stringify(eventData, null, 2));
 
-      // Combine required and optional fields
-      const completeEventData = {
-        ...eventData,
-        ...optionalFields
-      };
-
-      // Log the complete data for debugging
-      console.log('Creating event with data:', JSON.stringify(completeEventData, null, 2));
-
-      // Create FormData instance
-      const formData = new FormData();
-
-      // Append the logo file if exists
-      if (logo) {
-        formData.append('logo', logo);
-      }
-
-      // Append the stringified event data
-      formData.append('data', JSON.stringify(completeEventData));
-
-      // Make the API request
+      // Make the API request with JSON
       const response = await fetch('/api/admin/events', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(eventData)
       });
 
-      // Parse response data
-      const responseData = await response.json();
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (error) {
+        console.error('Failed to parse response:', error);
+        throw new Error('Invalid server response');
+      }
 
       // Check for errors
       if (!response.ok) {
