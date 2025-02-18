@@ -1199,42 +1199,14 @@ function EventsView() {
   const { user } = useUser();
   const { toast } = useToast();
   const [filteredEvents, setFilteredEvents] = useState<any[]>([]);
-  const [showArchived, setShowArchived] = useState(false);
-  const queryClient = useQueryClient();
-  
+  const [selectedEvents, setSelectedEvents] = useState<number[]>([]); // Add state for selected events
   const eventsQuery = useQuery({
-    queryKey: ['/api/admin/events', showArchived],
+    queryKey: ['/api/admin/events'],
     queryFn: async () => {
-      const response = await fetch(`/api/admin/events?archived=${showArchived}`);
+      const response = await fetch('/api/admin/events');
       if (!response.ok) throw new Error('Failed to fetch events');
       return response.json();
     }
-  });
-
-  const archiveEventMutation = useMutation({
-    mutationFn: async ({ eventId, archive }: { eventId: number, archive: boolean }) => {
-      const response = await fetch(`/api/admin/events/${eventId}/archive`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ archive }),
-      });
-      if (!response.ok) throw new Error('Failed to archive event');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['/api/admin/events']);
-      toast({
-        title: "Success",
-        description: "Event archive status updated successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update archive status",
-        variant: "destructive",
-      });
-    },
   });
 
   useEffect(() => {
@@ -1267,22 +1239,48 @@ function EventsView() {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-2">
+                {selectedEvents.length > 0 && (
+                  <Button
+                    variant="destructive"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/admin/events/bulk', {
+                          method: 'DELETE',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ eventIds: selectedEvents }),
+                        });
+
+                        if (!response.ok) throw new Error('Failed to delete events');
+
+                        setSelectedEvents([]);
+                        eventsQuery.refetch();
+                        toast({
+                          title: "Success",
+                          description: `${selectedEvents.length} events deleted successfully`,
+                        });
+                      } catch (error) {
+                        toast({
+                          title: "Error",
+                          description: "Failed to delete events",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                  >
+                    <Trash className="mr-2 h-4 w-4" />
+                    Delete Selected ({selectedEvents.length})
+                  </Button>
+                )}
                 <Input
                   placeholder="Search events..."
                   className="w-[300px]"
                 />
-                <Button
-                  variant="outline"
-                  onClick={() => setShowArchived(!showArchived)}
-                >
-                  {showArchived ? "Show Active Events" : "Show Archived Events"}
-                </Button>
                 <Select defaultValue="all" onValueChange={(value) => {
                   if (!eventsQuery.data) return;
                   const now = new Date();
                   const events = eventsQuery.data.filter((event: any) => {
                     if (value === 'all') return true;
-                    
+
                     const start = new Date(event.startDate);
                     const end = new Date(event.endDate);
                     end.setHours(23, 59, 59, 999);
@@ -1290,7 +1288,7 @@ function EventsView() {
                     if (value === 'past' && now > end) return true;
                     if (value === 'active' && now >= start && now <= end) return true;
                     if (value === 'upcoming' && now < start) return true;
-                    
+
                     return false;
                   });
                   setFilteredEvents(events);
@@ -1311,14 +1309,37 @@ function EventsView() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>
+                    <input type="checkbox" onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedEvents(filteredEvents.map((event: any) => event.id));
+                      } else {
+                        setSelectedEvents([]);
+                      }
+                    }} />
+                  </TableHead>
                   <TableHead>Event Name</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              </TableHeader><TableBody>
+              </TableHeader>
+              <TableBody>
                 {filteredEvents.map((event: any) => (
                   <TableRow key={event.id}>
+                    <TableCell>
+                      <input
+                        type="checkbox"
+                        checked={selectedEvents.includes(event.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedEvents([...selectedEvents, event.id]);
+                          } else {
+                            setSelectedEvents(selectedEvents.filter((id) => id !== event.id));
+                          }
+                        }}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">{event.name}</TableCell>
                     <TableCell>{event.startDate} - {event.endDate}</TableCell>
                     <TableCell>
@@ -1384,31 +1405,29 @@ function EventsView() {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
-                            onClick={() => archiveEventMutation.mutate({ 
-                              eventId: event.id, 
-                              archive: !event.isArchived 
-                            })}
+                            className="text-red-600"
+                            onClick={async () => {
+                              try {
+                                const response = await fetch(`/api/admin/events/${event.id}`, {
+                                  method: 'DELETE',
+                                });
+
+                                if (!response.ok) throw new Error('Failed to delete event');
+
+                                eventsQuery.refetch();
+                                toast({
+                                  title: "Success",
+                                  description: "Event deleted successfully",
+                                });
+                              } catch (error) {
+                                toast({
+                                  title: "Error",
+                                  description: "Failed to delete event",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
                           >
-                            {event.isArchived ? (
-                              <>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Unarchive Event
-                              </>
-                            ) : (
-                              <>
-                                <Archive className="mr-2 h-4 w-4" />
-                                Archive Event
-                              </>
-                            )}
-                          </DropdownMenuItem>
-                          {event.isArchived && (
-                            <DropdownMenuItem className="text-muted-foreground">
-                              <Clock className="mr-2 h-4 w-4" />
-                              Scheduled deletion: {new Date(event.scheduledDeletionDate).toLocaleDateString()}
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-600">
                             <Trash className="mr-2 h-4 w-4" />
                             Delete
                           </DropdownMenuItem>

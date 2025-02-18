@@ -1437,31 +1437,6 @@ export function registerRoutes(app: Express): Server {
     });
 
     // Add this new update endpoint after the existing event creation endpoint
-    app.post('/api/admin/events/:id/archive', isAdmin, async (req, res) => {
-      try {
-        const eventId = req.params.id;
-        const { archive } = req.body;
-        
-        const scheduledDeletionDate = archive ? 
-          new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() : 
-          null;
-
-        await db
-          .update(events)
-          .set({ 
-            isArchived: archive,
-            scheduledDeletionDate,
-            updatedAt: new Date().toISOString()
-          })
-          .where(eq(events.id, eventId));
-
-        res.json({ message: "Event archive status updated successfully" });
-      } catch (error) {
-        console.error('Error updating event archive status:', error);
-        res.status(500).json({ error: "Failed to update event archive status" });
-      }
-    });
-
     app.patch('/api/admin/events/:id', isAdmin, async (req, res) => {
       try {
         const eventId = req.params.id;
@@ -2351,7 +2326,13 @@ export function registerRoutes(app: Express): Server {
 
         // Start a transaction to handle cascade deletion
         await db.transaction(async (tx) => {
-          // Delete related records first
+          // First delete teams to remove references to age groups
+          await tx.delete(teams).where(eq(teams.eventId, eventId));
+
+          // Then delete tournament groups
+          await tx.delete(tournamentGroups).where(eq(tournamentGroups.eventId, eventId));
+          
+          // Delete other related records
           await tx.delete(eventAgeGroups).where(eq(eventAgeGroups.eventId, eventId));
           await tx.execute(sql`DELETE FROM event_complexes WHERE event_id = ${eventId}`);
           await tx.delete(eventFieldSizes).where(eq(eventFieldSizes.eventId, eventId));
