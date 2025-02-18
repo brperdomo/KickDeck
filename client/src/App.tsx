@@ -14,8 +14,9 @@ import UserDashboard from "@/pages/user-dashboard";
 import HouseholdPage from "@/pages/household";
 import ChatPage from "@/pages/chat";
 import EditEvent from "@/pages/edit-event";
+import EventCoupons from "@/pages/event-coupons";
 import { useUser } from "@/hooks/use-user";
-import EventRegistration from "./pages/event-registration"; // Added import
+import EventRegistration from "./pages/event-registration";
 
 function Router() {
   const { user, isLoading } = useUser();
@@ -49,12 +50,15 @@ function Router() {
       <Route path="/admin/events/:id">
         {user.isAdmin ? <EditEvent /> : <NotFound />}
       </Route>
+      <Route path="/admin/events/:id/coupons">
+        {user.isAdmin ? <EventCoupons /> : <NotFound />}
+      </Route>
       <Route path="/admin">
         {user.isAdmin ? <AdminDashboard /> : <NotFound />}
       </Route>
       <Route path="/household" component={HouseholdPage} />
       <Route path="/chat" component={ChatPage} />
-      <Route path="/register/event/:eventId" component={EventRegistration} /> {/* Added registration route */}
+      <Route path="/register/event/:eventId" component={EventRegistration} />
       <Route path="/">
         {user.isAdmin ? <AdminDashboard /> : <UserDashboard />}
       </Route>
