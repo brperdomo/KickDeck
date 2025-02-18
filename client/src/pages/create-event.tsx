@@ -868,26 +868,20 @@ export default function CreateEvent() {
 
   const handleCreateEvent = async () => {
     try {
-      if (!selectedScopeId) {
-        toast({
-          title: "Error",
-          description: "Please select a seasonal scope first",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (selectedAgeGroupIds.length === 0) {
-        toast({
-          title: "Error",
-          description: "Please select at least one age group from the chosen seasonal scope",
-          variant: "destructive",
-        });
-        return;
-      }
-
       setIsSaving(true);
       const formValues = form.getValues();
+
+      // Validate required fields
+      if (!formValues.name || !formValues.startDate || !formValues.endDate || !formValues.timezone || !formValues.applicationDeadline) {
+        setIsSaving(false);
+        toast({
+          title: "Error",
+          description: "Please fill in all required event information fields",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const selectedScope = seasonalScopesQuery.data?.find(scope => scope.id === selectedScopeId);
       const selectedAgeGroups = selectedScope?.ageGroups.filter(group =>
         selectedAgeGroupIds.includes(group.id)
@@ -905,13 +899,13 @@ export default function CreateEvent() {
         refundPolicy: formValues.refundPolicy || "",
         ageGroups: selectedAgeGroups.map(group => ({
           id: generateId(),
-          gender: group.gender as "Male" | "Female" | "Coed",
+          gender: group.gender as"Male" | "Female" | "Coed",
           projectedTeams: 20,
           birthDateStart: new Date(group.minBirthYear, 0, 1).toISOString(),
           birthDateEnd: new Date(group.maxBirthYear, 11, 31).toISOString(),
           scoringRule: scoringRules[0]?.id || '',
           ageGroup: group.ageGroup,
-          fieldSize: "11v11" as FieldSize,
+          fieldSize:"11v11" as FieldSize,
           amountDue: 0
         })),
         complexFieldSizes: eventFieldSizes,
@@ -926,6 +920,7 @@ export default function CreateEvent() {
       // Validate the event data with seasonal scope context
       const validation = validateEventData(eventData, selectedScopeId, selectedAgeGroupIds);
       if (!validation.isValid) {
+        setIsSaving(false);
         throw new Error(`Validation failed:\n${validation.errors.join('\n')}`);
       }
 
@@ -941,29 +936,35 @@ export default function CreateEvent() {
 
       // Validate required event data before making request
       if (!selectedScopeId) {
+        setIsSaving(false);
         throw new Error("Please select a seasonal scope first");
       }
 
       if (selectedAgeGroupIds.length === 0) {
+        setIsSaving(false);
         throw new Error("Please select at least one age group from the chosen seasonal scope");
       }
 
       if (!eventData.name || !eventData.startDate || !eventData.endDate || !eventData.timezone || !eventData.applicationDeadline) {
+        setIsSaving(false);
         throw new Error("Please fill in all required event information fields");
       }
 
       if (selectedComplexIds.length === 0) {
+        setIsSaving(false);
         throw new Error("Please select at least one complex for the event");
       }
 
       // Ensure age groups are selected
       if (!selectedAgeGroupIds.length) {
+        setIsSaving(false);
         throw new Error("Please select at least one age group from the chosen seasonal scope");
       }
 
       const response = await fetch('/api/admin/events', {
         method: 'POST',
         body: formData,
+        credentials: 'include',
         headers: {
           'Accept': 'application/json',
         }
@@ -971,6 +972,7 @@ export default function CreateEvent() {
 
       if (!response.ok) {
         const errorData = await response.json();
+        setIsSaving(false);
         throw new Error(errorData.error || 'Failed to create event. Please check all required fields.');
       }
 

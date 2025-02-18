@@ -1357,63 +1357,39 @@ export function registerRoutes(app: Express): Server {
     // Event creation endpoint
     app.post('/api/admin/events', isAdmin, async (req, res) => {
       try {
-        const eventData = req.body;
-        console.log('Creating event with data:', JSON.stringify(eventData));
+        const formData = req.body;
 
-        // Create event using a transaction
-        const event = await db.transaction(async (tx) => {
-          // Create the event first
-          const [newEvent] = await tx
-            .insert(events)
-            .values({
-              name: eventData.name,
-              startDate: eventData.startDate,
-              endDate: eventData.endDate,
-              timezone: eventData.timezone,
-              applicationDeadline: eventData.applicationDeadline,
-              details: eventData.details || null,
-              agreement: eventData.agreement || null,
-              refundPolicy: eventData.refundPolicy || null,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            })
-            .returning();
+        // Ensure we have valid data
+        if (!formData || typeof formData !== 'object') {
+          return res.status(400).json({ 
+            error: "Invalid request body"
+          });
+        }
 
-          // Log age groups being added (if any)
-          if (eventData.ageGroups && eventData.ageGroups.length > 0) {
-            console.log('Adding age groups:', eventData.ageGroups);
-            const ageGroupsToInsert = eventData.ageGroups.map(group => ({
-              eventId: newEvent.id,
-              ageGroup: group.ageGroup,
-              gender: group.gender,
-              projectedTeams: group.projectedTeams || 0,
-              birthDateStart: group.birthDateStart,
-              birthDateEnd: group.birthDateEnd,
-              fieldSize: group.fieldSize || '11v11',
-              amountDue: group.amountDue || 0,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            }));
+        const { name, startDate, endDate, timezone, applicationDeadline } = formData;
 
-            await tx.insert(eventAgeGroups).values(ageGroupsToInsert);
-          }
+        if (!name || !startDate || !endDate || !applicationDeadline) {
+          return res.status(400).json({ 
+            error: "Name, start date, end date, and application deadline are required" 
+          });
+        }
 
-          // Process complexes if provided
-          if (eventData.selectedComplexIds && eventData.selectedComplexIds.length > 0) {
-            const complexesToInsert = eventData.selectedComplexIds.map(complexId => ({
-              eventId: newEvent.id,
-              complexId: complexId,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            }));
+        // Create the event
+        const [newEvent] = await db
+          .insert(events)
+          .values({
+            name,
+            startDate,
+            endDate,
+            timezone: timezone || 'America/New_York',
+            applicationDeadline,
+            status: 'draft',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })
+          .returning();
 
-            await tx.insert(eventComplexes).values(complexesToInsert);
-          }
-
-          return newEvent;
-        });
-
-        res.status(201).json({ message: "Event created successfully", event });
+          res.status(201).json({ message: "Event created successfully", event: newEvent });
       } catch (error) {
         console.error('Error creating event:', error);
         console.error("Error details:", error);

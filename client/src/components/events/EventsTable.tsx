@@ -185,37 +185,12 @@ export function EventsTable() {
                   onClick={() => handleSort("date")}
                 >
                   <div className="flex items-center">
-                    Date
+                    Start Date
                     <SortIcon field="date" />
                   </div>
                 </TableHead>
-                <TableHead 
-                  className="font-semibold cursor-pointer text-right"
-                  onClick={() => handleSort("applications")}
-                >
-                  <div className="flex items-center justify-end">
-                    # Of Applications
-                    <SortIcon field="applications" />
-                  </div>
-                </TableHead>
-                <TableHead 
-                  className="font-semibold cursor-pointer text-right"
-                  onClick={() => handleSort("teams")}
-                >
-                  <div className="flex items-center justify-end">
-                    # of Accepted Teams
-                    <SortIcon field="teams" />
-                  </div>
-                </TableHead>
-                <TableHead 
-                  className="font-semibold cursor-pointer"
-                  onClick={() => handleSort("status")}
-                >
-                  <div className="flex items-center">
-                    Status
-                    <SortIcon field="status" />
-                  </div>
-                </TableHead>
+                <TableHead className="font-semibold">End Date</TableHead>
+                <TableHead className="font-semibold">Application Deadline</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -223,28 +198,9 @@ export function EventsTable() {
               {filteredEvents.map((event) => (
                 <TableRow key={event.id} className="hover:bg-muted/50">
                   <TableCell className="font-medium">{event.name}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1.5">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>{formatDate(event.startDate)} - {formatDate(event.endDate)}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">{event.applicationsReceived}</TableCell>
-                  <TableCell className="text-right">{event.teamsAccepted}</TableCell>
-                  <TableCell>
-                    <Badge 
-                      variant="outline" 
-                      className={`capitalize ${
-                        event.status === 'published' ? 'bg-blue-50 text-blue-700' :
-                        event.status === 'in_progress' ? 'bg-green-50 text-green-700' :
-                        event.status === 'completed' ? 'bg-purple-50 text-purple-700' :
-                        event.status === 'cancelled' ? 'bg-red-50 text-red-700' :
-                        'bg-gray-50 text-gray-700'
-                      }`}
-                    >
-                      {event.status.replace('_', ' ')}
-                    </Badge>
-                  </TableCell>
+                  <TableCell>{formatDate(event.startDate)}</TableCell>
+                  <TableCell>{formatDate(event.endDate)}</TableCell>
+                  <TableCell>{formatDate(event.applicationDeadline)}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
