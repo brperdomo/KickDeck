@@ -1,4 +1,3 @@
-<replit_final_file>
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link2, Edit, FileQuestion, User, TagsIcon, Printer, AlertTriangle, MoreHorizontal, ChevronUp, ChevronDown, Search, FormInput } from "lucide-react";
@@ -226,29 +225,36 @@ export function EventsTable() {
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Event Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => navigate(`/admin/events/${event.id}/edit`)}>
-                          <Edit className="h-4 w-4 mr-2" /> Edit Event
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit Event
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate(`/admin/events/${event.id}/application-form`)}>
-                          <FormInput className="h-4 w-4 mr-2" /> Application Form
+                          <FormInput className="mr-2 h-4 w-4" />
+                          Application Form
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate(`/admin/events/${event.id}/application-questions`)}>
-                          <FileQuestion className="h-4 w-4 mr-2" /> Application Questions
+                          <FileQuestion className="mr-2 h-4 w-4" />
+                          Application Questions
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate(`/admin/events/${event.id}/player-questions`)}>
-                          <User className="h-4 w-4 mr-2" /> Player Questions
+                          <User className="mr-2 h-4 w-4" />
+                          Player Questions
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate(`/admin/events/${event.id}/discounts`)}>
-                          <TagsIcon className="h-4 w-4 mr-2" /> Discounts
+                          <TagsIcon className="mr-2 h-4 w-4" />
+                          Discounts
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate(`/admin/events/${event.id}/game-cards`)}>
-                          <Printer className="h-4 w-4 mr-2" /> Print Game Cards
+                          <Printer className="mr-2 h-4 w-4" />
+                          Print Game Cards
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate(`/admin/events/${event.id}/red-cards`)}>
-                          <AlertTriangle className="h-4 w-4 mr-2" /> Red Card Report
+                          <AlertTriangle className="mr-2 h-4 w-4" />
+                          Red Card Report
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
