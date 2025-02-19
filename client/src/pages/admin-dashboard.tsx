@@ -89,6 +89,7 @@ import { FieldEditor } from "@/components/FieldEditor";
 import { UpdatesLogModal } from "@/components/admin/UpdatesLogModal";
 import { useDropzone } from 'react-dropzone';
 import { FileManager } from "@/components/admin/FileManager";
+import { FormTemplatesView } from "@/components/admin/FormTemplatesView"; // Import the component
 
 
 function AdminBanner() {
@@ -1001,9 +1002,8 @@ function ComplexesView() {
         description: error instanceof Error ? error.message: "Failed to update field",
         variant: "destructive",
       });
-    },
+    }
   });
-
 
   const handleSubmit = async (data: ComplexFormValues) => {
     try {
@@ -1553,6 +1553,18 @@ function AdminDashboard() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showUpdatesLog, setShowUpdatesLog] = useState(false);
 
+  // Add Form Templates to the navigation
+  const formTemplatesButton = (
+    <Button
+      variant={activeView === 'formTemplates' ? 'secondary' : 'ghost'}
+      className="w-full justify-start"
+      onClick={() => setActiveView('formTemplates')}
+    >
+      <FormInput className="mr-2 h-4 w-4" />
+      Form Templates
+    </Button>
+  );
+
   useEffect(() => {
     if (!user) {
       return; // Wait for user data to load
@@ -1624,7 +1636,7 @@ function AdminDashboard() {
       case 'coupons':
         return <CouponManagement />;
       case 'formTemplates':
-        return <FormTemplatesView />; // Add this line
+        return <FormTemplatesView />;
       default:
         return <div>Feature coming soon</div>;
     }
@@ -1651,6 +1663,8 @@ function AdminDashboard() {
               <Shield className="mr-2 h-4 w-4" />
               Administrators
             </Button>
+
+            {formTemplatesButton}
 
             <Button
               variant={activeView === 'events' ? 'secondary' : 'ghost'}

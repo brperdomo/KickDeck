@@ -92,6 +92,36 @@ export default function EventApplicationForm() {
     },
   });
 
+  const saveAsTemplateMutation = useMutation({
+    mutationFn: async (template: FormTemplate) => {
+      const response = await fetch(`/api/admin/form-templates`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: template.name,
+          description: template.description,
+          isPublished: template.isPublished,
+          fields: template.fields,
+          eventId
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to save template');
+
+      toast({
+        title: "Success",
+        description: "Form template saved successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save template",
+        variant: "destructive",
+      });
+    },
+  });
+
   const addField = (type: FieldType) => {
     setFormTemplate(prev => ({
       ...prev,
@@ -181,10 +211,16 @@ export default function EventApplicationForm() {
       <AdminBanner />
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Event Application Form</h1>
-          <div className="flex gap-4">
+          <h2 className="text-2xl font-bold">Event Application Form</h2>
+          <div className="flex gap-2">
             <Button variant="outline" onClick={() => window.history.back()}>
               Cancel
+            </Button>
+            <Button 
+              variant="secondary"
+              onClick={() => saveAsTemplateMutation.mutate(formTemplate)}
+            >
+              Save as Template
             </Button>
             <Button 
               onClick={() => saveTemplateMutation.mutate(formTemplate)}
@@ -196,10 +232,7 @@ export default function EventApplicationForm() {
                   Saving...
                 </>
               ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Changes
-                </>
+                'Save Changes'
               )}
             </Button>
           </div>
@@ -256,7 +289,7 @@ export default function EventApplicationForm() {
           </div>
 
           <div className="space-y-4">
-            {formTemplate.fields.map((field, fieldIndex) => (
+            {formTemplate.fields?.map((field, fieldIndex) => (
               <Card key={fieldIndex}>
                 <CardContent className="pt-6">
                   <div className="space-y-4">

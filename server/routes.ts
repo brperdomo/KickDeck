@@ -30,6 +30,10 @@ import {
   eventFieldSizes,
   files,
   coupons,
+  eventFormTemplates,
+  formFields,
+  formFieldOptions,
+  formResponses,
 } from "@db/schema";
 import fs from "fs/promises";
 import path from "path";
@@ -2535,12 +2539,12 @@ export function registerRoutes(app: Express): Server {
                       json_build_object(
                         'id', ${formFieldOptions.id},
                         'label', ${formFieldOptions.label},
-                        'value', ${formFieldOptions.value}
-                      )
+                        'value', ${formFieldOptions.value},
+                        'order', ${formFieldOptions.order}
+                      ) ORDER BY ${formFieldOptions.order}
                     )
                     FROM ${formFieldOptions}
                     WHERE ${formFieldOptions.fieldId} = ${formFields.id}
-                    ORDER BY ${formFieldOptions.order}
                   )
                 )
               ELSE NULL END
@@ -2569,6 +2573,69 @@ export function registerRoutes(app: Express): Server {
       } catch (error) {
         console.error('Error fetching form template:', error);
         res.status(500).json({ error: "Failed to fetch form template" });
+      }
+    });
+
+    app.post('/api/admin/form-templates', isAdmin, async (req, res) => {
+      try {
+        const { name, description, isPublished, fields, eventId } = req.body;
+
+        if (!eventId) {
+          return res.status(400).json({ error: "Event ID is required" });
+        }
+
+        await db.transaction(async (tx) => {
+          // Create form template
+          const [template] = await tx
+            .insert(eventFormTemplates)
+            .values({
+              eventId,
+              name,
+              description,
+              isPublished: isPublished || false,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            })
+            .returning();
+
+          // Create fields
+          if (fields?.length) {
+            for (const field of fields) {
+              const [newField] = await tx
+                .insert(formFields)
+                .values({
+                  templateId: template.id,
+                  label: field.label,
+                  type: field.type,
+                  required: field.required,
+                  order: field.order,
+                  placeholder: field.placeholder,
+                  helpText: field.helpText,
+                  validation: field.validation
+                })
+                .returning();
+
+              // Create options for dropdown fields
+              if (field.type === 'dropdown' && field.options?.length) {
+                await tx
+                  .insert(formFieldOptions)
+                  .values(
+                    field.options.map((option: any, index: number) => ({
+                      fieldId: newField.id,
+                      label: option.label,
+                      value: option.value,
+                      order: option.order || index
+                    }))
+                  );
+              }
+            }
+          }
+        });
+
+        res.status(201).json({ message: "Form template created successfully" });
+      } catch (error) {
+        console.error('Error creating form template:', error);
+        res.status(500).json({ error: "Failed to create form template" });
       }
     });
 

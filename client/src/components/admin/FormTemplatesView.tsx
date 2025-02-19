@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MoreHorizontal, Plus, Edit, Trash, Copy } from "lucide-react";
+import { MoreHorizontal, Plus, Edit, Trash } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +18,7 @@ interface FormTemplate {
   id: number;
   name: string;
   description: string;
+  isPublished: boolean;
   fields: any[];
   createdAt: string;
   updatedAt: string;
@@ -29,7 +30,7 @@ export function FormTemplatesView() {
   const queryClient = useQueryClient();
 
   const templatesQuery = useQuery({
-    queryKey: ['/api/admin/form-templates'],
+    queryKey: ['form-templates'],
     queryFn: async () => {
       const response = await fetch('/api/admin/form-templates');
       if (!response.ok) throw new Error('Failed to fetch templates');
@@ -46,17 +47,10 @@ export function FormTemplatesView() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/admin/form-templates']);
+      queryClient.invalidateQueries(['form-templates']);
       toast({
         title: "Success",
         description: "Template deleted successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
       });
     },
   });
@@ -82,8 +76,9 @@ export function FormTemplatesView() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Description</TableHead>
-                <TableHead>Last Modified</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Fields</TableHead>
+                <TableHead>Last Modified</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -92,8 +87,9 @@ export function FormTemplatesView() {
                 <TableRow key={template.id}>
                   <TableCell className="font-medium">{template.name}</TableCell>
                   <TableCell>{template.description}</TableCell>
+                  <TableCell>{template.isPublished ? 'Published' : 'Draft'}</TableCell>
+                  <TableCell>{template.fields?.length || 0} fields</TableCell>
                   <TableCell>{new Date(template.updatedAt).toLocaleDateString()}</TableCell>
-                  <TableCell>{template.fields.length} fields</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -102,13 +98,9 @@ export function FormTemplatesView() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => navigate(`/admin/form-templates/${template.id}`)}>
+                        <DropdownMenuItem onClick={() => navigate(`/admin/form-templates/${template.id}/edit`)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate(`/admin/form-templates/${template.id}/duplicate`)}>
-                          <Copy className="mr-2 h-4 w-4" />
-                          Duplicate
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={() => deleteTemplateMutation.mutate(template.id)}
