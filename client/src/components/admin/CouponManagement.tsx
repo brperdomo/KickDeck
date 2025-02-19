@@ -17,19 +17,33 @@ import { Badge } from "@/components/ui/badge";
 import { CouponModal } from "@/components/CouponModal";
 import type { SelectCoupon } from "@db/schema";
 
+import { AdminBanner } from "./AdminBanner";
+
 export function CouponManagement() {
   const { toast } = useToast();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState<SelectCoupon | null>(null);
   const queryClient = useQueryClient();
   const [location, navigate] = useLocation();
-  const eventId = location?.split('/')[2] || '';
+  const eventId = location?.split('/').pop() || '';
+
+  const eventsQuery = useQuery({
+    queryKey: ['/api/admin/events'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/events');
+      if (!response.ok) throw new Error('Failed to fetch events');
+      return response.json();
+    }
+  });
+
+  const events = eventsQuery.data;
 
   const couponsQuery = useQuery({
     queryKey: ['/api/admin/coupons', eventId],
     queryFn: async () => {
       try {
-        const response = await fetch(`/api/admin/coupons?eventId=${eventId}`, {
+        const url = eventId ? `/api/admin/coupons?eventId=${eventId}` : '/api/admin/coupons';
+        const response = await fetch(url, {
           headers: {
             "Accept": "application/json",
             "Content-Type": "application/json"
@@ -113,12 +127,15 @@ export function CouponManagement() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4">
+    <>
+      <AdminBanner />
+      <div className="max-w-6xl mx-auto px-4">
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-3xl font-bold text-gray-900 font-inter">Coupon Management</h2>
         <div className="flex gap-4">
           <Button 
             onClick={() => setIsAddModalOpen(true)}
+            disabled={!eventId}
             className="bg-[#2563EB] hover:bg-[#1d4ed8] text-white"
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -143,7 +160,7 @@ export function CouponManagement() {
                 <TableHead className="font-semibold text-gray-700">Amount</TableHead>
                 <TableHead className="font-semibold text-gray-700">Expires</TableHead>
                 <TableHead className="font-semibold text-gray-700">Uses</TableHead>
-                <TableHead className="font-semibold text-gray-700">Status</TableHead>
+                <TableHead className="font-semibold text-gray-700">Event</TableHead>
                 <TableHead className="text-right font-semibold text-gray-700">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -163,7 +180,7 @@ export function CouponManagement() {
                           : 'border-[#6B7280] text-[#6B7280]'
                       }
                     >
-                      {coupon.discountType === 'percentage' ? `${coupon.amount}%` : `$${coupon.amount}`}
+                      {coupon.discountType === 'percentage' ? 'Percentage' : 'Dollar'}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-gray-700">{coupon.amount}</TableCell>
@@ -177,12 +194,7 @@ export function CouponManagement() {
                     {coupon.usageCount} {coupon.maxUses ? `/ ${coupon.maxUses}` : ''}
                   </TableCell>
                   <TableCell>
-                    <Badge 
-                      variant={coupon.isActive ? 'default' : 'secondary'}
-                      className={coupon.isActive ? 'bg-[#10B981] text-white' : 'bg-[#6B7280] text-white'}
-                    >
-                      {coupon.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
+                    {events?.find(event => event.id === coupon.eventId)?.name || 'Global Coupon'}
                   </TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button 
@@ -213,5 +225,6 @@ export function CouponManagement() {
         couponToEdit={selectedCoupon}
       />
     </div>
+    </>
   );
 }

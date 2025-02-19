@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -46,7 +46,7 @@ type CouponFormValues = z.infer<typeof couponFormSchema>;
 interface CouponModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  eventId?: string;
+  eventId: string;
   couponToEdit?: any;
 }
 
@@ -55,15 +55,25 @@ export function CouponModal({ open, onOpenChange, eventId, couponToEdit }: Coupo
   const queryClient = useQueryClient();
   const [hasExpiration, setHasExpiration] = useState(couponToEdit?.expirationDate ? true : false);
 
+  const eventsQuery = useQuery({
+    queryKey: ['/api/admin/events'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/events');
+      if (!response.ok) throw new Error('Failed to fetch events');
+      return response.json();
+    }
+  });
+
   const form = useForm<CouponFormValues>({
     resolver: zodResolver(couponFormSchema),
-    defaultValues: {
+    values: {
       code: couponToEdit?.code || "",
-      discountType: couponToEdit?.discountType || "fixed",
+      discountType: couponToEdit?.discount_type || "fixed",
       amount: couponToEdit?.amount || 0,
-      hasExpiration: !!couponToEdit?.expirationDate,
-      expirationDate: couponToEdit?.expirationDate || "",
+      hasExpiration: !!couponToEdit?.expiration_date,
+      expirationDate: couponToEdit?.expiration_date || "",
       description: couponToEdit?.description || "",
+      eventId: couponToEdit?.event_id?.toString() || eventId?.toString() || "",
     },
   });
 
@@ -78,7 +88,7 @@ export function CouponModal({ open, onOpenChange, eventId, couponToEdit }: Coupo
           },
           body: JSON.stringify({
             ...data,
-            eventId,
+            eventId: eventId ? Number(eventId) : null,
             expirationDate: data.hasExpiration ? data.expirationDate : null,
           }),
         });
@@ -124,7 +134,7 @@ export function CouponModal({ open, onOpenChange, eventId, couponToEdit }: Coupo
           },
           body: JSON.stringify({
             ...data,
-            eventId,
+            eventId: eventId ? Number(eventId) : null,
             expirationDate: data.hasExpiration ? data.expirationDate : null,
           }),
         });
@@ -181,6 +191,35 @@ export function CouponModal({ open, onOpenChange, eventId, couponToEdit }: Coupo
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="eventId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Event</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value?.toString()}
+                    disabled={!!eventId && !couponToEdit}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select an event" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {eventsQuery.data?.map((event: any) => (
+                        <SelectItem key={event.id} value={event.id.toString()}>
+                          {event.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="code"
