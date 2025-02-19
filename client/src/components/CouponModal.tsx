@@ -196,25 +196,33 @@ export function CouponModal({ open, onOpenChange, eventId, couponToEdit }: Coupo
               name="eventId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Event</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value?.toString()}
-                    disabled={!!eventId && !couponToEdit}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select an event" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {eventsQuery.data?.map((event: any) => (
-                        <SelectItem key={event.id} value={event.id.toString()}>
-                          {event.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Event Labels</FormLabel>
+                  <div className="flex flex-wrap gap-2 p-2 border rounded-md">
+                    {eventsQuery.data?.map((event: any) => (
+                      <Badge
+                        key={event.id}
+                        variant={field.value?.toString() === event.id.toString() ? "default" : "outline"}
+                        className="cursor-pointer"
+                        onClick={() => field.onChange(event.id.toString())}
+                      >
+                        {event.name}
+                      </Badge>
+                    ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="accountingNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Accounting Number</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Enter accounting number" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
