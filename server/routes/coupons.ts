@@ -68,19 +68,16 @@ export async function createCoupon(req: Request, res: Response) {
 export async function getCoupons(req: Request, res: Response) {
   try {
     const eventId = req.query.eventId;
-    let query = sql`SELECT * FROM coupons`;
+    let query;
 
     if (eventId) {
-      // If eventId is provided, get coupons for that event and global coupons (where event_id is null)
-      query = sql`
-        SELECT * FROM coupons 
-        WHERE event_id = ${Number(eventId)} 
-        OR event_id IS NULL 
-        ORDER BY created_at DESC
-      `;
+      const numericEventId = parseInt(eventId as string, 10);
+      if (isNaN(numericEventId)) {
+        return res.status(400).json({ error: "Invalid event ID format" });
+      }
+      query = sql`SELECT * FROM coupons WHERE event_id = ${numericEventId}`;
     } else {
-      // If no eventId, return all coupons
-      query = sql`SELECT * FROM coupons ORDER BY created_at DESC`;
+      query = sql`SELECT * FROM coupons`;
     }
 
     const result = await db.execute(query);
