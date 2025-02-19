@@ -38,24 +38,40 @@ export function StyleSettingsView() {
   }, [styleConfig]);
 
   const handleColorChange = (section: keyof StyleConfig, colorKey: string, value: string) => {
+    // Ensure the color value is a valid 7-character hex code
+    const hexColor = value.length === 7 && value.startsWith('#') ? value : defaultColors[section][colorKey];
+
     setColors(prev => ({
       ...prev,
       [section]: {
         ...prev[section],
-        [colorKey]: value
+        [colorKey]: hexColor
       }
     }));
   };
 
   const handleSave = async () => {
     try {
-      await updateStyleConfig(colors);
+      // Validate all color values before saving
+      const validatedColors = Object.entries(colors).reduce((acc, [section, sectionColors]) => {
+        acc[section] = Object.entries(sectionColors).reduce((secAcc, [key, value]) => {
+          // Ensure each color is a valid 7-character hex code
+          secAcc[key] = value.length === 7 && value.startsWith('#') 
+            ? value 
+            : defaultColors[section][key];
+          return secAcc;
+        }, {});
+        return acc;
+      }, {} as StyleConfig);
+
+      await updateStyleConfig(validatedColors);
 
       toast({
         title: "Success",
         description: "Theme colors updated successfully"
       });
     } catch (error) {
+      console.error('Style update error:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -105,6 +121,7 @@ export function StyleSettingsView() {
                       onChange={(e) => handleColorChange(sectionKey as keyof StyleConfig, colorKey, e.target.value)}
                       className="font-mono uppercase"
                       maxLength={7}
+                      pattern="^#[0-9A-Fa-f]{6}$"
                     />
                   </div>
                 </div>

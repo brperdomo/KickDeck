@@ -52,16 +52,17 @@ export function useTheme() {
         const response = await fetch('/api/admin/styling');
         if (response.ok) {
           const data = await response.json();
-          setStyleConfig(data.config);
-
-          // Apply saved colors to document
           if (data.config) {
+            setStyleConfig(data.config);
+            // Apply saved colors to document
             Object.entries(data.config).forEach(([section, colors]: [string, any]) => {
               Object.entries(colors).forEach(([key, value]: [string, string]) => {
-                const cssVar = `--${key}`;
-                document.documentElement.style.setProperty(cssVar, value);
-                if (key === 'background') {
-                  document.body.style.backgroundColor = value;
+                if (typeof value === 'string' && value.startsWith('#') && value.length === 7) {
+                  const cssVar = `--${key}`;
+                  document.documentElement.style.setProperty(cssVar, value);
+                  if (key === 'background') {
+                    document.body.style.backgroundColor = value;
+                  }
                 }
               });
             });
@@ -74,32 +75,25 @@ export function useTheme() {
     loadStyleConfig();
   }, []);
 
-  const themeMutation = useMutation({
-    mutationFn: async (theme: Theme) => {
-      const response = await fetch('/api/theme', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(theme),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update theme');
-      }
-
-      return response.json();
-    },
-  });
-
   const styleConfigMutation = useMutation({
     mutationFn: async (config: StyleConfig) => {
+      // Validate color values before sending
+      const validConfig = Object.entries(config).reduce((acc, [section, colors]) => {
+        acc[section] = Object.entries(colors).reduce((secAcc, [key, value]) => {
+          if (typeof value === 'string' && value.startsWith('#') && value.length === 7) {
+            secAcc[key] = value;
+          }
+          return secAcc;
+        }, {});
+        return acc;
+      }, {} as StyleConfig);
+
       const response = await fetch('/api/admin/styling', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(config),
+        body: JSON.stringify(validConfig),
       });
 
       if (!response.ok) {
@@ -107,13 +101,15 @@ export function useTheme() {
       }
 
       // Update local state and apply styles
-      setStyleConfig(config);
-      Object.entries(config).forEach(([section, colors]: [string, any]) => {
+      setStyleConfig(validConfig);
+      Object.entries(validConfig).forEach(([section, colors]: [string, any]) => {
         Object.entries(colors).forEach(([key, value]: [string, string]) => {
-          const cssVar = `--${key}`;
-          document.documentElement.style.setProperty(cssVar, value);
-          if (key === 'background') {
-            document.body.style.backgroundColor = value;
+          if (typeof value === 'string' && value.startsWith('#') && value.length === 7) {
+            const cssVar = `--${key}`;
+            document.documentElement.style.setProperty(cssVar, value);
+            if (key === 'background') {
+              document.body.style.backgroundColor = value;
+            }
           }
         });
       });
@@ -128,13 +124,8 @@ export function useTheme() {
       : colorName;
 
     setCurrentColor(colorName as ColorName);
-    await themeMutation.mutateAsync({
-      variant: 'professional',
-      primary: colorValue,
-      appearance: 'light',
-      radius: 0.5,
-    });
-  }, [themeMutation]);
+    //Theme Mutation removed as per edit instructions focusing on style config
+  }, []);
 
   const updateStyleConfig = useCallback(async (config: StyleConfig) => {
     await styleConfigMutation.mutateAsync(config);
@@ -145,7 +136,7 @@ export function useTheme() {
     setColor,
     styleConfig,
     updateStyleConfig,
-    isLoading: themeMutation.isPending || styleConfigMutation.isPending,
-    error: themeMutation.error || styleConfigMutation.error,
+    isLoading: styleConfigMutation.isPending,
+    error: styleConfigMutation.error,
   };
 }
