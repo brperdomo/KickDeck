@@ -59,7 +59,7 @@ export default function EventApplicationForm() {
           <p className="text-gray-600 mb-6">{formTemplate.description}</p>
         )}
         <div className="space-y-6">
-          {formTemplate.fields.map((field, index) => (
+          {formTemplate.fields?.map((field, index) => (
             <div key={index} className="space-y-2">
               <label className="block font-medium">
                 {field.label}
