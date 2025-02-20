@@ -48,7 +48,7 @@ export default function EventApplicationForm() {
   const [formTemplate, setFormTemplate] = useState<FormTemplate>({
     name: "",
     isPublished: false,
-    fields: [],
+    fields: [] as FormField[],
   });
 
   const renderPreview = () => {
@@ -171,12 +171,12 @@ export default function EventApplicationForm() {
     setFormTemplate(prev => ({
       ...prev,
       fields: [
-        ...prev.fields,
+        ...(prev.fields || []),
         {
           type,
           label: "",
           required: false,
-          order: prev.fields.length,
+          order: (prev.fields || []).length,
           options: type === "dropdown" ? [{ label: "", value: "" }] : undefined,
         },
       ],
