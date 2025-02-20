@@ -186,7 +186,7 @@ export default function EventApplicationForm() {
   const updateField = (index: number, updates: Partial<FormField>) => {
     setFormTemplate(prev => ({
       ...prev,
-      fields: prev.fields.map((field, i) => 
+      fields: prev.fields.map((field, i) =>
         i === index ? { ...field, ...updates } : field
       ),
     }));
@@ -202,7 +202,7 @@ export default function EventApplicationForm() {
   const addOption = (fieldIndex: number) => {
     setFormTemplate(prev => ({
       ...prev,
-      fields: prev.fields.map((field, i) => 
+      fields: prev.fields.map((field, i) =>
         i === fieldIndex
           ? {
               ...field,
@@ -216,11 +216,11 @@ export default function EventApplicationForm() {
   const updateOption = (fieldIndex: number, optionIndex: number, updates: Partial<{ label: string; value: string }>) => {
     setFormTemplate(prev => ({
       ...prev,
-      fields: prev.fields.map((field, i) => 
+      fields: prev.fields.map((field, i) =>
         i === fieldIndex
           ? {
               ...field,
-              options: field.options?.map((opt, j) => 
+              options: field.options?.map((opt, j) =>
                 j === optionIndex ? { ...opt, ...updates } : opt
               ),
             }
@@ -232,7 +232,7 @@ export default function EventApplicationForm() {
   const removeOption = (fieldIndex: number, optionIndex: number) => {
     setFormTemplate(prev => ({
       ...prev,
-      fields: prev.fields.map((field, i) => 
+      fields: prev.fields.map((field, i) =>
         i === fieldIndex
           ? {
               ...field,
@@ -272,13 +272,13 @@ export default function EventApplicationForm() {
                 <Button variant="outline" onClick={() => window.history.back()}>
                   Cancel
                 </Button>
-                <Button 
+                <Button
                   variant="secondary"
                   onClick={() => saveAsTemplateMutation.mutate(formTemplate)}
                 >
                   Save as Template
                 </Button>
-                <Button 
+                <Button
                   onClick={() => saveTemplateMutation.mutate(formTemplate)}
                   disabled={saveTemplateMutation.isLoading}
                 >
@@ -293,172 +293,173 @@ export default function EventApplicationForm() {
                 </Button>
               </div>
             </div>
-        {!isPreviewMode && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Form Settings</CardTitle>
-            </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="formName">Form Name</Label>
-              <Input
-                id="formName"
-                value={formTemplate.name}
-                onChange={e => setFormTemplate(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Enter form name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="formDescription">Description</Label>
-              <Textarea
-                id="formDescription"
-                value={formTemplate.description || ""}
-                onChange={e => setFormTemplate(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Enter form description"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={formTemplate.isPublished}
-                onCheckedChange={checked => setFormTemplate(prev => ({ ...prev, isPublished: checked }))}
-              />
-              <Label>Published</Label>
-            </div>
-          </CardContent>
-        </Card>
-        )}
-
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-4">Form Fields</h2>
-          <div className="flex gap-2 mb-4">
-            <Button onClick={() => addField("input")} variant="outline">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Input Field
-            </Button>
-            <Button onClick={() => addField("paragraph")} variant="outline">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Paragraph Field
-            </Button>
-            <Button onClick={() => addField("dropdown")} variant="outline">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Dropdown Field
-            </Button>
-          </div>
-
-          <div className="space-y-4">
-            {formTemplate.fields?.map((field, fieldIndex) => (
-              <Card key={fieldIndex}>
-                <CardContent className="pt-6">
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-2 flex-1 mr-4">
-                        <Label>Field Label</Label>
-                        <Input
-                          value={field.label}
-                          onChange={e => updateField(fieldIndex, { label: e.target.value })}
-                          placeholder="Enter field label"
-                        />
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeField(fieldIndex)}
-                        className="text-destructive hover:text-destructive/90"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>Field Type</Label>
-                        <Select
-                          value={field.type}
-                          onValueChange={value => updateField(fieldIndex, { type: value as FieldType })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="input">Input</SelectItem>
-                            <SelectItem value="paragraph">Paragraph</SelectItem>
-                            <SelectItem value="dropdown">Dropdown</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          checked={field.required}
-                          onCheckedChange={checked => updateField(fieldIndex, { required: checked })}
-                        />
-                        <Label>Required</Label>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Placeholder Text</Label>
-                      <Input
-                        value={field.placeholder || ""}
-                        onChange={e => updateField(fieldIndex, { placeholder: e.target.value })}
-                        placeholder="Enter placeholder text"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Help Text</Label>
-                      <Input
-                        value={field.helpText || ""}
-                        onChange={e => updateField(fieldIndex, { helpText: e.target.value })}
-                        placeholder="Enter help text"
-                      />
-                    </div>
-
-                    {field.type === "dropdown" && (
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <Label>Options</Label>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => addOption(fieldIndex)}
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Option
-                          </Button>
-                        </div>
-                        <div className="space-y-2">
-                          {field.options?.map((option, optionIndex) => (
-                            <div key={optionIndex} className="flex gap-2">
-                              <Input
-                                value={option.label}
-                                onChange={e => updateOption(fieldIndex, optionIndex, { label: e.target.value })}
-                                placeholder="Option label"
-                              />
-                              <Input
-                                value={option.value}
-                                onChange={e => updateOption(fieldIndex, optionIndex, { value: e.target.value })}
-                                placeholder="Option value"
-                              />
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeOption(fieldIndex, optionIndex)}
-                                className="text-destructive hover:text-destructive/90"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+            {!isPreviewMode && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>Form Settings</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="formName">Form Name</Label>
+                    <Input
+                      id="formName"
+                      value={formTemplate.name}
+                      onChange={e => setFormTemplate(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Enter form name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="formDescription">Description</Label>
+                    <Textarea
+                      id="formDescription"
+                      value={formTemplate.description || ""}
+                      onChange={e => setFormTemplate(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Enter form description"
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={formTemplate.isPublished}
+                      onCheckedChange={checked => setFormTemplate(prev => ({ ...prev, isPublished: checked }))}
+                    />
+                    <Label>Published</Label>
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        </div>
-      )}
+            )}
+
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold mb-4">Form Fields</h2>
+              <div className="flex gap-2 mb-4">
+                <Button onClick={() => addField("input")} variant="outline">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Input Field
+                </Button>
+                <Button onClick={() => addField("paragraph")} variant="outline">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Paragraph Field
+                </Button>
+                <Button onClick={() => addField("dropdown")} variant="outline">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Dropdown Field
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                {formTemplate.fields?.map((field, fieldIndex) => (
+                  <Card key={fieldIndex}>
+                    <CardContent className="pt-6">
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-2 flex-1 mr-4">
+                            <Label>Field Label</Label>
+                            <Input
+                              value={field.label}
+                              onChange={e => updateField(fieldIndex, { label: e.target.value })}
+                              placeholder="Enter field label"
+                            />
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeField(fieldIndex)}
+                            className="text-destructive hover:text-destructive/90"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label>Field Type</Label>
+                            <Select
+                              value={field.type}
+                              onValueChange={value => updateField(fieldIndex, { type: value as FieldType })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="input">Input</SelectItem>
+                                <SelectItem value="paragraph">Paragraph</SelectItem>
+                                <SelectItem value="dropdown">Dropdown</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              checked={field.required}
+                              onCheckedChange={checked => updateField(fieldIndex, { required: checked })}
+                            />
+                            <Label>Required</Label>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Placeholder Text</Label>
+                          <Input
+                            value={field.placeholder || ""}
+                            onChange={e => updateField(fieldIndex, { placeholder: e.target.value })}
+                            placeholder="Enter placeholder text"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Help Text</Label>
+                          <Input
+                            value={field.helpText || ""}
+                            onChange={e => updateField(fieldIndex, { helpText: e.target.value })}
+                            placeholder="Enter help text"
+                          />
+                        </div>
+
+                        {field.type === "dropdown" && (
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <Label>Options</Label>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => addOption(fieldIndex)}
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Option
+                              </Button>
+                            </div>
+                            <div className="space-y-2">
+                              {field.options?.map((option, optionIndex) => (
+                                <div key={optionIndex} className="flex gap-2">
+                                  <Input
+                                    value={option.label}
+                                    onChange={e => updateOption(fieldIndex, optionIndex, { label: e.target.value })}
+                                    placeholder="Option label"
+                                  />
+                                  <Input
+                                    value={option.value}
+                                    onChange={e => updateOption(fieldIndex, optionIndex, { value: e.target.value })}
+                                    placeholder="Option value"
+                                  />
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removeOption(fieldIndex, optionIndex)}
+                                    className="text-destructive hover:text-destructive/90"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </>
   );
