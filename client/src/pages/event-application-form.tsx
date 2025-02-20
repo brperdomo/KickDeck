@@ -290,8 +290,8 @@ export default function EventApplicationForm() {
             </Button>
           </div>
         </div>
-
-        <Card className="mb-6">
+        {!isPreviewMode && (
+          <Card className="mb-6">
           <CardHeader>
             <CardTitle>Form Settings</CardTitle>
           </CardHeader>
@@ -323,6 +323,7 @@ export default function EventApplicationForm() {
             </div>
           </CardContent>
         </Card>
+        )}
 
         <div className="mb-6">
           <h2 className="text-lg font-semibold mb-4">Form Fields</h2>
