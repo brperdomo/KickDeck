@@ -35,10 +35,13 @@ export function FormTemplatesView() {
       const response = await fetch('/api/admin/form-templates');
       if (!response.ok) throw new Error('Failed to fetch templates');
       const templates = await response.json();
-      return templates.map((template: any) => ({
-        ...template,
-        eventName: template.eventId?.toString() || 'No Event'
-      }));
+      // Only return templates that don't have an eventId (copies)
+      return templates
+        .filter((template: any) => !template.eventId)
+        .map((template: any) => ({
+          ...template,
+          eventName: 'Template'
+        }));
     }
   });
 
