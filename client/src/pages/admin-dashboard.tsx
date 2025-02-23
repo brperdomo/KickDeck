@@ -993,7 +993,7 @@ function ComplexesView() {
   });
 
   const fieldsQuery = useQuery({
-    queryKey: ['/api/admin/fields, viewingComplexId],
+    queryKey: ['/api/admin/fields', viewingComplexId],
     enabled: !!viewingComplexId,
     queryFn: async () => {
       if (!viewingComplexId) return [];
