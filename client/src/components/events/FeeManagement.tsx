@@ -109,10 +109,11 @@ export function FeeManagement() {
 
   const createFeeMutation = useMutation({
     mutationFn: async (values: FeeFormValues) => {
-      if (!eventId) {
+      const parsedEventId = eventId?.toString();
+      if (!parsedEventId) {
         throw new Error("Event ID is required");
       }
-      const response = await fetch(`/api/admin/events/${eventId}/fees`, {
+      const response = await fetch(`/api/admin/events/${parsedEventId}/fees`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
