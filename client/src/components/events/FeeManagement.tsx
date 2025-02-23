@@ -74,6 +74,11 @@ export function FeeManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // If eventId is not available, show an error
+  if (!eventId) {
+    return <div>Error: Event ID is missing</div>;
+  }
+
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeFormSchema),
     defaultValues: {
@@ -88,7 +93,6 @@ export function FeeManagement() {
   const eventQuery = useQuery({
     queryKey: [`/api/admin/events/${eventId}`],
     queryFn: async () => {
-      if (!eventId) return null;
       const response = await fetch(`/api/admin/events/${eventId}`);
       if (!response.ok) throw new Error("Failed to fetch event details");
       return response.json();
@@ -99,35 +103,30 @@ export function FeeManagement() {
   const feesQuery = useQuery({
     queryKey: [`/api/admin/events/${eventId}/fees`],
     queryFn: async () => {
-      const parsedEventId = eventId?.toString();
-      if (!parsedEventId) {
-        throw new Error("Event ID is required");
-      }
-      const response = await fetch(`/api/admin/events/${parsedEventId}/fees`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch fees");
-      }
+      const response = await fetch(`/api/admin/events/${eventId}/fees`);
+      if (!response.ok) throw new Error("Failed to fetch fees");
       return response.json();
     },
     enabled: !!eventId,
-    retry: false
   });
 
   const createFeeMutation = useMutation({
     mutationFn: async (values: FeeFormValues) => {
-      const parsedEventId = eventId?.toString();
-      if (!parsedEventId) {
-        throw new Error("Event ID is required");
-      }
-      const response = await fetch(`/api/admin/events/${parsedEventId}/fees`, {
+      const response = await fetch(`/api/admin/events/${eventId}/fees`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...values,
           amount: Math.round(Number(values.amount) * 100), // Convert to cents
+          eventId: parseInt(eventId), // Include eventId in the request body
         }),
       });
-      if (!response.ok) throw new Error("Failed to create fee");
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to create fee");
+      }
+
       return response.json();
     },
     onSuccess: () => {
@@ -139,7 +138,7 @@ export function FeeManagement() {
         description: "Fee created successfully",
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
         description: error.message,
