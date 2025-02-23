@@ -1,9 +1,10 @@
+
 import { Router } from "express";
-import { eq } from "drizzle-orm";
+import { z } from "zod";
 import { db } from "@db";
+import { eq } from "drizzle-orm";
 import { eventFees } from "@db/schema";
 import { authenticateAdmin } from "../../middleware/auth";
-import { z } from "zod";
 
 const router = Router();
 
