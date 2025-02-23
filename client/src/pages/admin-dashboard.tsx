@@ -1547,7 +1547,7 @@ function TeamsView() {
   );
 }
 
-function AdminDashboard() {
+export function AdminDashboard() {
   const { user, logout } = useUser();
   const [, setLocation] = useLocation();
   const [activeView, setActiveView] = useState<View>('events');
@@ -1835,5 +1835,3 @@ const navigationItems = [
   { icon: FormInput, label: "Form Templates", value: "formTemplates" as const },
   { icon: User, label: "My Account", value: "account" as const },
 ];
-
-export default AdminDashboard;
