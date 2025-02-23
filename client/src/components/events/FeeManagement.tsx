@@ -123,8 +123,47 @@ export function FeeManagement() {
     },
   });
 
-  const onSubmit = (values: FeeFormValues) => {
-    createFeeMutation.mutate(values);
+  const updateFeeMutation = useMutation({
+    mutationFn: async (values: FeeFormValues & { id?: number }) => {
+      const response = await fetch(`/api/admin/events/${eventId}/fees/${values.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...values,
+          amount: Math.round(Number(values.amount) * 100),
+          beginDate: values.beginDate ? new Date(values.beginDate).toISOString() : null,
+          endDate: values.endDate ? new Date(values.endDate).toISOString() : null,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update fee");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/events/${eventId}/fees`] });
+      setIsDialogOpen(false);
+      form.reset();
+      toast({
+        title: "Success",
+        description: "Fee updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (values: FeeFormValues & { id?: number }) => {
+    if (values.id) {
+      updateFeeMutation.mutate(values);
+    } else {
+      createFeeMutation.mutate(values);
+    }
   };
 
   if (feesQuery.isLoading) {
@@ -270,7 +309,21 @@ export function FeeManagement() {
                     </TableCell>
                     <TableCell>{fee.applyToAll ? "Yes" : "No"}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          form.reset({
+                            name: fee.name,
+                            amount: (fee.amount / 100).toString(),
+                            beginDate: fee.beginDate ? new Date(fee.beginDate).toISOString().split('T')[0] : "",
+                            endDate: fee.endDate ? new Date(fee.endDate).toISOString().split('T')[0] : "",
+                            applyToAll: fee.applyToAll,
+                          });
+                          form.setValue("id", fee.id);
+                          setIsDialogOpen(true);
+                        }}
+                      >
                         Edit
                       </Button>
                     </TableCell>
