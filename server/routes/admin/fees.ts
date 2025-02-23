@@ -7,7 +7,7 @@ import { authenticateAdmin } from "../../middleware/auth";
 const router = Router();
 
 // Get all fees for an event
-router.get("/:eventId/fees", authenticateAdmin, async (req, res) => {
+router.get("/events/:eventId/fees", authenticateAdmin, async (req, res) => {
   try {
     const { eventId } = req.params;
     if (!eventId || isNaN(parseInt(eventId))) {
@@ -25,7 +25,7 @@ router.get("/:eventId/fees", authenticateAdmin, async (req, res) => {
 });
 
 // Create a new fee
-router.post("/:eventId/fees", authenticateAdmin, async (req, res) => {
+router.post("/events/:eventId/fees", authenticateAdmin, async (req, res) => {
   try {
     const { eventId } = req.params;
     const validatedData = insertEventFeeSchema.parse({
@@ -47,7 +47,7 @@ router.post("/:eventId/fees", authenticateAdmin, async (req, res) => {
 });
 
 // Update a fee
-router.patch("/:eventId/fees/:feeId", authenticateAdmin, async (req, res) => {
+router.patch("/events/:eventId/fees/:feeId", authenticateAdmin, async (req, res) => {
   try {
     const { eventId, feeId } = req.params;
     const validatedData = insertEventFeeSchema.parse({
