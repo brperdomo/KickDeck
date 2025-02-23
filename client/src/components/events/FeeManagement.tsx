@@ -69,8 +69,8 @@ export function FeeManagement() {
     defaultValues: {
       name: "",
       amount: "",
-      beginDate: new Date().toISOString().split('T')[0],
-      endDate: new Date().toISOString().split('T')[0],
+      beginDate: "",
+      endDate: "",
       applyToAll: false,
     },
   });
