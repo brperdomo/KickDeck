@@ -494,46 +494,7 @@ function ReportsView() {
   const { isExporting, startExport } = useExportProcess();
   const { toast } = useToast();
 
-    try {
-      const response = await fetch(`/api/admin/accounting-codes/${selectedCode.id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) throw new Error('Failed to delete accounting code');
-
-      // Refresh accounting codes
-      const updatedCodes = await fetch('/api/admin/accounting-codes').then(res => res.json());
-      setAccountingCodes(updatedCodes);
-
-      toast({
-        title: "Success",
-        description: "Accounting code deleted successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete accounting code",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleEditCode = (code: any) => {
-    setSelectedCode(code);
-    setIsAddingAccountingCode(true);
-  };
-
-  const accountingCodesQuery = useQuery({
-    queryKey: ['/api/admin/accounting-codes'],
-    queryFn: async () => {
-      const response = await fetch('/api/admin/accounting-codes');
-      if (!response.ok) throw new Error('Failed to fetch accounting codes');
-      return response.json();
-    },
-    onSuccess: (data) => {
-      setAccountingCodes(data);
-    }
-  });
+    // Reports view rendering function
 
   const renderReportContent = () => {
     switch (selectedReport) {
