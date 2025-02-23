@@ -10,6 +10,9 @@ const router = Router();
 router.get("/:eventId/fees", authenticateAdmin, async (req, res) => {
   try {
     const { eventId } = req.params;
+    if (!eventId || isNaN(parseInt(eventId))) {
+      return res.status(400).json({ message: "Invalid event ID" });
+    }
     const fees = await db.query.eventFees.findMany({
       where: eq(eventFees.eventId, parseInt(eventId)),
       orderBy: (eventFees) => [eventFees.createdAt],
