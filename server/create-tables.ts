@@ -55,6 +55,18 @@ async function createTables() {
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
 
+      CREATE TABLE IF NOT EXISTS event_fees (
+        id SERIAL PRIMARY KEY,
+        event_id BIGINT NOT NULL,
+        name TEXT NOT NULL,
+        amount INTEGER NOT NULL,
+        begin_date TIMESTAMP,
+        end_date TIMESTAMP,
+        apply_to_all BOOLEAN NOT NULL DEFAULT false,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+
       CREATE TABLE IF NOT EXISTS coupons (
         id SERIAL PRIMARY KEY,
         code TEXT NOT NULL UNIQUE,
