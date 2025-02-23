@@ -33,7 +33,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -166,6 +165,10 @@ export function FeeManagement() {
     }
   };
 
+  const feeToEdit = form.watch("id"); // Track if an id is set for editing
+
+  const isSubmitting = createFeeMutation.isLoading || updateFeeMutation.isLoading;
+
   if (feesQuery.isLoading) {
     return <div>Loading...</div>;
   }
@@ -191,9 +194,13 @@ export function FeeManagement() {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Create New Fee</DialogTitle>
+                  <DialogTitle>
+                    {feeToEdit ? "Update Fee" : "Create New Fee"}
+                  </DialogTitle>
                   <DialogDescription>
-                    Add a new fee for this event. You can specify dates and whether it applies to all registrants.
+                    {feeToEdit
+                      ? "Update an existing fee for this event."
+                      : "Add a new fee for this event. You can specify dates and whether it applies to all registrants."}
                   </DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
@@ -276,7 +283,15 @@ export function FeeManagement() {
                       )}
                     />
                     <DialogFooter>
-                      <Button type="submit">Create Fee</Button>
+                      <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting
+                          ? feeToEdit
+                            ? "Updating..."
+                            : "Creating..."
+                          : feeToEdit
+                            ? "Update Fee"
+                            : "Create Fee"}
+                      </Button>
                     </DialogFooter>
                   </form>
                 </Form>
@@ -309,8 +324,8 @@ export function FeeManagement() {
                     </TableCell>
                     <TableCell>{fee.applyToAll ? "Yes" : "No"}</TableCell>
                     <TableCell className="text-right">
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="sm"
                         onClick={() => {
                           form.reset({
