@@ -1835,3 +1835,5 @@ const navigationItems = [
   { icon: FormInput, label: "Form Templates", value: "formTemplates" as const },
   { icon: User, label: "My Account", value: "account" as const },
 ];
+
+const CouponManagement = lazy(() => import('./coupon-management'));
