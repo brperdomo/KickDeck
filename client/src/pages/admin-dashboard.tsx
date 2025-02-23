@@ -491,7 +491,13 @@ function AdministratorsView() {
 
 function ReportsView() {
   const [selectedReport, setSelectedReport] = useState<ReportType>('financial');
+  const [accountingCodes, setAccountingCodes] = useState<any[]>([]);
+  const [isAddingAccountingCode, setIsAddingAccountingCode] = useState(false);
   const { isExporting, startExport } = useExportProcess();
+
+  const handleEditCode = (code: any) => {
+    // TODO: Implement edit functionality
+  };
 
   const renderReportContent = () => {
     switch (selectedReport) {
@@ -524,7 +530,44 @@ function ReportsView() {
             </Card>
           </div>
         );
-      // ... other report types ...
+      case 'accounting-codes':
+        return (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Accounting Codes</h3>
+              <Button onClick={() => setIsAddingAccountingCode(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Code
+              </Button>
+            </div>
+            <Card>
+              <CardContent className="p-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Code</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {accountingCodes.map((code) => (
+                      <TableRow key={code.id}>
+                        <TableCell>{code.code}</TableCell>
+                        <TableCell>{code.description}</TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm" onClick={() => handleEditCode(code)}>
+                            Edit
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+        );
       default:
         return null;
     }
@@ -553,7 +596,15 @@ function ReportsView() {
                 <FileText className="mr-2 h-4 w-4" />
                 Event Financial Reports
               </Button>
-              {/* ... other report type buttons ... */}
+              <Button
+                variant={selectedReport === 'accounting-codes' ? 'secondary' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => setSelectedReport('accounting-codes')}
+                disabled={isExporting !== null}
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                Accounting Codes
+              </Button>
             </div>
           </CardContent>
         </Card>
