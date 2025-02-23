@@ -96,6 +96,8 @@ export function FeeManagement() {
         body: JSON.stringify({
           ...values,
           amount: Math.round(Number(values.amount) * 100), // Convert to cents
+          beginDate: values.beginDate ? new Date(values.beginDate).toISOString() : null,
+          endDate: values.endDate ? new Date(values.endDate).toISOString() : null,
         }),
       });
       if (!response.ok) {
