@@ -1,8 +1,55 @@
 import { Router } from "express";
 import { eq } from "drizzle-orm";
 import { db } from "@db";
-import { eventFees, insertEventFeeSchema } from "@db/schema";
+import { eventFees } from "@db/schema";
 import { authenticateAdmin } from "../../middleware/auth";
+import { z } from "zod";
+
+const router = Router();
+
+const feeSchema = z.object({
+  name: z.string(),
+  amount: z.number(),
+  beginDate: z.string().optional(),
+  endDate: z.string().optional(),
+  applyToAll: z.boolean(),
+  eventId: z.string()
+});
+
+router.get("/:eventId/fees", authenticateAdmin, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const fees = await db
+      .select()
+      .from(eventFees)
+      .where(eq(eventFees.eventId, eventId));
+    res.json(fees);
+  } catch (error) {
+    console.error("Error fetching fees:", error);
+    res.status(500).json({ message: "Failed to fetch fees" });
+  }
+});
+
+router.post("/:eventId/fees", authenticateAdmin, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const fee = await db
+      .insert(eventFees)
+      .values({
+        ...req.body,
+        eventId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+      .returning();
+    res.status(201).json(fee[0]);
+  } catch (error) {
+    console.error("Error creating fee:", error);
+    res.status(500).json({ message: "Failed to create fee" });
+  }
+});
+
+export default router;
 
 const router = Router();
 
