@@ -1717,7 +1717,7 @@ function AdminDashboard() {
               onClick={() => setActiveView('reports')}
             >
               <FileText className="mr-2 h-4 w-4" />
-              Reports
+              Reports and Financials
             </Button>
 
             <Button
