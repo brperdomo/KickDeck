@@ -52,7 +52,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from 'react-router-dom';
+
 
 const feeFormSchema = z.object({
   name: z.string().min(1, "Fee name is required"),
