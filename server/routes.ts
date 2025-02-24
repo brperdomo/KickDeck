@@ -1849,8 +1849,9 @@ export function registerRoutes(app: Express): Server {
                 .update(eventAgeGroups)
                 .set({
                   projectedTeams: group.projectedTeams,
-                  birthDateStart: group.birthDateStart,
-                  birthDateEnd: group.birthDateEnd,
+                  ageGroup: group.ageGroup,
+                  gender: group.gender,
+                  fieldSize: group.fieldSize,
                   scoringRule: group.scoringRule,
                   amountDue: group.amountDue || null,
                 })
