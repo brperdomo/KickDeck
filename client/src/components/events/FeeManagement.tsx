@@ -189,7 +189,7 @@ export function FeeManagement() {
         </Button>
       </div>
       <Card>
-        <CardHeader className="space-y-1">
+        <CardContent>
           <div className="flex justify-between items-center">
             <div>
               <CardTitle>Event Fees</CardTitle>
