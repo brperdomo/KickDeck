@@ -151,11 +151,11 @@ export const eventAgeGroups = pgTable("event_age_groups", {
   ageGroup: text("age_group").notNull(),
   birthYear: integer("birth_year").notNull(),
   gender: text("gender").notNull(),
-  divisionCode: text("division_code").notNull(),
   projectedTeams: integer("projected_teams").notNull(),
   scoringRule: text("scoring_rule"),
   fieldSize: text("field_size").notNull(),
   amountDue: integer("amount_due"),
+  seasonalScopeId: integer("seasonal_scope_id").references(() => seasonalScopes.id),
   createdAt: text("created_at").notNull(),
 });
 

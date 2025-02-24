@@ -2042,6 +2042,14 @@ export function registerRoutes(app: Express): Server {
           .from(users)
           .where(eq(users.isAdmin, true));
 
+        // Get the seasonal scope ID and age group IDs from the event
+        const seasonalScope = await db
+          .select()
+          .from(seasonalScopes)
+          .where(eq(seasonalScopes.id, eventAgeGroups[0]?.seasonalScopeId ?? 0))
+          .limit(1)
+          .then(rows => rows[0]);
+
         // Format response to match create event view structure exactly
         const response = {
           ...event,
@@ -2063,6 +2071,9 @@ export function registerRoutes(app: Express): Server {
           ),
           scoringRules,
           administrators,
+          // Add selected scope and age group IDs
+          selectedScopeId: seasonalScope?.id || null,
+          selectedAgeGroupIds: ageGroups.map(({ ageGroup }) => ageGroup.id),
           // Additional metadata needed by create view
           availableAgeGroups: ageGroups.map(({ ageGroup }) => ageGroup.ageGroup),
           availableFieldSizes: [...new Set(fieldSizes.map(f => f.fieldSize))].filter(Boolean),
