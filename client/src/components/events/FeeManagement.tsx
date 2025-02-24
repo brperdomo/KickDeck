@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams } from "wouter";
+import { ArrowLeft } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -180,21 +181,28 @@ export function FeeManagement() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto py-6 max-w-4xl">
+      <div className="flex justify-between items-center mb-6">
+        <Button variant="outline" onClick={() => window.history.back()}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Dashboard
+        </Button>
+      </div>
       <Card>
-        <CardHeader>
-          <CardTitle>Event Fees</CardTitle>
-          <CardDescription>
-            Manage fees for this event. Fees can be applied to all registrants or specific age groups.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
+        <CardHeader className="space-y-1">
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Event Fees</CardTitle>
+              <CardDescription>
+                Manage fees for this event. Fees can be applied to all registrants or specific age groups.
+              </CardDescription>
+            </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button>Add New Fee</Button>
               </DialogTrigger>
               <DialogContent>
+          
                 <DialogHeader>
                   <DialogTitle>
                     {feeToEdit ? "Update Fee" : "Create New Fee"}
