@@ -1850,6 +1850,7 @@ export function registerRoutes(app: Express): Server {
                 .set({
                   projectedTeams: group.projectedTeams,
                   ageGroup: group.ageGroup,
+                  birthYear: group.birthYear,
                   gender: group.gender,
                   fieldSize: group.fieldSize,
                   scoringRule: group.scoringRule,
