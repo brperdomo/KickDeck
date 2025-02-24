@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams } from "wouter";
+import { ArrowLeft } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -33,6 +34,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -44,6 +46,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "@/hooks/use-location";
 
 const feeFormSchema = z.object({
+  id: z.number().optional(),
   name: z.string().min(1, "Fee name is required"),
   amount: z.string().min(1, "Amount is required").refine(
     (val) => !isNaN(Number(val)) && Number(val) > 0,
@@ -178,16 +181,22 @@ export function FeeManagement() {
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Event Fees</CardTitle>
-          <CardDescription>
-            Manage fees for this event. Fees can be applied to all registrants or specific age groups.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
+    <div className="container mx-auto py-8 max-w-4xl">
+      <div className="flex justify-between items-center mb-8">
+        <Button variant="outline" onClick={() => window.history.back()}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Dashboard
+        </Button>
+      </div>
+      <Card className="shadow-lg">
+        <CardContent className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <div className="space-y-2">
+              <CardTitle>Event Fees</CardTitle>
+              <CardDescription>
+                Manage fees for this event. Fees can be applied to all registrants or specific age groups.
+              </CardDescription>
+            </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button>Add New Fee</Button>
@@ -299,12 +308,12 @@ export function FeeManagement() {
             </Dialog>
           </div>
 
-          <div className="rounded-md border">
+          <div className="rounded-md border mt-6">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Amount</TableHead>
+                <TableRow className="hover:bg-muted/50">
+                  <TableHead className="py-4">Name</TableHead>
+                  <TableHead className="py-4">Amount</TableHead>
                   <TableHead>Begin Date</TableHead>
                   <TableHead>End Date</TableHead>
                   <TableHead>Apply to All</TableHead>
