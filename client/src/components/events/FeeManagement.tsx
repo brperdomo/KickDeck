@@ -191,7 +191,7 @@ export function FeeManagement() {
       <Card>
         <CardContent>
           <div className="flex justify-between items-center">
-            <div>
+            <div className="space-y-2">
               <CardTitle>Event Fees</CardTitle>
               <CardDescription>
                 Manage fees for this event. Fees can be applied to all registrants or specific age groups.
