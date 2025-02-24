@@ -28,30 +28,33 @@ export default function UserDashboard() {
 
   const MenuItem = ({ href, icon: Icon, children }: { href: string; icon: any; children: React.ReactNode }) => (
     <Link href={href}>
-      <a className="flex items-center gap-3 p-4 text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition-colors rounded-lg">
-        <Icon className="h-6 w-6" />
-        <span className="text-base">{children}</span>
-      </a>
+      <Button
+        variant="ghost"
+        className="w-full justify-start text-base py-6"
+      >
+        <Icon className="h-5 w-5 mr-3" />
+        {children}
+      </Button>
     </Link>
   );
 
   const MobileMenu = () => (
     <Drawer open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-      <DrawerContent className="h-[85vh]">
-        <DrawerHeader className="border-b pb-4">
-          <DrawerTitle>
-            <h2 className="text-xl font-bold text-primary">MatchPro</h2>
+      <DrawerContent>
+        <DrawerHeader className="border-b">
+          <DrawerTitle className="text-center">
+            <h2 className="text-xl font-semibold">Menu</h2>
           </DrawerTitle>
         </DrawerHeader>
-        <div className="flex flex-col h-full">
+        <div className="px-2 py-4">
           {/* User Profile Section */}
-          <div className="p-4 border-b">
-            <div className="flex items-center gap-3 mb-2">
+          <div className="px-4 mb-6">
+            <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                 <User className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="font-medium text-base">
+                <p className="font-medium text-lg">
                   {user?.firstName} {user?.lastName}
                 </p>
                 <p className="text-sm text-gray-500">{user?.email}</p>
@@ -60,7 +63,7 @@ export default function UserDashboard() {
           </div>
 
           {/* Navigation */}
-          <div className="flex-1 p-2 space-y-1">
+          <div className="space-y-2">
             <MenuItem href="/household" icon={Home}>
               My Household
             </MenuItem>
@@ -70,14 +73,14 @@ export default function UserDashboard() {
           </div>
 
           {/* Logout Button */}
-          <div className="p-4 border-t">
+          <div className="px-2 pt-6">
             <Button
-              variant="outline"
-              className="w-full justify-start gap-3 text-red-600 hover:text-red-700 hover:bg-red-50"
+              variant="destructive"
+              className="w-full py-6 text-base"
               onClick={handleLogout}
             >
-              <LogOut className="h-6 w-6" />
-              <span className="text-base">Logout</span>
+              <LogOut className="h-5 w-5 mr-3" />
+              Logout
             </Button>
           </div>
         </div>
@@ -89,7 +92,7 @@ export default function UserDashboard() {
     <div className="min-h-screen bg-gray-50">
       {/* Mobile Header */}
       {isMobile && (
-        <header className="sticky top-0 z-50 bg-white border-b px-4 py-3 flex items-center justify-between">
+        <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b px-4 py-3 flex items-center justify-between">
           <Button
             variant="ghost"
             size="icon"
@@ -103,9 +106,9 @@ export default function UserDashboard() {
         </header>
       )}
 
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar - Hidden on Mobile */}
       {!isMobile && (
-        <div className="fixed left-0 top-0 h-full w-64 bg-white border-r">
+        <div className="fixed left-0 top-0 h-full w-64 bg-white border-r hidden md:block">
           <div className="flex flex-col h-full">
             <div className="p-4 border-b">
               <h2 className="text-xl font-bold text-primary">MatchPro</h2>
@@ -120,11 +123,11 @@ export default function UserDashboard() {
             </div>
             <div className="p-4 border-t">
               <Button
-                variant="outline"
-                className="w-full justify-start gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                variant="destructive"
+                className="w-full"
                 onClick={handleLogout}
               >
-                <LogOut className="h-5 w-5" />
+                <LogOut className="h-5 w-5 mr-2" />
                 Logout
               </Button>
             </div>
@@ -136,18 +139,18 @@ export default function UserDashboard() {
       {isMobile && <MobileMenu />}
 
       {/* Main Content */}
-      <main className={`${isMobile ? 'pt-16' : 'ml-64'} p-4`}>
-        <div className="max-w-2xl mx-auto space-y-4">
+      <main className={`${isMobile ? 'pt-16' : 'ml-64'} p-4 md:p-6`}>
+        <div className="max-w-lg mx-auto space-y-4">
           {/* Welcome Card */}
           <Card className="border-none shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xl font-semibold">
-                Welcome, {user?.firstName}!
+            <CardHeader className="pb-3">
+              <CardTitle className="text-2xl">
+                Welcome back!
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">
-                Access your household information and manage your account settings from here.
+              <p className="text-gray-600 text-lg">
+                What would you like to do today?
               </p>
             </CardContent>
           </Card>
@@ -155,18 +158,18 @@ export default function UserDashboard() {
           {/* Quick Actions */}
           <div className="grid grid-cols-2 gap-4">
             <Link href="/household">
-              <Card className="border-none shadow-sm hover:shadow transition-shadow cursor-pointer">
-                <CardContent className="p-4 text-center">
-                  <Home className="h-6 w-6 mx-auto mb-2 text-primary" />
-                  <p className="font-medium">Household</p>
+              <Card className="border-none shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                <CardContent className="p-6 text-center">
+                  <Home className="h-8 w-8 mx-auto mb-3 text-primary" />
+                  <p className="font-medium text-lg">Household</p>
                 </CardContent>
               </Card>
             </Link>
             <Link href="/account">
-              <Card className="border-none shadow-sm hover:shadow transition-shadow cursor-pointer">
-                <CardContent className="p-4 text-center">
-                  <User className="h-6 w-6 mx-auto mb-2 text-primary" />
-                  <p className="font-medium">Account</p>
+              <Card className="border-none shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                <CardContent className="p-6 text-center">
+                  <User className="h-8 w-8 mx-auto mb-3 text-primary" />
+                  <p className="font-medium text-lg">Account</p>
                 </CardContent>
               </Card>
             </Link>
