@@ -77,7 +77,7 @@ export function FeeManagement() {
   });
 
   const feesQuery = useQuery({
-    queryKey: ['fees', eventId],
+    queryKey: [`/api/admin/events/${eventId}/fees`],
     queryFn: async () => {
       if (!eventId) return [];
       const response = await fetch(`/api/admin/events/${eventId}/fees`);
@@ -112,7 +112,7 @@ export function FeeManagement() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['fees', eventId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/events/${eventId}/fees`] });
       setIsDialogOpen(false);
       form.reset();
       toast({
