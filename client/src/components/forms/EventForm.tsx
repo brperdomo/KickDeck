@@ -147,11 +147,13 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
   });
 
   const feesQuery = useQuery({
-    queryKey: [`/api/admin/events/${defaultValues?.id}/fees`],
+    queryKey: ['eventFees', defaultValues?.id],
     queryFn: async () => {
       if (!defaultValues?.id) return [];
       const response = await fetch(`/api/admin/events/${defaultValues.id}/fees`);
-      if (!response.ok) throw new Error("Failed to fetch fees");
+      if (!response.ok) {
+        throw new Error("Failed to fetch fees");
+      }
       return response.json();
     },
     enabled: !!defaultValues?.id
