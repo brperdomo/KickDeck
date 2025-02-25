@@ -112,32 +112,75 @@ export function registerRoutes(app: Express): Server {
     // Admin event details endpoint
     app.get('/api/admin/events/:id', isAdmin, async (req, res) => {
       try {
-        const eventId = req.params.id; // Remove parseInt since ID is string
+        const eventId = parseInt(req.params.id);
 
-        // Simplified query to get basic event data
-        const event = await db
-          .select({
-            id: events.id,
-            name: events.name,
-            startDate: events.startDate,
-            endDate: events.endDate,
-            applicationDeadline: events.applicationDeadline,
-            timezone: events.timezone,
-            details: events.details,
-            agreement: events.agreement,
-            refundPolicy: events.refundPolicy,
-            createdAt: events.createdAt,
-            updatedAt: events.updatedAt
-          })
+        // Get event details
+        const [event] = await db
+          .select()
           .from(events)
-          .where(eq(events.id, eventId))
-          .limit(1);
+          .where(eq(events.id, eventId));
 
-        if (!event || event.length === 0) {
+        if (!event) {
           return res.status(404).json({ message: "Event not found" });
         }
 
-        res.json(event[0]);
+        // Get age groups
+        const ageGroups = await db
+          .select()
+          .from(eventAgeGroups)
+          .where(eq(eventAgeGroups.eventId, eventId.toString()));
+
+        // Get scoring rules
+        const scoringRules = await db
+          .select()
+          .from(scoringRules)
+          .where(eq(scoringRules.eventId, eventId));
+
+        // Get complex assignments and field sizes
+        const complexAssignments = await db
+          .select()
+          .from(eventComplexes)
+          .where(eq(eventComplexes.eventId, eventId));
+
+        const fieldSizes = await db
+          .select()
+          .from(complexFieldSizes)
+          .where(eq(complexFieldSizes.eventId, eventId));
+
+        // Get seasonal scope
+        const ageGroup = await db
+          .select()
+          .from(eventAgeGroups)
+          .where(eq(eventAgeGroups.eventId, eventId.toString()))
+          .limit(1)
+          .then(rows => rows[0]);
+
+        const seasonalScope = ageGroup ? await db
+          .select({
+            id: seasonalScopes.id,
+            name: seasonalScopes.name,
+            startYear: seasonalScopes.startYear,
+            endYear: seasonalScopes.endYear,
+            isActive: seasonalScopes.isActive
+          })
+          .from(seasonalScopes)
+          .where(eq(seasonalScopes.id, ageGroup.seasonalScopeId))
+          .limit(1)
+          .then(rows => rows[0]) : null;
+
+        // Format response
+        const response = {
+          ...event,
+          ageGroups,
+          scoringRules,
+          seasonalScope,
+          selectedComplexIds: complexAssignments.map(a => a.complexId),
+          complexFieldSizes: Object.fromEntries(
+            fieldSizes.map(f => [f.fieldId, f.fieldSize])
+          )
+        };
+
+        res.json(response);
       } catch (error) {
         console.error('Error fetching event details:', error);
         console.error("Error details:", error);
@@ -1716,21 +1759,53 @@ export function registerRoutes(app: Express): Server {
 
         // Create the event
         const eventId = crypto.generateEventId();
-        const [newEvent] = await db
-          .insert(events)
-          .values({
-            id: eventId,
-            name,
-            startDate,
-            endDate,
-            timezone: timezone || 'America/New_York',
-            applicationDeadline,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          })
-          .returning();
+        const [newEvent] = await db.transaction(async (tx) => {
+          // Create main event
+          const [event] = await tx
+            .insert(events)
+            .values({
+              id: eventId,
+              name,
+              startDate,
+              endDate,
+              timezone: timezone || 'America/New_York',
+              applicationDeadline,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            })
+            .returning();
 
-          res.status(201).json({ message: "Event created successfully", event: newEvent });
+          // Handle age groups if provided
+          if (formData.selectedScopeId && formData.selectedAgeGroupIds) {
+            const selectedAgeGroups = await tx
+              .select()
+              .from(ageGroupSettings)
+              .where(and(
+                eq(ageGroupSettings.seasonalScopeId, formData.selectedScopeId),
+                inArray(ageGroupSettings.id, formData.selectedAgeGroupIds)
+              ));
+
+            // Create event age groups
+            for (const group of selectedAgeGroups) {
+              await tx
+                .insert(eventAgeGroups)
+                .values({
+                  eventId,
+                  ageGroup: group.ageGroup,
+                  birthYear: group.birthYear,
+                  gender: group.gender,
+                  fieldSize: "11v11", // Default value, can be updated later
+                  projectedTeams: 8, // Default value, can be updated later
+                  seasonalScopeId: group.seasonalScopeId,
+                  createdAt: new Date().toISOString(),
+                });
+            }
+          }
+
+          return [event];
+        });
+
+        res.status(201).json({ message: "Event created successfully", event: newEvent });
       } catch (error) {
         console.error('Error creating event:', error);
         console.error("Error details:", error);
@@ -2975,17 +3050,20 @@ export function registerRoutes(app: Express): Server {
 
         // Start a transaction to handle cascade deletion
         await db.transaction(async (tx) => {
-          // First delete teams to remove references to age groups
+          // Delete chat rooms associated with the event
+          await tx.delete(chatRooms).where(eq(chatRooms.eventId, eventId));
+          
+          // Delete teams first to handle foreign key constraints
           await tx.delete(teams).where(eq(teams.eventId, eventId));
 
-          // Then delete tournament groups
+          // Delete tournament groups
           await tx.delete(tournamentGroups).where(eq(tournamentGroups.eventId, eventId));
           
           // Delete other related records
           await tx.delete(eventAgeGroups).where(eq(eventAgeGroups.eventId, eventId));
           await tx.execute(sql`DELETE FROM event_complexes WHERE event_id = ${eventId}`);
           await tx.delete(eventFieldSizes).where(eq(eventFieldSizes.eventId, eventId));
-          await tx.delete(teams).where(eq(teams.eventId, eventId));
+          await tx.delete(eventScoringRules).where(eq(eventScoringRules.eventId, eventId));
 
           // Finally delete the event
           const [deletedEvent] = await tx
@@ -2994,7 +3072,7 @@ export function registerRoutes(app: Express): Server {
             .returning();
 
           if (!deletedEvent) {
-            throw new Error("Event not found");
+            return res.status(404).json({ error: "Event not found" });
           }
         });
 

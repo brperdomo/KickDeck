@@ -247,7 +247,7 @@ export function EventsTable() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Event Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => navigate(`/admin/events/${event.id}`)}>
+                        <DropdownMenuItem onClick={() => navigate(`/admin/events/${event.id}/edit`)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
