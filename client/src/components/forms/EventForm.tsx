@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -57,6 +57,7 @@ interface EventFormValues extends EventInformationValues {
   settings: EventSetting[];
   administrators: EventAdministrator[];
   branding: EventBranding;
+  seasonalScope?: { name: string; startYear: number; endYear: number };
 }
 
 interface EventFormProps {
@@ -92,20 +93,45 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
   const [primaryColor, setPrimaryColor] = useState(defaultValues?.branding?.primaryColor || '#007AFF');
   const [secondaryColor, setSecondaryColor] = useState(defaultValues?.branding?.secondaryColor || '#34C759');
   const [isExtracting, setIsExtracting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
 
-  const form = useForm<EventInformationValues>({
+  const form = useForm<EventFormValues>({
     resolver: zodResolver(eventInformationSchema),
-    defaultValues: defaultValues?.information || {
-      name: "",
-      startDate: "",
-      endDate: "",
-      timezone: "",
-      applicationDeadline: "",
-      details: "",
-      agreement: "",
-      refundPolicy: "",
+    defaultValues: defaultValues || {
+      name: '',
+      startDate: '',
+      endDate: '',
+      timezone: '',
+      applicationDeadline: '',
+      details: '',
+      agreement: '',
+      refundPolicy: '',
+      ageGroups: [],
+      selectedComplexIds: [],
+      complexFieldSizes: {},
+      scoringRules: [],
+      settings: [],
+      administrators: [],
+      branding: {} as EventBranding
+    }
+  });
+
+  useEffect(() => {
+    if (defaultValues) {
+      form.reset(defaultValues);
+    }
+  }, [defaultValues]);
+
+  const seasonalScopeQuery = useQuery({
+    queryKey: ['/api/admin/seasonal-scopes', defaultValues?.seasonalScopeId],
+    queryFn: async () => {
+      if (!defaultValues?.seasonalScopeId) return null;
+      const response = await fetch(`/api/admin/seasonal-scopes/${defaultValues.seasonalScopeId}`);
+      if (!response.ok) throw new Error('Failed to fetch seasonal scope');
+      return response.json();
     },
+    enabled: !!defaultValues?.seasonalScopeId
   });
 
   const complexesQuery = useQuery({
@@ -120,7 +146,18 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
     enabled: activeTab === 'complexes',
   });
 
-  const handleSubmitForm = async (data: EventInformationValues) => {
+  const feesQuery = useQuery({
+    queryKey: [`/api/admin/events/${defaultValues?.id}/fees`],
+    queryFn: async () => {
+      if (!defaultValues?.id) return [];
+      const response = await fetch(`/api/admin/events/${defaultValues.id}/fees`);
+      if (!response.ok) throw new Error("Failed to fetch fees");
+      return response.json();
+    },
+    enabled: !!defaultValues?.id
+  });
+
+  const handleSubmitForm = async (data: EventFormValues) => {
     setIsSaving(true);
     try {
       if (!data.name || !data.startDate || !data.endDate || !data.timezone || !data.applicationDeadline) {
@@ -176,6 +213,10 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
       ...prev,
       [complexId]: size
     }));
+  };
+
+  const handleDeleteAgeGroup = (id: string) => {
+    setAgeGroups(ageGroups.filter(group => group.id !== id));
   };
 
   const SaveButton = () => (
@@ -380,6 +421,11 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Age Groups</h3>
+        {seasonalScopeQuery.data && (
+          <Badge variant="outline" className="text-sm">
+            {seasonalScopeQuery.data.name} ({seasonalScopeQuery.data.startYear}-{seasonalScopeQuery.data.endYear})
+          </Badge>
+        )}
       </div>
 
       <Table>
@@ -393,6 +439,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
             <TableHead>Field Size</TableHead>
             <TableHead>Projected Teams</TableHead>
             <TableHead>Amount Due</TableHead>
+            <TableHead>Fees</TableHead> {/* Added Fees column */}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -416,6 +463,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                             projectedTeams: 0,
                             fieldSize: '11v11' as FieldSize,
                             amountDue: null,
+                            fees: [] // Initialize fees array
                           },
                         ]);
                       } else {
@@ -502,6 +550,38 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                     />
                   ) : (
                     "-"
+                  )}
+                </TableCell>
+                <TableCell>
+                  {existingGroup && feesQuery.data && feesQuery.data.length > 0 ? (
+                    <Select
+                      value={existingGroup.fees}
+                      onValueChange={(selectedFees) => {
+                        setAgeGroups(prevAgeGroups => prevAgeGroups.map(ag =>
+                          ag.id === existingGroup.id ? { ...ag, fees: selectedFees } : ag
+                        ));
+                      }}
+                      multiple
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Fees" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {feesQuery.data.map(fee => (
+                          <SelectItem key={fee.id} value={fee.id}>
+                            {fee.name} - ${fee.amount}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : feesQuery.isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : feesQuery.isError ? (
+                    <span className="text-red-500">Error loading fees</span>
+                  ) : (
+                    <a href={`/admin/events/${defaultValues?.id}/fees`} className="text-blue-500 underline">
+                      Manage Fees
+                    </a>
                   )}
                 </TableCell>
               </TableRow>
@@ -925,9 +1005,9 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
 
             <Button
               onClick={form.handleSubmit(handleSubmitForm)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isSaving}
             >
-              {isSubmitting ? (
+              {isSubmitting || isSaving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Saving...
