@@ -149,7 +149,8 @@ async function testDbConnection() {
     const findAvailablePort = async (startPort: number): Promise<number> => {
       return new Promise((resolve, reject) => {
         const tryPort = (port: number) => {
-          const tempServer = require('http').createServer();
+          const { createServer } = await import('http');
+          const tempServer = createServer();
           tempServer.listen(port, "0.0.0.0")
             .on('listening', () => {
               tempServer.close(() => resolve(port));
