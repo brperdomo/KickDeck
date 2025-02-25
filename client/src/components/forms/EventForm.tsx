@@ -57,6 +57,7 @@ interface EventFormValues extends EventInformationValues {
   settings: EventSetting[];
   administrators: EventAdministrator[];
   branding: EventBranding;
+  seasonalScope?: { name: string; startYear: number; endYear: number };
 }
 
 interface EventFormProps {
@@ -394,6 +395,11 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Age Groups</h3>
+        {defaultValues?.seasonalScope && (
+          <Badge variant="outline" className="text-sm">
+            {defaultValues.seasonalScope.name} ({defaultValues.seasonalScope.startYear}-{defaultValues.seasonalScope.endYear})
+          </Badge>
+        )}
       </div>
 
       <Table>
