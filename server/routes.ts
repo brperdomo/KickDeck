@@ -34,6 +34,7 @@ import {
   formFields,
   formFieldOptions,
   formResponses,
+  teams,
 } from "@db/schema";
 import fs from "fs/promises";
 import path from "path";
