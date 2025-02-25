@@ -145,16 +145,22 @@ async function testDbConnection() {
 
     // Start the server
     const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
-    server.listen(PORT, "0.0.0.0", () => {
-      log(`Server started successfully on port ${PORT}`);
-    }).on('error', (e: any) => {
-      if (e.code === 'EADDRINUSE') {
-        log(`Port ${PORT} is busy, trying ${PORT + 1}`);
-        server.listen(PORT + 1, "0.0.0.0", () => {
-          log(`Server started successfully on port ${PORT + 1}`);
-        });
-      }
-    });
+    
+    const startServer = (port: number) => {
+      server.listen(port, "0.0.0.0", () => {
+        log(`Server started successfully on port ${port}`);
+      }).on('error', (e: any) => {
+        if (e.code === 'EADDRINUSE') {
+          log(`Port ${port} is busy, trying ${port + 1}`);
+          startServer(port + 1);
+        } else {
+          log(`Error starting server: ${e.message}`);
+          process.exit(1);
+        }
+      });
+    };
+
+    startServer(PORT);
 
     // Handle shutdown gracefully
     process.on("SIGTERM", () => {
