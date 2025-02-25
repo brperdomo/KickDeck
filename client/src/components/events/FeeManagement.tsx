@@ -82,13 +82,10 @@ export function FeeManagement() {
       if (!eventId) return [];
       const response = await fetch(`/api/admin/events/${eventId}/fees`);
       const data = await response.json();
+      const data = await response.json();
       if (!response.ok) {
         throw new Error(data.message || 'Failed to fetch fees');
       }
-      if (!response.ok) {
-        throw new Error("Failed to fetch fees");
-      }
-      const data = await response.json();
       return Array.isArray(data) ? data : [];
     },
     enabled: !!eventId,
