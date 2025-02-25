@@ -27,10 +27,12 @@ router.get("/:eventId/fees", authenticateAdmin, async (req, res) => {
     console.log("Found fees:", fees.length, "fees for event", eventId);
     console.log("Fee details:", fees);
 
+    res.setHeader('Content-Type', 'application/json');
     res.status(200).json(fees || []);
   } catch (error) {
     console.error("Error fetching event fees:", error);
-    res.status(500).json({ message: "Failed to fetch event fees", error: String(error) });
+    res.setHeader('Content-Type', 'application/json');
+    res.status(500).json({ message: "Failed to fetch event fees" });
   }
 });
 

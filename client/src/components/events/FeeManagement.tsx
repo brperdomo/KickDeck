@@ -77,24 +77,15 @@ export function FeeManagement() {
         const response = await fetch(`/api/admin/events/${eventId}/fees`, {
           credentials: 'include',
           headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Accept': 'application/json'
           }
         });
-        
-        const text = await response.text();
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch (e) {
-          console.error("Failed to parse response:", text);
-          throw new Error("Invalid server response");
-        }
 
         if (!response.ok) {
-          throw new Error(data.message || 'Failed to fetch fees');
+          throw new Error('Failed to fetch fees');
         }
 
+        const data = await response.json();
         return Array.isArray(data) ? data : [];
       } catch (error) {
         console.error("Error fetching fees:", error);
