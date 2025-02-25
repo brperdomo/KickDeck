@@ -94,6 +94,7 @@ export function FeeManagement() {
 
   const createFeeMutation = useMutation({
     mutationFn: async (values: FeeFormValues) => {
+      if (!eventId) throw new Error("Event ID is required");
       const response = await fetch(`/api/admin/events/${eventId}/fees`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -162,11 +163,19 @@ export function FeeManagement() {
     },
   });
 
-  const onSubmit = (values: FeeFormValues & { id?: number }) => {
-    if (values.id) {
-      updateFeeMutation.mutate(values);
-    } else {
-      createFeeMutation.mutate(values);
+  const onSubmit = async (values: FeeFormValues & { id?: number }) => {
+    try {
+      if (values.id) {
+        await updateFeeMutation.mutateAsync(values);
+      } else {
+        await createFeeMutation.mutateAsync(values);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save fee. Please check all fields are valid.",
+        variant: "destructive",
+      });
     }
   };
 
