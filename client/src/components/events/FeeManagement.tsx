@@ -85,7 +85,7 @@ export function FeeManagement() {
         throw new Error("Failed to fetch fees");
       }
       const data = await response.json();
-      console.log('Fees data:', data);
+      console.log('Detailed Fees data:', JSON.stringify(data, null, 2));
       return Array.isArray(data) ? data : [];
     },
     enabled: !!eventId,
