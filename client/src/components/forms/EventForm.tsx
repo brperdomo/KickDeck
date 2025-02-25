@@ -578,9 +578,9 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                   ) : feesQuery.isError ? (
                     <span className="text-red-500">Error loading fees</span>
                   ) : (
-                    <a href={`/admin/events/${defaultValues?.id}/fees`} className="text-blue-500 underline">
+                    <Link to={`/admin/events/${defaultValues?.id}/fees`} className="text-blue-500 underline">
                       Manage Fees
-                    </a>
+                    </Link>
                   )}
                 </TableCell>
               </TableRow>
