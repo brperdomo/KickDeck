@@ -126,19 +126,8 @@ export function registerRoutes(app: Express): Server {
 
         // Get age groups
         const ageGroups = await db
-          .select({
-            id: eventAgeGroups.id,
-            eventId: eventAgeGroups.eventId,
-            ageGroupId: eventAgeGroups.ageGroupSettingsId,
-            seasonalScopeId: eventAgeGroups.seasonalScopeId,
-            gender: ageGroupSettings.gender,
-            ageGroup: ageGroupSettings.ageGroup,
-            projectedTeams: ageGroupSettings.projectedTeams,
-            fieldSize: ageGroupSettings.fieldSize,
-            amountDue: ageGroupSettings.amountDue,
-          })
+          .select()
           .from(eventAgeGroups)
-          .leftJoin(ageGroupSettings, eq(eventAgeGroups.ageGroupSettingsId, ageGroupSettings.id))
           .where(eq(eventAgeGroups.eventId, eventId.toString()));
 
         // Get scoring rules
