@@ -44,7 +44,12 @@ router.post("/:eventId/fees", authenticateAdmin, async (req, res) => {
     res.status(201).json(newFee[0]);
   } catch (error) {
     console.error("Error creating event fee:", error);
-    res.status(500).json({ message: "Failed to create event fee" });
+    if (error.errors) {
+      // Zod validation error
+      res.status(400).json({ message: error.errors[0].message });
+    } else {
+      res.status(500).json({ message: error.message || "Failed to create event fee" });
+    }
   }
 });
 

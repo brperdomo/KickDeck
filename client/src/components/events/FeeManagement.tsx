@@ -100,7 +100,7 @@ export function FeeManagement() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...values,
-          amount: Math.round(Number(values.amount) * 100), // Convert to cents
+          amount: Math.round(parseFloat(values.amount) * 100), // Convert to cents
           beginDate: values.beginDate ? new Date(values.beginDate).toISOString() : null,
           endDate: values.endDate ? new Date(values.endDate).toISOString() : null,
         }),
