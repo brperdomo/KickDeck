@@ -144,23 +144,16 @@ async function testDbConnection() {
     });
 
     // Start the server
-    const tryPort = async (port: number): Promise<number> => {
-      try {
-        await new Promise((resolve, reject) => {
-          server.listen(port, "0.0.0.0", () => {
-            server.close(() => resolve(port));
-          }).on('error', reject);
-        });
-        return port;
-      } catch {
-        return tryPort(port + 1);
-      }
-    };
-
     const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
-    const finalPort = await tryPort(PORT);
-    server.listen(finalPort, "0.0.0.0", () => {
-      log(`Server started successfully on port ${finalPort}`);
+    server.listen(PORT, "0.0.0.0", () => {
+      log(`Server started successfully on port ${PORT}`);
+    }).on('error', (e: any) => {
+      if (e.code === 'EADDRINUSE') {
+        log(`Port ${PORT} is busy, trying ${PORT + 1}`);
+        server.listen(PORT + 1, "0.0.0.0", () => {
+          log(`Server started successfully on port ${PORT + 1}`);
+        });
+      }
     });
 
     // Handle shutdown gracefully
