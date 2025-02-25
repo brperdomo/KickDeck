@@ -148,7 +148,14 @@ export function registerRoutes(app: Express): Server {
           .where(eq(complexFieldSizes.eventId, eventId));
 
         // Get seasonal scope
-        const [seasonalScope] = await db
+        const ageGroup = await db
+          .select()
+          .from(eventAgeGroups)
+          .where(eq(eventAgeGroups.eventId, eventId.toString()))
+          .limit(1)
+          .then(rows => rows[0]);
+
+        const seasonalScope = ageGroup ? await db
           .select({
             id: seasonalScopes.id,
             name: seasonalScopes.name,
@@ -157,9 +164,9 @@ export function registerRoutes(app: Express): Server {
             isActive: seasonalScopes.isActive
           })
           .from(seasonalScopes)
-          .innerJoin(eventAgeGroups, eq(seasonalScopes.id, eventAgeGroups.seasonalScopeId))
-          .where(eq(eventAgeGroups.eventId, eventId.toString()))
-          .limit(1);
+          .where(eq(seasonalScopes.id, ageGroup.seasonalScopeId))
+          .limit(1)
+          .then(rows => rows[0]) : null;
 
         // Format response
         const response = {
