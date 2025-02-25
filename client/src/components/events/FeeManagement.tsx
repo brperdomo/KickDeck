@@ -64,21 +64,13 @@ export function FeeManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const form = useForm<FeeFormValues>({
-    resolver: zodResolver(feeFormSchema),
-    defaultValues: {
-      name: "",
-      amount: "",
-      beginDate: "",
-      endDate: "",
-      applyToAll: false,
-    },
-  });
+  console.log("FeeManagement mounted with eventId:", eventId);
 
   const feesQuery = useQuery({
     queryKey: ['fees', eventId],
     queryFn: async () => {
       if (!eventId) return [];
+
       console.log("Fetching fees for event ID:", eventId);
       try {
         const response = await fetch(`/api/admin/events/${eventId}/fees`);
@@ -88,7 +80,7 @@ export function FeeManagement() {
           throw new Error(errorData.message || 'Failed to fetch fees');
         }
         const data = await response.json();
-        console.log("Fees response:", data);
+        console.log("Received fees data:", data);
         return Array.isArray(data) ? data : [];
       } catch (error) {
         console.error("Error fetching fees:", error);
@@ -97,7 +89,7 @@ export function FeeManagement() {
           description: "Failed to fetch fees. Please try again.",
           variant: "destructive",
         });
-        return [];
+        throw error; // Re-throw the error for useQuery to handle
       }
     },
     enabled: !!eventId,
@@ -188,6 +180,17 @@ export function FeeManagement() {
         description: error.message || "Failed to update fee",
         variant: "destructive",
       });
+    },
+  });
+
+  const form = useForm<FeeFormValues>({
+    resolver: zodResolver(feeFormSchema),
+    defaultValues: {
+      name: "",
+      amount: "",
+      beginDate: "",
+      endDate: "",
+      applyToAll: false,
     },
   });
 

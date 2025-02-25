@@ -14,13 +14,15 @@ router.get("/:eventId/fees", authenticateAdmin, async (req, res) => {
       return res.status(400).json({ message: "Invalid event ID" });
     }
 
-    // Ensure eventId is handled as a string for comparison
+    console.log("Fetching fees for event ID:", eventId, "Type:", typeof eventId);
+
     const fees = await db.query.eventFees.findMany({
       where: eq(eventFees.eventId, eventId),
-      orderBy: (eventFees) => [eventFees.createdAt],
     });
 
-    console.log("Found fees for event", eventId, ":", fees);
+    console.log("Found fees:", fees.length, "fees for event", eventId);
+    console.log("Fee details:", fees);
+
     res.json(fees);
   } catch (error) {
     console.error("Error fetching event fees:", error);
