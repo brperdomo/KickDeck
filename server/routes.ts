@@ -112,32 +112,73 @@ export function registerRoutes(app: Express): Server {
     // Admin event details endpoint
     app.get('/api/admin/events/:id', isAdmin, async (req, res) => {
       try {
-        const eventId = req.params.id; // Remove parseInt since ID is string
+        const eventId = parseInt(req.params.id);
 
-        // Simplified query to get basic event data
-        const event = await db
-          .select({
-            id: events.id,
-            name: events.name,
-            startDate: events.startDate,
-            endDate: events.endDate,
-            applicationDeadline: events.applicationDeadline,
-            timezone: events.timezone,
-            details: events.details,
-            agreement: events.agreement,
-            refundPolicy: events.refundPolicy,
-            createdAt: events.createdAt,
-            updatedAt: events.updatedAt
-          })
+        // Get event details
+        const [event] = await db
+          .select()
           .from(events)
-          .where(eq(events.id, eventId))
-          .limit(1);
+          .where(eq(events.id, eventId));
 
-        if (!event || event.length === 0) {
+        if (!event) {
           return res.status(404).json({ message: "Event not found" });
         }
 
-        res.json(event[0]);
+        // Get age groups
+        const ageGroups = await db
+          .select({
+            id: eventAgeGroups.id,
+            eventId: eventAgeGroups.eventId,
+            ageGroupId: eventAgeGroups.ageGroupSettingsId,
+            seasonalScopeId: eventAgeGroups.seasonalScopeId,
+            gender: ageGroupSettings.gender,
+            ageGroup: ageGroupSettings.ageGroup,
+            projectedTeams: ageGroupSettings.projectedTeams,
+            fieldSize: ageGroupSettings.fieldSize,
+            amountDue: ageGroupSettings.amountDue,
+          })
+          .from(eventAgeGroups)
+          .leftJoin(ageGroupSettings, eq(eventAgeGroups.ageGroupSettingsId, ageGroupSettings.id))
+          .where(eq(eventAgeGroups.eventId, eventId.toString()));
+
+        // Get scoring rules
+        const scoringRules = await db
+          .select()
+          .from(scoringRules)
+          .where(eq(scoringRules.eventId, eventId));
+
+        // Get complex assignments and field sizes
+        const complexAssignments = await db
+          .select()
+          .from(eventComplexes)
+          .where(eq(eventComplexes.eventId, eventId));
+
+        const fieldSizes = await db
+          .select()
+          .from(complexFieldSizes)
+          .where(eq(complexFieldSizes.eventId, eventId));
+
+        // Get seasonal scope
+        const [seasonalScope] = await db
+          .select()
+          .from(seasonalScopes)
+          .innerJoin(eventAgeGroups, eq(seasonalScopes.id, eventAgeGroups.seasonalScopeId))
+          .where(eq(eventAgeGroups.eventId, eventId.toString()))
+          .limit(1);
+
+        // Format response
+        const response = {
+          ...event,
+          ageGroups,
+          scoringRules,
+          seasonalScope,
+          selectedComplexIds: complexAssignments.map(a => a.complexId),
+          complexFieldSizes: Object.fromEntries(
+            fieldSizes.map(f => [f.fieldId, f.fieldSize])
+          )
+        };
+
+        res.json(response);
       } catch (error) {
         console.error('Error fetching event details:', error);
         console.error("Error details:", error);
