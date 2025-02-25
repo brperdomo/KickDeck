@@ -1716,21 +1716,53 @@ export function registerRoutes(app: Express): Server {
 
         // Create the event
         const eventId = crypto.generateEventId();
-        const [newEvent] = await db
-          .insert(events)
-          .values({
-            id: eventId,
-            name,
-            startDate,
-            endDate,
-            timezone: timezone || 'America/New_York',
-            applicationDeadline,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          })
-          .returning();
+        const [newEvent] = await db.transaction(async (tx) => {
+          // Create main event
+          const [event] = await tx
+            .insert(events)
+            .values({
+              id: eventId,
+              name,
+              startDate,
+              endDate,
+              timezone: timezone || 'America/New_York',
+              applicationDeadline,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            })
+            .returning();
 
-          res.status(201).json({ message: "Event created successfully", event: newEvent });
+          // Handle age groups if provided
+          if (formData.selectedScopeId && formData.selectedAgeGroupIds) {
+            const selectedAgeGroups = await tx
+              .select()
+              .from(ageGroupSettings)
+              .where(and(
+                eq(ageGroupSettings.seasonalScopeId, formData.selectedScopeId),
+                inArray(ageGroupSettings.id, formData.selectedAgeGroupIds)
+              ));
+
+            // Create event age groups
+            for (const group of selectedAgeGroups) {
+              await tx
+                .insert(eventAgeGroups)
+                .values({
+                  eventId,
+                  ageGroup: group.ageGroup,
+                  birthYear: group.birthYear,
+                  gender: group.gender,
+                  fieldSize: "11v11", // Default value, can be updated later
+                  projectedTeams: 8, // Default value, can be updated later
+                  seasonalScopeId: group.seasonalScopeId,
+                  createdAt: new Date().toISOString(),
+                });
+            }
+          }
+
+          return [event];
+        });
+
+        res.status(201).json({ message: "Event created successfully", event: newEvent });
       } catch (error) {
         console.error('Error creating event:', error);
         console.error("Error details:", error);
