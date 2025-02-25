@@ -436,10 +436,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
             <TableHead>Birth Year</TableHead>
             <TableHead>Gender</TableHead>
             <TableHead>Division Code</TableHead>
-            <TableHead>Field Size</TableHead>
-            <TableHead>Projected Teams</TableHead>
-            <TableHead>Amount Due</TableHead>
-            <TableHead>Fees</TableHead> {/* Added Fees column */}
+            <TableHead>Field Size</TableHead><TableHead>Projected Teams</TableHead><TableHead>Amount Due</TableHead><TableHead>Fees</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
