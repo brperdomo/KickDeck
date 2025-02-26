@@ -1,0 +1,33 @@
+use-user.ts:94 Warning: validateDOMNesting(...): Whitespace text nodes cannot appear as a child of <tr>. Make sure you don't have any extra whitespace between tags on each line of your source code.
+    at tr
+    at _c9 (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/src/components/ui/table.tsx:96:12)
+    at tbody
+    at _c5 (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/src/components/ui/table.tsx:53:12)
+    at table
+    at div
+    at _c (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/src/components/ui/table.tsx:20:11)
+    at div
+    at _c9 (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/src/components/ui/card.tsx:106:12)
+    at div
+    at _c (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at FeeManagement (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/src/components/events/FeeManagement.tsx:82:18)
+    at Route (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.d…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=143ddc79:191:16)
+    at Switch (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.d…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=143ddc79:247:17)
+    at Router (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/src/App.tsx:42:31)
+    at Provider (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.d…unner/workspace/node_modules/.vite/deps/chunk-LSQNWB54.js?v=143ddc79:38:15)
+    at TooltipProvider (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.d…rkspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=143ddc79:63:5)
+    at QueryClientProvider (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.d…rkspace/node_modules/.vite/deps/@tanstack_react-query.js?v=143ddc79:2844:3)
+    at App
+
+chunk-64QRF5MD.js?v=143ddc79:338 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+chunk-AZCBCMZO.js?v=143ddc79:124 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap
+chunk-AZCBCMZO.js?v=143ddc79:124 OTS parsing error: invalid sfntVersion: 791289955
+chunk-64QRF5MD.js?v=143ddc79:338 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+chunk-4KOP45UO.js?v=143ddc79:194 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap
+chunk-4KOP45UO.js?v=143ddc79:194 OTS parsing error: invalid sfntVersion: 791289955
+FeeManagement.tsx:207 
+ PATCH https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/api/admin/events/12/fees/1 500 (Internal Server Error)
+mutationFn	@	FeeManagement.tsx:207
+await in execute		
+handleSubmit	@	FeeManagement.tsx:267
