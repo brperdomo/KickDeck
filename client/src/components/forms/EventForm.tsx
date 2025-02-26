@@ -952,7 +952,8 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                 defaultValue={editingSetting?.value}
                 required
               />
-            </div            <Button type="submit">
+            </div>
+            <Button type="submit">
               {editingSetting ? 'Update Setting' : 'Add Setting'}
             </Button>
           </form>
