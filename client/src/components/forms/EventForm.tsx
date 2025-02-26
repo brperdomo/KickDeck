@@ -538,12 +538,21 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                           return ag;
                         }));
                       }}
+                      open={existingGroup.selectOpen}
                       onOpenChange={(open) => {
                         if (!open) {
                           const activeElement = document.activeElement;
                           const isClickOutside = !activeElement?.closest('[role="listbox"]');
-                          setIsDialogOpen(isClickOutside);
+                          if (isClickOutside) {
+                            setAgeGroups(prevGroups => prevGroups.map(g => 
+                              g.id === existingGroup.id ? { ...g, selectOpen: false } : g
+                            ));
+                          }
                           return isClickOutside;
+                        } else {
+                          setAgeGroups(prevGroups => prevGroups.map(g => 
+                            g.id === existingGroup.id ? { ...g, selectOpen: true } : g
+                          ));
                         }
                         return true;
                       }}
