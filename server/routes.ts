@@ -1840,7 +1840,7 @@ export function registerRoutes(app: Express): Server {
 
             if (existingGroup) {
               // Update existing group
-              await tx
+              const updatedGroup = await tx
                 .update(eventAgeGroups)
                 .set({
                   projectedTeams: group.projectedTeams,
@@ -1851,7 +1851,24 @@ export function registerRoutes(app: Express): Server {
                   scoringRule: group.scoringRule,
                   amountDue: group.amountDue || null,
                 })
-                .where(eq(eventAgeGroups.id, existingGroup.id));
+                .where(eq(eventAgeGroups.id, existingGroup.id))
+                .returning();
+
+              // Update fee assignments
+              if (group.fees && Array.isArray(group.fees)) {
+                // Delete existing fee assignments
+                await tx
+                  .delete(eventAgeGroupFees)
+                  .where(eq(eventAgeGroupFees.ageGroupId, existingGroup.id));
+
+                // Create new fee assignments
+                for (const feeId of group.fees) {
+                  await tx.insert(eventAgeGroupFees).values({
+                    ageGroupId: existingGroup.id,
+                    feeId: feeId
+                  });
+                }
+              }
 
               // Remove from map to track which ones need to be deleted
               existingAgeGroupsMap.delete(groupKey);
