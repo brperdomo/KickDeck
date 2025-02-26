@@ -62,7 +62,21 @@ type FeeFormValues = z.infer<typeof feeFormSchema>;
 
 export function FeeManagement() {
   const params = useParams();
-  const eventId = params?.eventId ? Number(params.eventId) : null;
+  const eventId = params?.eventId;
+  
+  if (!eventId) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center text-destructive">
+              <p>Event ID is required</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -82,7 +96,11 @@ export function FeeManagement() {
     queryKey: ['fees', eventId],
     queryFn: async () => {
       try {
-        const response = await fetch(`/api/admin/events/${eventId}/fees`);
+        const response = await fetch(`/api/admin/events/${eventId}/fees`, {
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`Failed to fetch fees: ${errorText}`);
