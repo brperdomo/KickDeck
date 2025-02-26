@@ -147,7 +147,11 @@ export function FeeManagement() {
           })
         );
       }
-      return data;
+      // Set isSelected to true for all age groups
+      return data.map(group => ({
+        ...group,
+        isSelected: true
+      }));
     },
   });
 
