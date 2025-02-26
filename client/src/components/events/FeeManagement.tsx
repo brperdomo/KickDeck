@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams } from "wouter";
 import { useLocation } from "@/hooks/use-location";
@@ -80,9 +79,6 @@ export function FeeManagement() {
       </div>
     );
   }
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeFormSchema),
@@ -204,7 +200,7 @@ export function FeeManagement() {
     }
   };
 
-  const feeToEdit = form.watch("id"); // Track if an id is set for editing
+  const feeToEdit = form.watch("id");
 
   const isSubmitting = createFeeMutation.isLoading || updateFeeMutation.isLoading;
 
@@ -249,7 +245,7 @@ export function FeeManagement() {
                   </DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <form onSubmit={form.handleSubmit(onSubmit)}>
                     <FormField
                       control={form.control}
                       name="name"
@@ -257,7 +253,7 @@ export function FeeManagement() {
                         <FormItem>
                           <FormLabel>Fee Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter fee name" {...field} />
+                            <Input {...field} placeholder="Early Bird Registration" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -268,14 +264,9 @@ export function FeeManagement() {
                       name="amount"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Amount ($)</FormLabel>
+                          <FormLabel>Amount</FormLabel>
                           <FormControl>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              placeholder="0.00"
-                              {...field}
-                            />
+                            <Input {...field} type="number" step="0.01" placeholder="50.00" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -286,9 +277,9 @@ export function FeeManagement() {
                       name="beginDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Begin Date (Optional)</FormLabel>
+                          <FormLabel>Begin Date</FormLabel>
                           <FormControl>
-                            <Input type="date" {...field} />
+                            <Input {...field} type="date" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -299,9 +290,9 @@ export function FeeManagement() {
                       name="endDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>End Date (Optional)</FormLabel>
+                          <FormLabel>End Date</FormLabel>
                           <FormControl>
-                            <Input type="date" {...field} />
+                            <Input {...field} type="date" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -311,15 +302,15 @@ export function FeeManagement() {
                       control={form.control}
                       name="applyToAll"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Apply to All Registrants</FormLabel>
+                        <FormItem>
+                          <div className="flex items-center space-x-2">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormLabel>Apply to all registrations</FormLabel>
                             <FormDescription>
                               If checked, this fee will be applied to all registrations
                             </FormDescription>
@@ -343,35 +334,33 @@ export function FeeManagement() {
               </DialogContent>
             </Dialog>
           </div>
-
-          <div className="rounded-md border mt-6">
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-muted/50">
-                  <TableHead className="py-4">Name</TableHead>
-                  <TableHead className="py-4">Amount</TableHead>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Amount</TableHead>
                   <TableHead>Begin Date</TableHead>
                   <TableHead>End Date</TableHead>
                   <TableHead>Apply to All</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {feesQuery.data?.map((fee: any) => (
+                {feesQuery.data?.map((fee) => (
                   <TableRow key={fee.id}>
                     <TableCell>{fee.name}</TableCell>
                     <TableCell>${(fee.amount / 100).toFixed(2)}</TableCell>
                     <TableCell>
-                      {fee.beginDate ? format(new Date(fee.beginDate), "PP") : "-"}
+                      {fee.beginDate ? format(new Date(fee.beginDate), 'MM/dd/yyyy') : '-'}
                     </TableCell>
                     <TableCell>
-                      {fee.endDate ? format(new Date(fee.endDate), "PP") : "-"}
+                      {fee.endDate ? format(new Date(fee.endDate), 'MM/dd/yyyy') : '-'}
                     </TableCell>
-                    <TableCell>{fee.applyToAll ? "Yes" : "No"}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell>{fee.applyToAll ? 'Yes' : 'No'}</TableCell>
+                    <TableCell>
                       <Button
-                        variant="ghost"
-                        size="sm"
+                        variant="outline"
                         onClick={() => {
                           form.reset({
                             id: fee.id,
