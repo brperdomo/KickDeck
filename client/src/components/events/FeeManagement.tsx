@@ -36,18 +36,19 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+} from "@/components/ui/select"; // Added back these imports
+
 
 const feeFormSchema = z.object({
   name: z.string().min(1, "Fee name is required"),
@@ -74,16 +75,6 @@ export function FeeManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Event details query to show event name in header
-  const eventQuery = useQuery({
-    queryKey: ['event', eventId],
-    queryFn: async () => {
-      const response = await fetch(`/api/admin/events/${eventId}`);
-      if (!response.ok) throw new Error('Failed to fetch event details');
-      return response.json();
-    },
-  });
-
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeFormSchema),
     defaultValues: {
@@ -95,11 +86,25 @@ export function FeeManagement() {
     },
   });
 
+  // Event details query
+  const eventQuery = useQuery({
+    queryKey: ['event', eventId],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/events/${eventId}`, {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch event details');
+      return response.json();
+    },
+  });
+
   // Fetch fees query
   const feesQuery = useQuery({
     queryKey: ['fees', eventId],
     queryFn: async () => {
-      const response = await fetch(`/api/admin/events/${eventId}/fees`);
+      const response = await fetch(`/api/admin/events/${eventId}/fees`, {
+        credentials: 'include',
+      });
       if (!response.ok) throw new Error('Failed to fetch fees');
       return response.json();
     },
@@ -110,6 +115,7 @@ export function FeeManagement() {
     mutationFn: async (values: FeeFormValues) => {
       const response = await fetch(`/api/admin/events/${eventId}/fees`, {
         method: "POST",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...values,
@@ -142,6 +148,7 @@ export function FeeManagement() {
     mutationFn: async (values: FeeFormValues & { id: number }) => {
       const response = await fetch(`/api/admin/events/${eventId}/fees/${values.id}`, {
         method: "PATCH",
+        credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...values,
@@ -175,6 +182,7 @@ export function FeeManagement() {
     mutationFn: async (feeId: number) => {
       const response = await fetch(`/api/admin/events/${eventId}/fees/${feeId}`, {
         method: "DELETE",
+        credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to delete fee');
       return response.json();
@@ -224,11 +232,23 @@ export function FeeManagement() {
   }) : [];
 
   if (feesQuery.isLoading || eventQuery.isLoading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-[calc(100vh-4rem)]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+      </div>
+    );
   }
 
   if (feesQuery.error || eventQuery.error) {
-    return <div className="text-red-500">Error loading data</div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] space-y-4">
+        <div className="text-red-500 font-semibold">Failed to load fee management data</div>
+        <Button variant="outline" onClick={() => window.history.back()}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Return to Events
+        </Button>
+      </div>
+    );
   }
 
   return (
