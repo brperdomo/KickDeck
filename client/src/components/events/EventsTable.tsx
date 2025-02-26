@@ -212,7 +212,7 @@ export function EventsTable() {
                     <SortIcon field="status" />
                   </div>
                 </TableHead>
-                <TableHead>Application Deadline</TableHead>
+                <TableHead>Registration Deadline</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -221,7 +221,7 @@ export function EventsTable() {
                 <TableRow key={event.id}>
                   <TableCell className="font-medium">{event.name}</TableCell>
                   <TableCell>{formatDate(event.startDate)}</TableCell>
-                  <TableCell>{formatDate(event.endDate)}</TableCell>
+                  <TableCell>{formatDate(event.eventEndDate)}</TableCell>
                   <TableCell>
                     <Badge
                       variant={
