@@ -62,8 +62,11 @@ type FeeFormValues = z.infer<typeof feeFormSchema>;
 
 export function FeeManagement() {
   const params = useParams();
-  const eventId = params?.eventId;
-  
+  const eventId = params?.id;
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   if (!eventId) {
     return (
       <div className="container mx-auto py-8">
