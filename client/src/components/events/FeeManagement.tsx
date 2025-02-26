@@ -267,7 +267,7 @@ export function FeeManagement() {
       ...values,
       ageGroups: values.ageGroups || [],
       accountingCodeId: values.accountingCodeId || null,
-      amount: Math.round(Number(values.amount))
+      amount: Math.round(Number(values.amount) * 100)
     };
 
     if (editingFee) {
