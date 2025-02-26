@@ -345,6 +345,9 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                       'bold italic backcolor | alignleft aligncenter ' +
                       'alignright alignjustify | bullist numlist outdent indent | ' +
                       'removeformat | help',
+                    // Added base_url to fix TinyMCE in production
+                    base_url: '/tinymce', // Update with your actual TinyMCE path
+                    suffix: '.min'
                   }}
                   value={field.value}
                   onEditorChange={(content) => field.onChange(content)}
@@ -376,6 +379,9 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                       'bold italic backcolor | alignleft aligncenter ' +
                       'alignright alignjustify | bullist numlist outdent indent | ' +
                       'removeformat | help',
+                    // Added base_url to fix TinyMCE in production
+                    base_url: '/tinymce', // Update with your actual TinyMCE path
+                    suffix: '.min'
                   }}
                   value={field.value}
                   onEditorChange={(content) => field.onChange(content)}
@@ -407,6 +413,9 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                       'bold italic backcolor | alignleft aligncenter ' +
                       'alignright alignjustify | bullist numlist outdent indent | ' +
                       'removeformat | help',
+                    // Added base_url to fix TinyMCE in production
+                    base_url: '/tinymce', // Update with your actual TinyMCE path
+                    suffix: '.min'
                   }}
                   value={field.value}
                   onEditorChange={(content) => field.onChange(content)}
@@ -943,8 +952,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                 defaultValue={editingSetting?.value}
                 required
               />
-            </div>
-            <Button type="submit">
+            </div            <Button type="submit">
               {editingSetting ? 'Update Setting' : 'Add Setting'}
             </Button>
           </form>
