@@ -345,6 +345,9 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                       'bold italic backcolor | alignleft aligncenter ' +
                       'alignright alignjustify | bullist numlist outdent indent | ' +
                       'removeformat | help',
+                    // Added base_url to fix TinyMCE in production
+                    base_url: '/tinymce', // Update with your actual TinyMCE path
+                    suffix: '.min'
                   }}
                   value={field.value}
                   onEditorChange={(content) => field.onChange(content)}
@@ -376,6 +379,9 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                       'bold italic backcolor | alignleft aligncenter ' +
                       'alignright alignjustify | bullist numlist outdent indent | ' +
                       'removeformat | help',
+                    // Added base_url to fix TinyMCE in production
+                    base_url: '/tinymce', // Update with your actual TinyMCE path
+                    suffix: '.min'
                   }}
                   value={field.value}
                   onEditorChange={(content) => field.onChange(content)}
@@ -407,6 +413,9 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                       'bold italic backcolor | alignleft aligncenter ' +
                       'alignright alignjustify | bullist numlist outdent indent | ' +
                       'removeformat | help',
+                    // Added base_url to fix TinyMCE in production
+                    base_url: '/tinymce', // Update with your actual TinyMCE path
+                    suffix: '.min'
                   }}
                   value={field.value}
                   onEditorChange={(content) => field.onChange(content)}
@@ -424,6 +433,11 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Age Groups</h3>
+        {event?.seasonalScopeName && (
+          <Badge variant="outline" className="text-sm">
+            {event.seasonalScopeName} ({event.seasonalStartYear}-{event.seasonalEndYear})
+          </Badge>
+        )}
         {seasonalScopeQuery.data && (
           <Badge variant="outline" className="text-sm">
             {seasonalScopeQuery.data.name} ({seasonalScopeQuery.data.startYear}-{seasonalScopeQuery.data.endYear})
@@ -446,7 +460,13 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
           {PREDEFINED_AGE_GROUPS.map((group) => {
             const existingGroup = ageGroups.find(
               (ag) => ag.divisionCode === group.divisionCode
-            ) || { ...group, isSelected: true };
+            ) || { ...group, isSelected: true, fees: [] };
+
+            const assignedFees = feesQuery.data?.filter(fee => 
+              (fee.ageGroups || []).some(agId => 
+                ageGroups.find(ag => ag.id === agId && ag.divisionCode === group.divisionCode)
+              )
+            ) || [];
 
             return (
               <TableRow key={group.divisionCode}>
@@ -518,16 +538,11 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                   )}
                 </TableCell>
                 <TableCell>
-                  {existingGroup ? (
-                    <span className="text-sm font-medium">
-                      ${feesQuery.data
-                        ?.filter(fee => Array.isArray(existingGroup.fees) && existingGroup.fees.includes(fee.id))
-                        .reduce((sum, fee) => sum + (fee.amount / 100), 0)
-                        .toFixed(2) || "0.00"}
-                    </span>
-                  ) : (
-                    "-"
-                  )}
+                  <span className="text-sm font-medium">
+                    ${assignedFees
+                      .reduce((sum, fee) => sum + (fee.amount / 100), 0)
+                      .toFixed(2) || "0.00"}
+                  </span>
                 </TableCell>
                 <TableCell>
                   {existingGroup && feesQuery.data && feesQuery.data.length > 0 ? (

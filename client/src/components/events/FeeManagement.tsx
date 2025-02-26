@@ -93,12 +93,13 @@ export function FeeManagement() {
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeFormSchema),
     defaultValues: {
-      name: "",
-      amount: "",
-      beginDate: "",
-      endDate: "",
-      applyToAll: false,
-      ageGroups: [],
+      name: editingFee?.name || "",
+      amount: editingFee ? (editingFee.amount / 100).toString() : "",
+      beginDate: editingFee?.beginDate || "",
+      endDate: editingFee?.endDate || "",
+      applyToAll: editingFee?.applyToAll || false,
+      ageGroups: editingFee?.ageGroups || [],
+      accountingCodeId: editingFee?.accountingCodeId || null,
     },
   });
 
@@ -210,7 +211,7 @@ export function FeeManagement() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...values,
-          amount: Math.round(Number(values.amount) * 100),
+          amount: Number(values.amount),
           ageGroups: values.ageGroups || [],
         }),
       });
@@ -263,10 +264,17 @@ export function FeeManagement() {
   });
 
   const handleSubmit = (values: FeeFormValues) => {
+    const formattedValues = {
+      ...values,
+      ageGroups: values.ageGroups || [],
+      accountingCodeId: values.accountingCodeId,
+      amount: Math.round(Number(values.amount) * 100)
+    };
+
     if (editingFee) {
-      updateFeeMutation.mutate({ ...values, id: editingFee.id });
+      updateFeeMutation.mutate({ ...formattedValues, id: editingFee.id });
     } else {
-      createFeeMutation.mutate(values);
+      createFeeMutation.mutate(formattedValues);
     }
   };
 
@@ -290,7 +298,7 @@ export function FeeManagement() {
     return a[sortField].localeCompare(b[sortField]) * modifier;
   }) : [];
 
-  if (feesQuery.isLoading || eventQuery.isLoading) {
+  if (feesQuery.isLoading || eventQuery.isLoading || accountingCodesQuery.isLoading) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-4rem)]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
@@ -298,7 +306,7 @@ export function FeeManagement() {
     );
   }
 
-  if (feesQuery.error || eventQuery.error) {
+  if (feesQuery.error || eventQuery.error || accountingCodesQuery.error) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] space-y-4">
         <div className="text-red-500 font-semibold">Failed to load fee management data</div>
@@ -309,6 +317,10 @@ export function FeeManagement() {
       </div>
     );
   }
+
+  const accountingCodes = accountingCodesQuery.data || [];
+
+  const formatCurrency = (amount: number) => `$${(amount / 100).toFixed(2)}`;
 
   return (
     <div className="container mx-auto py-8 max-w-6xl">
@@ -345,6 +357,7 @@ export function FeeManagement() {
                 <TableHead className="cursor-pointer" onClick={() => handleSort('amount')}>
                   Amount <ArrowUpDown className="inline h-4 w-4" />
                 </TableHead>
+                <TableHead>Age Groups</TableHead>
                 <TableHead>Accounting Code</TableHead>
                 <TableHead className="cursor-pointer" onClick={() => handleSort('beginDate')}>
                   Begin Date <ArrowUpDown className="inline h-4 w-4" />
@@ -358,8 +371,9 @@ export function FeeManagement() {
               {sortedFees.map((fee: any) => (
                 <TableRow key={fee.id}>
                   <TableCell>{fee.name}</TableCell>
-                  <TableCell>${(fee.amount / 100).toFixed(2)}</TableCell>
-                  <TableCell>-</TableCell> {/* Placeholder for Accounting Code */}
+                  <TableCell>{(fee.amount / 100).toFixed(2)}</TableCell>
+                  <TableCell>{fee.applyToAll ? 'All' : (fee.ageGroups || []).map((ageGroupId: number) => ageGroupsQuery.data?.find((group: any) => group.id === ageGroupId)?.ageGroup || '-').join(', ')}</TableCell>
+                  <TableCell>{accountingCodesQuery.data?.find(code => code.id === fee.accountingCodeId)?.name || '-'}</TableCell>
                   <TableCell>
                     {fee.beginDate ? format(new Date(fee.beginDate), "MMM d, yyyy") : "-"}
                   </TableCell>
@@ -384,6 +398,7 @@ export function FeeManagement() {
                             endDate: fee.endDate ? new Date(fee.endDate).toISOString().split('T')[0] : "",
                             applyToAll: fee.applyToAll,
                             ageGroups: Array.isArray(fee.ageGroups) ? [...fee.ageGroups] : [],
+                            accountingCodeId: fee.accountingCodeId,
                           };
                           setEditingFee(fee);
                           form.reset(feeData);
@@ -500,7 +515,7 @@ export function FeeManagement() {
                   <FormItem>
                     <FormLabel>Accounting Code</FormLabel>
                     <Select
-                      value={field.value?.toString()}
+                      value={field.value?.toString() || editingFee?.accountingCodeId?.toString() || ""}
                       onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
                     >
                       <SelectTrigger>
@@ -567,4 +582,26 @@ export function FeeManagement() {
       </Dialog>
     </div>
   );
+}
+
+async function createFee(eventId: string, data: any) {
+  const response = await fetch(`/api/admin/events/${eventId}/fees`, {
+    method: "POST",
+    credentials: 'include',
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error('Failed to create fee');
+  return response.json();
+}
+
+async function updateFee(eventId: string, feeId: number, data: any) {
+  const response = await fetch(`/api/admin/events/${eventId}/fees/${feeId}`, {
+    method: "PATCH",
+    credentials: 'include',
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error('Failed to update fee');
+  return response.json();
 }
