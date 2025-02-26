@@ -339,16 +339,8 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                   apiKey="wysafiugpee0xtyjdnegcq6x43osb81qje582522ekththu8"
                   init={{
                     height: 300,
-                    menubar: true,
-                    plugins: [
-                      'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                      'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                      'insertdatetime', 'media', 'table', 'help', 'wordcount'
-                    ],
-                    toolbar: 'undo redo | formatselect | ' +
-                      'bold italic backcolor | alignleft aligncenter ' +
-                      'alignright alignjustify | bullist numlist outdent indent | ' +
-                      'removeformat | help',
+                    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+                    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
                     base_url: '/tinymce',
                     suffix: '.min'
                   }}
@@ -372,16 +364,8 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                   apiKey="wysafiugpee0xtyjdnegcq6x43osb81qje582522ekththu8"
                   init={{
                     height: 300,
-                    menubar: true,
-                    plugins: [
-                      'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                      'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                      'insertdatetime', 'media', 'table', 'help', 'wordcount'
-                    ],
-                    toolbar: 'undo redo | formatselect | ' +
-                      'bold italic backcolor | alignleft aligncenter ' +
-                      'alignright alignjustify | bullist numlist outdent indent | ' +
-                      'removeformat | help',
+                    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+                    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
                     base_url: '/tinymce',
                     suffix: '.min'
                   }}
@@ -405,16 +389,8 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                   apiKey="wysafiugpee0xtyjdnegcq6x43osb81qje582522ekththu8"
                   init={{
                     height: 300,
-                    menubar: true,
-                    plugins: [
-                      'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                      'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                      'insertdatetime', 'media', 'table', 'help', 'wordcount'
-                    ],
-                    toolbar: 'undo redo | formatselect | ' +
-                      'bold italic backcolor | alignleft aligncenter ' +
-                      'alignright alignjustify | bullist numlist outdent indent | ' +
-                      'removeformat | help',
+                    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+                    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
                     base_url: '/tinymce',
                     suffix: '.min'
                   }}
@@ -975,7 +951,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
               {TAB_ORDER.map((tab) => (
                 <TabsTrigger
                   key={tab}
-                  value={tab}
+                                    value={tab}
                   className={`w-fullpx-4 py-2 rounded-md text-sm font-medium transition-colors
                     data-[state=active]:bg-white data-[state=active]:text-[#007AFF] data-[state=active]:shadow-sm
                     text-[#1C1C1E] hover:text-[#007AFF]`}
