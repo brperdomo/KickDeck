@@ -80,7 +80,7 @@ export function FeeManagement() {
     queryKey: ['fees', eventId],
     queryFn: async () => {
       if (!eventId) return [];
-      const response = await fetch(`/api/events/${eventId}/fees`);
+      const response = await fetch(`/api/admin/events/${eventId}/fees`);
       if (!response.ok) {
         throw new Error("Failed to fetch fees");
       }
