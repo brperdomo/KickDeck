@@ -94,42 +94,44 @@ export function FeeManagement() {
   useEffect(() => {
     if (editingFee) {
       console.log("Setting form values for editing fee:", editingFee);
+      // Ensure ageGroups is an array of numbers
+      const ageGroups = Array.isArray(editingFee.ageGroups) 
+        ? editingFee.ageGroups.map(Number) 
+        : [];
+
       form.reset({
         name: editingFee.name,
         amount: (editingFee.amount / 100).toString(),
         beginDate: editingFee.beginDate || "",
         endDate: editingFee.endDate || "",
         applyToAll: editingFee.applyToAll || false,
-        ageGroups: editingFee.ageGroups || [],
+        ageGroups: ageGroups,
         accountingCodeId: editingFee.accountingCodeId || null,
       });
     }
   }, [editingFee, form]);
 
-  const eventQuery = useQuery({
-    queryKey: ['event', eventId],
-    queryFn: async () => {
-      const response = await fetch(`/api/admin/events/${eventId}`);
-      if (!response.ok) throw new Error('Failed to fetch event details');
-      return response.json();
-    },
-  });
-
   const ageGroupsQuery = useQuery({
     queryKey: ['ageGroups', eventId],
     queryFn: async () => {
+      console.log("Fetching age groups for event:", eventId);
       const response = await fetch(`/api/admin/events/${eventId}/age-groups`);
       if (!response.ok) throw new Error('Failed to fetch age groups');
-      return response.json();
+      const data = await response.json();
+      console.log("Fetched age groups:", data);
+      return data;
     },
   });
 
   const feesQuery = useQuery({
     queryKey: ['fees', eventId],
     queryFn: async () => {
+      console.log("Fetching fees for event:", eventId);
       const response = await fetch(`/api/admin/events/${eventId}/fees`);
       if (!response.ok) throw new Error('Failed to fetch fees');
-      return response.json();
+      const data = await response.json();
+      console.log("Fetched fees:", data);
+      return data;
     },
   });
 
@@ -488,6 +490,7 @@ export function FeeManagement() {
                                 const newValue = checked
                                   ? [...field.value, group.id]
                                   : field.value.filter((id: number) => id !== group.id);
+                                console.log("Setting age groups to:", newValue);
                                 field.onChange(newValue);
                               }}
                             />
