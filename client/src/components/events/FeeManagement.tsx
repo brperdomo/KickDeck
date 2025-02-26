@@ -263,10 +263,17 @@ export function FeeManagement() {
   });
 
   const handleSubmit = (values: FeeFormValues) => {
+    const feeData = {
+      ...values,
+      ageGroups: values.ageGroups || [],
+      accountingCodeId: values.accountingCodeId || null,
+      amount: Math.round(Number(values.amount) * 100) // Added to handle amount properly
+    };
+
     if (editingFee) {
-      updateFeeMutation.mutate({ ...values, id: editingFee.id });
+      updateFeeMutation.mutate({ ...feeData, id: editingFee.id });
     } else {
-      createFeeMutation.mutate(values);
+      createFeeMutation.mutate(feeData);
     }
   };
 
@@ -574,4 +581,26 @@ export function FeeManagement() {
       </Dialog>
     </div>
   );
+}
+
+async function createFee(eventId: string, data: any) {
+  const response = await fetch(`/api/admin/events/${eventId}/fees`, {
+    method: "POST",
+    credentials: 'include',
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error('Failed to create fee');
+  return response.json();
+}
+
+async function updateFee(eventId: string, feeId: number, data: any) {
+  const response = await fetch(`/api/admin/events/${eventId}/fees/${feeId}`, {
+    method: "PATCH",
+    credentials: 'include',
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error('Failed to update fee');
+  return response.json();
 }
