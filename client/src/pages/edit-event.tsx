@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EventForm } from "@/components/forms/EventForm";
 import { type EventTab, TAB_ORDER } from "@/components/forms/event-form-types";
-import { ProgressIndicator } from "@/components/forms/ProgressIndicator";
+import { ProgressIndicator } from "@/components/ui/progress-indicator";
 
 export default function EditEvent() {
   const { id } = useParams();
