@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useParams } from "wouter";
 import { ArrowLeft } from "lucide-react";
@@ -43,7 +44,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "@/hooks/use-location";
 
 const feeFormSchema = z.object({
   id: z.number().optional(),
@@ -65,6 +65,17 @@ export function FeeManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const form = useForm<FeeFormValues>({
+    resolver: zodResolver(feeFormSchema),
+    defaultValues: {
+      name: "",
+      amount: "",
+      beginDate: "",
+      endDate: "",
+      applyToAll: false,
+    },
+  });
+
   if (!eventId) {
     return (
       <div className="container mx-auto py-8">
@@ -79,21 +90,9 @@ export function FeeManagement() {
     );
   }
 
-  const form = useForm<FeeFormValues>({
-    resolver: zodResolver(feeFormSchema),
-    defaultValues: {
-      name: "",
-      amount: "",
-      beginDate: "",
-      endDate: "",
-      applyToAll: false,
-    },
-  });
-
   const feesQuery = useQuery({
     queryKey: ['fees', eventId],
     queryFn: async () => {
-      if (!eventId) throw new Error("Event ID is required");
       try {
         const response = await fetch(`/api/admin/events/${eventId}/fees`);
         if (!response.ok) {
@@ -114,7 +113,6 @@ export function FeeManagement() {
 
   const createFeeMutation = useMutation({
     mutationFn: async (values: FeeFormValues) => {
-      if (!eventId) throw new Error("Event ID is required");
       try {
         const response = await fetch(`/api/admin/events/${eventId}/fees`, {
           method: "POST",
@@ -367,13 +365,13 @@ export function FeeManagement() {
                         size="sm"
                         onClick={() => {
                           form.reset({
+                            id: fee.id,
                             name: fee.name,
                             amount: (fee.amount / 100).toString(),
                             beginDate: fee.beginDate ? new Date(fee.beginDate).toISOString().split('T')[0] : "",
                             endDate: fee.endDate ? new Date(fee.endDate).toISOString().split('T')[0] : "",
                             applyToAll: fee.applyToAll,
                           });
-                          form.setValue("id", fee.id);
                           setIsDialogOpen(true);
                         }}
                       >
