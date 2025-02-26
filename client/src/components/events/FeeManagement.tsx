@@ -43,7 +43,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "@/hooks/use-location";
 
 const feeFormSchema = z.object({
   id: z.number().optional(),
@@ -110,7 +109,7 @@ export function FeeManagement() {
         const data = await response.json();
         console.log('Received fees data:', JSON.stringify(data, null, 2));
 
-        // Transform BigInt eventId to string to avoid JSON serialization issues
+        // Transform amounts from cents to dollars
         return Array.isArray(data) ? data.map(fee => ({
           ...fee,
           eventId: fee.eventId.toString(),
@@ -169,7 +168,7 @@ export function FeeManagement() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...values,
-          amount: Math.round(Number(values.amount) * 100),
+          amount: Math.round(Number(values.amount) * 100), // Convert to cents
           beginDate: values.beginDate ? new Date(values.beginDate).toISOString() : null,
           endDate: values.endDate ? new Date(values.endDate).toISOString() : null,
         }),
@@ -205,16 +204,12 @@ export function FeeManagement() {
     }
   };
 
-  const feeToEdit = form.watch("id"); // Track if an id is set for editing
-
-  const isSubmitting = createFeeMutation.isLoading || updateFeeMutation.isLoading;
-
   if (feesQuery.isLoading) {
-    return <div>Loading...</div>;
+    return <div>Loading fees...</div>;
   }
 
   if (feesQuery.error) {
-    return <div>Error loading fees</div>;
+    return <div>Error loading fees: {feesQuery.error.message}</div>;
   }
 
   return (
@@ -241,10 +236,10 @@ export function FeeManagement() {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>
-                    {feeToEdit ? "Update Fee" : "Create New Fee"}
+                    {form.watch("id") ? "Update Fee" : "Create New Fee"}
                   </DialogTitle>
                   <DialogDescription>
-                    {feeToEdit
+                    {form.watch("id")
                       ? "Update an existing fee for this event."
                       : "Add a new fee for this event. You can specify dates and whether it applies to all registrants."}
                   </DialogDescription>
@@ -329,12 +324,15 @@ export function FeeManagement() {
                       )}
                     />
                     <DialogFooter>
-                      <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting
-                          ? feeToEdit
+                      <Button 
+                        type="submit" 
+                        disabled={createFeeMutation.isPending || updateFeeMutation.isPending}
+                      >
+                        {createFeeMutation.isPending || updateFeeMutation.isPending
+                          ? form.watch("id")
                             ? "Updating..."
                             : "Creating..."
-                          : feeToEdit
+                          : form.watch("id")
                             ? "Update Fee"
                             : "Create Fee"}
                       </Button>
@@ -375,13 +373,13 @@ export function FeeManagement() {
                         size="sm"
                         onClick={() => {
                           form.reset({
+                            id: fee.id,
                             name: fee.name,
                             amount: fee.amount.toString(),
                             beginDate: fee.beginDate ? new Date(fee.beginDate).toISOString().split('T')[0] : "",
                             endDate: fee.endDate ? new Date(fee.endDate).toISOString().split('T')[0] : "",
                             applyToAll: fee.applyToAll,
                           });
-                          form.setValue("id", fee.id);
                           setIsDialogOpen(true);
                         }}
                       >
