@@ -514,7 +514,7 @@ export function FeeManagement() {
                   <FormItem>
                     <FormLabel>Accounting Code</FormLabel>
                     <Select
-                      value={field.value?.toString()}
+                      value={field.value?.toString() || editingFee?.accountingCodeId?.toString() || ""}
                       onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
                     >
                       <SelectTrigger>
