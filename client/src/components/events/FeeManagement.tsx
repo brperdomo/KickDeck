@@ -85,6 +85,7 @@ export function FeeManagement() {
       beginDate: "",
       endDate: "",
       applyToAll: false,
+      ageGroups: [],
     },
   });
 
@@ -359,6 +360,7 @@ export function FeeManagement() {
                             beginDate: fee.beginDate ? new Date(fee.beginDate).toISOString().split('T')[0] : "",
                             endDate: fee.endDate ? new Date(fee.endDate).toISOString().split('T')[0] : "",
                             applyToAll: fee.applyToAll,
+                            ageGroups: fee.ageGroups, // Added ageGroups to reset
                           });
                           setIsDialogOpen(true);
                         }}
