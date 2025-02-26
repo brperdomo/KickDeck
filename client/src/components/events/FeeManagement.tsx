@@ -93,12 +93,13 @@ export function FeeManagement() {
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeFormSchema),
     defaultValues: {
-      name: "",
-      amount: "",
-      beginDate: "",
-      endDate: "",
-      applyToAll: false,
-      ageGroups: [],
+      name: editingFee?.name || "",
+      amount: editingFee ? (editingFee.amount / 100).toString() : "",
+      beginDate: editingFee?.beginDate || "",
+      endDate: editingFee?.endDate || "",
+      applyToAll: editingFee?.applyToAll || false,
+      ageGroups: editingFee?.ageGroups || [],
+      accountingCodeId: editingFee?.accountingCodeId || null,
     },
   });
 
