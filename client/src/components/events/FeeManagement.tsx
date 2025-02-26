@@ -290,7 +290,7 @@ export function FeeManagement() {
     return a[sortField].localeCompare(b[sortField]) * modifier;
   }) : [];
 
-  if (feesQuery.isLoading || eventQuery.isLoading) {
+  if (feesQuery.isLoading || eventQuery.isLoading || accountingCodesQuery.isLoading) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-4rem)]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
@@ -298,7 +298,7 @@ export function FeeManagement() {
     );
   }
 
-  if (feesQuery.error || eventQuery.error) {
+  if (feesQuery.error || eventQuery.error || accountingCodesQuery.error) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] space-y-4">
         <div className="text-red-500 font-semibold">Failed to load fee management data</div>
@@ -309,6 +309,10 @@ export function FeeManagement() {
       </div>
     );
   }
+
+  const accountingCodes = accountingCodesQuery.data || [];
+
+  const formatCurrency = (amount: number) => `$${(amount / 100).toFixed(2)}`;
 
   return (
     <div className="container mx-auto py-8 max-w-6xl">
@@ -345,6 +349,7 @@ export function FeeManagement() {
                 <TableHead className="cursor-pointer" onClick={() => handleSort('amount')}>
                   Amount <ArrowUpDown className="inline h-4 w-4" />
                 </TableHead>
+                <TableHead>Age Groups</TableHead>
                 <TableHead>Accounting Code</TableHead>
                 <TableHead className="cursor-pointer" onClick={() => handleSort('beginDate')}>
                   Begin Date <ArrowUpDown className="inline h-4 w-4" />
@@ -358,8 +363,9 @@ export function FeeManagement() {
               {sortedFees.map((fee: any) => (
                 <TableRow key={fee.id}>
                   <TableCell>{fee.name}</TableCell>
-                  <TableCell>${(fee.amount / 100).toFixed(2)}</TableCell>
-                  <TableCell>-</TableCell> {/* Placeholder for Accounting Code */}
+                  <TableCell>{formatCurrency(fee.amount)}</TableCell>
+                  <TableCell>{fee.applyToAll ? 'All' : (fee.ageGroups || []).map((ageGroupId: number) => ageGroupsQuery.data?.find((group: any) => group.id === ageGroupId)?.ageGroup || '-').join(', ')}</TableCell>
+                  <TableCell>{accountingCodes.find(code => code.id === fee.accountingCodeId)?.name || '-'}</TableCell>
                   <TableCell>
                     {fee.beginDate ? format(new Date(fee.beginDate), "MMM d, yyyy") : "-"}
                   </TableCell>
@@ -384,6 +390,7 @@ export function FeeManagement() {
                             endDate: fee.endDate ? new Date(fee.endDate).toISOString().split('T')[0] : "",
                             applyToAll: fee.applyToAll,
                             ageGroups: Array.isArray(fee.ageGroups) ? [...fee.ageGroups] : [],
+                            accountingCodeId: fee.accountingCodeId,
                           };
                           setEditingFee(fee);
                           form.reset(feeData);
