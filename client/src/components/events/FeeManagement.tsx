@@ -211,7 +211,7 @@ export function FeeManagement() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...values,
-          amount: Math.round(Number(values.amount) * 100),
+          amount: Number(values.amount),
           ageGroups: values.ageGroups || [],
         }),
       });
