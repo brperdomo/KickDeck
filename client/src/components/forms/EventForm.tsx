@@ -463,7 +463,8 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                             projectedTeams: 0,
                             fieldSize: '11v11' as FieldSize,
                             amountDue: null,
-                            fees: [] // Initialize fees array
+                            fees: [], // Initialize fees array as empty array
+                            scoringRule: null,
                           },
                         ]);
                       } else {
@@ -524,10 +525,11 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                 <TableCell>
                   {existingGroup && feesQuery.data && feesQuery.data.length > 0 ? (
                     <Select
-                      value={existingGroup.fees}
+                      value={existingGroup.fees || []}
                       onValueChange={(selectedFees) => {
+                        const feesArray = Array.isArray(selectedFees) ? selectedFees : [selectedFees];
                         setAgeGroups(prevAgeGroups => prevAgeGroups.map(ag =>
-                          ag.id === existingGroup.id ? { ...ag, fees: selectedFees } : ag
+                          ag.id === existingGroup.id ? { ...ag, fees: feesArray } : ag
                         ));
                       }}
                       multiple
