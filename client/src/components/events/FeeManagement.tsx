@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -43,6 +43,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "@/hooks/use-location";
 
 const feeFormSchema = z.object({
   id: z.number().optional(),
@@ -59,15 +60,10 @@ const feeFormSchema = z.object({
 type FeeFormValues = z.infer<typeof feeFormSchema>;
 
 export function FeeManagement() {
-  const params = useParams();
-  const eventId = params.id; // Route parameter is named 'id'
+  const { eventId } = useParams();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    console.log('FeeManagement mounted with eventId:', eventId);
-  }, [eventId]);
 
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeFormSchema),
@@ -83,45 +79,17 @@ export function FeeManagement() {
   const feesQuery = useQuery({
     queryKey: ['fees', eventId],
     queryFn: async () => {
-      if (!eventId) {
-        console.error('No eventId provided to feesQuery');
-        throw new Error("Event ID is required");
+      if (!eventId) return [];
+      const response = await fetch(`/api/admin/events/${eventId}/fees`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch fees");
       }
-      console.log('Fetching fees for event:', eventId);
-
-      try {
-        const response = await fetch(`/api/admin/events/${eventId}/fees`, {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-          }
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Failed to fetch fees. Status:', response.status, 'Error:', errorText);
-          throw new Error(errorText || "Failed to fetch fees");
-        }
-
-        const data = await response.json();
-        console.log('Received fees data:', JSON.stringify(data, null, 2));
-
-        // Transform amounts from cents to dollars
-        return Array.isArray(data) ? data.map(fee => ({
-          ...fee,
-          eventId: fee.eventId.toString(),
-          amount: Number(fee.amount) / 100 // Convert cents to dollars
-        })) : [];
-      } catch (error) {
-        console.error('Error in fees query:', error);
-        throw error;
-      }
+      const data = await response.json();
+      console.log('Fees data:', data);
+      return Array.isArray(data) ? data : [];
     },
     enabled: !!eventId,
-    retry: 2,
+    retry: 1,
     refetchOnWindowFocus: false
   });
 
@@ -142,9 +110,8 @@ export function FeeManagement() {
       }
       return response.json();
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['fees', eventId] });
-      await queryClient.refetchQueries({ queryKey: ['fees', eventId] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/events/${eventId}/fees`] });
       setIsDialogOpen(false);
       form.reset();
       toast({
@@ -168,7 +135,7 @@ export function FeeManagement() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...values,
-          amount: Math.round(Number(values.amount) * 100), // Convert to cents
+          amount: Math.round(Number(values.amount) * 100),
           beginDate: values.beginDate ? new Date(values.beginDate).toISOString() : null,
           endDate: values.endDate ? new Date(values.endDate).toISOString() : null,
         }),
@@ -179,7 +146,7 @@ export function FeeManagement() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['fees', eventId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/events/${eventId}/fees`] });
       setIsDialogOpen(false);
       form.reset();
       toast({
@@ -204,12 +171,16 @@ export function FeeManagement() {
     }
   };
 
+  const feeToEdit = form.watch("id"); // Track if an id is set for editing
+
+  const isSubmitting = createFeeMutation.isLoading || updateFeeMutation.isLoading;
+
   if (feesQuery.isLoading) {
-    return <div>Loading fees...</div>;
+    return <div>Loading...</div>;
   }
 
   if (feesQuery.error) {
-    return <div>Error loading fees: {feesQuery.error.message}</div>;
+    return <div>Error loading fees</div>;
   }
 
   return (
@@ -236,10 +207,10 @@ export function FeeManagement() {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>
-                    {form.watch("id") ? "Update Fee" : "Create New Fee"}
+                    {feeToEdit ? "Update Fee" : "Create New Fee"}
                   </DialogTitle>
                   <DialogDescription>
-                    {form.watch("id")
+                    {feeToEdit
                       ? "Update an existing fee for this event."
                       : "Add a new fee for this event. You can specify dates and whether it applies to all registrants."}
                   </DialogDescription>
@@ -324,15 +295,12 @@ export function FeeManagement() {
                       )}
                     />
                     <DialogFooter>
-                      <Button 
-                        type="submit" 
-                        disabled={createFeeMutation.isPending || updateFeeMutation.isPending}
-                      >
-                        {createFeeMutation.isPending || updateFeeMutation.isPending
-                          ? form.watch("id")
+                      <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting
+                          ? feeToEdit
                             ? "Updating..."
                             : "Creating..."
-                          : form.watch("id")
+                          : feeToEdit
                             ? "Update Fee"
                             : "Create Fee"}
                       </Button>
@@ -359,7 +327,7 @@ export function FeeManagement() {
                 {feesQuery.data?.map((fee: any) => (
                   <TableRow key={fee.id}>
                     <TableCell>{fee.name}</TableCell>
-                    <TableCell>${fee.amount.toFixed(2)}</TableCell>
+                    <TableCell>${(fee.amount / 100).toFixed(2)}</TableCell>
                     <TableCell>
                       {fee.beginDate ? format(new Date(fee.beginDate), "PP") : "-"}
                     </TableCell>
@@ -373,13 +341,13 @@ export function FeeManagement() {
                         size="sm"
                         onClick={() => {
                           form.reset({
-                            id: fee.id,
                             name: fee.name,
-                            amount: fee.amount.toString(),
+                            amount: (fee.amount / 100).toString(),
                             beginDate: fee.beginDate ? new Date(fee.beginDate).toISOString().split('T')[0] : "",
                             endDate: fee.endDate ? new Date(fee.endDate).toISOString().split('T')[0] : "",
                             applyToAll: fee.applyToAll,
                           });
+                          form.setValue("id", fee.id);
                           setIsDialogOpen(true);
                         }}
                       >
