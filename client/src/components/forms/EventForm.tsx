@@ -433,11 +433,13 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
               (ag) => ag.divisionCode === group.divisionCode
             ) || { ...group, isSelected: false, fees: [] };
 
-            const assignedFees = feesQuery.data?.filter(fee =>
-              fee.applyToAll || (fee.ageGroups || []).includes(existingGroup?.id)
-            ) || [];
-
-            const totalAmount = assignedFees.reduce((sum, fee) => sum + (fee.amount || 0), 0);
+            // Calculate total amount only from the fees selected for this group
+            const totalAmount = feesQuery.data
+              ? existingGroup.fees?.reduce((sum, feeId) => {
+                  const fee = feesQuery.data.find(f => f.id === feeId);
+                  return sum + (fee?.amount || 0);
+                }, 0) || 0
+              : 0;
 
             return (
               <TableRow key={group.divisionCode}>
