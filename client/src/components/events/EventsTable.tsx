@@ -220,8 +220,8 @@ export function EventsTable() {
               {filteredEvents.map((event) => (
                 <TableRow key={event.id}>
                   <TableCell className="font-medium">{event.name}</TableCell>
-                  <TableCell>{event.startDate ? formatDate(event.startDate) : '-'}</TableCell>
-                  <TableCell>{event.endDate ? formatDate(event.endDate) : '-'}</TableCell>
+                  <TableCell>{formatDate(event.startDate)}</TableCell>
+                  <TableCell>{formatDate(event.endDate)}</TableCell>
                   <TableCell>
                     <Badge
                       variant={
