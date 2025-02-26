@@ -333,24 +333,15 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
               <FormControl>
                 <Editor
                   apiKey="wysafiugpee0xtyjdnegcq6x43osb81qje582522ekththu8"
-                  init={{
-                    height: 300,
-                    menubar: true,
-                    plugins: [
-                      'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                      'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                      'insertdatetime', 'media', 'table', 'help', 'wordcount'
-                    ],
-                    toolbar: 'undo redo | formatselect | ' +
-                      'bold italic backcolor | alignleft aligncenter ' +
-                      'alignright alignjustify | bullist numlist outdent indent | ' +
-                      'removeformat | help',
-                    // Added base_url to fix TinyMCE in production
-                    base_url: '/tinymce', // Update with your actual TinyMCE path
-                    suffix: '.min'
-                  }}
                   value={field.value}
                   onEditorChange={(content) => field.onChange(content)}
+                  init={{
+                    height: 300,
+                    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+                    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+                    base_url: '/tinymce',
+                    suffix: '.min'
+                  }}
                 />
               </FormControl>
               <FormMessage />
@@ -367,24 +358,15 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
               <FormControl>
                 <Editor
                   apiKey="wysafiugpee0xtyjdnegcq6x43osb81qje582522ekththu8"
-                  init={{
-                    height: 300,
-                    menubar: true,
-                    plugins: [
-                      'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                      'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                      'insertdatetime', 'media', 'table', 'help', 'wordcount'
-                    ],
-                    toolbar: 'undo redo | formatselect | ' +
-                      'bold italic backcolor | alignleft aligncenter ' +
-                      'alignright alignjustify | bullist numlist outdent indent | ' +
-                      'removeformat | help',
-                    // Added base_url to fix TinyMCE in production
-                    base_url: '/tinymce', // Update with your actual TinyMCE path
-                    suffix: '.min'
-                  }}
                   value={field.value}
                   onEditorChange={(content) => field.onChange(content)}
+                  init={{
+                    height: 300,
+                    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+                    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+                    base_url: '/tinymce',
+                    suffix: '.min'
+                  }}
                 />
               </FormControl>
               <FormMessage />
@@ -401,24 +383,15 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
               <FormControl>
                 <Editor
                   apiKey="wysafiugpee0xtyjdnegcq6x43osb81qje582522ekththu8"
-                  init={{
-                    height: 300,
-                    menubar: true,
-                    plugins: [
-                      'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                      'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                      'insertdatetime', 'media', 'table', 'help', 'wordcount'
-                    ],
-                    toolbar: 'undo redo | formatselect | ' +
-                      'bold italic backcolor | alignleft aligncenter ' +
-                      'alignright alignjustify | bullist numlist outdent indent | ' +
-                      'removeformat | help',
-                    // Added base_url to fix TinyMCE in production
-                    base_url: '/tinymce', // Update with your actual TinyMCE path
-                    suffix: '.min'
-                  }}
                   value={field.value}
                   onEditorChange={(content) => field.onChange(content)}
+                  init={{
+                    height: 300,
+                    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+                    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+                    base_url: '/tinymce',
+                    suffix: '.min'
+                  }}
                 />
               </FormControl>
               <FormMessage />
@@ -982,7 +955,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                 <TabsTrigger
                   key={tab}
                   value={tab}
-                  className={`w-fullpx-4 py-2 rounded-md text-sm font-medium transition-colors
+                  className={`wfullpx-4 py-2 rounded-md text-sm font-medium transition-colors
                     data-[state=active]:bg-white data-[state=active]:text-[#007AFF] data-[state=active]:shadow-sm
                     text-[#1C1C1E] hover:text-[#007AFF]`}
                 >
