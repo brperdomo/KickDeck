@@ -3001,7 +3001,7 @@ export function registerRoutes(app: Express): Server {
           // Finally delete the event
           const [deletedEvent] = await tx
             .delete(events)
-            .where(eq(events.id, eventId))
+            .where(eq(events.id, req.params.id))
             .returning();
 
           if (!deletedEvent) {
