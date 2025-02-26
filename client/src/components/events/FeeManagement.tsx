@@ -122,8 +122,9 @@ export function FeeManagement() {
       }
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['fees', eventId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['fees', eventId] });
+      await queryClient.refetchQueries({ queryKey: ['fees', eventId] });
       setIsDialogOpen(false);
       form.reset();
       toast({
