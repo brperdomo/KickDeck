@@ -96,14 +96,25 @@ export function FeeManagement() {
     queryFn: async () => {
       try {
         const response = await fetch(`/api/admin/events/${eventId}/fees`, {
+          credentials: 'include',
           headers: {
             'Accept': 'application/json'
           }
         });
+        
         if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Failed to fetch fees: ${errorText}`);
+          if (response.status === 401) {
+            window.location.href = '/';
+            return [];
+          }
+          throw new Error('Failed to fetch fees');
         }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Invalid response format');
+        }
+        
         const data = await response.json();
         return Array.isArray(data) ? data : [];
       } catch (error) {
