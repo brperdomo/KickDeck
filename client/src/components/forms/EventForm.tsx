@@ -514,7 +514,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                   {existingGroup ? (
                     <span className="text-sm font-medium">
                       ${feesQuery.data
-                        ?.filter(fee => existingGroup.fees?.includes(fee.id))
+                        ?.filter(fee => Array.isArray(existingGroup.fees) && existingGroup.fees.includes(fee.id))
                         .reduce((sum, fee) => sum + (fee.amount / 100), 0)
                         .toFixed(2) || "0.00"}
                     </span>
@@ -525,10 +525,11 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                 <TableCell>
                   {existingGroup && feesQuery.data && feesQuery.data.length > 0 ? (
                     <Select
-                      value={existingGroup.fees || []}
+                      value={Array.isArray(existingGroup.fees) ? existingGroup.fees : []}
                       onValueChange={(selectedFees) => {
+                        const feesArray = Array.isArray(selectedFees) ? selectedFees : [selectedFees];
                         setAgeGroups(prevAgeGroups => prevAgeGroups.map(ag =>
-                          ag.id === existingGroup.id ? { ...ag, fees: selectedFees } : ag
+                          ag.id === existingGroup.id ? { ...ag, fees: feesArray } : ag
                         ));
                       }}
                       multiple
