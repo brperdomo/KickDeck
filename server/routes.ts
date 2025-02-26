@@ -2987,20 +2987,16 @@ export function registerRoutes(app: Express): Server {
 
         // Start a transaction to handle cascade deletion
         await db.transaction(async (tx) => {
-          // Delete chat rooms associated with the event
+          // Delete all related records first
+          await tx.delete(formResponses).where(eq(formResponses.eventId, eventId));
           await tx.delete(chatRooms).where(eq(chatRooms.eventId, eventId));
-          
-          // Delete teams first to handle foreign key constraints
-          await tx.delete(teams).where(eq(teams.eventId, eventId));
-
-          // Delete tournament groups
-          await tx.delete(tournamentGroups).where(eq(tournamentGroups.eventId, eventId));
-          
-          // Delete other related records
-          await tx.delete(eventAgeGroups).where(eq(eventAgeGroups.eventId, eventId));
-          await tx.execute(sql`DELETE FROM event_complexes WHERE event_id = ${eventId}`);
           await tx.delete(eventFieldSizes).where(eq(eventFieldSizes.eventId, eventId));
           await tx.delete(eventScoringRules).where(eq(eventScoringRules.eventId, eventId));
+          await tx.delete(eventComplexes).where(eq(eventComplexes.eventId, eventId));
+          await tx.delete(teams).where(eq(teams.eventId, eventId));
+          await tx.delete(tournamentGroups).where(eq(tournamentGroups.eventId, eventId));
+          await tx.delete(eventAgeGroups).where(eq(eventAgeGroups.eventId, eventId));
+          await tx.delete(eventFormTemplates).where(eq(eventFormTemplates.eventId, eventId));
 
           // Finally delete the event
           const [deletedEvent] = await tx
