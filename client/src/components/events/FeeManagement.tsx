@@ -92,9 +92,11 @@ export function FeeManagement() {
 
       try {
         const response = await fetch(`/api/admin/events/${eventId}/fees`, {
+          method: 'GET',
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json'
           }
         });
 
