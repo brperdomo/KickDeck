@@ -7,5 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatDate(dateString: string) {
-  return format(new Date(dateString), 'MMM d, yyyy')
+  // Parse the date string and add 'T00:00:00' to ensure it's treated as start of day in local timezone
+  const date = new Date(`${dateString.split('T')[0]}T00:00:00`);
+  return format(date, 'MMM d, yyyy')
 }
