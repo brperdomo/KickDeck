@@ -423,6 +423,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
             <TableHead>Gender</TableHead>
             <TableHead>Division Code</TableHead>
             <TableHead>Field Size</TableHead>
+            <TableHead>Amount Due</TableHead>
             <TableHead>Fees</TableHead>
           </TableRow>
         </TableHeader>
@@ -435,6 +436,8 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
             const assignedFees = feesQuery.data?.filter(fee =>
               fee.applyToAll || (fee.ageGroups || []).includes(existingGroup?.id)
             ) || [];
+
+            const totalAmount = assignedFees.reduce((sum, fee) => sum + (fee.amount || 0), 0);
 
             return (
               <TableRow key={group.divisionCode}>
@@ -497,6 +500,9 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                   )}
                 </TableCell>
                 <TableCell>
+                  ${(totalAmount / 100).toFixed(2)}
+                </TableCell>
+                <TableCell>
                   {existingGroup.isSelected && feesQuery.data ? (
                     <Select
                       value={existingGroup.fees?.map(f => f.toString()) || []}
@@ -509,7 +515,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                           if (ag.divisionCode === existingGroup.divisionCode) {
                             return {
                               ...ag,
-                              fees: feeIds
+                              fees: feeIds,
                             };
                           }
                           return ag;
