@@ -446,7 +446,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
           {PREDEFINED_AGE_GROUPS.map((group) => {
             const existingGroup = ageGroups.find(
               (ag) => ag.divisionCode === group.divisionCode
-            );
+            ) || { ...group, isSelected: true };
 
             return (
               <TableRow key={group.divisionCode}>
@@ -484,19 +484,26 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                 <TableCell>
                   {existingGroup ? (
                     <Select
-                      value={existingGroup.fieldSize}
+                      value={existingGroup.fieldSize || ""}
                       onValueChange={(value: FieldSize) => {
-                        setAgeGroups(
-                          ageGroups.map((ag) =>
-                            ag.id === existingGroup.id
-                              ? { ...ag, fieldSize: value }
-                              : ag
-                          )
-                        );
+                        setAgeGroups(prevAgeGroups => prevAgeGroups.map(ag => {
+                          if (ag.divisionCode === existingGroup.divisionCode) {
+                            return { 
+                              ...ag, 
+                              fieldSize: value, 
+                              isSelected: true 
+                            };
+                          }
+                          return ag;
+                        }));
+                        form.setValue('ageGroups', ageGroups.map(ag => ({
+                          ...ag,
+                          fieldSize: ag.divisionCode === existingGroup.divisionCode ? value : ag.fieldSize
+                        })));
                       }}
                     >
                       <SelectTrigger className="w-[120px]">
-                        <SelectValue />
+                        <SelectValue placeholder="Select size">{existingGroup.fieldSize}</SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {['3v3', '4v4', '5v5', '6v6', '7v7', '8v8', '9v9', '10v10', '11v11', 'N/A'].map((size) => (
@@ -525,15 +532,15 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                 <TableCell>
                   {existingGroup && feesQuery.data && feesQuery.data.length > 0 ? (
                     <Select
-                      value={Array.isArray(existingGroup.fees) ? existingGroup.fees : []}
+                      value={Array.isArray(existingGroup.fees) && existingGroup.fees.length > 0 ? existingGroup.fees[0].toString() : ""}
                       onValueChange={(selectedFee) => {
                         setAgeGroups(prevAgeGroups => prevAgeGroups.map(ag => {
-                          if (ag.id === existingGroup.id) {
-                            const currentFees = Array.isArray(ag.fees) ? ag.fees : [];
-                            const newFees = currentFees.includes(selectedFee) 
-                              ? currentFees.filter(f => f !== selectedFee)
-                              : [...currentFees, selectedFee];
-                            return { ...ag, fees: newFees };
+                          if (ag.divisionCode === existingGroup.divisionCode) {
+                            return { 
+                              ...ag, 
+                              fees: selectedFee ? [Number(selectedFee)] : [],
+                              isSelected: true
+                            };
                           }
                           return ag;
                         }));
@@ -647,7 +654,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                       }
                     >
                       <SelectTrigger className="w-[120px]">
-                        <SelectValue placeholder="Select size" />
+                        <SelectValue>{existingGroup.fieldSize || "Select size"}</SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {['3v3', '4v4', '5v5', '6v6', '7v7', '8v8', '9v9', '10v10', '11v11', 'N/A'].map((size) => (
