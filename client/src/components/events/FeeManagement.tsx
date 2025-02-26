@@ -96,7 +96,8 @@ export function FeeManagement() {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
           }
         });
 
