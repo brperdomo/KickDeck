@@ -446,7 +446,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
           {PREDEFINED_AGE_GROUPS.map((group) => {
             const existingGroup = ageGroups.find(
               (ag) => ag.divisionCode === group.divisionCode
-            );
+            ) || { ...group, isSelected: true };
 
             return (
               <TableRow key={group.divisionCode}>
