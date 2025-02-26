@@ -433,6 +433,11 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Age Groups</h3>
+        {event?.seasonalScopeName && (
+          <Badge variant="outline" className="text-sm">
+            {event.seasonalScopeName} ({event.seasonalStartYear}-{event.seasonalEndYear})
+          </Badge>
+        )}
         {seasonalScopeQuery.data && (
           <Badge variant="outline" className="text-sm">
             {seasonalScopeQuery.data.name} ({seasonalScopeQuery.data.startYear}-{seasonalScopeQuery.data.endYear})
