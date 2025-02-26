@@ -10,23 +10,17 @@ const router = Router();
 router.get("/:eventId/fees", authenticateAdmin, async (req, res) => {
   try {
     const { eventId } = req.params;
-    console.log('Fetching fees for event:', eventId);
-
-    if (!eventId) {
-      console.error('Invalid event ID:', eventId);
+    if (!eventId || isNaN(parseInt(eventId))) {
       return res.status(400).json({ message: "Invalid event ID" });
     }
-
     const fees = await db.query.eventFees.findMany({
-      where: eq(eventFees.eventId, BigInt(eventId)),
+      where: eq(eventFees.eventId, parseInt(eventId)),
       orderBy: (eventFees) => [eventFees.createdAt],
     });
-
-    console.log(`Found ${fees.length} fees for event ${eventId}:`, fees);
     res.json(fees);
   } catch (error) {
     console.error("Error fetching event fees:", error);
-    res.status(500).json({ message: "Failed to fetch event fees", error: error.message });
+    res.status(500).json({ message: "Failed to fetch event fees" });
   }
 });
 
@@ -34,32 +28,23 @@ router.get("/:eventId/fees", authenticateAdmin, async (req, res) => {
 router.post("/:eventId/fees", authenticateAdmin, async (req, res) => {
   try {
     const { eventId } = req.params;
-    console.log('Creating fee for event:', eventId, 'with data:', req.body);
-
-    if (!eventId) {
-      console.error('Invalid event ID for fee creation:', eventId);
-      return res.status(400).json({ message: "Invalid event ID" });
-    }
-
     const validatedData = insertEventFeeSchema.parse({
       ...req.body,
-      eventId: BigInt(eventId),
+      eventId: parseInt(eventId),
     });
 
     const newFee = await db.insert(eventFees).values({
       ...validatedData,
-      eventId: BigInt(eventId),
       beginDate: validatedData.beginDate ? new Date(validatedData.beginDate) : null,
       endDate: validatedData.endDate ? new Date(validatedData.endDate) : null,
       createdAt: new Date(),
       updatedAt: new Date(),
     }).returning();
 
-    console.log('Created new fee:', newFee[0]);
     res.status(201).json(newFee[0]);
   } catch (error) {
     console.error("Error creating event fee:", error);
-    res.status(500).json({ message: "Failed to create event fee", error: error.message });
+    res.status(500).json({ message: "Failed to create event fee" });
   }
 });
 
@@ -69,14 +54,13 @@ router.patch("/:eventId/fees/:feeId", authenticateAdmin, async (req, res) => {
     const { eventId, feeId } = req.params;
     const validatedData = insertEventFeeSchema.parse({
       ...req.body,
-      eventId: BigInt(eventId),
+      eventId: parseInt(eventId),
     });
 
     const updatedFee = await db
       .update(eventFees)
       .set({
         ...validatedData,
-        eventId: BigInt(eventId),
         beginDate: validatedData.beginDate ? new Date(validatedData.beginDate) : null,
         endDate: validatedData.endDate ? new Date(validatedData.endDate) : null,
         updatedAt: new Date(),
