@@ -349,8 +349,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                       'bold italic backcolor | alignleft aligncenter ' +
                       'alignright alignjustify | bullist numlist outdent indent | ' +
                       'removeformat | help',
-                    // Added base_url to fix TinyMCE in production
-                    base_url: '/tinymce', // Update with your actual TinyMCE path
+                    base_url: '/tinymce',
                     suffix: '.min'
                   }}
                   value={field.value}
@@ -383,8 +382,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                       'bold italic backcolor | alignleft aligncenter ' +
                       'alignright alignjustify | bullist numlist outdent indent | ' +
                       'removeformat | help',
-                    // Added base_url to fix TinyMCE in production
-                    base_url: '/tinymce', // Update with your actual TinyMCE path
+                    base_url: '/tinymce',
                     suffix: '.min'
                   }}
                   value={field.value}
@@ -417,8 +415,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                       'bold italic backcolor | alignleft aligncenter ' +
                       'alignright alignjustify | bullist numlist outdent indent | ' +
                       'removeformat | help',
-                    // Added base_url to fix TinyMCE in production
-                    base_url: '/tinymce', // Update with your actual TinyMCE path
+                    base_url: '/tinymce',
                     suffix: '.min'
                   }}
                   value={field.value}
@@ -956,7 +953,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
               />
             </div>
             <Button type="submit">
-              {editingSetting ? 'Update Setting' : 'Add Setting'}
+              {editingSetting ? 'Update Setting' : 'Add SettingButton'}
             </Button>
           </form>
         </DialogContent>
