@@ -527,9 +527,8 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                     <Select
                       value={existingGroup.fees || []}
                       onValueChange={(selectedFees) => {
-                        const feesArray = Array.isArray(selectedFees) ? selectedFees : [selectedFees];
                         setAgeGroups(prevAgeGroups => prevAgeGroups.map(ag =>
-                          ag.id === existingGroup.id ? { ...ag, fees: feesArray } : ag
+                          ag.id === existingGroup.id ? { ...ag, fees: selectedFees } : ag
                         ));
                       }}
                       multiple
