@@ -81,8 +81,6 @@ app.patch('/api/admin/events/:id', async (req, res) => {
             eventId: eventId,
             gender: group.gender,
             projectedTeams: group.projectedTeams,
-            birth_date_start: group.birth_date_start || null,
-            birth_date_end: group.birth_date_end || null,
             scoringRule: group.scoringRule,
             ageGroup: group.ageGroup,
             birthYear: group.birthYear,
@@ -91,7 +89,17 @@ app.patch('/api/admin/events/:id', async (req, res) => {
             createdAt: new Date().toISOString(),
           };
 
-          await tx.insert(eventAgeGroups).values(insertData);
+          const newGroup = await tx.insert(eventAgeGroups).values(insertData).returning();
+
+          // Handle fee assignments if they exist
+          if (group.fees && Array.isArray(group.fees) && newGroup.length > 0) {
+            for (const feeId of group.fees) {
+              await tx.insert(eventAgeGroupFees).values({
+                ageGroupId: newGroup[0].id,
+                feeId: feeId
+              });
+            }
+          }
         }
       }
       return updatedEvent;
@@ -101,5 +109,48 @@ app.patch('/api/admin/events/:id', async (req, res) => {
   } catch (error) {
     console.error("Error updating event:", error);
     res.status(500).json({ error: "Failed to update event" });
+  }
+});
+
+// Get event by id for editing
+app.get('/api/admin/events/:id/edit', authenticateAdmin, async (req, res) => {
+  try {
+    const eventId = req.params.id;
+
+    const event = await db.query.events.findFirst({
+      where: eq(events.id, eventId),
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Get age groups
+    const ageGroups = await db.query.eventAgeGroups.findMany({
+      where: eq(eventAgeGroups.eventId, eventId),
+    });
+
+    // Get fee assignments for each age group
+    const ageGroupsWithFees = await Promise.all(
+      ageGroups.map(async (group) => {
+        const feeAssignments = await db.query.eventAgeGroupFees.findMany({
+          where: eq(eventAgeGroupFees.ageGroupId, group.id),
+        });
+
+        return {
+          ...group,
+          fees: feeAssignments.map(assignment => assignment.feeId)
+        };
+      })
+    );
+
+    // Return the event with age groups (including their assigned fees)
+    res.json({
+      ...event,
+      ageGroups: ageGroupsWithFees,
+    });
+  } catch (error) {
+    console.error("Error fetching event for editing:", error);
+    res.status(500).json({ error: "Failed to fetch event" });
   }
 });
