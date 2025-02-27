@@ -178,6 +178,8 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
           gender: group.gender,
           ageGroup: group.ageGroup,
           birthYear: group.birthYear,
+          // Temporary: Include projected_teams with a default value until database migration
+          projected_teams: 0
         }));
 
       const combinedData: EventFormValues = {
