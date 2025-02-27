@@ -6,6 +6,13 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { SoccerFieldBackground } from "@/components/ui/SoccerFieldBackground";
 
+interface AgeGroup {
+  id: number;
+  ageGroup: string;
+  gender: string;
+  divisionCode: string;
+}
+
 interface Event {
   id: string;
   name: string;
@@ -13,6 +20,7 @@ interface Event {
   endDate: string;
   applicationDeadline: string;
   details: string;
+  ageGroups: AgeGroup[];
 }
 
 export default function EventRegistration() {
@@ -101,6 +109,21 @@ export default function EventRegistration() {
                 <p>{new Date(event.applicationDeadline).toLocaleDateString()}</p>
               </div>
             </div>
+
+            {event.ageGroups && event.ageGroups.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="font-semibold text-[#1E88E5]">Eligible Age Groups</h3>
+                <div className="grid gap-2">
+                  {event.ageGroups.map((group, index) => (
+                    <div key={index} className="bg-blue-50 p-3 rounded-lg">
+                      <span className="font-medium">{group.ageGroup}</span>
+                      <span className="text-gray-600 ml-2">({group.gender})</span>
+                      <span className="text-sm text-gray-500 ml-2">Division: {group.divisionCode}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {event.details && (
               <div className="space-y-2">
