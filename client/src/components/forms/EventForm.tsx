@@ -966,4 +966,3 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
 };
 
 export default EventForm;
-</
