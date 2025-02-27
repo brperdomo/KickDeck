@@ -115,87 +115,97 @@ export function registerRoutes(app: Express): Server {
     // Add admin event deletion endpoint
     app.delete('/api/admin/events/:id', isAdmin, async (req, res) => {
       try {
-        const eventId = parseInt(req.params.id);
+        const eventId = req.params.id;
 
         // Start a transaction to delete all related records first
         await db.transaction(async (tx) => {
           // Delete games first (they reference time slots and teams)
           await tx
             .delete(games)
-            .where(sql`${games.eventId} = ${eventId}`);
+            .where(eq(games.eventId, eventId));
 
           // Delete game time slots
           await tx
             .delete(gameTimeSlots)
-            .where(sql`${gameTimeSlots.eventId} = ${eventId}`);
+            .where(eq(gameTimeSlots.eventId, eventId));
 
           // Delete tournament groups first (as they reference age groups)
           await tx
             .delete(tournamentGroups)
-            .where(sql`${tournamentGroups.eventId} = ${eventId}`);
+            .where(eq(tournamentGroups.eventId, eventId));
 
           // Delete teams (they reference age groups)
           await tx
             .delete(teams)
-            .where(sql`${teams.eventId} = ${eventId}`);
+            .where(eq(teams.eventId, eventId));
+
+          // Delete age group fees first
+          await tx.execute(sql`
+            DELETE FROM event_age_group_fees 
+            WHERE age_group_id IN (
+              SELECT id FROM event_age_groups 
+              WHERE event_id = ${eventId}
+            )
+          `);
 
           // Delete event age groups
           await tx
             .delete(eventAgeGroups)
-            .where(sql`${eventAgeGroups.eventId} = ${eventId}`);
+            .where(eq(eventAgeGroups.eventId, eventId));
 
           // Delete event complexes  
           await tx
             .delete(eventComplexes)
-            .where(sql`${eventComplexes.eventId} = ${eventId}`);
+            .where(eq(eventComplexes.eventId, eventId));
 
           // Delete event field sizes
           await tx
             .delete(eventFieldSizes)
-            .where(sql`${eventFieldSizes.eventId} = ${eventId}`);
+            .where(eq(eventFieldSizes.eventId, eventId));
 
           // Delete event scoring rules
           await tx
             .delete(eventScoringRules)
-            .where(sql`${eventScoringRules.eventId} = ${eventId}`);
+            .where(eq(eventScoringRules.eventId, eventId));
 
           // Delete event settings
           await tx
             .delete(eventSettings)
-            .where(sql`${eventSettings.eventId} = ${eventId}`);
+            .where(eq(eventSettings.eventId, eventId));
 
           // Delete form responses
           await tx
             .delete(formResponses)
-            .where(sql`${formResponses.eventId} = ${eventId}`);
+            .where(eq(formResponses.eventId, eventId));
 
-          // Delete form fields and options
-          const formTemplates = await tx
-            .select({ id: eventFormTemplates.id })
-            .from(eventFormTemplates)
-            .where(sql`${eventFormTemplates.eventId} = ${eventId}`);
+          // Delete form field options and fields for this event's templates
+          await tx.execute(sql`
+            DELETE FROM form_field_options 
+            WHERE form_field_id IN (
+              SELECT ff.id 
+              FROM form_fields ff
+              JOIN event_form_templates eft ON ff.template_id = eft.id
+              WHERE eft.event_id = ${eventId}
+            )
+          `);
 
-          for (const template of formTemplates) {
-            await tx
-              .delete(formFieldOptions)
-              .where(sql`${formFieldOptions.formFieldId} IN (
-                SELECT id FROM ${formFields} WHERE form_template_id = ${template.id}
-              )`);
-
-            await tx
-              .delete(formFields)
-              .where(sql`${formFields.formTemplateId} = ${template.id}`);
-          }
+          await tx.execute(sql`
+            DELETE FROM form_fields 
+            WHERE template_id IN (
+              SELECT id FROM event_form_templates 
+              WHERE event_id = ${eventId}
+            )
+          `);
 
           // Delete event form templates
           await tx
             .delete(eventFormTemplates)
-            .where(sql`${eventFormTemplates.eventId} = ${eventId}`);
+            .where(eq(eventFormTemplates.eventId, eventId));
 
           // Finally delete the event itself
           const [deletedEvent] = await tx
             .delete(events)
-            .where(sql`${events.id} = ${eventId}`)
+            .where(eq(events.id, BigInt(eventId)))
             .returning();
 
           if (!deletedEvent) {
