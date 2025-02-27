@@ -59,7 +59,19 @@ export function AgeGroupSelector({ onAgeGroupsChange }: AgeGroupSelectorProps) {
     const updatedGroups = [...ageGroups];
     updatedGroups[index] = { ...updatedGroups[index], isSelected: checked };
     setAgeGroups(updatedGroups);
-    const selectedGroups = updatedGroups.filter(group => group.isSelected);
+    
+    // Ensure we send the complete data for selected groups
+    const selectedGroups = updatedGroups
+      .filter(group => group.isSelected)
+      .map(group => ({
+        ...group,
+        // Ensure these fields are always defined
+        projectedTeams: group.projectedTeams || 0,
+        fieldSize: group.fieldSize || '11v11',
+        scoringRule: group.scoringRule || null,
+        amountDue: group.amountDue || null
+      }));
+      
     onAgeGroupsChange(selectedGroups);
   };
 

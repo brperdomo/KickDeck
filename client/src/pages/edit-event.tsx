@@ -30,17 +30,23 @@ export default function EditEvent() {
   });
 
   const updateEventMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await fetch(`/api/admin/events/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || 'Failed to update event');
+    mutationFn: async (data: EventFormData) => {
+      try {
+        const response = await fetch(`/api/admin/events/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        if (!response.ok) {
+          const errorData = await response.text();
+          console.error('Server response:', errorData);
+          throw new Error(`Failed to update event: ${errorData || response.statusText}`);
+        }
+        return response.json();
+      } catch (error) {
+        console.error('Error updating event:', error);
+        throw error;
       }
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['event', id] });
