@@ -117,27 +117,17 @@ export function registerRoutes(app: Express): Server {
       try {
         const eventId = parseInt(req.params.id);
 
-        // Start a transaction to handle cascade deletion
+        // Start a transaction to delete all related records first
         await db.transaction(async (tx) => {
-          // Delete all related records first
-          await tx.delete(formResponses).where(eq(formResponses.eventId, eventId));
-          await tx.delete(chatRooms).where(eq(chatRooms.eventId, eventId));
-          await tx.delete(eventFieldSizes).where(eq(eventFieldSizes.eventId, eventId));
-          await tx.delete(eventScoringRules).where(eq(eventScoringRules.eventId, eventId));
-          await tx.delete(eventComplexes).where(eq(eventComplexes.eventId, eventId));
-          await tx.delete(teams).where(eq(teams.eventId, eventId));
-          await tx.delete(tournamentGroups).where(eq(tournamentGroups.eventId, eventId));
-          await tx.delete(eventAgeGroups).where(eq(eventAgeGroups.eventId, eventId));
-          await tx.delete(eventFormTemplates).where(eq(eventFormTemplates.eventId, eventId));
-          
-          // Delete games and time slots if they exist
-          if (typeof games !== 'undefined') {
-            await tx.delete(games).where(eq(games.eventId, eventId));
-          }
-          
-          if (typeof gameTimeSlots !== 'undefined') {
-            await tx.delete(gameTimeSlots).where(eq(gameTimeSlots.eventId, eventId));
-          }
+          // Delete games first (they reference time slots and teams)
+          await tx
+            .delete(games)
+            .where(sql`${games.eventId} = ${eventId}`);
+
+          // Delete game time slots
+          await tx
+            .delete(gameTimeSlots)
+            .where(sql`${gameTimeSlots.eventId} = ${eventId}`);
 
           // Delete tournament groups first (as they reference age groups)
           await tx
@@ -3190,7 +3180,7 @@ export function registerRoutes(app: Express): Server {
           // Finally delete the event
           const [deletedEvent] = await tx
             .delete(events)
-            .where(eq(events.id, eventId))
+            .where(eq(events.id, req.params.id))
             .returning();
 
           if (!deletedEvent) {
@@ -3207,7 +3197,7 @@ export function registerRoutes(app: Express): Server {
         if (error instanceof Error) {
           errorMessage = error.message;
         }
-        res.status(500).json({ message: errorMessage });
+        res.status(500).send(errorMessage);
       }
     });
 
