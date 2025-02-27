@@ -1,0 +1,156 @@
+// Assuming necessary imports like 'app', 'db', 'events', 'eventAgeGroups', 'seasonalScopes', 'eq' are present.  Also assuming a 'processAgeGroups' function exists as described in the thinking section.
+
+
+async function processAgeGroups(ageGroups, seasonalScopeId) {
+  const processedAgeGroups = await Promise.all(ageGroups.map(async (ageGroup) => {
+    //Removed birth_date_start processing
+    return ageGroup;
+  }));
+  return processedAgeGroups;
+}
+
+
+app.patch('/api/admin/events/:id', async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    const eventData = req.body;
+
+    // Process age groups to ensure birth_date_start is set
+    const processedAgeGroups = await processAgeGroups(
+      eventData.ageGroups || [],
+      eventData.seasonalScopeId
+    );
+
+    // Replace the age groups in the request with the processed ones
+    eventData.ageGroups = processedAgeGroups;
+
+    // Begin a transaction
+    const result = await db.transaction(async (tx) => {
+      // Update event
+      const updatedEvent = await tx
+        .update(events)
+        .set({
+          name: eventData.name,
+          startDate: eventData.startDate,
+          endDate: eventData.endDate,
+          timezone: eventData.timezone,
+          applicationDeadline: eventData.applicationDeadline,
+          details: eventData.details,
+          agreement: eventData.agreement,
+          refundPolicy: eventData.refundPolicy,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(events.id, eventId))
+        .returning();
+
+      // Get existing age groups for comparison
+      const existingAgeGroups = await tx
+        .select()
+        .from(eventAgeGroups)
+        .where(eq(eventAgeGroups.eventId, eventId));
+
+      // Compare and update or insert age groups
+      for (const group of eventData.ageGroups) {
+        const existingGroup = existingAgeGroups.find(
+          (g) => g.ageGroup === group.ageGroup && g.birthYear === group.birthYear && g.gender === group.gender
+        );
+
+        // Update existing group
+        if (existingGroup) {
+          // Build the update object conditionally
+          const updateData = {
+            ageGroup: group.ageGroup,
+            birthYear: group.birthYear,
+            gender: group.gender,
+            projectedTeams: group.projectedTeams,
+            fieldSize: group.fieldSize,
+            scoringRule: group.scoringRule,
+            amountDue: group.amountDue || null,
+          };
+
+          await tx
+            .update(eventAgeGroups)
+            .set(updateData)
+            .where(eq(eventAgeGroups.id, existingGroup.id))
+            .returning();
+        }
+        // Create if it doesn't exist
+        else {
+          // Build the insertion object with only the required fields
+          const insertData = {
+            eventId: eventId,
+            gender: group.gender,
+            projectedTeams: group.projectedTeams,
+            scoringRule: group.scoringRule,
+            ageGroup: group.ageGroup,
+            birthYear: group.birthYear,
+            fieldSize: group.fieldSize,
+            amountDue: group.amountDue || null,
+            createdAt: new Date().toISOString(),
+          };
+
+          const newGroup = await tx.insert(eventAgeGroups).values(insertData).returning();
+
+          // Handle fee assignments if they exist
+          if (group.fees && Array.isArray(group.fees) && newGroup.length > 0) {
+            for (const feeId of group.fees) {
+              await tx.insert(eventAgeGroupFees).values({
+                ageGroupId: newGroup[0].id,
+                feeId: feeId
+              });
+            }
+          }
+        }
+      }
+      return updatedEvent;
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error updating event:", error);
+    res.status(500).json({ error: "Failed to update event" });
+  }
+});
+
+// Get event by id for editing
+app.get('/api/admin/events/:id/edit', authenticateAdmin, async (req, res) => {
+  try {
+    const eventId = req.params.id;
+
+    const event = await db.query.events.findFirst({
+      where: eq(events.id, eventId),
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Get age groups
+    const ageGroups = await db.query.eventAgeGroups.findMany({
+      where: eq(eventAgeGroups.eventId, eventId),
+    });
+
+    // Get fee assignments for each age group
+    const ageGroupsWithFees = await Promise.all(
+      ageGroups.map(async (group) => {
+        const feeAssignments = await db.query.eventAgeGroupFees.findMany({
+          where: eq(eventAgeGroupFees.ageGroupId, group.id),
+        });
+
+        return {
+          ...group,
+          fees: feeAssignments.map(assignment => assignment.feeId)
+        };
+      })
+    );
+
+    // Return the event with age groups (including their assigned fees)
+    res.json({
+      ...event,
+      ageGroups: ageGroupsWithFees,
+    });
+  } catch (error) {
+    console.error("Error fetching event for editing:", error);
+    res.status(500).json({ error: "Failed to fetch event" });
+  }
+});
