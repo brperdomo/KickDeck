@@ -966,7 +966,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
               ) : mode === 'edit' ? 'Save Changes' : 'Continue'}
             </Button>
                     </div>
-        </        </CardContent>
+        </CardContent>
       </Card>
       <AdminModal
         open={isAdminModalOpen}
