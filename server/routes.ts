@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { log } from "./vite";
-import { db } from "../db";
+import { db } from "@db";
 import seasonalScopesRouter from "./routes/seasonal-scopes";
 import uploadRouter from "./routes/upload";
 import accountingCodesRouter from "./routes/admin/accounting-codes";
@@ -39,7 +39,7 @@ import {
   games,
   gameTimeSlots,
   eventSettings,
-} from "../db/schema";
+} from "@db/schema";
 import fs from "fs/promises";
 import path from "path";
 import { crypto } from "./crypto";
@@ -74,7 +74,7 @@ export function registerRoutes(app: Express): Server {
     app.use('/api/admin/accounting-codes', isAdmin, accountingCodesRouter);
     app.use('/api/admin/seasonal-scopes', isAdmin, seasonalScopesRouter);
     app.use('/api/admin/events', isAdmin, eventsRouter);
-    app.use('/api/admin/fees', isAdmin, feesRouter); // Mount fees router under events path
+    app.use('/api/admin/events', isAdmin, feesRouter); // Mount fees router under events path
 
     // Register coupon routes
     app.post('/api/admin/coupons', isAdmin, createCoupon);
@@ -2953,11 +2953,12 @@ export function registerRoutes(app: Express): Server {
             .delete(formFieldOptions)
             .where(
               inArray(
-            formFieldOptions.fieldId,
-            db.select({ id: formFields.id })
-              .from(formFields)
-              .where(eq(formFields.templateId, templateId))
-          ));
+                formFieldOptions.fieldId,
+                db.select({ id: formFields.id })
+                  .from(formFields)
+                  .where(eq(formFields.templateId, templateId))
+              )
+            );
 
           // Delete all fields
           await tx
