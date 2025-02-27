@@ -2952,13 +2952,12 @@ export function registerRoutes(app: Express): Server {
           await tx
             .delete(formFieldOptions)
             .where(
-              inArray`array(
-                formFieldOptions.fieldId,
-                db.select({ id: formFields.id })
-                  .from(formFields)
-                  .where(eq(formFields.templateId, templateId))
-              )
-            );
+              inArray(
+            formFieldOptions.fieldId,
+            db.select({ id: formFields.id })
+              .from(formFields)
+              .where(eq(formFields.templateId, templateId))
+          ));
 
           // Delete all fields
           await tx
