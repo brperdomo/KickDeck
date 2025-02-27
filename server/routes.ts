@@ -9,7 +9,7 @@ import accountingCodesRouter from "./routes/admin/accounting-codes";
 import feesRouter from "./routes/admin/fees";
 import eventsRouter from "./routes/admin/events";
 import { createCoupon, getCoupons, updateCoupon, deleteCoupon } from "./routes/coupons";
-import { sql, eq, and, asc } from "drizzle-orm";
+import { sql, eq, and } from "drizzle-orm";
 import {
   users,
   organizationSettings,
@@ -208,68 +208,6 @@ export function registerRoutes(app: Express): Server {
         console.error('Error deleting event:', error);
         console.error("Error details:", error);
         res.status(500).send(error instanceof Error ? error.message : "Failed to delete event");
-      }
-    });
-
-    // Update event age groups endpoint
-    app.patch('/api/admin/events/:id/age-groups', isAdmin, async (req, res) => {
-      try {
-        const eventId = parseInt(req.params.id);
-        const { ageGroups } = req.body;
-
-        if (!Array.isArray(ageGroups)) {
-          return res.status(400).json({ error: "ageGroups must be an array" });
-        }
-
-        await db.transaction(async (tx) => {
-          // First delete existing age groups for this event
-          await tx
-            .delete(eventAgeGroups)
-            .where(eq(eventAgeGroups.eventId, eventId));
-
-          // Then insert the new age groups
-          if (ageGroups.length > 0) {
-            await tx
-              .insert(eventAgeGroups)
-              .values(
-                ageGroups.map(group => ({
-                  eventId,
-                  gender: group.gender,
-                  ageGroup: group.ageGroup,
-                  birthDateStart: group.birthDateStart,
-                  birthDateEnd: group.birthDateEnd,
-                  minBirthYear: group.minBirthYear,
-                  maxBirthYear: group.maxBirthYear,
-                  divisionCode: group.divisionCode,
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString()
-                }))
-              );
-          }
-        });
-
-        res.json({ message: "Age groups updated successfully" });
-      } catch (error) {
-        console.error('Error updating age groups:', error);
-        res.status(500).json({ error: "Failed to update age groups" });
-      }
-    });
-
-    // Get event age groups endpoint
-    app.get('/api/admin/events/:id/age-groups', isAdmin, async (req, res) => {
-      try {
-        const eventId = parseInt(req.params.id);
-        
-        const ageGroups = await db
-          .select()
-          .from(eventAgeGroups)
-          .where(eq(eventAgeGroups.eventId, eventId))
-          .orderBy(asc(eventAgeGroups.ageGroup));
-
-        res.json(ageGroups);
-      } catch (error) {
-        console.error('Error fetching age groups:', error);
-        res.status(500).json({ error: "Failed to fetch age groups" });
       }
     });
 
