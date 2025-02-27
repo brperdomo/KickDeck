@@ -761,20 +761,34 @@ export default function CreateEvent() {
       setIsSaving(true);
       const formValues = form.getValues();
 
-      // Create a minimal event data object with only required fields
+      // Get the selected age groups from the seasonal scope
+      const selectedScope = seasonalScopesQuery.data?.find(scope => scope.id === selectedScopeId);
+      const selectedAgeGroupsData = selectedScope?.ageGroups.filter(group =>
+        selectedAgeGroupIds.includes(group.id)
+      ) || [];
+
+      // Create event data object with age groups
       const eventData = {
         name: formValues.name?.trim(),
         startDate: formValues.startDate,
         endDate: formValues.endDate,
         applicationDeadline: formValues.applicationDeadline,
-        ageGroups: ageGroups,
+        ageGroups: selectedAgeGroupsData,
         selectedComplexIds: selectedComplexIds,
         complexFieldSizes: eventFieldSizes,
+        details: formValues.details,
+        timezone: formValues.timezone,
+        agreement: formValues.agreement,
+        refundPolicy: formValues.refundPolicy,
+        branding: {
+          logoUrl: previewUrl,
+          primaryColor,
+          secondaryColor,
+        },
       };
 
       console.log('Creating event with data:', JSON.stringify(eventData, null, 2));
 
-      // Make the API request with JSON
       const response = await fetch('/api/admin/events', {
         method: 'POST',
         headers: {
@@ -792,22 +806,17 @@ export default function CreateEvent() {
         throw new Error('Invalid server response');
       }
 
-      // Check for errors
       if (!response.ok) {
         console.error('Server error response:', responseData);
         throw new Error(responseData.message || responseData.error || 'Failed to create event');
       }
 
-      // Handle successful creation
       toast({
         title: "Success",
         description: "Event created successfully",
       });
 
-      // Invalidate events query to trigger a refresh
       await queryClient.invalidateQueries({ queryKey: ['/api/admin/events'] });
-
-      // Navigate to admin dashboard
       navigate("/admin");
 
     } catch (error) {
@@ -924,8 +933,7 @@ export default function CreateEvent() {
 
   const renderInformationTab = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Event Information</h3>
+      <div className="flex items-center justify-between"><h3 className="text-lg font-semibold">Event Information</h3>
         <Button variant="outline" onClick={() => navigateTab('next')}>
           Continue
           <ArrowRight className="ml-2 h-4 w-4" />
