@@ -141,31 +141,42 @@ export const EventForm = ({
         throw new Error('Required fields are missing');
       }
 
+      // Filter and prepare age groups data
       const preparedAgeGroups = ageGroups
         .filter(group => group.selected)
         .map(group => ({
-          ...group,
+          ageGroup: group.ageGroup,
+          birthYear: group.birthYear,
+          gender: group.gender,
+          divisionCode: group.divisionCode,
           projectedTeams: group.projectedTeams || 0,
+          fieldSize: group.fieldSize,
+          fees: group.fees || [],
           birthDateStart: `${group.birthYear}-01-01`,
           birthDateEnd: `${group.birthYear}-12-31`,
-          amountDue: group.amountDue || 0,
-          fees: group.fees || []
         }));
 
+      // Only include essential data
       const combinedData = {
-        ...formData,
+        id: formData.id,
+        name: formData.name,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        timezone: formData.timezone,
+        applicationDeadline: formData.applicationDeadline,
+        details: formData.details,
+        agreement: formData.agreement,
+        refundPolicy: formData.refundPolicy,
         ageGroups: preparedAgeGroups,
+        selectedComplexIds,
+        complexFieldSizes,
         scoringRules,
         settings,
-        complexFieldSizes,
-        selectedComplexIds,
-        administrators: defaultValues?.administrators || [],
         branding: {
           primaryColor,
           secondaryColor,
-          logo,
-          logoUrl: previewUrl || undefined,
-        },
+          logoUrl: previewUrl
+        }
       };
 
       await onSubmit(combinedData);
