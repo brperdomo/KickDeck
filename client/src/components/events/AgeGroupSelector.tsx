@@ -59,18 +59,21 @@ export function AgeGroupSelector({ onAgeGroupsChange }: AgeGroupSelectorProps) {
     const updatedGroups = [...ageGroups];
     updatedGroups[index] = { ...updatedGroups[index], isSelected: checked };
     setAgeGroups(updatedGroups);
-    onAgeGroupsChange(updatedGroups.filter(group => group.isSelected));
+    const selectedGroups = updatedGroups.filter(group => group.isSelected);
+    onAgeGroupsChange(selectedGroups);
   };
 
   const handleProjectedTeamsChange = (index: number, value: string) => {
+    const parsedValue = parseInt(value);
     const updatedGroups = [...ageGroups];
     updatedGroups[index] = { 
       ...updatedGroups[index], 
-      projectedTeams: parseInt(value) || 0 
+      projectedTeams: isNaN(parsedValue) ? 0 : parsedValue 
     };
     setAgeGroups(updatedGroups);
     if (updatedGroups[index].isSelected) {
-      onAgeGroupsChange(updatedGroups.filter(group => group.isSelected));
+      const selectedGroups = updatedGroups.filter(group => group.isSelected);
+      onAgeGroupsChange(selectedGroups);
     }
   };
 

@@ -1937,7 +1937,7 @@ export function registerRoutes(app: Express): Server {
           );
 
           // Process each age group from the request
-          for (const group of eventData.ageGroups) {
+          for (const group of eventData.ageGroups || []) {
             const groupKey = `${group.gender}-${group.ageGroup}-${group.fieldSize}`;
             const existingGroup = existingAgeGroupsMap.get(groupKey);
 
@@ -1946,12 +1946,12 @@ export function registerRoutes(app: Express): Server {
               const updatedGroup = await tx
                 .update(eventAgeGroups)
                 .set({
-                  projectedTeams: group.projectedTeams,
+                  projectedTeams: group.projectedTeams || 0,
                   ageGroup: group.ageGroup,
                   birthYear: group.birthYear,
                   gender: group.gender,
                   fieldSize: group.fieldSize,
-                  scoringRule: group.scoringRule,
+                  scoringRule: group.scoringRule || null,
                   amountDue: group.amountDue || null,
                 })
                 .where(eq(eventAgeGroups.id, existingGroup.id))
