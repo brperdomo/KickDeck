@@ -116,7 +116,7 @@ export function AgeGroupSelector({ onAgeGroupsChange, initialAgeGroups = [], eve
       }));
 
     onAgeGroupsChange(selectedGroups);
-  }, []);
+  }, [ageGroups, onAgeGroupsChange]);
 
   const handleSelectionChange = (index: number, checked: boolean) => {
     const updatedGroups = [...ageGroups];
@@ -127,7 +127,8 @@ export function AgeGroupSelector({ onAgeGroupsChange, initialAgeGroups = [], eve
       birthDateEnd: checked ? new Date(updatedGroups[index].birthYear, 11, 31).toISOString().split('T')[0] : undefined,
       minBirthYear: checked ? updatedGroups[index].birthYear : undefined,
       maxBirthYear: checked ? updatedGroups[index].birthYear : undefined,
-      fees: checked ? updatedGroups[index].fees || [] : []
+      fees: checked ? updatedGroups[index].fees || [] : [],
+      fieldSize: checked ? updatedGroups[index].fieldSize || "11v11" : undefined //Added this line
     };
     setAgeGroups(updatedGroups);
 
@@ -140,7 +141,8 @@ export function AgeGroupSelector({ onAgeGroupsChange, initialAgeGroups = [], eve
         birthDateEnd: group.birthDateEnd,
         minBirthYear: group.minBirthYear,
         maxBirthYear: group.maxBirthYear,
-        fees: group.fees || []
+        fees: group.fees || [],
+        fieldSize: group.fieldSize || "11v11" //Added this line
       }));
 
     onAgeGroupsChange(selectedGroups);
