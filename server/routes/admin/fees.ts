@@ -1,45 +1,44 @@
 import { Router } from "express";
 import { eq } from "drizzle-orm";
-import { db } from "../../db";
-import { eventFees, eventAgeGroupFees } from "../../db/schema";
+import { db } from "@db";
+import { eventFees } from "@db/schema";
 import { authenticateAdmin } from "../../middleware/auth";
 
 const router = Router();
 
 // Get all fees for an event
-router.get("/events/:eventId/fees", authenticateAdmin, async (req, res) => {
+router.get("/:eventId/fees", authenticateAdmin, async (req, res) => {
   try {
-    const eventId = req.params.eventId;
-    console.log(`Fetching fees for event: ${eventId}`);
+    const { eventId } = req.params;
+    console.log('Fetching fees for event:', eventId);
 
-    const fees = await db.query.eventFees.findMany({
-      where: eq(eventFees.eventId, BigInt(eventId)),
-    });
+    if (!eventId) {
+      console.error('Invalid event ID:', eventId);
+      return res.status(400).json({ message: "Invalid event ID" });
+    }
+
+    const fees = await db.select({
+      id: eventFees.id,
+      name: eventFees.name,
+      amount: eventFees.amount,
+      beginDate: eventFees.beginDate,
+      endDate: eventFees.endDate,
+      applyToAll: eventFees.applyToAll,
+      createdAt: eventFees.createdAt,
+      updatedAt: eventFees.updatedAt,
+    }).from(eventFees)
+      .where(eq(eventFees.eventId, BigInt(eventId)))
+      .orderBy(eventFees.createdAt);
 
     console.log(`Found ${fees.length} fees for event ${eventId}`);
 
     res.json(fees);
   } catch (error) {
-    console.error("Error fetching fees:", error);
-    res.status(500).json({ error: "Failed to fetch fees" });
-  }
-});
-
-// Get fee assignments for a specific age group
-router.get("/age-groups/:ageGroupId/fees", authenticateAdmin, async (req, res) => {
-  try {
-    const ageGroupId = parseInt(req.params.ageGroupId);
-
-    const feeAssignments = await db.query.eventAgeGroupFees.findMany({
-      where: eq(eventAgeGroupFees.ageGroupId, ageGroupId),
+    console.error("Error fetching event fees:", error);
+    res.status(500).json({ 
+      message: "Failed to fetch event fees", 
+      error: error instanceof Error ? error.message : "Unknown error" 
     });
-
-    const feeIds = feeAssignments.map(assignment => assignment.feeId);
-
-    res.json(feeIds);
-  } catch (error) {
-    console.error("Error fetching fee assignments:", error);
-    res.status(500).json({ error: "Failed to fetch fee assignments" });
   }
 });
 
