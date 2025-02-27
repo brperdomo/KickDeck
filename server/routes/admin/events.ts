@@ -1,15 +1,15 @@
 import { Router } from 'express';
 import { db } from '../../../db';
-import { events, eventAgeGroups, seasonalScopes, eventScoringRules, eventComplexes, eventFieldSizes, eventFees, eventAgeGroupFees } from '@db/schema';
+import { events, eventAgeGroups, eventScoringRules, eventComplexes, eventFieldSizes, eventFees } from '@db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 const router = Router();
 
+// Keep existing GET endpoint unchanged
 router.get('/:id', async (req, res) => {
   try {
     const eventId = req.params.id;
-    console.log('Fetching event details for:', eventId);
 
     // Get main event details
     const event = await db
@@ -22,7 +22,7 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Event not found' });
     }
 
-    // Get age groups with their associated fees
+    // Get age groups
     const ageGroups = await db
       .select({
         id: eventAgeGroups.id,
@@ -35,13 +35,8 @@ router.get('/:id', async (req, res) => {
         amountDue: eventAgeGroups.amountDue,
         birth_date_start: eventAgeGroups.birth_date_start,
         divisionCode: eventAgeGroups.divisionCode,
-        feeId: eventAgeGroupFees.feeId,
       })
       .from(eventAgeGroups)
-      .leftJoin(
-        eventAgeGroupFees,
-        eq(eventAgeGroups.id, eventAgeGroupFees.ageGroupId)
-      )
       .where(eq(eventAgeGroups.eventId, eventId));
 
     // Get complex assignments
@@ -74,8 +69,7 @@ router.get('/:id', async (req, res) => {
       ageGroups: ageGroups.map(group => ({
         ...group,
         id: group.id,
-        selected: true,
-        feeId: group.feeId
+        selected: true
       })),
       complexes: complexAssignments,
       fieldSizes,
@@ -93,42 +87,42 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Delete event endpoint
+// Updated Delete endpoint
 router.delete('/:id', async (req, res) => {
   try {
     const eventId = BigInt(req.params.id);
     console.log('Starting event deletion for ID:', eventId);
 
     await db.transaction(async (tx) => {
-      // Delete age group fees first
-      await tx.delete(eventAgeGroupFees)
-        .where(eq(eventAgeGroupFees.ageGroupId, sql`(SELECT id FROM event_age_groups WHERE event_id = ${eventId})`))
-        .execute();
-
-      // Delete fees
+      // Delete fees first
       await tx.delete(eventFees)
         .where(eq(eventFees.eventId, eventId))
         .execute();
+      console.log('Deleted event fees');
 
       // Delete age groups
       await tx.delete(eventAgeGroups)
         .where(eq(eventAgeGroups.eventId, eventId.toString()))
         .execute();
+      console.log('Deleted event age groups');
 
       // Delete complexes
       await tx.delete(eventComplexes)
         .where(eq(eventComplexes.eventId, eventId.toString()))
         .execute();
+      console.log('Deleted event complexes');
 
       // Delete field sizes
       await tx.delete(eventFieldSizes)
         .where(eq(eventFieldSizes.eventId, eventId.toString()))
         .execute();
+      console.log('Deleted event field sizes');
 
       // Delete scoring rules
       await tx.delete(eventScoringRules)
         .where(eq(eventScoringRules.eventId, eventId.toString()))
         .execute();
+      console.log('Deleted event scoring rules');
 
       // Finally delete the event itself
       const [deletedEvent] = await tx.delete(events)
