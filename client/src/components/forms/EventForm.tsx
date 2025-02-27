@@ -185,7 +185,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
             gender: group.gender,
             ageGroup: group.ageGroup,
             birthYear: group.birthYear,
-            projectedTeams: 0,
+            projectedTeams: 0, //This line was added.
             birthDateStart,
             birthDateEnd,
             isSelected: true
@@ -971,7 +971,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
           setIsAdminModalOpen(false);
           setEditingAdmin(null);
         }}
-      />
+            />
     </div>
   );
 };
