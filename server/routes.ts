@@ -9,7 +9,7 @@ import accountingCodesRouter from "./routes/admin/accounting-codes";
 import feesRouter from "./routes/admin/fees";
 import eventsRouter from "./routes/admin/events";
 import { createCoupon, getCoupons, updateCoupon, deleteCoupon } from "./routes/coupons";
-import { sql, eq, and } from "drizzle-orm";
+import { sql, eq, and, inArray, or } from "drizzle-orm";
 import {
   users,
   organizationSettings,
@@ -39,6 +39,8 @@ import {
   games,
   gameTimeSlots,
   eventSettings,
+  ageGroupSettings,
+  eventAgeGroupFees
 } from "@db/schema";
 import fs from "fs/promises";
 import path from "path";
@@ -988,7 +990,7 @@ export function registerRoutes(app: Express): Server {
           .from(complexes)
           .leftJoin(fields, eq(complexes.id, fields.complexId))
           .groupBy(complexes.id)
-          .orderBy(complexes.name);
+          `.orderBy(complexes.name);
 
         if (complexesWithFields.length === 0) {
           return res.json({
@@ -1957,8 +1959,10 @@ export function registerRoutes(app: Express): Server {
                 .where(eq(eventAgeGroups.id, existingGroup.id))
                 .returning();
 
-              // Update fee assignments
               if (group.fees && Array.isArray(group.fees)) {
+                // Get the schema reference from the imported schema
+                const { eventAgeGroupFees } = require('@db/schema');
+
                 // Delete existing fee assignments
                 await tx
                   .delete(eventAgeGroupFees)
@@ -2799,7 +2803,7 @@ export function registerRoutes(app: Express): Server {
           }
         });
 
-        res.status(201).json({ message: "Form template created successfully" });
+        res.json({ message: "Form template created successfully" });
       } catch (error) {
         console.error('Error creating form template:', error);
         res.status(500).json({ error: "Failed to create form template" });
