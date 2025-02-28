@@ -1073,9 +1073,7 @@ function OrganizationSettingsForm() {
 
             <div
               {...getRootProps()}
-              className={`border-2 border-dashed rounded-lg p-6 cursor-pointer transition-colors ${
-                isDragActive ? 'border-primary bg-primary/5' : 'border-border'
-              }`}
+              className={`border-2 border-dashed rounded-lg p-6 cursor-pointer transition-colors ${isDragActive ? 'border-primary bg-primary/5' : 'border-border'}`}
             >
               <input {...getInputProps()} />
               <div className="flex flex-col items-center justify-center gap-2">
