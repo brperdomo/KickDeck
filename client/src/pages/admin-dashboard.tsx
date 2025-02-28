@@ -1608,7 +1608,7 @@ function TeamsView() {
   );
 }
 
-function AdminDashboard() {
+export default function AdminDashboard() {
   const { user, logout } = useUser();
   const [, setLocation] = useLocation();
   const [view, setView] = useState<View>('events'); // Changed state variable name
