@@ -377,7 +377,7 @@ export function FeeManagement() {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] space-y-4">
         <div className="text-red-500 font-semibold">Failed to load fee management data</div>
-        <Button variant="outline" onClick={() => setLocation(-1)}>
+        <Button variant="outline" onClick={() => setLocation("/admin/events")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Return to Events
         </Button>
@@ -389,9 +389,9 @@ export function FeeManagement() {
     <div className="container mx-auto py-8 max-w-6xl">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={() => setLocation(-1)}>
+          <Button variant="outline" onClick={() => setLocation("/admin/events")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
+            Back to Events
           </Button>
           <h1 className="text-2xl font-bold">Fee Management</h1>
         </div>
