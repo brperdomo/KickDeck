@@ -1,3 +1,4 @@
+
 import { Switch, Route } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
@@ -67,6 +68,9 @@ function Router() {
       </Route>
       <Route path="/admin/accounting-codes">
         {user.isAdmin ? <AccountingCodeManagement /> : <NotFound />}
+      </Route>
+      <Route path="/admin/events">
+        {user.isAdmin ? <AdminDashboard /> : <NotFound />}
       </Route>
       <Route path="/admin">
         {user.isAdmin ? <AdminDashboard /> : <NotFound />}
