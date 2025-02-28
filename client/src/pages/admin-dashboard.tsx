@@ -89,9 +89,8 @@ import { useDropzone } from 'react-dropzone';
 import { FileManager } from "@/components/admin/FileManager";
 import { FormTemplatesView } from "@/components/admin/FormTemplatesView";
 import { AccountingCodeModal } from "@/components/admin/AccountingCodeModal";
-import { EmailTemplatesView } from "@/components/admin/EmailTemplatesView";
-import { CouponModal } from "@/components/CouponModal";
-import { cn } from "@/lib/utils";
+import { EmailTemplatesView } from "@/components/admin/EmailTemplatesView"; // Added import
+import { CouponModal } from "@/components/admin/CouponModal";
 
 
 function AdminBanner() {
@@ -114,11 +113,12 @@ function AdminBanner() {
 
 const MyAccount = lazy(() => import("./my-account"));
 
+// Type guard function to check if user is admin
 function isAdminUser(user: SelectUser | null): user is SelectUser & { isAdmin: true } {
   return user !== null && user.isAdmin === true;
 }
 
-type View = 'events' | 'teams' | 'administrators' | 'settings' | 'households' | 'reports' | 'account' | 'complexes' | 'scheduling' | 'chat' | 'files' | 'coupons' | 'formTemplates' | 'emailTemplates';
+type View = 'events' | 'teams' | 'administrators' | 'settings' | 'households' | 'reports' | 'account' | 'complexes' | 'scheduling' | 'chat' | 'files' | 'coupons' | 'formTemplates' | 'emailTemplates'; // Updated View type
 type SettingsView = 'branding' | 'general' | 'payments' | 'styling';
 type ReportType = 'financial' | 'manager' | 'player' | 'schedule' | 'guest-player';
 type RoleType = 'super_admin' | 'tournament_admin' | 'score_admin' | 'finance_admin';
@@ -228,6 +228,7 @@ function AdministratorsView() {
       };
     }
 
+    // Initialize with empty arrays for each role type
     const groupedAdmins: RoleGroup = {
       super_admin: [],
       tournament_admin: [],
@@ -235,7 +236,9 @@ function AdministratorsView() {
       finance_admin: []
     };
 
+    // Group administrators by their roles
     administratorsQuery.data.forEach((admin: any) => {
+      // If admin has no roles or roles is null/undefined, add to super_admin
       if (!admin.roles || !Array.isArray(admin.roles) || admin.roles.length === 0 || admin.roles[0] === null) {
         if (!groupedAdmins.super_admin.some(a => a.id === admin.id)) {
           groupedAdmins.super_admin.push({ ...admin, roles: ['super_admin'] });
@@ -243,13 +246,18 @@ function AdministratorsView() {
         return;
       }
 
+      // Add admin to each role group they belong to
       admin.roles.forEach((role: string) => {
-        if (role === null) return;
+        if (role === null) return; // Skip null roles
+
+        // Only add if it's a valid role group
         if (role in groupedAdmins) {
+          // Avoid duplicate entries
           if (!groupedAdmins[role].some((a: any) => a.id === admin.id)) {
             groupedAdmins[role].push(admin);
           }
         } else {
+          // If role is not recognized, add to super_admin
           if (!groupedAdmins.super_admin.some(a => a.id === admin.id)) {
             groupedAdmins.super_admin.push(admin);
           }
@@ -340,6 +348,7 @@ function AdministratorsView() {
     onError: (error: Error) => {
       const errorMessage = error.message;
 
+      // Provide specific error messages based on error codes
       if (errorMessage.includes("LAST_SUPER_ADMIN")) {
         toast({
           title: "Cannot Update Role",
@@ -599,6 +608,7 @@ function ReportsView() {
               </div>
             </div>
 
+            {/* Accounting Codes Table */}
             {selectedFinancialReport === 'accounting-codes' && (
               <Card>
                 <CardHeader>
@@ -810,6 +820,7 @@ function ReportsView() {
       </div>
 
       <div className="grid grid-cols-4 gap-6">
+        {/* Report Navigation */}
         <Card className="col-span-1">
           <CardHeader>
             <CardTitle>Report Types</CardTitle>
@@ -865,6 +876,7 @@ function ReportsView() {
           </CardContent>
         </Card>
 
+        {/* Report Content */}
         <div className="col-span-3">
           {renderReportContent()}
         </div>
@@ -889,6 +901,7 @@ function BrandingPreview() {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
+          {/* Logo Preview */}
           {preview.logoUrl && (
             <div className="flex justify-center p-4 bg-background rounded-lg">
               <img
@@ -898,6 +911,7 @@ function BrandingPreview() {
               />
             </div>
           )}
+          {/* Color Preview */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <div
@@ -920,6 +934,7 @@ function BrandingPreview() {
   );
 }
 
+// Add type for organization settings
 interface OrganizationSettings {
   id: number;
   name: string;
@@ -941,23 +956,32 @@ function OrganizationSettingsForm() {
   const { toast } = useToast();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    ```javascript
     const file = acceptedFiles[0];
     if (!file) return;
 
+    // Preview the uploaded image
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
     setLogo(file);
 
     try {
+      // Import Vibrant using dynamic import
       const Vibrant = (await import('node-vibrant')).default;
+
+      // Create new Vibrant instance
       const v = new Vibrant(objectUrl);
+
+      // Get the palette with error handling
       const palette = await v.getPalette();
 
+      // Set primary color from the Vibrant swatch
       if (palette.Vibrant) {
         setPrimaryColor(palette.Vibrant.hex);
         console.log('Primary color extracted:', palette.Vibrant.hex);
       }
 
+      // Set secondary color from the LightVibrant or Muted swatch
       if (palette.LightVibrant) {
         setSecondaryColor(palette.LightVibrant.hex);
         console.log('Secondary color (Light Vibrant) extracted:', palette.LightVibrant.hex);
@@ -966,6 +990,7 @@ function OrganizationSettingsForm() {
         console.log('Secondary color (Muted) extracted:', palette.Muted.hex);
       }
 
+      // Update the preview
       updatePreview({
         logoUrl: objectUrl,
         primaryColor: palette.Vibrant?.hex || primaryColor,
@@ -974,7 +999,7 @@ function OrganizationSettingsForm() {
 
       toast({
         title: "Colors extracted",
-        description: "Brandcolors have been updated based on your logo.",
+        description: "Brand colors have been updated based on your logo.",
       });
     } catch (error) {
       console.error('Color extraction error:', error);
@@ -1048,10 +1073,7 @@ function OrganizationSettingsForm() {
 
             <div
               {...getRootProps()}
-              className={cn(
-                "border-2 border-dashed rounded-lg p-6 cursor-pointer transition-colors",
-                isDragActive ? "border-primary bg-primary/5" : "border-border"
-              )}
+              className={`border-2 border-dashed rounded-lg p-6 cursor-pointer transition-colors ${isDragActive ? 'border-primary bg-primary/5' : 'border-border'}`}
             >
               <input {...getInputProps()} />
               <div className="flex flex-col items-center justify-center gap-2">
@@ -1156,7 +1178,7 @@ function ComplexesView() {
     enabled: !!viewingComplexId,
     queryFn: async () => {
       if (!viewingComplexId) return [];
-      const response = await fetch("/api/admin/complexes/" + viewingComplexId + "/fields");
+      const response = await fetch(`/api/admin/complexes/${viewingComplexId}/fields`);
       if (!response.ok) throw new Error('Failed to fetch fields');
       return response.json();
     }
@@ -1191,7 +1213,7 @@ function ComplexesView() {
 
   const updateComplexMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: ComplexFormValues }) => {
-      const response = await fetch("/api/admin/complexes/" + id, {
+      const response = await fetch(`/api/admin/complexes/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -1236,7 +1258,7 @@ function ComplexesView() {
 
   const createFieldMutation = useMutation({
     mutationFn: async ({ complexId, data }: { complexId: number; data: FieldFormValues }) => {
-      const response = await fetch("/api/admin/complexes/" + complexId + "/fields", {
+      const response = await fetch(`/api/admin/complexes/${complexId}/fields`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1270,7 +1292,7 @@ function ComplexesView() {
 
   const updateFieldMutation = useMutation({
     mutationFn: async ({ complexId, fieldId, data }: { complexId: number; fieldId: number; data: FieldFormValues }) => {
-      const response = await fetch("/api/admin/complexes/" + complexId + "/fields/" + fieldId, {
+      const response = await fetch(`/api/admin/complexes/${complexId}/fields/${fieldId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -1492,21 +1514,7 @@ function ComplexesView() {
   );
 }
 
-const EventsView = ({}) => {
-  const navigate = useLocation()[1];
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Events</h2>
-        <Button onClick={() => navigate("/admin/events/create")}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Event
-        </Button>
-      </div>
-      <EventsTable />
-    </div>
-  );
-}
+// Using the simpler EventsView implementation from line 126
 
 function HouseholdsView() {
   return (
@@ -1588,6 +1596,7 @@ function TeamsView() {
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {/* Team rows will be populated from the database */}
               </TableBody>
             </Table>
           </div>
@@ -1597,34 +1606,30 @@ function TeamsView() {
   );
 }
 
-// Using the simpler EventsView implementation from line 126
+function AdminDashboard() {
+  const { user, logout } = useUser();
+  const [, setLocation] = useLocation();
+  const [view, setView] = useState<View>('events'); // Changed state variable name
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [activeSettingsView, setActiveSettingsView] = useState<SettingsView>('general');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [showUpdatesLog, setShowUpdatesLog] = useState(false);
 
-import { cn } from "@/lib/utils";
-
-export function AdminDashboard() {
-  const [activeView, setActiveView] = useState<View>('events');
-  const [activeSettingsView, setActiveSettingsView] = useState<SettingsView>('branding');
-  const [activeReportType, setActiveReportType] = useState<ReportType>('financial');
-  const [isCreateAdminModalOpen, setIsCreateAdminModalOpen] = useState(false);
-  const [isUpdatesLogModalOpen, setIsUpdatesLogModalOpen] = useState(false);
-  const [isAccountingCodeModalOpen, setIsAccountingCodeModalOpen] = useState(false);
-  const [selectedAccountingCode, setSelectedAccountingCode] = useState<null | { id: number, code: string, name: string, description: string }>(null);
-  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
-  const [selectedCoupon, setSelectedCoupon] = useState<null | any>(null);
-  const { isLoading, error, data: updates } = useQuery({
-    queryKey: ['updates'],
-    queryFn: async () => {
-      const response = await fetch('/api/admin/updates');
-      if (!response.ok) {
-        throw new Error('Failed to fetch updates');
-      }
-      return response.json();
-    },
-  });
+  // Add Form Templates to the navigation
+  const formTemplatesButton = (
+    <Button
+      variant={view === 'formTemplates' ? 'secondary' : 'ghost'}
+      className="w-full justify-start"
+      onClick={() => setView('formTemplates')}
+    >
+      <FormInput className="mr-2 h-4 w-4" />
+      Form Templates
+    </Button>
+  );
 
   useEffect(() => {
     if (!user) {
-      return;
+      return; // Wait for user data to load
     }
     if (!isAdminUser(user)) {
       setLocation("/");
@@ -1694,7 +1699,7 @@ export function AdminDashboard() {
         return <CouponManagement />;
       case 'formTemplates':
         return <FormTemplatesView />;
-      case 'emailTemplates':
+      case 'emailTemplates': // Added case for email templates
         return <EmailTemplatesView />;
       default:
         return <div>Feature coming soon</div>;
@@ -1702,22 +1707,198 @@ export function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background">
       <AdminBanner />
-      <div className="flex flex-1 overflow-hidden">
-        <div className="w-64 bg-white shadow-md overflow-y-auto h-[calc(100vh-10rem)]">
-          <div className="p-4">
-            <AdminNavigationCard
-              activeView={activeView}
-              setActiveView={setActiveView}
-              updateCount={updates?.length || 0}
-              setIsUpdatesLogModalOpen={setIsUpdatesLogModalOpen}
-            />
-          </div>
-        </div>
+      <div className="container mx-auto p-6 space-y-8">
+        <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+          <Card className="w-full md:w-64 lg:w-72">
+            <CardContent className="p-6">
+              <nav className="space-y-2">
+                <Button
+                  variant={view === 'administrators' ? 'secondary' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => setView('administrators')}
+                >
+                  <Shield className="mr-2 h-4 w-4" />
+                  Administrators
+                </Button>
 
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="container mx-auto max-w-7xl">
+                {formTemplatesButton}
+
+                <Button
+                  variant={view === 'events' ? 'secondary' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => setView('events')}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Events
+                </Button>
+
+                <Button
+                  variant={view === 'teams' ? 'secondary' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => setView('teams')}
+                >
+                  <Users className="mr-2 h-4 w-4" />
+                  Teams
+                </Button>
+
+                <Button
+                  variant={view === 'complexes' ? 'secondary' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => setView('complexes')}
+                >
+                  <Building2 className="mr-2 h-4 w-4" />
+                  Field Complexes
+                </Button>
+
+                <Button
+                  variant={view === 'households' ? 'secondary' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => setView('households')}
+                >
+                  <Home className="mr-2 h-4 w-4" />
+                  MatchPro Client
+                </Button>
+
+                <Button
+                  variant={view === 'scheduling' ? 'secondary' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => setView('scheduling')}
+                >
+                  <CalendarDays className="mr-2 h-4 w-4" />
+                  Scheduling
+                </Button>
+
+                <Button
+                  variant={view === 'reports' ? 'secondary' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => setView('reports')}
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Reports and Financials
+                </Button>
+
+                <Button
+                  variant={view === 'chat' ? 'secondary' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => setView('chat')}
+                >
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Chat
+                </Button>
+                <Button
+                  variant={view === 'files' ? 'secondary' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => setView('files')}
+                >
+                  <ImageIcon className="mr-2 h-4 w-4" />
+                  File Manager
+                </Button>
+
+                {/* Settings */}
+                <Collapsible
+                  open={isSettingsOpen}
+                  onOpenChange={setIsSettingsOpen}
+                  className="space-y-2"
+                >
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      variant={view === 'settings' ? 'secondary' : 'ghost'}
+                      className="w-full justify-between"
+                    >
+                      <span className="flex items-center">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Settings
+                      </span>
+                      <ChevronRight
+                        className={`h-4 w-4 transition-transform duration-200 ${
+                          isSettingsOpen ? 'rotate-90' : ''
+                        }`}
+                      />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-2 pl-4">
+                    <Button
+                      variant={activeSettingsView === 'branding' ? 'secondary' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => {
+                        setView('settings');
+                        setActiveSettingsView('branding');
+                      }}
+                    >
+                      <Palette className="mr-2 h-4 w-4" />
+                      Branding
+                    </Button>
+                    <Button
+                      variant={activeSettingsView === 'payments' ? 'secondary' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => {
+                        setView('settings');
+                        setActiveSettingsView('payments');
+                      }}
+                    >
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Payments
+                    </Button>
+                    <Button
+                      variant={activeSettingsView === 'general' ? 'secondary' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => {
+                        setView('settings');
+                        setActiveSettingsView('general');
+                      }}
+                    >
+                      <Settings className="mr-2 h-4 w-4" />
+                      General
+                    </Button>
+                    <Button
+                      variant={activeSettingsView === 'styling' ? 'secondary' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => {
+                        setView('settings');
+                        setActiveSettingsView('styling');
+                      }}
+                    >
+                      <Palette className="mr-2 h-4 w-4" />
+                      Theme
+                    </Button>
+                  </CollapsibleContent>
+                </Collapsible>
+
+                {/* Added Email Templates Navigation */}
+                <Button
+                  variant={view === 'emailTemplates' ? 'secondary' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => setView('emailTemplates')}
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Email Templates
+                </Button>
+
+
+                {/* Account */}
+                <Button
+                  variant={view === 'account' ? 'secondary' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => setView('account')}
+                >
+                  <User className="mr-2 h-4 w-4" />
+                  My Account
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </Button>
+              </nav>
+            </CardContent>
+          </Card>
+          <div className="flex-1">
             {renderView()}
           </div>
         </div>
@@ -1764,16 +1945,12 @@ function ChatView() {
           <div className="space-y-4">
             <div className="flex flex-col space-y-4">
               {messagesQuery.data?.map((message: any) => (
-                <div key={message.id} className={cn(
-                  "flex",
-                  message.isAdmin ? "justify-end" : "justify-start"
-                )}>
-                  <div className={cn(
-                    "rounded-lg px-4 py-2 max-w-[70%]",
+                <div key={message.id} className={`flex ${message.isAdmin ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`rounded-lg px-4 py-2 max-w-[70%] ${
                     message.isAdmin
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
-                  )}>
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted'
+                  }`}>
                     <p className="text-sm font-medium">{message.sender}</p>
                     <p>{message.content}</p>
                     <p className="text-xs opacity-70">{new Date(message.timestamp).toLocaleDateString()}</p>
@@ -1814,7 +1991,8 @@ function SettingsView({ activeSettingsView }: { activeSettingsView: SettingsView
       return <GeneralSettingsView />;
     case 'styling':
       return <ThemeEditor />;
-    case 'payments':      return (
+    case 'payments':
+      return (
         <div className="space-y-6">
           <h2 className="text-2xl font-bold">Payments Settings</h2>
           <Card>
@@ -1843,6 +2021,7 @@ function ThemeEditor() {
     backgroundColor: '#ffffff',
     textColor: '#000000',
     buttonColor: '#4CAF50',
+    // Add more colors as needed
   });
 
   const handleColorChange = (color: string, value: string) => {
@@ -1880,8 +2059,10 @@ function ThemeEditor() {
             onChange={(e) => handleColorChange('buttonColor', e.target.value)}
           />
         </div>
+        {/* Add more color pickers as needed */}
       </div>
       <Button onClick={() => {
+        // Apply theme changes here
         console.log("Theme updated:", theme);
       }}>
         Apply Theme
@@ -1913,7 +2094,7 @@ function CouponManagement() {
   const couponsQuery = useQuery({
     queryKey: ['/api/admin/coupons', eventId],
     queryFn: async () => {
-      const response = await fetch("/api/admin/coupons?eventId=" + eventId);
+      const response = await fetch(`/api/admin/coupons?eventId=${eventId}`);
       if (!response.ok) throw new Error('Failed to fetch coupons');
       return response.json();
     }
@@ -1921,7 +2102,7 @@ function CouponManagement() {
 
   const deleteCouponMutation = useMutation({
     mutationFn: async (couponId: number) => {
-      const response = await fetch("/api/admin/coupons/" + couponId, {
+      const response = await fetch(`/api/admin/coupons/${couponId}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete coupon');
@@ -1995,7 +2176,7 @@ function CouponManagement() {
                   <TableCell className="font-medium">{coupon.code}</TableCell>
                   <TableCell>
                     <Badge variant={coupon.discountType === 'percentage' ? 'secondary' : 'outline'}>
-                      {coupon.discountType === 'percentage' ? (coupon.amount + '%') : ('$' + coupon.amount)}
+                      {coupon.discountType === 'percentage' ? `${coupon.amount}%` : `$${coupon.amount}`}
                     </Badge>
                   </TableCell>
                   <TableCell>{coupon.amount}</TableCell>
@@ -2006,7 +2187,7 @@ function CouponManagement() {
                     }
                   </TableCell>
                   <TableCell>
-                    {coupon.usageCount} {coupon.maxUses ? ("/ " + coupon.maxUses) : ''}
+                    {coupon.usageCount} {coupon.maxUses ? `/ ${coupon.maxUses}` : ''}
                   </TableCell>
                   <TableCell>{coupon.description}</TableCell>
                   <TableCell>
@@ -2068,139 +2249,3 @@ const navigationItems = [
   { icon: FormInput, label: "Form Templates", value: "formTemplates" as const },
   { icon: User, label: "My Account", value: "account" as const },
 ];
-
-// Add default export
-export default AdminDashboard;
-
-function AdminNavigationCard({
-  activeView,
-  setActiveView,
-  updateCount,
-  setIsUpdatesLogModalOpen,
-}: {
-  activeView: View;
-  setActiveView: (view: View) => void;
-  updateCount: number;
-  setIsUpdatesLogModalOpen: (open: boolean) => void;
-}) {
-  const { user, logout } = useUser();
-  const [, setLocation] = useLocation();
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [showUpdatesLog, setShowUpdatesLog] = useState(false);
-
-
-  useEffect(() => {
-    if (!user) {
-      return;
-    }
-    if (!isAdminUser(user)) {
-      setLocation("/");
-    }
-  }, [user, setLocation]);
-
-  const handleLogout = () => {
-    setShowLogoutOverlay(true);
-    setTimeout(async () => {
-      await logout();
-    }, 1500);
-  };
-
-  return (
-    <Card>
-      <CardContent className="p-6">
-        <nav className="space-y-2">
-          {navigationItems.map((item) => (
-            <Button
-              key={item.value}
-              variant={activeView === item.value ? 'secondary' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => setActiveView(item.value)}
-            >
-              <item.icon className="mr-2 h-4 w-4" />
-              {item.label}
-            </Button>
-          ))}
-
-          <Collapsible
-            open={isSettingsOpen}
-            onOpenChange={setIsSettingsOpen}
-            className="space-y-2"
-          >
-            <CollapsibleTrigger asChild>
-              <Button
-                variant={activeView === 'settings' ? 'secondary' : 'ghost'}
-                className="w-full justify-between"
-              >
-                <span className="flex items-center">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </span>
-                <ChevronRight
-                  className={cn(
-                    "h-4 w-4 transition-transform duration-200",
-                    isSettingsOpen ? "rotate-90" : ""
-                  )}
-                />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-2 pl-4">
-              <Button
-                variant={activeSettingsView === 'branding' ? 'secondary' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => {
-                  setActiveView('settings');
-                  setActiveSettingsView('branding');
-                }}
-              >
-                <Palette className="mr-2 h-4 w-4" />
-                Branding
-              </Button>
-              <Button
-                variant={activeSettingsView === 'payments' ? 'secondary' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => {
-                  setActiveView('settings');
-                  setActiveSettingsView('payments');
-                }}
-              >
-                <CreditCard className="mr-2 h-4 w-4" />
-                Payments
-              </Button>
-              <Button
-                variant={activeSettingsView === 'general' ? 'secondary' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => {
-                  setActiveView('settings');
-                  setActiveSettingsView('general');
-                }}
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                General
-              </Button>
-              <Button
-                variant={activeSettingsView === 'styling' ? 'secondary' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => {
-                  setActiveView('settings');
-                  setActiveSettingsView('styling');
-                }}
-              >
-                <Palette className="mr-2 h-4 w-4" />
-                Theme
-              </Button>
-            </CollapsibleContent>
-          </Collapsible>
-
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-            onClick={handleLogout}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
-        </nav>
-      </CardContent>
-    </Card>
-  );
-}
