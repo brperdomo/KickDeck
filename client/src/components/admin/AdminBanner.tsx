@@ -11,7 +11,7 @@ export function AdminBanner() {
           <img
             src={settings?.logoUrl || "/attached_assets/MatchPro.ai_Stacked_Color.png"}
             alt="Organization Logo"
-            className="w-auto h-48 md:h-60 max-w-[840px] md:max-w-[960px] object-contain"
+            className="w-auto h-32 max-w-[600px] object-contain"
           />
         </div>
       </div>
