@@ -102,15 +102,20 @@ export function FeeManagement() {
     },
   });
 
-  // Fetch event age groups
+  // Query to fetch age groups
   const ageGroupsQuery = useQuery({
     queryKey: ['eventAgeGroups', eventId],
     queryFn: async () => {
+      console.log(`Fetching age groups for event: ${eventId}`);
       const response = await fetch(`/api/admin/events/${eventId}/age-groups`);
       if (!response.ok) {
-        throw new Error('Failed to fetch age groups');
+        const error = await response.text();
+        console.error('Failed to fetch age groups:', error);
+        throw new Error(`Failed to fetch age groups: ${error}`);
       }
-      return response.json();
+      const data = await response.json();
+      console.log(`Found ${data.length} age groups for event ${eventId}`);
+      return data;
     },
     enabled: !!eventId,
   });
@@ -360,7 +365,7 @@ export function FeeManagement() {
 
   const formatCurrency = (amount: number) => `$${(amount / 100).toFixed(2)}`;
 
-  if (feesQuery.isLoading || accountingCodesQuery.isLoading) {
+  if (feesQuery.isLoading || accountingCodesQuery.isLoading || ageGroupsQuery.isLoading) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-4rem)]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
@@ -368,7 +373,7 @@ export function FeeManagement() {
     );
   }
 
-  if (feesQuery.error || accountingCodesQuery.error) {
+  if (feesQuery.error || accountingCodesQuery.error || ageGroupsQuery.error) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] space-y-4">
         <div className="text-red-500 font-semibold">Failed to load fee management data</div>
