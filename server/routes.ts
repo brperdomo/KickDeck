@@ -116,7 +116,7 @@ export function registerRoutes(app: Express): Server {
     // Add admin event deletion endpoint
     app.delete('/api/admin/events/:id', isAdmin, async (req, res) => {
       const tx = db.transaction();
-      
+
       try {
         const eventId = req.params.id;
         console.log('Starting event deletion for ID:', eventId);
@@ -243,10 +243,10 @@ export function registerRoutes(app: Express): Server {
       } catch (error) {
         // If anything failed, rollback the transaction
         await tx.rollback();
-        
+
         console.error('Error deleting event:', error);
         console.error("Error details:", error);
-        
+
         res.status(500).json({ 
           error: error instanceof Error ? error.message : "Failed to delete event",
           details: error instanceof Error ? error.stack : undefined
@@ -2000,29 +2000,7 @@ export function registerRoutes(app: Express): Server {
                 .where(eq(eventAgeGroups.id, existingGroup.id))
                 .returning();
 
-              // Update fee assignments if the table exists
-              if (group.fees && Array.isArray(group.fees)) {
-                try {
-                  // Check if we have the fees table available - some installations may not have this
-                  if (tx.schema?.eventAgeGroupFees) {
-                    // Delete existing fee assignments
-                    await tx
-                      .delete(tx.schema.eventAgeGroupFees)
-                      .where(eq(tx.schema.eventAgeGroupFees.ageGroupId, existingGroup.id));
-
-                    // Create new fee assignments
-                    for (const feeId of group.fees) {
-                      await tx.insert(tx.schema.eventAgeGroupFees).values({
-                        ageGroupId: existingGroup.id,
-                        feeId: feeId
-                      });
-                    }
-                  }
-                } catch (error) {
-                  console.warn('Fee assignments could not be updated', error);
-                  // Continue without fee assignments if there's an error
-                }
-              }
+              // Fee assignments are now managed through Fee Management component
 
               // Remove from map to track which ones need to be deleted
               existingAgeGroupsMap.delete(groupKey);
@@ -2461,19 +2439,32 @@ export function registerRoutes(app: Express): Server {
     // Teams management endpoints
     app.get('/api/admin/events/:eventId/age-groups', isAdmin, async (req, res) => {
       try {
-        const eventId = parseInt(req.params.eventId);
-        const ageGroups = await db
-          .select()
-          .from(eventAgeGroups)
-          .where(eq(eventAgeGroups.eventId, eventId))
-          .orderBy(eventAgeGroups.ageGroup);
+        const eventId = req.params.eventId;
 
-        res.json(ageGroups);
+        let ageGroups = await db.query.eventAgeGroups.findMany({
+          where: eq(eventAgeGroups.eventId, eventId),
+        });
+
+        // Log the count for debugging
+        console.log(`Fetched ${ageGroups.length} age groups for event ${eventId}`);
+
+        // More targeted deduplication that preserves all relevant groups
+        // Only deduplicate exact duplicates with the same ID
+        const uniqueGroups = [];
+        const seenIds = new Set();
+
+        for (const group of ageGroups) {
+          if (!seenIds.has(group.id)) {
+            seenIds.add(group.id);
+            uniqueGroups.push(group);
+          }
+        }
+
+        console.log(`Returning ${uniqueGroups.length} unique age groups after deduplication`);
+        res.json(uniqueGroups);
       } catch (error) {
         console.error('Error fetching age groups:', error);
-        // Added basic error logging for white screen debugging.
-        console.error("Error details:", error);
-        res.status(500).send("Failed to fetch age groups");
+        res.status(500).json({ error: 'Failed to fetch age groups' });
       }
     });
 
@@ -3306,7 +3297,7 @@ export function registerRoutes(app: Express): Server {
             if (!deletedEvent) {
               return res.status(404).json({ error: "Event not found" });
             }
-            
+
             console.log('Successfully deleted event:', eventId);
           } catch (e) {
             console.error('Error deleting event entity:', e);
