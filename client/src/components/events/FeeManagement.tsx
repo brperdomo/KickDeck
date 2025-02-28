@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useLocation } from 'wouter';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -68,6 +68,7 @@ export function FeeManagement() {
   const [selectedAgeGroups, setSelectedAgeGroups] = useState({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeFormSchema),
@@ -371,7 +372,7 @@ export function FeeManagement() {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] space-y-4">
         <div className="text-red-500 font-semibold">Failed to load fee management data</div>
-        <Button variant="outline" onClick={() => window.history.back()}>
+        <Button variant="outline" onClick={() => setLocation(-1)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Return to Events
         </Button>
@@ -383,7 +384,7 @@ export function FeeManagement() {
     <div className="container mx-auto py-8 max-w-6xl">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={() => window.history.back()}>
+          <Button variant="outline" onClick={() => setLocation(-1)}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
