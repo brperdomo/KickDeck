@@ -2448,14 +2448,14 @@ export function registerRoutes(app: Express): Server {
         // Log the count for debugging
         console.log(`Fetched ${ageGroups.length} age groups for event ${eventId}`);
 
-        // Deduplicate age groups by gender, ageGroup, and birthYear
+        // More targeted deduplication that preserves all relevant groups
+        // Only deduplicate exact duplicates with the same ID
         const uniqueGroups = [];
-        const seenKeys = new Set();
+        const seenIds = new Set();
 
         for (const group of ageGroups) {
-          const key = `${group.gender}-${group.ageGroup}-${group.birthYear}`;
-          if (!seenKeys.has(key)) {
-            seenKeys.add(key);
+          if (!seenIds.has(group.id)) {
+            seenIds.add(group.id);
             uniqueGroups.push(group);
           }
         }
