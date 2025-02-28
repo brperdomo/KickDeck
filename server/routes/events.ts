@@ -57,20 +57,20 @@ router.patch('/:id', async (req, res) => {
         // Filter only selected age groups
         const selectedGroups = eventData.ageGroups.filter(group => group.selected);
         console.log('Selected age groups:', selectedGroups);
-        
+
         // Use a Map to prevent duplicate age groups based on gender and age group
         const processedGroups = new Map();
 
         for (const group of selectedGroups) {
           // Create a unique key for this group
           const groupKey = `${group.gender}-${group.ageGroup}`;
-          
+
           // Skip if we've already processed this group
           if (processedGroups.has(groupKey)) {
             console.log(`Skipping duplicate group: ${groupKey}`);
             continue;
           }
-          
+
           processedGroups.set(groupKey, group);
           console.log('Processing selected group:', group);
 
@@ -125,6 +125,40 @@ router.patch('/:id', async (req, res) => {
       error: "Failed to update event", 
       details: error instanceof Error ? error.message : 'Unknown error' 
     });
+  }
+});
+
+// Added route to fetch age groups with deduplication
+app.get('/api/admin/events/:eventId/age-groups', isAdmin, async (req, res) => {
+  try {
+    const eventId = req.params.eventId;
+
+    // Use a direct SQL query to ensure we get only the distinct age groups
+    const ageGroups = await db
+      .select()
+      .from(eventAgeGroups)
+      .where(eq(eventAgeGroups.eventId, eventId))
+      .orderBy(eventAgeGroups.gender, eventAgeGroups.ageGroup);
+
+    // Create unique groups based on age group, gender, and field size
+    const uniqueMap = new Map();
+    const uniqueGroups = [];
+
+    for (const group of ageGroups) {
+      const key = `${group.gender}-${group.ageGroup}-${group.fieldSize}`;
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, group);
+        uniqueGroups.push(group);
+      }
+    }
+
+    console.log(`Fetched ${ageGroups.length} age groups for event ${eventId}`);
+    console.log(`Returning ${uniqueGroups.length} unique age groups after deduplication`);
+
+    res.json(uniqueGroups);
+  } catch (error) {
+    console.error('Error fetching age groups:', error);
+    res.status(500).json({ error: 'Failed to fetch age groups' });
   }
 });
 
