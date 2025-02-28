@@ -956,7 +956,6 @@ function OrganizationSettingsForm() {
   const { toast } = useToast();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    ```javascript
     const file = acceptedFiles[0];
     if (!file) return;
 
