@@ -151,7 +151,7 @@ router.get('/:id/fee-assignments', async (req, res) => {
       .where(eq(eventAgeGroups.eventId, eventId.toString()));
 
     console.log('Found assignments:', assignments);
-    res.json(assignments);
+    res.json(assignments.length ? assignments : []);
   } catch (error) {
     console.error("Error fetching fee assignments:", error);
     res.status(500).json({

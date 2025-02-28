@@ -112,48 +112,82 @@ export function FeeManagement() {
   const feesQuery = useQuery<Fee[]>({
     queryKey: ['fees', eventId],
     queryFn: async () => {
-      const response = await fetch(`/api/admin/events/${eventId}/fees`);
-      if (!response.ok) throw new Error('Failed to fetch fees');
-      return response.json();
+      try {
+        const response = await fetch(`/api/admin/events/${eventId}/fees`);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`Failed to fetch fees: ${response.status} ${response.statusText} ${errorData.error || ''}`);
+        }
+        return response.json();
+      } catch (error) {
+        console.error("Fees fetch error:", error);
+        throw error;
+      }
     },
   });
 
   const accountingCodesQuery = useQuery({
     queryKey: ['accountingCodes'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/accounting-codes');
-      if (!response.ok) throw new Error('Failed to fetch accounting codes');
-      return response.json();
+      try {
+        const response = await fetch('/api/admin/accounting-codes');
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`Failed to fetch accounting codes: ${response.status} ${response.statusText} ${errorData.error || ''}`);
+        }
+        return response.json();
+      } catch (error) {
+        console.error("Accounting codes fetch error:", error);
+        throw error;
+      }
     },
   });
 
   const ageGroupsQuery = useQuery<AgeGroup[]>({
     queryKey: ['ageGroups', eventId],
     queryFn: async () => {
-      const response = await fetch(`/api/admin/events/${eventId}/age-groups`);
-      if (!response.ok) throw new Error('Failed to fetch age groups');
-      return response.json();
+      try {
+        const response = await fetch(`/api/admin/events/${eventId}/age-groups`);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`Failed to fetch age groups: ${response.status} ${response.statusText} ${errorData.error || ''}`);
+        }
+        return response.json();
+      } catch (error) {
+        console.error("Age groups fetch error:", error);
+        throw error;
+      }
     },
   });
 
   const assignmentsQuery = useQuery<FeeAssignment[]>({
     queryKey: ['feeAssignments', eventId],
     queryFn: async () => {
-      const response = await fetch(`/api/admin/events/${eventId}/fee-assignments`);
-      if (!response.ok) throw new Error('Failed to fetch fee assignments');
-      const data = await response.json();
-
-      // Transform the data into the expected format
-      const assignmentMap: Record<number, string[]> = {};
-      data.forEach((assignment: FeeAssignment) => {
-        if (!assignmentMap[assignment.feeId]) {
-          assignmentMap[assignment.feeId] = [];
+      try {
+        const response = await fetch(`/api/admin/events/${eventId}/fee-assignments`);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`Failed to fetch fee assignments: ${response.status} ${response.statusText} ${errorData.error || ''}`);
         }
-        assignmentMap[assignment.feeId].push(assignment.ageGroupId);
-      });
-      setAssignments(assignmentMap);
+        const data = await response.json();
 
-      return data;
+        // Transform the data into the expected format
+        const assignmentMap: Record<number, string[]> = {};
+        if (Array.isArray(data)) {
+          data.forEach((assignment: FeeAssignment) => {
+            if (!assignmentMap[assignment.feeId]) {
+              assignmentMap[assignment.feeId] = [];
+            }
+            assignmentMap[assignment.feeId].push(assignment.ageGroupId);
+          });
+        }
+        setAssignments(assignmentMap);
+
+        return data || [];
+      } catch (error) {
+        console.error("Fee assignments fetch error:", error);
+        throw error;
+      }
     },
   });
 
@@ -312,9 +346,20 @@ export function FeeManagement() {
   }
 
   if (feesQuery.error || accountingCodesQuery.error || ageGroupsQuery.error || assignmentsQuery.error) {
+    console.error("Fees Query Error:", feesQuery.error);
+    console.error("Accounting Codes Query Error:", accountingCodesQuery.error);
+    console.error("Age Groups Query Error:", ageGroupsQuery.error);
+    console.error("Assignments Query Error:", assignmentsQuery.error);
+    
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] space-y-4">
         <div className="text-red-500 font-semibold">Failed to load fee management data</div>
+        <div className="text-sm text-gray-500 max-w-md text-center">
+          {feesQuery.error ? `Fees error: ${feesQuery.error.message}` : ''}
+          {accountingCodesQuery.error ? `Accounting codes error: ${accountingCodesQuery.error.message}` : ''}
+          {ageGroupsQuery.error ? `Age groups error: ${ageGroupsQuery.error.message}` : ''}
+          {assignmentsQuery.error ? `Assignments error: ${assignmentsQuery.error.message}` : ''}
+        </div>
         <Button variant="outline" onClick={() => window.history.back()}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Return to Events
