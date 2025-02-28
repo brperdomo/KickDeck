@@ -20,7 +20,7 @@ import EventApplicationForm from "@/pages/event-application-form";
 import { useUser } from "@/hooks/use-user";
 import EventRegistration from "./pages/event-registration";
 import { FeeManagement } from "@/components/events/FeeManagement";
-import EmailTemplatesView from "@/pages/email-templates"; // Import the missing component
+import EmailTemplatesPage from "@/pages/email-templates"; // Updated import name
 
 
 function Router() {
@@ -74,7 +74,7 @@ function Router() {
         {user.isAdmin ? <AdminDashboard /> : <NotFound />}
       </Route>
       <Route path="/admin/email-templates">
-        {user.isAdmin ? <EmailTemplatesView /> : <NotFound />}
+        {user.isAdmin ? <EmailTemplatesPage /> : <NotFound />}
       </Route>
       <Route path="/admin">
         {user.isAdmin ? <AdminDashboard /> : <NotFound />}
