@@ -2184,7 +2184,7 @@ function CouponManagement() {
                   <TableCell className="font-medium">{coupon.code}</TableCell>
                   <TableCell>
                     <Badge variant={coupon.discountType === 'percentage' ? 'secondary' : 'outline'}>
-                      {coupon.discountType === 'percentage' ? `${coupon.amount}%` : `$${coupon.amount}`}
+                      {coupon.discountType === 'percentage' ? (coupon.amount + '%') : ('$' + coupon.amount)}
                     </Badge>
                   </TableCell>
                   <TableCell>{coupon.amount}</TableCell>
