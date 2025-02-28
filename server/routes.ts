@@ -2000,29 +2000,7 @@ export function registerRoutes(app: Express): Server {
                 .where(eq(eventAgeGroups.id, existingGroup.id))
                 .returning();
 
-              // Update fee assignments if the table exists
-              if (group.fees && Array.isArray(group.fees)) {
-                try {
-                  // Check if we have the fees table available - some installations may not have this
-                  if (tx.schema?.eventAgeGroupFees) {
-                    // Delete existing fee assignments
-                    await tx
-                      .delete(tx.schema.eventAgeGroupFees)
-                      .where(eq(tx.schema.eventAgeGroupFees.ageGroupId, existingGroup.id));
-
-                    // Create new fee assignments
-                    for (const feeId of group.fees) {
-                      await tx.insert(tx.schema.eventAgeGroupFees).values({
-                        ageGroupId: existingGroup.id,
-                        feeId: feeId
-                      });
-                    }
-                  }
-                } catch (error) {
-                  console.warn('Fee assignments could not be updated', error);
-                  // Continue without fee assignments if there's an error
-                }
-              }
+              // Fee assignments are now managed through Fee Management component
 
               // Remove from map to track which ones need to be deleted
               existingAgeGroupsMap.delete(groupKey);

@@ -437,7 +437,6 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
             <TableHead>Division Code</TableHead>
             <TableHead>Field Size</TableHead>
             <TableHead>Amount Due</TableHead>
-            <TableHead>Fees</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -446,13 +445,8 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
               (ag) => ag.divisionCode === group.divisionCode
             ) || { ...group, isSelected: false, fees: [] };
 
-            // Calculate total amount only from the fees selected for this group
-            const totalAmount = feesQuery.data
-              ? (existingGroup.fees || []).reduce((sum, feeId) => {
-                  const fee = feesQuery.data.find(f => f.id === feeId);
-                  return sum + (fee?.amount || 0);
-                }, 0)
-              : 0;
+            // Fee calculations moved to Fee Management component
+            const totalAmount = 0;
 
             return (
               <TableRow key={group.divisionCode}>
@@ -523,32 +517,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                       <div className="border rounded-md p-2">
                         <div className="flex flex-wrap gap-2">
                           {feesQuery.data.map(fee => (
-                            <div key={fee.id} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`fee-${fee.id}-${existingGroup.divisionCode}`}
-                                checked={existingGroup.fees?.includes(fee.id)}
-                                onCheckedChange={(checked) => {
-                                  setAgeGroups(prevAgeGroups => prevAgeGroups.map(ag => {
-                                    if (ag.divisionCode === existingGroup.divisionCode) {
-                                      const newFees = checked
-                                        ? [...(ag.fees || []), fee.id]
-                                        : (ag.fees || []).filter(f => f !== fee.id);
-                                      return {
-                                        ...ag,
-                                        fees: newFees,
-                                      };
-                                    }
-                                    return ag;
-                                  }));
-                                }}
-                              />
-                              <label
-                                htmlFor={`fee-${fee.id}-${existingGroup.divisionCode}`}
-                                className="text-sm"
-                              >
-                                {fee.name} - ${(fee.amount / 100).toFixed(2)}
-                              </label>
-                            </div>
+                            {/* Fee assignment moved to Fee Management component */}
                           ))}
                         </div>
                       </div>

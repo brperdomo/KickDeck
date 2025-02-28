@@ -13,6 +13,7 @@ interface AgeGroupData {
   projectedTeams: number;
   fieldSize: string;
   amountDue?: number;
+  // Fees removed - now managed in Fee Management
 }
 
 const DEFAULT_AGE_GROUPS: AgeGroupData[] = [

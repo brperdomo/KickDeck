@@ -446,3 +446,656 @@ export function FeeManagement() {
     </div>
   );
 }
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../ui/table';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '../ui/card';
+import { Button } from '../ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Checkbox } from '../ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { useToast } from '../ui/use-toast';
+import { format } from 'date-fns';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { DatePicker } from '../ui/date-picker';
+
+export function FeeManagement() {
+  const { id: eventId } = useParams();
+  const [isAddFeeOpen, setIsAddFeeOpen] = useState(false);
+  const [isEditFeeOpen, setIsEditFeeOpen] = useState(false);
+  const [isAssignFeeOpen, setIsAssignFeeOpen] = useState(false);
+  const [editingFee, setEditingFee] = useState(null);
+  const [selectedFeeId, setSelectedFeeId] = useState(null);
+  const [newFee, setNewFee] = useState({
+    name: '',
+    amount: '',
+    beginDate: null,
+    endDate: null,
+    applyToAll: false,
+  });
+  const [selectedAgeGroups, setSelectedAgeGroups] = useState({});
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch event fees
+  const { data: fees, isLoading: isLoadingFees } = useQuery({
+    queryKey: ['eventFees', eventId],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/events/${eventId}/fees`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch fees');
+      }
+      return response.json();
+    },
+    enabled: !!eventId,
+  });
+
+  // Fetch event age groups
+  const { data: ageGroups, isLoading: isLoadingAgeGroups } = useQuery({
+    queryKey: ['eventAgeGroups', eventId],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/events/${eventId}/age-groups`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch age groups');
+      }
+      return response.json();
+    },
+    enabled: !!eventId,
+  });
+
+  // Fetch fee assignments
+  const { data: feeAssignments, isLoading: isLoadingAssignments } = useQuery({
+    queryKey: ['feeAssignments', eventId],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/events/${eventId}/fee-assignments`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch fee assignments');
+      }
+      return response.json();
+    },
+    enabled: !!eventId,
+  });
+
+  // Initialize selected age groups when fee assignments load
+  useEffect(() => {
+    if (feeAssignments && ageGroups) {
+      const assignmentMap = {};
+      ageGroups.forEach(group => {
+        assignmentMap[group.id] = {};
+        fees?.forEach(fee => {
+          const isAssigned = feeAssignments.some(
+            assignment => assignment.ageGroupId === group.id && assignment.feeId === fee.id
+          );
+          assignmentMap[group.id][fee.id] = isAssigned;
+        });
+      });
+      setSelectedAgeGroups(assignmentMap);
+    }
+  }, [feeAssignments, ageGroups, fees]);
+
+  // Add fee mutation
+  const addFeeMutation = useMutation({
+    mutationFn: async (fee) => {
+      const response = await fetch(`/api/admin/events/${eventId}/fees`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(fee),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to add fee');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['eventFees', eventId]);
+      setIsAddFeeOpen(false);
+      setNewFee({
+        name: '',
+        amount: '',
+        beginDate: null,
+        endDate: null,
+        applyToAll: false,
+      });
+      toast({
+        title: 'Success',
+        description: 'Fee added successfully',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to add fee',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Update fee mutation
+  const updateFeeMutation = useMutation({
+    mutationFn: async (fee) => {
+      const response = await fetch(`/api/admin/events/${eventId}/fees/${fee.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(fee),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update fee');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['eventFees', eventId]);
+      setIsEditFeeOpen(false);
+      setEditingFee(null);
+      toast({
+        title: 'Success',
+        description: 'Fee updated successfully',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update fee',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Delete fee mutation
+  const deleteFeeMutation = useMutation({
+    mutationFn: async (feeId) => {
+      const response = await fetch(`/api/admin/events/${eventId}/fees/${feeId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete fee');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['eventFees', eventId]);
+      queryClient.invalidateQueries(['feeAssignments', eventId]);
+      toast({
+        title: 'Success',
+        description: 'Fee deleted successfully',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete fee',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Update fee assignments mutation
+  const updateAssignmentsMutation = useMutation({
+    mutationFn: async ({ feeId, ageGroupIds }) => {
+      const response = await fetch(`/api/admin/events/${eventId}/fee-assignments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          feeId,
+          ageGroupIds,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update fee assignments');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['feeAssignments', eventId]);
+      setIsAssignFeeOpen(false);
+      setSelectedFeeId(null);
+      toast({
+        title: 'Success',
+        description: 'Fee assignments updated successfully',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update fee assignments',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleAddFee = () => {
+    const feeData = {
+      ...newFee,
+      amount: parseFloat(newFee.amount) * 100, // Convert to cents
+    };
+    
+    addFeeMutation.mutate(feeData);
+  };
+
+  const handleUpdateFee = () => {
+    const feeData = {
+      ...editingFee,
+      amount: parseFloat(editingFee.amount) * 100, // Convert to cents
+    };
+    
+    updateFeeMutation.mutate(feeData);
+  };
+
+  const handleDeleteFee = (feeId) => {
+    if (window.confirm('Are you sure you want to delete this fee?')) {
+      deleteFeeMutation.mutate(feeId);
+    }
+  };
+
+  const handleSaveAssignments = () => {
+    const selectedAgeGroupIds = [];
+    
+    Object.entries(selectedAgeGroups).forEach(([ageGroupId, feeMap]) => {
+      Object.entries(feeMap).forEach(([feeId, isSelected]) => {
+        if (parseInt(feeId) === selectedFeeId && isSelected) {
+          selectedAgeGroupIds.push(parseInt(ageGroupId));
+        }
+      });
+    });
+    
+    updateAssignmentsMutation.mutate({
+      feeId: selectedFeeId,
+      ageGroupIds: selectedAgeGroupIds,
+    });
+  };
+
+  const openAssignFeeDialog = (feeId) => {
+    setSelectedFeeId(feeId);
+    setIsAssignFeeOpen(true);
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Event Fees Management</CardTitle>
+          <CardDescription>Manage fees for this event and assign them to age groups</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="fees">
+            <TabsList>
+              <TabsTrigger value="fees">Fee List</TabsTrigger>
+              <TabsTrigger value="assignments">Fee Assignments</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="fees" className="space-y-4">
+              <div className="flex justify-end mb-4">
+                <Button onClick={() => setIsAddFeeOpen(true)}>Add Fee</Button>
+              </div>
+              
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Start Date</TableHead>
+                    <TableHead>End Date</TableHead>
+                    <TableHead>Apply to All</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoadingFees ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center">Loading fees...</TableCell>
+                    </TableRow>
+                  ) : fees?.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center">No fees found</TableCell>
+                    </TableRow>
+                  ) : (
+                    fees?.map((fee) => (
+                      <TableRow key={fee.id}>
+                        <TableCell>{fee.name}</TableCell>
+                        <TableCell>${(fee.amount / 100).toFixed(2)}</TableCell>
+                        <TableCell>
+                          {fee.beginDate ? format(new Date(fee.beginDate), 'MM/dd/yyyy') : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          {fee.endDate ? format(new Date(fee.endDate), 'MM/dd/yyyy') : 'N/A'}
+                        </TableCell>
+                        <TableCell>{fee.applyToAll ? 'Yes' : 'No'}</TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingFee({
+                                  ...fee,
+                                  amount: (fee.amount / 100).toString(),
+                                  beginDate: fee.beginDate ? new Date(fee.beginDate) : null,
+                                  endDate: fee.endDate ? new Date(fee.endDate) : null,
+                                });
+                                setIsEditFeeOpen(true);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openAssignFeeDialog(fee.id)}
+                            >
+                              Assign
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteFee(fee.id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TabsContent>
+            
+            <TabsContent value="assignments" className="space-y-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Age Group</TableHead>
+                    <TableHead>Gender</TableHead>
+                    <TableHead>Birth Year</TableHead>
+                    <TableHead>Division Code</TableHead>
+                    <TableHead>Assigned Fees</TableHead>
+                    <TableHead>Total Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoadingAgeGroups || isLoadingFees || isLoadingAssignments ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center">Loading data...</TableCell>
+                    </TableRow>
+                  ) : ageGroups?.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center">No age groups found</TableCell>
+                    </TableRow>
+                  ) : (
+                    ageGroups?.map((ageGroup) => {
+                      // Find assigned fees for this age group
+                      const assignedFees = feeAssignments
+                        ? fees?.filter(fee =>
+                            feeAssignments.some(
+                              assignment =>
+                                assignment.ageGroupId === ageGroup.id && assignment.feeId === fee.id
+                            )
+                          )
+                        : [];
+                      
+                      // Calculate total amount
+                      const totalAmount = assignedFees.reduce(
+                        (sum, fee) => sum + fee.amount,
+                        0
+                      );
+                      
+                      return (
+                        <TableRow key={ageGroup.id}>
+                          <TableCell>{ageGroup.ageGroup}</TableCell>
+                          <TableCell>{ageGroup.gender}</TableCell>
+                          <TableCell>{ageGroup.birthYear}</TableCell>
+                          <TableCell>{ageGroup.divisionCode}</TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              {assignedFees.map(fee => (
+                                <div key={fee.id}>
+                                  {fee.name} - ${(fee.amount / 100).toFixed(2)}
+                                </div>
+                              ))}
+                              {assignedFees.length === 0 && (
+                                <div className="text-muted-foreground">No fees assigned</div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>${(totalAmount / 100).toFixed(2)}</TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* Add Fee Dialog */}
+      <Dialog open={isAddFeeOpen} onOpenChange={setIsAddFeeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Fee</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="fee-name">Fee Name</Label>
+              <Input
+                id="fee-name"
+                value={newFee.name}
+                onChange={(e) => setNewFee({ ...newFee, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="fee-amount">Amount ($)</Label>
+              <Input
+                id="fee-amount"
+                type="number"
+                step="0.01"
+                value={newFee.amount}
+                onChange={(e) => setNewFee({ ...newFee, amount: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="fee-begin-date">Begin Date</Label>
+              <DatePicker
+                id="fee-begin-date"
+                selected={newFee.beginDate}
+                onSelect={(date) => setNewFee({ ...newFee, beginDate: date })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="fee-end-date">End Date</Label>
+              <DatePicker
+                id="fee-end-date"
+                selected={newFee.endDate}
+                onSelect={(date) => setNewFee({ ...newFee, endDate: date })}
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="fee-apply-all"
+                checked={newFee.applyToAll}
+                onCheckedChange={(checked) =>
+                  setNewFee({ ...newFee, applyToAll: !!checked })
+                }
+              />
+              <Label htmlFor="fee-apply-all">Apply to All Age Groups</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddFeeOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddFee}>Add Fee</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Fee Dialog */}
+      <Dialog open={isEditFeeOpen} onOpenChange={setIsEditFeeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Fee</DialogTitle>
+          </DialogHeader>
+          {editingFee && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-fee-name">Fee Name</Label>
+                <Input
+                  id="edit-fee-name"
+                  value={editingFee.name}
+                  onChange={(e) =>
+                    setEditingFee({ ...editingFee, name: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-fee-amount">Amount ($)</Label>
+                <Input
+                  id="edit-fee-amount"
+                  type="number"
+                  step="0.01"
+                  value={editingFee.amount}
+                  onChange={(e) =>
+                    setEditingFee({ ...editingFee, amount: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-fee-begin-date">Begin Date</Label>
+                <DatePicker
+                  id="edit-fee-begin-date"
+                  selected={editingFee.beginDate}
+                  onSelect={(date) =>
+                    setEditingFee({ ...editingFee, beginDate: date })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-fee-end-date">End Date</Label>
+                <DatePicker
+                  id="edit-fee-end-date"
+                  selected={editingFee.endDate}
+                  onSelect={(date) =>
+                    setEditingFee({ ...editingFee, endDate: date })
+                  }
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="edit-fee-apply-all"
+                  checked={editingFee.applyToAll}
+                  onCheckedChange={(checked) =>
+                    setEditingFee({
+                      ...editingFee,
+                      applyToAll: !!checked,
+                    })
+                  }
+                />
+                <Label htmlFor="edit-fee-apply-all">Apply to All Age Groups</Label>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditFeeOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateFee}>Update Fee</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Fees Dialog */}
+      <Dialog open={isAssignFeeOpen} onOpenChange={setIsAssignFeeOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>
+              Assign Fee: {selectedFeeId && fees?.find(f => f.id === selectedFeeId)?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Assign</TableHead>
+                  <TableHead>Age Group</TableHead>
+                  <TableHead>Gender</TableHead>
+                  <TableHead>Birth Year</TableHead>
+                  <TableHead>Division Code</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoadingAgeGroups ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">Loading age groups...</TableCell>
+                  </TableRow>
+                ) : ageGroups?.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">No age groups found</TableCell>
+                  </TableRow>
+                ) : (
+                  ageGroups?.map((ageGroup) => (
+                    <TableRow key={ageGroup.id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedAgeGroups[ageGroup.id]?.[selectedFeeId] || false}
+                          onCheckedChange={(checked) => {
+                            setSelectedAgeGroups(prev => ({
+                              ...prev,
+                              [ageGroup.id]: {
+                                ...(prev[ageGroup.id] || {}),
+                                [selectedFeeId]: !!checked,
+                              },
+                            }));
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>{ageGroup.ageGroup}</TableCell>
+                      <TableCell>{ageGroup.gender}</TableCell>
+                      <TableCell>{ageGroup.birthYear}</TableCell>
+                      <TableCell>{ageGroup.divisionCode}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAssignFeeOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveAssignments}>Save Assignments</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
