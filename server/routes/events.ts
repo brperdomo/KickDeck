@@ -57,8 +57,21 @@ router.patch('/:id', async (req, res) => {
         // Filter only selected age groups
         const selectedGroups = eventData.ageGroups.filter(group => group.selected);
         console.log('Selected age groups:', selectedGroups);
+        
+        // Use a Set to prevent duplicate age groups based on gender and age group
+        const processedGroups = new Set();
 
         for (const group of selectedGroups) {
+          // Create a unique key for this group
+          const groupKey = `${group.gender}-${group.ageGroup}-${group.birthYear}`;
+          
+          // Skip if we've already processed this group
+          if (processedGroups.has(groupKey)) {
+            console.log(`Skipping duplicate group: ${groupKey}`);
+            continue;
+          }
+          
+          processedGroups.add(groupKey);
           console.log('Processing selected group:', group);
 
           // Insert age group

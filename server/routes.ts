@@ -116,7 +116,7 @@ export function registerRoutes(app: Express): Server {
     // Add admin event deletion endpoint
     app.delete('/api/admin/events/:id', isAdmin, async (req, res) => {
       const tx = db.transaction();
-      
+
       try {
         const eventId = req.params.id;
         console.log('Starting event deletion for ID:', eventId);
@@ -243,10 +243,10 @@ export function registerRoutes(app: Express): Server {
       } catch (error) {
         // If anything failed, rollback the transaction
         await tx.rollback();
-        
+
         console.error('Error deleting event:', error);
         console.error("Error details:", error);
-        
+
         res.status(500).json({ 
           error: error instanceof Error ? error.message : "Failed to delete event",
           details: error instanceof Error ? error.stack : undefined
@@ -2439,19 +2439,32 @@ export function registerRoutes(app: Express): Server {
     // Teams management endpoints
     app.get('/api/admin/events/:eventId/age-groups', isAdmin, async (req, res) => {
       try {
-        const eventId = parseInt(req.params.eventId);
-        const ageGroups = await db
-          .select()
-          .from(eventAgeGroups)
-          .where(eq(eventAgeGroups.eventId, eventId))
-          .orderBy(eventAgeGroups.ageGroup);
+        const eventId = req.params.eventId;
 
-        res.json(ageGroups);
+        let ageGroups = await db.query.eventAgeGroups.findMany({
+          where: eq(eventAgeGroups.eventId, eventId),
+        });
+
+        // Log the count for debugging
+        console.log(`Fetched ${ageGroups.length} age groups for event ${eventId}`);
+
+        // Deduplicate age groups by gender, ageGroup, and birthYear
+        const uniqueGroups = [];
+        const seenKeys = new Set();
+
+        for (const group of ageGroups) {
+          const key = `${group.gender}-${group.ageGroup}-${group.birthYear}`;
+          if (!seenKeys.has(key)) {
+            seenKeys.add(key);
+            uniqueGroups.push(group);
+          }
+        }
+
+        console.log(`Returning ${uniqueGroups.length} unique age groups after deduplication`);
+        res.json(uniqueGroups);
       } catch (error) {
         console.error('Error fetching age groups:', error);
-        // Added basic error logging for white screen debugging.
-        console.error("Error details:", error);
-        res.status(500).send("Failed to fetch age groups");
+        res.status(500).json({ error: 'Failed to fetch age groups' });
       }
     });
 
@@ -3284,7 +3297,7 @@ export function registerRoutes(app: Express): Server {
             if (!deletedEvent) {
               return res.status(404).json({ error: "Event not found" });
             }
-            
+
             console.log('Successfully deleted event:', eventId);
           } catch (e) {
             console.error('Error deleting event entity:', e);
