@@ -50,6 +50,7 @@ type FeeFormValues = z.infer<typeof feeFormSchema>;
 export function FeeManagement() {
   const params = useParams();
   const eventId = params.id;
+  const [location, setLocation] = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingFee, setEditingFee] = useState<any>(null);
   const [sortField, setSortField] = useState<SortField>('name');
@@ -68,7 +69,11 @@ export function FeeManagement() {
   const [selectedAgeGroups, setSelectedAgeGroups] = useState({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [, setLocation] = useLocation();
+
+
+  // Get eventId from the URL parameter
+  const eventIdMatch = location.match(/\/admin\/events\/(\d+)\/fees/);
+  const eventIdParam = eventIdMatch ? eventIdMatch[1] : eventId;
 
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeFormSchema),
@@ -83,13 +88,13 @@ export function FeeManagement() {
 
   // Fetch event fees
   const feesQuery = useQuery({
-    queryKey: ['fees', eventId],
+    queryKey: ['fees', eventIdParam],
     queryFn: async () => {
-      const response = await fetch(`/api/admin/events/${eventId}/fees`);
+      const response = await fetch(`/api/admin/events/${eventIdParam}/fees`);
       if (!response.ok) throw new Error('Failed to fetch fees');
       return response.json();
     },
-    enabled: !!eventId,
+    enabled: !!eventIdParam,
   });
 
   // Fetch accounting codes
@@ -104,38 +109,44 @@ export function FeeManagement() {
 
   // Query to fetch age groups
   const ageGroupsQuery = useQuery({
-    queryKey: ['eventAgeGroups', eventId],
+    queryKey: ['eventAgeGroups', eventIdParam],
     queryFn: async () => {
-      console.log(`Fetching age groups for event: ${eventId}`);
-      const response = await fetch(`/api/admin/events/${eventId}/age-groups`);
+      console.log(`Fetching age groups for event: ${eventIdParam}`);
+      const response = await fetch(`/api/admin/events/${eventIdParam}/age-groups`);
       if (!response.ok) {
         const error = await response.text();
         console.error('Failed to fetch age groups:', error);
         throw new Error(`Failed to fetch age groups: ${error}`);
       }
       const data = await response.json();
-      console.log(`Found ${data.length} age groups for event ${eventId}`);
+      console.log(`Found ${data.length} age groups for event ${eventIdParam}`);
       return data;
     },
-    enabled: !!eventId,
+    enabled: !!eventIdParam,
   });
 
   // Fetch fee assignments
   const feeAssignmentsQuery = useQuery({
-    queryKey: ['feeAssignments', eventId],
+    queryKey: ['feeAssignments', eventIdParam],
     queryFn: async () => {
-      const response = await fetch(`/api/admin/events/${eventId}/fee-assignments`);
+      const response = await fetch(`/api/admin/events/${eventIdParam}/fee-assignments`);
       if (!response.ok) {
         throw new Error('Failed to fetch fee assignments');
       }
       return response.json();
     },
-    enabled: !!eventId,
+    enabled: !!eventIdParam,
   });
 
   // Initialize selected age groups when fee assignments load
   useEffect(() => {
-    if (feeAssignmentsQuery.data && ageGroupsQuery.data) {
+    // Debug info to help diagnose routing issues
+    console.log("Current location:", location);
+    console.log("Event ID from parameter:", eventIdParam);
+    console.log("Age groups data:", ageGroupsQuery.data);
+    console.log("Fee assignments data:", feeAssignmentsQuery.data);
+
+    if (ageGroupsQuery.data && feeAssignmentsQuery.data) {
       const assignmentMap = {};
       ageGroupsQuery.data.forEach(group => {
         assignmentMap[group.id] = {};
@@ -148,12 +159,12 @@ export function FeeManagement() {
       });
       setSelectedAgeGroups(assignmentMap);
     }
-  }, [feeAssignmentsQuery.data, ageGroupsQuery.data, feesQuery.data]);
+  }, [feeAssignmentsQuery.data, ageGroupsQuery.data, feesQuery.data, location]);
 
   // Add fee mutation
   const addFeeMutation = useMutation({
     mutationFn: async (feeData) => {
-      const response = await fetch(`/api/admin/events/${eventId}/fees`, {
+      const response = await fetch(`/api/admin/events/${eventIdParam}/fees`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -168,7 +179,7 @@ export function FeeManagement() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['fees', eventId]);
+      queryClient.invalidateQueries(['fees', eventIdParam]);
       setIsAddFeeOpen(false);
       setNewFee({
         name: '',
@@ -194,7 +205,7 @@ export function FeeManagement() {
   // Update fee mutation
   const updateFeeMutation = useMutation({
     mutationFn: async (feeData) => {
-      const response = await fetch(`/api/admin/events/${eventId}/fees/${feeData.id}`, {
+      const response = await fetch(`/api/admin/events/${eventIdParam}/fees/${feeData.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -209,7 +220,7 @@ export function FeeManagement() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['fees', eventId]);
+      queryClient.invalidateQueries(['fees', eventIdParam]);
       setIsEditFeeOpen(false);
       setEditingFee(null);
       toast({
@@ -229,7 +240,7 @@ export function FeeManagement() {
   // Delete fee mutation
   const deleteFeeMutation = useMutation({
     mutationFn: async (feeId) => {
-      const response = await fetch(`/api/admin/events/${eventId}/fees/${feeId}`, {
+      const response = await fetch(`/api/admin/events/${eventIdParam}/fees/${feeId}`, {
         method: 'DELETE',
       });
 
@@ -240,7 +251,7 @@ export function FeeManagement() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['fees', eventId]);
+      queryClient.invalidateQueries(['fees', eventIdParam]);
       toast({
         title: 'Success',
         description: 'Fee deleted successfully',
@@ -258,7 +269,7 @@ export function FeeManagement() {
   // Update fee assignments mutation
   const updateAssignmentsMutation = useMutation({
     mutationFn: async ({ feeId, ageGroupIds }) => {
-      const response = await fetch(`/api/admin/events/${eventId}/fee-assignments`, {
+      const response = await fetch(`/api/admin/events/${eventIdParam}/fee-assignments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -276,7 +287,7 @@ export function FeeManagement() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['feeAssignments', eventId]);
+      queryClient.invalidateQueries(['feeAssignments', eventIdParam]);
       setIsAssignFeeOpen(false);
       setSelectedFeeId(null);
       toast({
