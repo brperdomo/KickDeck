@@ -8,6 +8,7 @@ import uploadRouter from "./routes/upload";
 import accountingCodesRouter from "./routes/admin/accounting-codes";
 import feesRouter from "./routes/admin/fees";
 import eventsRouter from "./routes/admin/events";
+import emailTemplatesRouter from "./routes/admin/email-templates";
 import { createCoupon, getCoupons, updateCoupon, deleteCoupon } from "./routes/coupons";
 import { sql, eq, and, or, inArray } from "drizzle-orm";
 import {
@@ -76,6 +77,7 @@ export function registerRoutes(app: Express): Server {
     app.use('/api/admin/seasonal-scopes', isAdmin, seasonalScopesRouter);
     app.use('/api/admin/events', isAdmin, eventsRouter);
     app.use('/api/admin/events', isAdmin, feesRouter); // Mount fees router under events path
+    app.use('/api/admin/email-templates', isAdmin, emailTemplatesRouter);
 
     // Register coupon routes
     app.post('/api/admin/coupons', isAdmin, createCoupon);
