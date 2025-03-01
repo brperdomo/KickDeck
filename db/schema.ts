@@ -870,3 +870,15 @@ export const selectEmailTemplateSchema = createSelectSchema(emailTemplates);
 
 export type InsertEmailTemplate = typeof emailTemplates.$inferInsert;
 export type SelectEmailTemplate = typeof emailTemplates.$inferSelect;
+
+export const adminFormSchema = z.object({
+  email: z.string().email("Please enter a valid email address").min(1, "Email is required"),
+  username: z.string().min(3, "Username must be at least 3 characters").max(50),
+  password: passwordSchema,
+  firstName: z.string().min(1, "First name is required").max(50),
+  lastName: z.string().min(1, "Last name is required").max(50),
+  phone: z.string().nullable().optional(),
+  isAdmin: z.boolean().default(true),
+});
+
+export type AdminFormData = z.infer<typeof adminFormSchema>;
