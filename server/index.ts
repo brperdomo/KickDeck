@@ -105,12 +105,15 @@ async function testDbConnection() {
     // Create WebSocket server
     const wss = new WebSocketServer({ 
       server,
-      path: "/api/ws",
+      path: "/ws", // Use consistent path with setupWebSocketServer
       verifyClient: (info) => {
         const protocol = info.req.headers['sec-websocket-protocol'];
         return !protocol || protocol !== 'vite-hmr';
       }
     });
+
+    // Log WebSocket server setup
+    log("WebSocket server created with path: /ws");
 
     // WebSocket connection handling
     wss.on('connection', (ws) => {
