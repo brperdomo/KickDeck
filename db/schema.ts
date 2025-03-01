@@ -163,7 +163,7 @@ export const eventAgeGroups = pgTable("event_age_groups", {
 export const insertEventAgeGroupSchema = createInsertSchema(eventAgeGroups, {
   ageGroup: z.string().min(1, "Age group is required"),
   birthYear: z.number().int("Birth year must be a valid year"),
-  gender: z.enum(["Boys", "Girls"], "Gender must be either Boys or Girls"),
+  gender: z.enum(["Boys", "Girls"]),
   divisionCode: z.string().min(1, "Division code is required"),
   projectedTeams: z.number().int().min(0, "Projected teams must be 0 or greater").optional(),
   fieldSize: z.string().min(1, "Field size is required"),
@@ -595,15 +595,6 @@ export type SelectRole = typeof roles.$inferSelect;
 export type InsertAdminRole = typeof adminRoles.$inferInsert;
 export type SelectAdminRole = typeof adminRoles.$inferSelect;
 
-export const adminFormSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  roles: z.array(z.string()).min(1, "At least one role is required"),
-});
-
-export type AdminFormValues = z.infer<typeof adminFormSchema>;
 
 export const updates = pgTable("updates", {
   id: serial("id").primaryKey(),
@@ -717,7 +708,7 @@ export const coupons = pgTable("coupons", {
 
 export const insertCouponSchema = createInsertSchema(coupons, {
   code: z.string().min(1, "Coupon code is required"),
-  discountType: z.enum(['fixed', 'percentage'], "Invalid discount type"),
+  discountType: z.enum(['fixed', 'percentage']),
   amount: z.number().positive("Amount must be positive"),
   expirationDate: z.string().min(1, "Expiration date is required"),
   description: z.string().optional(),
@@ -851,3 +842,31 @@ export const formResponsesRelations = relations(formResponses, ({ one }) => ({
     references: [teams.id],
   }),
 }));
+
+export const emailTemplates = pgTable("email_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // registration, payment, password_reset, etc.
+  subject: text("subject").notNull(),
+  content: text("content").notNull(),
+  senderName: text("sender_name").notNull(),
+  senderEmail: text("sender_email").notNull(),
+  isDefault: boolean("is_default").default(false).notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertEmailTemplateSchema = createInsertSchema(emailTemplates, {
+  name: z.string().min(1, "Template name is required"),
+  type: z.string().min(1, "Template type is required"),
+  subject: z.string().min(1, "Subject is required"),
+  content: z.string().min(1, "Content is required"),
+  senderName: z.string().min(1, "Sender name is required"),
+  senderEmail: z.string().email("Invalid sender email"),
+  isDefault: z.boolean().default(false),
+});
+
+export const selectEmailTemplateSchema = createSelectSchema(emailTemplates);
+
+export type InsertEmailTemplate = typeof emailTemplates.$inferInsert;
+export type SelectEmailTemplate = typeof emailTemplates.$inferSelect;
