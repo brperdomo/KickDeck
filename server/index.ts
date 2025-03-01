@@ -102,32 +102,40 @@ async function testDbConnection() {
     // Register routes first to ensure all middleware is set up
     const server = registerRoutes(app);
 
-    // Create WebSocket server
-    const wss = new WebSocketServer({ 
-      server,
-      path: "/ws", // Use consistent path with setupWebSocketServer
-      verifyClient: (info) => {
-        const protocol = info.req.headers['sec-websocket-protocol'];
-        return !protocol || protocol !== 'vite-hmr';
-      }
-    });
-
-    // Log WebSocket server setup
-    log("WebSocket server created with path: /ws");
-
-    // WebSocket connection handling
-    wss.on('connection', (ws) => {
-      log("New WebSocket connection established");
-
-      ws.on('message', (message) => {
-        // Handle incoming messages
-        log("Received WebSocket message: " + message);
+    // We'll create the WebSocket server after the HTTP server has started successfully
+    let wss: WebSocketServer;
+    
+    // Function to initialize WebSocket after server is listening
+    const initializeWebSocket = () => {
+      // Create WebSocket server
+      wss = new WebSocketServer({ 
+        server,
+        path: "/ws", // Use consistent path with setupWebSocketServer
+        verifyClient: (info) => {
+          const protocol = info.req.headers['sec-websocket-protocol'];
+          return !protocol || protocol !== 'vite-hmr';
+        }
       });
 
-      ws.on('close', () => {
-        log("WebSocket connection closed");
+      // Log WebSocket server setup
+      log("WebSocket server created with path: /ws");
+
+      // WebSocket connection handling
+      wss.on('connection', (ws) => {
+        log("New WebSocket connection established");
+
+        ws.on('message', (message) => {
+          // Handle incoming messages
+          log("Received WebSocket message: " + message);
+        });
+
+        ws.on('close', () => {
+          log("WebSocket connection closed");
+        });
       });
-    });
+    };
+
+    // WebSocket initialization happens after server starts successfully
 
     if (app.get("env") === "development") {
       // Setup Vite middleware
@@ -151,43 +159,31 @@ async function testDbConnection() {
     const ALTERNATIVE_PORTS = [5001, 5002, 5003, 5432, 6000];
     
     const startServer = (port: number, attemptIndex = 0) => {
-      try {
-        const serverInstance = server.listen(port, "0.0.0.0", () => {
-          log(`Server started successfully on port ${port}`);
-        });
+      const serverInstance = server.listen(port, "0.0.0.0", () => {
+        log(`Server started successfully on port ${port}`);
         
-        serverInstance.on('error', (error: any) => {
-          if (error.code === 'EADDRINUSE') {
-            log(`Port ${port} is already in use.`);
-            
-            // Close the server to prevent the error from propagating up
-            serverInstance.close();
-            
-            // Try next alternative port
-            if (attemptIndex < ALTERNATIVE_PORTS.length) {
-              const nextPort = ALTERNATIVE_PORTS[attemptIndex];
-              log(`Attempting to use alternative port: ${nextPort}`);
-              startServer(nextPort, attemptIndex + 1);
-            } else {
-              log(`Error: All ports are in use. Please close other running servers or specify a different port.`);
-              process.exit(1);
-            }
+        // Initialize WebSocket server after HTTP server starts successfully
+        initializeWebSocket();
+      });
+      
+      serverInstance.on('error', (error: any) => {
+        if (error.code === 'EADDRINUSE') {
+          log(`Port ${port} is already in use.`);
+          
+          // Try next alternative port
+          if (attemptIndex < ALTERNATIVE_PORTS.length) {
+            const nextPort = ALTERNATIVE_PORTS[attemptIndex];
+            log(`Attempting to use alternative port: ${nextPort}`);
+            startServer(nextPort, attemptIndex + 1);
           } else {
-            log(`Error starting server: ${error.message}`);
+            log(`Error: All ports are in use. Please close other running servers or specify a different port.`);
             process.exit(1);
           }
-        });
-      } catch (error) {
-        log(`Error in startServer: ${(error as Error).message}`);
-        if (attemptIndex < ALTERNATIVE_PORTS.length) {
-          const nextPort = ALTERNATIVE_PORTS[attemptIndex];
-          log(`Attempting to use alternative port: ${nextPort}`);
-          startServer(nextPort, attemptIndex + 1);
         } else {
-          log(`Error: All ports are in use. Please close other running servers or specify a different port.`);
+          log(`Error starting server: ${error.message}`);
           process.exit(1);
         }
-      }
+      });
     };
     
     startServer(PORT);
