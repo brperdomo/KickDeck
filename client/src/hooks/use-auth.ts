@@ -107,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         login,
         logout,
-        checkAuth,
+        checkAuth
       }}
     >
       {children}
