@@ -346,12 +346,13 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
               <FormLabel>Details About This Event</FormLabel>
               <FormControl>
                 <Editor
+                  apiKey="wysafiugpee0xtyjdnegcq6x43osb81qje582522ekththu8"
                   value={field.value}
                   onEditorChange={(content) => field.onChange(content)}
                   init={{
                     height: 300,
-                    plugins: 'link lists',
-                    toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist | link | removeformat',
+                    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+                    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
                     base_url: 'https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.7.3',
                     suffix: '.min'
                   }}
@@ -370,12 +371,13 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
               <FormLabel>Agreement</FormLabel>
               <FormControl>
                 <Editor
+                  apiKey="wysafiugpee0xtyjdnegcq6x43osb81qje582522ekththu8"
                   value={field.value}
                   onEditorChange={(content) => field.onChange(content)}
                   init={{
                     height: 300,
-                    plugins: 'link lists',
-                    toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist | link | removeformat',
+                    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+                    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
                     base_url: 'https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.7.3',
                     suffix: '.min'
                   }}
@@ -394,12 +396,13 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
               <FormLabel>Refund Policy</FormLabel>
               <FormControl>
                 <Editor
+                  apiKey="wysafiugpee0xtyjdnegcq6x43osb81qje582522ekththu8"
                   value={field.value}
                   onEditorChange={(content) => field.onChange(content)}
                   init={{
                     height: 300,
-                    plugins: 'link lists',
-                    toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist | link | removeformat',
+                    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+                    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
                     base_url: 'https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.7.3',
                     suffix: '.min'
                   }}
