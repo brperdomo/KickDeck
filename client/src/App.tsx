@@ -112,7 +112,7 @@ import EditEventPage from "./pages/admin/events/[id]/edit";
 import CreateAdminPage from "./pages/admin/create";
 import ScoresPage from "./pages/admin/scores";
 import UsersPage from "./pages/admin/users";
-import ChatPage from "./pages/admin/chat";
+import AdminChatPage from "./pages/admin/chat";
 import SchedulePage from "./pages/admin/schedule";
 import SettingsPage from "./pages/admin/settings";
 import FinancePage from "./pages/admin/finance";
@@ -161,7 +161,7 @@ function App() {
             <Route path="/admin/events/:id/edit" component={EditEventPage} />
             <Route path="/admin/scores" component={ScoresPage} />
             <Route path="/admin/users" component={UsersPage} />
-            <Route path="/admin/chat" component={ChatPage} />
+            <Route path="/admin/chat" component={AdminChatPage} />
             <Route path="/admin/schedule" component={SchedulePage} />
             <Route path="/admin/settings" component={SettingsPage} />
             <Route path="/admin/finance" component={FinancePage} />
