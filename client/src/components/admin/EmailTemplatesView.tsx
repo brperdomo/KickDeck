@@ -15,7 +15,11 @@ import { Badge } from "@/components/ui/badge";
 import { EmailTemplateModal } from "@/components/admin/EmailTemplateModal";
 import type { EmailTemplate } from "@db/schema/emailTemplates";
 
-export function EmailTemplatesView() {
+interface EmailTemplatesViewProps {
+  isEmbedded?: boolean;
+}
+
+export function EmailTemplatesView({ isEmbedded = false }: EmailTemplatesViewProps) {
   const { toast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
@@ -53,17 +57,32 @@ export function EmailTemplatesView() {
 
   return (
     <>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Email Templates</h2>
-        <Button onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Template
-        </Button>
-      </div>
+      {!isEmbedded && (
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Email Templates</h2>
+          <Button onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Template
+          </Button>
+        </div>
+      )}
+      {isEmbedded && (
+        <div className="flex justify-end mb-4">
+          <Button onClick={handleCreate} size="sm">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Template
+          </Button>
+        </div>
+      )}
 
-      <Card>
-        <CardContent className="p-6">
+      {isEmbedded ? (
+        <div className="rounded-md border">
           <Table>
+      ) : (
+        <Card>
+          <CardContent className="p-6">
+            <Table>
+      )}
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
@@ -119,8 +138,12 @@ export function EmailTemplatesView() {
               ))}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+          {isEmbedded ? (
+            </div>
+          ) : (
+            </CardContent>
+          </Card>
+          )}
 
       <EmailTemplateModal
         open={isModalOpen}
