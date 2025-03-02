@@ -195,6 +195,22 @@ export const eventAgeGroupFees = pgTable("event_age_group_fees", {
   createdAt: timestamp("created_at").notNull(),
 });
 
+// Coupons table
+export const coupons = pgTable("coupons", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  discountType: text("discount_type").notNull(),
+  amount: integer("amount").notNull(),
+  expirationDate: timestamp("expiration_date"),
+  description: text("description"),
+  eventId: integer("event_id"),
+  maxUses: integer("max_uses"),
+  usageCount: integer("usage_count").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export type SelectEvent = typeof events.$inferSelect;
 export type InsertEvent = typeof events.$inferInsert;
 
@@ -209,3 +225,17 @@ export type InsertEventAgeGroup = typeof eventAgeGroups.$inferInsert;
 
 export type SelectEventAgeGroupFee = typeof eventAgeGroupFees.$inferSelect;
 export type InsertEventAgeGroupFee = typeof eventAgeGroupFees.$inferInsert;
+
+export type SelectCoupon = typeof coupons.$inferSelect;
+export type InsertCoupon = typeof coupons.$inferInsert;
+
+export const insertCouponSchema = createInsertSchema(coupons, {
+  code: z.string().min(1, "Coupon code is required"),
+  discountType: z.enum(["percentage", "fixed"], {
+    errorMap: () => ({ message: "Discount type must be percentage or fixed" }),
+  }),
+  amount: z.number().min(1, "Amount must be greater than 0"),
+  description: z.string().optional(),
+  maxUses: z.number().optional(),
+  expirationDate: z.date().optional(),
+});
