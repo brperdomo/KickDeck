@@ -1,116 +1,95 @@
-
 import { Router } from "express";
-import { db } from "../../db";
-import { emailConfig } from "@db/schema";
+import { db } from "../../../db"; // Fix the import path
+import { emailSettings } from "../../../db/schema";
 import { eq } from "drizzle-orm";
-import nodemailer from "nodemailer";
 
 const router = Router();
 
 // Get email configuration
-router.get("/", async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const [config] = await db.select().from(emailConfig).limit(1);
-    
-    // If config exists, remove sensitive information before sending to client
-    if (config && config.auth && config.auth.pass) {
-      // Create a copy of the config to avoid modifying the database result
-      const safeConfig = { ...config };
-      // Mask the password
-      safeConfig.auth = { ...config.auth, pass: "********" };
-      res.json(safeConfig);
-    } else {
-      res.json(config || {});
-    }
+    const [config] = await db
+      .select()
+      .from(emailSettings)
+      .limit(1);
+
+    res.json(config || {});
   } catch (error) {
-    console.error("Error fetching email configuration:", error);
+    console.error('Error fetching email config:', error);
     res.status(500).json({ error: "Failed to fetch email configuration" });
   }
 });
 
-// Save email configuration
-router.post("/", async (req, res) => {
+// Update email configuration
+router.post('/', async (req, res) => {
   try {
-    const newConfig = req.body;
-    
-    // Validate required fields
-    if (!newConfig.host || !newConfig.port || !newConfig.auth?.user || !newConfig.auth?.pass || !newConfig.senderEmail) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
+    const configData = req.body;
 
-    // Check if configuration already exists
-    const [existingConfig] = await db.select().from(emailConfig).limit(1);
+    // Check if config exists
+    const [existingConfig] = await db
+      .select()
+      .from(emailSettings)
+      .limit(1);
 
-    let savedConfig;
+    let updatedConfig;
+
     if (existingConfig) {
-      // Update existing configuration
-      [savedConfig] = await db
-        .update(emailConfig)
+      // Update existing config
+      [updatedConfig] = await db
+        .update(emailSettings)
         .set({
-          ...newConfig,
-          updatedAt: new Date().toISOString()
+          ...configData,
+          updatedAt: new Date().toISOString(),
         })
-        .where(eq(emailConfig.id, existingConfig.id))
+        .where(eq(emailSettings.id, existingConfig.id))
         .returning();
     } else {
-      // Insert new configuration
-      [savedConfig] = await db
-        .insert(emailConfig)
+      // Create new config
+      [updatedConfig] = await db
+        .insert(emailSettings)
         .values({
-          ...newConfig,
+          ...configData,
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
         })
         .returning();
     }
 
-    // Remove sensitive information before sending response
-    const safeConfig = { ...savedConfig };
-    if (safeConfig.auth && safeConfig.auth.pass) {
-      safeConfig.auth = { ...safeConfig.auth, pass: "********" };
-    }
-
-    res.json(safeConfig);
+    res.json(updatedConfig);
   } catch (error) {
-    console.error("Error saving email configuration:", error);
-    res.status(500).json({ error: "Failed to save email configuration" });
+    console.error('Error updating email config:', error);
+    res.status(500).json({ error: "Failed to update email configuration" });
   }
 });
 
-// Test email connection
-router.post("/test", async (req, res) => {
+// Test email configuration
+router.post('/test', async (req, res) => {
   try {
-    const config = req.body;
-    
-    // Create test transporter
-    const transporter = nodemailer.createTransport({
-      host: config.host,
-      port: config.port,
-      secure: config.secure,
-      auth: {
-        user: config.auth.user,
-        pass: config.auth.pass
-      }
+    const { recipient } = req.body;
+
+    if (!recipient) {
+      return res.status(400).json({ error: "Recipient email is required" });
+    }
+
+    // Import email service dynamically to prevent circular dependencies
+    const { sendEmail } = await import('../../services/email-service');
+
+    await sendEmail({
+      to: recipient,
+      subject: "Email Configuration Test",
+      html: `
+        <h1>Email Configuration Test</h1>
+        <p>This is a test email to verify your email configuration settings.</p>
+        <p>If you received this email, your configuration is working correctly.</p>
+      `,
     });
 
-    // Verify connection
-    await transporter.verify();
-    
-    // Send a test email to the sender address
-    await transporter.sendMail({
-      from: config.senderName ? `${config.senderName} <${config.senderEmail}>` : config.senderEmail,
-      to: config.auth.user,
-      subject: "SMTP Connection Test",
-      text: "This is a test email to verify your SMTP connection.",
-      html: "<p>This is a test email to verify your SMTP connection.</p>"
-    });
-
-    res.json({ success: true, message: "Connection test successful" });
+    res.json({ success: true, message: "Test email sent successfully" });
   } catch (error) {
-    console.error("Email connection test failed:", error);
+    console.error('Error sending test email:', error);
     res.status(500).json({ 
-      error: "Connection test failed", 
-      details: error instanceof Error ? error.message : "Unknown error" 
+      success: false, 
+      error: error instanceof Error ? error.message : "Failed to send test email" 
     });
   }
 });
