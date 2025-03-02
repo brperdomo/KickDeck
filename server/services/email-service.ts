@@ -155,7 +155,7 @@ class EmailService {
   async getEmailTemplate(templateName: string) {
     try {
       const template = await db.select().from(emailTemplates).where(eq(emailTemplates.name, templateName)).limit(1);
-      return template.length > 0 ? template[0].html : null;
+      return template.length > 0 ? template[0].content : null;
     } catch (error) {
       console.error('Failed to get email template:', error);
       return null;
