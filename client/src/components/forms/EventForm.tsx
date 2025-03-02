@@ -51,6 +51,9 @@ import {
 } from "./event-form-types";
 import { ComplexSelector } from "@/components/events/ComplexSelector";
 import { InfoPopover } from "@/components/ui/InfoPopover"; // Import added here
+import {SeasonalScopeSelector} from "@/components/events/SeasonalScopeSelector"; // Import added here
+import {AgeGroupSelector} from "@/components/events/AgeGroupSelector"; //Import added here
+
 
 interface EventFormValues extends EventInformationValues {
   ageGroups: AgeGroup[];
@@ -79,6 +82,10 @@ interface EventFormProps {
 export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false, activeTab, onTabChange, completedTabs, onCompletedTabsChange, navigateTab }: EventFormProps) => {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { control, handleSubmit, formState, setValue, getValues, setFieldValue } = useForm<EventFormValues>({
+    resolver: zodResolver(eventInformationSchema),
+    defaultValues: defaultValues
+  });
 
   const [event, setEvent] = useState<EventFormValues>(defaultValues || {
     name: '',
@@ -114,18 +121,27 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
   const [secondaryColor, setSecondaryColor] = useState(defaultValues?.branding?.secondaryColor || '#34C759');
   const [isExtracting, setIsExtracting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedSeasonalScopeId, setSelectedSeasonalScopeId] = useState<number | null>(
+    defaultValues?.seasonalScopeId || null
+  );
+  const [seasonalScopes, setSeasonalScopes] = useState<any[] | null>(null);
 
-
-  const form = useForm<EventFormValues>({
-    resolver: zodResolver(eventInformationSchema),
-    defaultValues: event
-  });
-
+  // Fetch seasonal scopes on component mount
   useEffect(() => {
-    if (defaultValues) {
-      form.reset(defaultValues);
-    }
-  }, [defaultValues]);
+    const fetchSeasonalScopes = async () => {
+      try {
+        const response = await fetch('/api/admin/seasonal-scopes');
+        if (response.ok) {
+          const data = await response.json();
+          setSeasonalScopes(data);
+        }
+      } catch (error) {
+        console.error('Error fetching seasonal scopes:', error);
+      }
+    };
+
+    fetchSeasonalScopes();
+  }, []);
 
   const seasonalScopeQuery = useQuery({
     queryKey: ['/api/admin/seasonal-scopes', defaultValues?.seasonalScopeId],
@@ -873,23 +889,30 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                     </InfoPopover>
                   </div>
 
-                  {defaultValues?.seasonalScopeId ? (
-                    <>
-                      <div className="p-4 bg-green-50 border border-green-200 rounded-md">
-                        <p className="text-sm text-green-800">
-                          <CheckCircle className="inline-block mr-2 h-4 w-4" />
-                          All standard age groups from U4 to U18 for both boys and girls will be automatically included in this event.
-                        </p>
-                        <p className="text-sm text-green-800 mt-2">
-                          No manual selection is required. Division codes will be created automatically.
-                        </p>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                      <p className="text-sm text-yellow-800">
-                        Please select a seasonal scope first. All standard age groups will be automatically added.
-                      </p>
+                  {seasonalScopes && (
+                    <SeasonalScopeSelector
+                      selectedScopeId={selectedSeasonalScopeId}
+                      onScopeSelect={(scopeId) => {
+                        setSelectedSeasonalScopeId(scopeId);
+                        // Clear existing age group selections when scope changes
+                        const selectedScope = seasonalScopes.find(scope => scope.id === scopeId);
+                        if (selectedScope) {
+                          // Auto-select all age groups from the scope
+                          setFieldValue('ageGroups', selectedScope.ageGroups);
+                        }
+                      }}
+                      scopes={seasonalScopes}
+                    />
+                  )}
+
+                  {selectedSeasonalScopeId && (
+                    <div className="mt-4">
+                      <Label>Age Groups</Label>
+                      <AgeGroupSelector
+                        values={getValues().ageGroups || []}
+                        onChange={(ageGroups) => setFieldValue('ageGroups', ageGroups)}
+                        seasonalScopeId={selectedSeasonalScopeId}
+                      />
                     </div>
                   )}
                 </div>
@@ -926,7 +949,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
             )}
 
             <Button
-              onClick={form.handleSubmit(handleSubmitForm)}
+              onClick={handleSubmit(handleSubmitForm)}
               disabled={isSubmitting || isSaving}
             >
               {isSubmitting || isSaving ? (
