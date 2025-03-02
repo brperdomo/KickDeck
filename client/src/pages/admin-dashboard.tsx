@@ -1629,16 +1629,7 @@ function AdminDashboard() {
     </Button>
   );
 
-  const emailTemplatesButton = (
-    <Button
-      variant={activeView === 'emailTemplates' ? 'secondary' : 'ghost'}
-      className="w-full justify-start"
-      onClick={() => setActiveView('emailTemplates')}
-    >
-      <Mail className="mr-2 h-4 w-4" />
-      Email Templates
-    </Button>
-  );
+  // Email Templates button removed
 
   useEffect(() => {
     if (!user) {
@@ -2299,7 +2290,6 @@ const navigationItems = [
   { icon: ImageIcon, label: "File Manager", value: "files" as const },
   { icon: Ticket, label: "Coupons", value: "coupons" as const },
   { icon: FormInput, label: "Form Templates", value: "formTemplates" as const },
-  { icon: Mail, label: "Email Templates", value: "emailTemplates" as const },
   { icon: User, label: "My Account", value: "account" as const },
 ];
 
