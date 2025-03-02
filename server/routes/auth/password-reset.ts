@@ -50,9 +50,11 @@ router.post('/request-reset', async (req, res) => {
     // For development: log the token and reset URL
     if (process.env.NODE_ENV !== 'production') {
       const resetUrl = `${process.env.APP_URL || ''}/reset-password?token=${resetToken}`;
+      console.log(`\n=============== PASSWORD RESET INFO ===============`);
       console.log(`[DEV ONLY] Password reset requested for ${user.email}`);
       console.log(`[DEV ONLY] Reset token: ${resetToken}`);
       console.log(`[DEV ONLY] Reset URL: ${resetUrl}`);
+      console.log(`====================================================\n`);
     }
     
     return res.status(200).json({ 
