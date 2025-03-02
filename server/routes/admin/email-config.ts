@@ -25,7 +25,7 @@ router.post('/', async (req, res) => {
   try {
     const configData = req.body;
 
-    // Check if config exists
+    // Check if config already exists
     const [existingConfig] = await db
       .select()
       .from(emailConfig)
@@ -39,7 +39,7 @@ router.post('/', async (req, res) => {
         .update(emailConfig)
         .set({
           ...configData,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         })
         .where(eq(emailConfig.id, existingConfig.id))
         .returning();
@@ -50,7 +50,7 @@ router.post('/', async (req, res) => {
         .values({
           ...configData,
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         })
         .returning();
     }
