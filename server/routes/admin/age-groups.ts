@@ -45,7 +45,11 @@ router.post('/cleanup/:eventId', async (req, res) => {
       }
       
       if (!uniqueGroups.has(key)) {
-        // Keep this group
+        // Keep this group and ensure it has a division code
+        if (!group.divisionCode) {
+          // Set a proper division code if missing
+          group.divisionCode = key;
+        }
         uniqueGroups.set(key, group);
         keptGroups.push(group);
       } else {

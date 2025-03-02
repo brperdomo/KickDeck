@@ -3,7 +3,7 @@ import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, ArrowLeft, Plus, Edit, Trash } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Edit, Trash, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -862,7 +862,36 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
               </TabsContent>
 
               <TabsContent value="age-groups">
-                {renderAgeGroupsContent()}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium">Age Groups</h3>
+                    <InfoPopover>
+                      <p>
+                        All standard age groups (15 boys, 15 girls) will be automatically included in this event.
+                      </p>
+                    </InfoPopover>
+                  </div>
+
+                  {defaultValues?.seasonalScopeId ? (
+                    <>
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+                        <p className="text-sm text-green-800">
+                          <CheckCircle className="inline-block mr-2 h-4 w-4" />
+                          All standard age groups from U4 to U18 for both boys and girls will be automatically included in this event.
+                        </p>
+                        <p className="text-sm text-green-800 mt-2">
+                          No manual selection is required. Division codes will be created automatically.
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                      <p className="text-sm text-yellow-800">
+                        Please select a seasonal scope first. All standard age groups will be automatically added.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </TabsContent>
 
               <TabsContent value="scoring">
@@ -896,7 +925,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
             )}
 
             <Button
-              onClick={form.handleSubmit(handleSubmit)}
+              onClick={form.handleSubmit(handleSubmitForm)}
               disabled={isSubmitting || isSaving}
             >
               {isSubmitting || isSaving ? (
@@ -921,6 +950,13 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
       />
     </div>
   );
+};
+
+// With the new approach, we don't need to select age groups - all standard ones will be included
+// This function is kept for compatibility but doesn't do anything anymore
+const handleAgeGroupsChange = () => {
+  // No selection needed as all standard age groups will be included automatically
+  console.log("Age groups will be automatically created for this event");
 };
 
 export default EventForm;

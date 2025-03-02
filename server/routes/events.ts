@@ -149,7 +149,7 @@ app.get('/api/admin/events/:eventId/age-groups', isAdmin, async (req, res) => {
     if (ageGroups.length === 0) {
       // Import predefined age groups and return them all
       const { PREDEFINED_AGE_GROUPS } = require('../../client/src/components/forms/event-form-types');
-      
+
       for (const group of PREDEFINED_AGE_GROUPS) {
         const key = group.divisionCode;
         uniqueGroups.push({
@@ -168,7 +168,7 @@ app.get('/api/admin/events/:eventId/age-groups', isAdmin, async (req, res) => {
           createdAt: new Date().toISOString(),
         });
       }
-      
+
       console.log(`No age groups found. Returning ${uniqueGroups.length} standard age groups as fallback`);
       return res.json(uniqueGroups);
     }
@@ -177,7 +177,7 @@ app.get('/api/admin/events/:eventId/age-groups', isAdmin, async (req, res) => {
       // Ensure every group has a division code
       const divisionCode = group.divisionCode || `${group.gender.charAt(0)}${group.birthYear || ''}`;
       const key = divisionCode;
-      
+
       if (!uniqueMap.has(key)) {
         // Create a simplified version of the group with standard field size
         const simplifiedGroup = {
