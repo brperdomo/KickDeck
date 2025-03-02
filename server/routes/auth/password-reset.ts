@@ -3,7 +3,9 @@ import { db } from "@db";
 import { users } from "@db/schema";
 import { eq } from "drizzle-orm";
 import { randomBytes } from "crypto";
-import { emailService } from "../../services/email-service";
+// import { emailService } from "../../services/email-service";  Removed as per changes
+import { getEmailTemplate, sendEmail } from "../../services/email-service"; //Assuming these are now exported
+
 
 const router = Router();
 
@@ -44,14 +46,34 @@ router.post("/", async (req, res) => {
       })
       .where(eq(users.id, user.id));
 
-    // Send email with reset link
-    const appUrl = process.env.APP_URL || 'http://localhost:5000';
-    const resetUrl = `${appUrl}/reset-password?token=${resetToken}`;
+    // Get the email template for password reset
+    const template = await getEmailTemplate('password_reset');
 
-    await emailService.sendPasswordResetEmail(user.email, {
-      username: user.username || user.firstName || 'User',
-      resetUrl,
+    // Create reset URL
+    const resetUrl = `${process.env.APP_URL || ''}/reset-password?token=${resetToken}`;
+
+    // Replace placeholders in template content if they exist
+    let emailContent = template?.content || `
+      <p>You requested a password reset. Click the link below to reset your password:</p>
+      <a href="${resetUrl}">Reset Password</a>
+      <p>This link will expire in 1 hour.</p>
+      <p>If you did not request this, please ignore this email.</p>
+    `;
+
+    // Replace placeholders if they exist in the template
+    emailContent = emailContent
+      .replace(/\{resetUrl\}/g, resetUrl)
+      .replace(/\{username\}/g, user.username || user.email)
+      .replace(/\{email\}/g, user.email);
+
+    // Send the password reset email
+    await sendEmail({
+      to: user.email,
+      subject: template?.subject || 'Password Reset Request',
+      html: emailContent,
+      from: template?.senderName ? `${template.senderName} <${template.senderEmail}>` : undefined
     });
+
 
     // For development: log the token and reset URL in a VERY VISIBLE way
     console.log(`\n=============== PASSWORD RESET TOKEN ===============`);
