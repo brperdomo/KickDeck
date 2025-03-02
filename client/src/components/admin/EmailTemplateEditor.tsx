@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
@@ -12,8 +11,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 export interface EmailTemplate {
   id: number;
-  name: string;
   type: string;
+  name: string;
   subject: string;
   content: string;
   senderName: string;
@@ -107,7 +106,7 @@ export function EmailTemplateEditor({ template, onSave, onPreview, onCancel }: E
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="type"
@@ -162,7 +161,7 @@ export function EmailTemplateEditor({ template, onSave, onPreview, onCancel }: E
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="senderEmail"
