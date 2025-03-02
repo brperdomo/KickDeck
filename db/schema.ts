@@ -1,6 +1,6 @@
 import { pgTable, text, serial, boolean, jsonb, time, integer, date, timestamp, bigint, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { z } from "zod";
 
 export const organizationSettings = pgTable("organization_settings", {
@@ -369,15 +369,25 @@ export const chatParticipants = pgTable("chat_participants", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const messages = pgTable("messages", {
-  id: serial("id").primaryKey(),
-  chatRoomId: integer("chat_room_id").notNull().references(() => chatRooms.id),
-  userId: integer("user_id").notNull().references(() => users.id),
-  content: text("content").notNull(),
-  type: text("type").notNull().default('text'),
-  metadata: jsonb("metadata"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+export const messages = pgTable('messages', {
+  id: serial('id').primaryKey(),
+  content: text('content').notNull(),
+  chatRoomId: integer('chat_room_id').references(() => chatRooms.id, { onDelete: 'cascade' }),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at'),
+});
+
+export const activityLogs = pgTable('activity_logs', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'set null' }),
+  action: text('action').notNull(),
+  entityType: text('entity_type'),
+  entityId: text('entity_id'),
+  details: jsonb('details'),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 export const insertChatRoomSchema = createInsertSchema(chatRooms, {
@@ -594,15 +604,6 @@ export type InsertRole = typeof roles.$inferInsert;
 export type SelectRole = typeof roles.$inferSelect;
 export type InsertAdminRole = typeof adminRoles.$inferInsert;
 export type SelectAdminRole = typeof adminRoles.$inferSelect;
-
-export const adminFormSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  roles: z.array(z.string()).min(1, "At least one role is required"),
-});
-
-export type AdminFormValues = z.infer<typeof adminFormSchema>;
 
 
 export const updates = pgTable("updates", {
@@ -879,3 +880,15 @@ export const selectEmailTemplateSchema = createSelectSchema(emailTemplates);
 
 export type InsertEmailTemplate = typeof emailTemplates.$inferInsert;
 export type SelectEmailTemplate = typeof emailTemplates.$inferSelect;
+
+export const adminFormSchema = z.object({
+  email: z.string().email("Please enter a valid email address").min(1, "Email is required"),
+  username: z.string().min(3, "Username must be at least 3 characters").max(50),
+  password: passwordSchema,
+  firstName: z.string().min(1, "First name is required").max(50),
+  lastName: z.string().min(1, "Last name is required").max(50),
+  phone: z.string().nullable().optional(),
+  isAdmin: z.boolean().default(true),
+});
+
+export type AdminFormData = z.infer<typeof adminFormSchema>;
