@@ -159,33 +159,46 @@ async function testDbConnection() {
     const ALTERNATIVE_PORTS = [5001, 5002, 5003, 5432, 6000];
     
     const startServer = (port: number, attemptIndex = 0) => {
-      const serverInstance = server.listen(port, "0.0.0.0", () => {
-        log(`Server started successfully on port ${port}`);
-        
-        // Initialize WebSocket server after HTTP server starts successfully
-        initializeWebSocket();
-      });
-      
-      serverInstance.on('error', (error: any) => {
-        if (error.code === 'EADDRINUSE') {
-          log(`Port ${port} is already in use.`);
+      try {
+        const serverInstance = server.listen(port, "0.0.0.0", () => {
+          log(`Server started successfully on port ${port}`);
           
-          // Try next alternative port
-          if (attemptIndex < ALTERNATIVE_PORTS.length) {
-            const nextPort = ALTERNATIVE_PORTS[attemptIndex];
-            log(`Attempting to use alternative port: ${nextPort}`);
-            startServer(nextPort, attemptIndex + 1);
+          // Initialize WebSocket server after HTTP server starts successfully
+          initializeWebSocket();
+        });
+        
+        serverInstance.on('error', (error: any) => {
+          if (error.code === 'EADDRINUSE') {
+            log(`Port ${port} is already in use.`);
+            serverInstance.close();
+            
+            // Try next alternative port
+            if (attemptIndex < ALTERNATIVE_PORTS.length) {
+              const nextPort = ALTERNATIVE_PORTS[attemptIndex];
+              log(`Attempting to use alternative port: ${nextPort}`);
+              startServer(nextPort, attemptIndex + 1);
+            } else {
+              log(`Error: All ports are in use. Please close other running servers or specify a different port.`);
+              process.exit(1);
+            }
           } else {
-            log(`Error: All ports are in use. Please close other running servers or specify a different port.`);
+            log(`Error starting server: ${error.message}`);
             process.exit(1);
           }
+        });
+      } catch (error) {
+        log(`Failed to start server: ${(error as Error).message}`);
+        if (attemptIndex < ALTERNATIVE_PORTS.length) {
+          const nextPort = ALTERNATIVE_PORTS[attemptIndex];
+          log(`Attempting to use alternative port: ${nextPort}`);
+          startServer(nextPort, attemptIndex + 1);
         } else {
-          log(`Error starting server: ${error.message}`);
           process.exit(1);
         }
-      });
+      }
     };
     
+    // Kill any existing process on these ports before starting
     startServer(PORT);
 
     // Handle shutdown gracefully
