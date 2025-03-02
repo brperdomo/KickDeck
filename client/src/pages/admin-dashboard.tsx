@@ -91,7 +91,7 @@ import { useDropzone } from 'react-dropzone';
 import { FileManager } from "@/components/admin/FileManager";
 import { FormTemplatesView } from "@/components/admin/FormTemplatesView"; // Import the component
 import { AccountingCodeModal } from "@/components/admin/AccountingCodeModal";
-import { EmailTemplatesView } from "@/components/admin/EmailTemplatesView"; // Import the EmailTemplatesView component
+// import { EmailTemplatesView } from "@/components/admin/EmailTemplatesView"; // Import the EmailTemplatesView component
 
 
 function AdminBanner() {
@@ -119,8 +119,8 @@ function isAdminUser(user: SelectUser | null): user is SelectUser & { isAdmin: t
   return user !== null && user.isAdmin === true;
 }
 
-type View = 'events' | 'teams' | 'administrators' | 'settings' | 'households' | 'reports' | 'account' | 'complexes' | 'scheduling' | 'chat' | 'files' | 'coupons' | 'formTemplates' | 'emailTemplates';
-type SettingsView = 'branding' | 'general' | 'payments' | 'styling' | 'emailTemplates';
+type View = 'events' | 'teams' | 'administrators' | 'settings' | 'households' | 'reports' | 'account' | 'complexes' | 'scheduling' | 'chat' | 'files' | 'coupons' | 'formTemplates';
+type SettingsView = 'branding' | 'general' | 'payments' | 'styling';
 type ReportType = 'financial' | 'manager' | 'player' | 'schedule' | 'guest-player';
 type RoleType = 'super_admin' | 'tournament_admin' | 'score_admin' | 'finance_admin';
 
@@ -981,7 +981,7 @@ function OrganizationSettingsForm() {
         console.log('Primarycolor extracted:', palette.Vibrant.hex);
       }
 
-      // Set secondary color from the LightVibrant or Muted swatch
+      // Set secondary color from theLightVibrant or Muted swatch
       if (palette.LightVibrant) {
         setSecondaryColor(palette.LightVibrant.hex);
         console.log('Secondary color (Light Vibrant) extracted:', palette.LightVibrant.hex);
@@ -1629,7 +1629,6 @@ function AdminDashboard() {
     </Button>
   );
 
-  // Email Templates button removed
 
   useEffect(() => {
     if (!user) {
@@ -1703,8 +1702,6 @@ function AdminDashboard() {
         return <CouponManagement />;
       case 'formTemplates':
         return <FormTemplatesView />;
-      case 'emailTemplates':
-        return <EmailTemplatesView />; // Added EmailTemplatesView
       default:
         return <div>Feature coming soon</div>;
     }
@@ -1739,14 +1736,6 @@ function AdminDashboard() {
             >
               <FormInput className="mr-2 h-4 w-4" />
               Form Templates
-            </Button>
-            <Button
-              variant={activeView === 'emailTemplates' ? 'secondary' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => setActiveView('emailTemplates')}
-            >
-              <Mail className="mr-2 h-4 w-4" />
-              Email Templates
             </Button>
 
             <Button
@@ -2030,10 +2019,8 @@ function SettingsView({ activeSettingsView }: { activeSettingsView: SettingsView
         </BrandingPreviewProvider>
       );
     case 'general':
-    case 'emailTemplates': // Add emailTemplates as a case that returns GeneralSettingsView
-      return <GeneralSettingsView />;
     case 'styling':
-      return <ThemeEditor />;
+      return <GeneralSettingsView />;
     case 'payments':
       return (
         <div className="space-y-6">
