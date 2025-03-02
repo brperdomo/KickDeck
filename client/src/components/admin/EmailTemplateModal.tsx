@@ -361,8 +361,6 @@ const formSchema = z.object({
   variables: z.array(z.string()).optional(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
-
 interface EmailTemplateModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
