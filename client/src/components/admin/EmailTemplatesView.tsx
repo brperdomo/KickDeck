@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -78,11 +79,6 @@ export function EmailTemplatesView({ isEmbedded = false }: EmailTemplatesViewPro
       {isEmbedded ? (
         <div className="rounded-md border">
           <Table>
-      ) : (
-        <Card>
-          <CardContent className="p-6">
-            <Table>
-      )}
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
@@ -138,12 +134,69 @@ export function EmailTemplatesView({ isEmbedded = false }: EmailTemplatesViewPro
               ))}
             </TableBody>
           </Table>
-          {isEmbedded ? (
-            </div>
-          ) : (
-            </CardContent>
-          </Card>
-          )}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Subject</TableHead>
+                  <TableHead>Sender</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Last Modified</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {templatesQuery.data?.map((template) => (
+                  <TableRow key={template.id}>
+                    <TableCell className="font-medium">{template.name}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="capitalize">
+                        {template.type.replace('_', ' ')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{template.subject}</TableCell>
+                    <TableCell>{template.senderName}</TableCell>
+                    <TableCell>
+                      <Badge variant={template.isActive ? "default" : "secondary"}>
+                        {template.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {template.updatedAt ? new Date(template.updatedAt).toLocaleDateString() : 'Not modified'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEdit(template)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => {
+                            window.open(`/api/admin/email-templates/preview?template=${encodeURIComponent(JSON.stringify(template))}`, '_blank');
+                          }}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            Preview
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       <EmailTemplateModal
         open={isModalOpen}
