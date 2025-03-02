@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Editor } from "@tinymce/tinymce-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Send } from "lucide-react";
+import { z } from "zod";
 
 export interface EmailTemplate {
   id: string;
@@ -53,10 +54,7 @@ export function EmailTemplateEditor({
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Add schema definition for validation
-import { z } from "zod";
-
-const emailTemplateSchema = z.object({
+  const emailTemplateSchema = z.object({
   name: z.string().min(1, "Template name is required"),
   type: z.string().min(1, "Template type is required"),
   subject: z.string().min(1, "Subject is required"),
