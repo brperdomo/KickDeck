@@ -996,7 +996,7 @@ export function registerRoutes(app: Express): Server {
         const complexId = parseInt(req.params.id);
 
         // First delete all fields associated with this complex
-        awaitdb
+        await db
           .delete(fields)
           .where(eq(fields.complexId, complexId));
 
