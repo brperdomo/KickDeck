@@ -14,6 +14,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
+import { useState } from "react";
+import { FormTemplateModal } from "./FormTemplateModal";
+
 interface FormTemplate {
   id: number;
   name: string;
@@ -65,15 +68,22 @@ export function FormTemplatesView() {
     },
   });
 
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
   if (templatesQuery.isLoading) {
     return <div>Loading...</div>;
   }
 
   return (
     <>
+      <FormTemplateModal 
+        open={showCreateModal} 
+        onOpenChange={setShowCreateModal} 
+      />
+      
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Form Templates</h2>
-        <Button onClick={() => navigate("/admin/form-templates/create")}>
+        <Button onClick={() => setShowCreateModal(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Create Template
         </Button>
