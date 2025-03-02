@@ -1,6 +1,7 @@
+
 import { Router } from "express";
-import { db } from "../../../db"; 
-import { emailConfig } from "../../../db/schema";
+import { db } from "@db";
+import { emailConfig } from "@db/schema";
 import { eq } from "drizzle-orm";
 
 const router = Router();
@@ -28,7 +29,7 @@ router.post('/', async (req, res) => {
     // Check if config exists
     const [existingConfig] = await db
       .select()
-      .from(emailSettings)
+      .from(emailConfig)
       .limit(1);
 
     let updatedConfig;
