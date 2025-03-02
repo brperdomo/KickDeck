@@ -109,6 +109,10 @@ export function EmailTemplateEditor({
     }
   };
 
+  const handleSubmit = () => {
+    handleSave();
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -215,11 +219,17 @@ export function EmailTemplateEditor({
         </Button>
         <Button 
           type="button"
-          onClick={handleSave}
+          onClick={handleSubmit}
           disabled={isSaving}
         >
-          {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-          Save
+          {isSaving ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            'Save'
+          )}
         </Button>
       </div>
     </form>
