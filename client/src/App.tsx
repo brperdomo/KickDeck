@@ -98,3 +98,87 @@ function App() {
 }
 
 export default App;
+import { Route, Switch } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ThemeProvider } from "./components/theme-provider";
+import { Toaster } from "./components/ui/toaster";
+import AdminDashboard from "./pages/admin/dashboard";
+import LoginPage from "./pages/login";
+import RegisterPage from "./pages/register";
+import CreateEventPage from "./pages/create-event";
+import SignUpPage from "./pages/signup";
+import EventListPage from "./pages/events";
+import EventDetailsPage from "./pages/events/[id]";
+import EventApplicationPage from "./pages/events/[id]/apply";
+import EditEventPage from "./pages/admin/events/[id]/edit";
+import CreateAdminPage from "./pages/admin/create";
+import ScoresPage from "./pages/admin/scores";
+import UsersPage from "./pages/admin/users";
+import ChatPage from "./pages/admin/chat";
+import SchedulePage from "./pages/admin/schedule";
+import SettingsPage from "./pages/admin/settings";
+import FinancePage from "./pages/admin/finance";
+import TeamsPage from "./pages/admin/teams";
+import AnnouncementsPage from "./pages/admin/announcements";
+import ReportsPage from "./pages/admin/reports";
+import FormTemplatesPage from "./pages/admin/form-templates";
+import CreateFormTemplatePage from "./pages/admin/form-templates/create";
+import EditFormTemplatePage from "./pages/admin/form-templates/[id]/edit";
+import NotFoundPage from "./pages/404";
+import { AuthProvider } from "./hooks/use-auth";
+import { useTheme } from "./hooks/use-theme";
+import AdminLayout from "./components/layouts/admin-layout";
+import EmailTemplatesPage from "./pages/admin/email-templates";
+
+// Create a client
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+function App() {
+  const { theme } = useTheme();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme={theme}>
+        <AuthProvider>
+          <Toaster />
+          <Switch>
+            <Route path="/" component={LoginPage} />
+            <Route path="/login" component={LoginPage} />
+            <Route path="/register" component={RegisterPage} />
+            <Route path="/signup" component={SignUpPage} />
+            <Route path="/events" component={EventListPage} />
+            <Route path="/events/:id" component={EventDetailsPage} />
+            <Route path="/events/:id/apply" component={EventApplicationPage} />
+            <Route path="/admin" component={AdminDashboard} />
+            <Route path="/admin/create" component={CreateAdminPage} />
+            <Route path="/admin/create-event" component={CreateEventPage} />
+            <Route path="/admin/events/:id/edit" component={EditEventPage} />
+            <Route path="/admin/scores" component={ScoresPage} />
+            <Route path="/admin/users" component={UsersPage} />
+            <Route path="/admin/chat" component={ChatPage} />
+            <Route path="/admin/schedule" component={SchedulePage} />
+            <Route path="/admin/settings" component={SettingsPage} />
+            <Route path="/admin/finance" component={FinancePage} />
+            <Route path="/admin/teams" component={TeamsPage} />
+            <Route path="/admin/announcements" component={AnnouncementsPage} />
+            <Route path="/admin/reports" component={ReportsPage} />
+            <Route path="/admin/email-templates" component={EmailTemplatesPage} />
+            <Route path="/admin/form-templates" component={FormTemplatesPage} />
+            <Route path="/admin/form-templates/create" component={CreateFormTemplatePage} />
+            <Route path="/admin/form-templates/:id/edit" component={EditFormTemplatePage} />
+            <Route component={NotFoundPage} />
+          </Switch>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
