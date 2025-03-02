@@ -91,6 +91,8 @@ import { useDropzone } from 'react-dropzone';
 import { FileManager } from "@/components/admin/FileManager";
 import { FormTemplatesView } from "@/components/admin/FormTemplatesView"; // Import the component
 import { AccountingCodeModal } from "@/components/admin/AccountingCodeModal";
+import { EmailTemplatesView } from "@/components/admin/EmailTemplatesView"; // Import the EmailTemplatesView component
+
 
 function AdminBanner() {
   const { settings } = useOrganizationSettings();
@@ -970,7 +972,7 @@ function OrganizationSettingsForm() {
       // Create new Vibrant instance
       const v = new Vibrant(objectUrl);
 
-      // Get the palette with error handling
+      //      // Get the palette with error handling
       const palette = await v.getPalette();
 
       // Set primary color from the Vibrant swatch
@@ -1711,8 +1713,7 @@ function AdminDashboard() {
       case 'formTemplates':
         return <FormTemplatesView />;
       case 'emailTemplates':
-        setLocation("/admin/email-templates");
-        return null;
+        return <EmailTemplatesView />; // Added EmailTemplatesView
       default:
         return <div>Feature coming soon</div>;
     }
@@ -1740,9 +1741,22 @@ function AdminDashboard() {
               Administrators
             </Button>
 
-            {formTemplatesButton}
-
-            {emailTemplatesButton}
+            <Button
+              variant={activeView === 'formTemplates' ? 'secondary' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => setActiveView('formTemplates')}
+            >
+              <FormInput className="mr-2 h-4 w-4" />
+              Form Templates
+            </Button>
+            <Button
+              variant={activeView === 'emailTemplates' ? 'secondary' : 'ghost'}
+              className="w-full justify-start"
+              onClick={() => setActiveView('emailTemplates')}
+            >
+              <Mail className="mr-2 h-4 w-4" />
+              Email Templates
+            </Button>
 
             <Button
               variant={activeView === 'events' ? 'secondary' : 'ghost'}

@@ -996,7 +996,7 @@ export function registerRoutes(app: Express): Server {
         const complexId = parseInt(req.params.id);
 
         // First delete all fields associated with this complex
-        await db
+        awaitdb
           .delete(fields)
           .where(eq(fields.complexId, complexId));
 
@@ -2007,7 +2007,7 @@ export function registerRoutes(app: Express): Server {
             } else {
               // Create new group
               await tx
-                .insert(eventAgeGroups)
+                .insert(`eventAgeGroups)
                 .values({
                   eventId,
                   gender: group.gender,
@@ -3528,6 +3528,19 @@ export function registerRoutes(app: Express): Server {
         res.status(500).send("Failed to add participants");
       }
     });
+
+    // Email template routes
+    import { 
+      getEmailTemplates, 
+      createEmailTemplate, 
+      updateEmailTemplate, 
+      deleteEmailTemplate 
+    } from './routes/email-templates';
+
+    app.get('/api/admin/email-templates', isAdmin, getEmailTemplates);
+    app.post('/api/admin/email-templates', isAdmin, createEmailTemplate);
+    app.put('/api/admin/email-templates/:id', isAdmin, updateEmailTemplate);
+    app.delete('/api/admin/email-templates/:id', isAdmin, deleteEmailTemplate);
 
     return httpServer;
   } catch (error) {
