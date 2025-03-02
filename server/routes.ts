@@ -2790,21 +2790,71 @@ export function registerRoutes(app: Express): Server {
         res.status(500).json({ error: "Failed to fetch form templates" });
       }
     });
+    
+    // Get a specific form template
+    app.get('/api/admin/form-templates/:id', isAdmin, async (req, res) => {
+      try {
+        const templateId = parseInt(req.params.id);
+        
+        const [template] = await db
+          .select({
+            template: eventFormTemplates,
+            fields: sql<any[]>`json_agg(
+              CASE WHEN ${formFields.id} IS NOT NULL THEN
+                json_build_object(
+                  'id', ${formFields.id},
+                  'label', ${formFields.label},
+                  'type', ${formFields.type},
+                  'required', ${formFields.required},
+                  'order', ${formFields.order},
+                  'placeholder', ${formFields.placeholder},
+                  'helpText', ${formFields.helpText},
+                  'validation', ${formFields.validation},
+                  'options', (
+                    SELECT json_agg(
+                      json_build_object(
+                        'id', ${formFieldOptions.id},
+                        'label', ${formFieldOptions.label},
+                        'value', ${formFieldOptions.value},
+                        'order', ${formFieldOptions.order}
+                      ) ORDER BY ${formFieldOptions.order}
+                    )
+                    FROM ${formFieldOptions}
+                    WHERE ${formFieldOptions.fieldId} = ${formFields.id}
+                  )
+                )
+              ELSE NULL END
+            ) FILTER (WHERE ${formFields.id} IS NOT NULL)`.mapWith(f => f || [])
+          })
+          .from(eventFormTemplates)
+          .leftJoin(formFields, eq(formFields.templateId, eventFormTemplates.id))
+          .where(eq(eventFormTemplates.id, templateId))
+          .groupBy(eventFormTemplates.id);
+
+        if (!template) {
+          return res.status(404).json({ error: "Template not found" });
+        }
+
+        res.json({
+          ...template.template,
+          fields: template.fields
+        });
+      } catch (error) {
+        console.error('Error fetching form template:', error);
+        res.status(500).json({ error: "Failed to fetch form template" });
+      }
+    });
 
     app.post('/api/admin/form-templates', isAdmin, async (req, res) => {
       try {
         const { name, description, isPublished, fields, eventId } = req.body;
-
-        if (!eventId) {
-          return res.status(400).json({ error: "Event ID is required" });
-        }
 
         await db.transaction(async (tx) => {
           // Create form template
           const [template] = await tx
             .insert(eventFormTemplates)
             .values({
-              eventId,
+              eventId: eventId || null, // Make eventId optional
               name,
               description,
               isPublished: isPublished || false,
@@ -3569,6 +3619,16 @@ export function registerRoutes(app: Express): Server {
         res.status(500).send("Failed to delete email template");
       }
     });
+    
+    app.get('/api/admin/email-templates/preview', isAdmin, async (req, res) => {
+      try {
+        const { previewEmailTemplate } = await import('./routes/email-templates');
+        await previewEmailTemplate(req, res);
+      } catch (error) {
+        console.error('Error previewing email template:', error);
+        res.status(500).send("Failed to preview email template");
+      }
+    });
 
     return httpServer;
   } catch (error) {
@@ -3576,3 +3636,6 @@ export function registerRoutes(app: Express): Server {
     throw error;
   }
 }
+
+    // Get a specific form template
+    

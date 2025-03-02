@@ -155,7 +155,7 @@ export function EmailTemplateModal({ open, onOpenChange, template }: EmailTempla
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" id="template-form">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -259,17 +259,33 @@ export function EmailTemplateModal({ open, onOpenChange, template }: EmailTempla
               control={form.control}
               name="content"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email Content</FormLabel>
+                <FormItem className="col-span-2">
+                  <FormLabel>Email Body</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Enter the email content here"
-                      className="min-h-[200px]"
-                      {...field}
-                    />
+                    <div className="border rounded-md overflow-hidden">
+                      <Editor
+                        apiKey={TINYMCE_API_KEY}
+                        value={field.value}
+                        onEditorChange={(content) => field.onChange(content)}
+                        init={{
+                          height: 400,
+                          menubar: true,
+                          plugins: [
+                            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                            'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
+                          ],
+                          toolbar: 'undo redo | blocks | ' +
+                            'bold italic forecolor | alignleft aligncenter ' +
+                            'alignright alignjustify | bullist numlist outdent indent | ' +
+                            'removeformat | help',
+                          content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+                        }}
+                      />
+                    </div>
                   </FormControl>
                   <FormDescription>
-                    Use variables by placing them inside curly braces, e.g. &#123;firstName&#125;
+                    The content of the email. HTML is supported.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -297,11 +313,21 @@ export function EmailTemplateModal({ open, onOpenChange, template }: EmailTempla
             />
             <DialogFooter>
               <Button
-                type="button"
                 variant="outline"
+                type="button"
                 onClick={() => onOpenChange(false)}
               >
                 Cancel
+              </Button>
+              <Button
+                variant="secondary"
+                type="button"
+                onClick={() => {
+                  const formData = form.getValues();
+                  window.open(`/api/admin/email-templates/preview?template=${encodeURIComponent(JSON.stringify(formData))}`, '_blank');
+                }}
+              >
+                Preview
               </Button>
               <Button type="submit" disabled={mutation.isPending}>
                 {mutation.isPending && (
