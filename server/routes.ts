@@ -51,6 +51,8 @@ import { setupWebSocketServer } from "./websocket";
 import { randomBytes } from "crypto";
 import activityLogsRouter from "./routes/admin/activity-logs";
 import passwordResetRouter from "./routes/auth/password-reset";
+import verifyTokenRouter from "./routes/auth/verify-token"; // Added import
+import resetConfirmRouter from "./routes/auth/reset-confirm"; // Added import
 
 // Admin middleware (unchanged)
 const isAdmin = (req: Request, res: Response, next: Function) => {
@@ -981,7 +983,7 @@ export function registerRoutes(app: Express): Server {
             .update(fields)
             .set({
               isOpen,
-              updatedAt: new Date().toISOString            })
+              updatedAt: new Date().toISOString()            })
             .where(eq(fields.complexId, complexId));
 
           res.json(updatedComplex);
@@ -2414,6 +2416,8 @@ res.status(500).send("Failed to update complex status");
 
     // Auth routes that don't require authentication
     app.use('/api/auth/password-reset', passwordResetRouter);
+    app.use('/api/auth/verify-token', verifyTokenRouter); // Added route
+    app.use('/api/auth/reset-confirm', resetConfirmRouter); // Added route
 
     app.use('/api/files', uploadRouter);
 
