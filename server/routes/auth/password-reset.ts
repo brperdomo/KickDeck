@@ -47,6 +47,14 @@ router.post('/request-reset', async (req, res) => {
     // Send password reset email
     await sendPasswordResetEmail(user.email, resetToken, user.username);
     
+    // For development: log the token and reset URL
+    if (process.env.NODE_ENV !== 'production') {
+      const resetUrl = `${process.env.APP_URL || ''}/reset-password?token=${resetToken}`;
+      console.log(`[DEV ONLY] Password reset requested for ${user.email}`);
+      console.log(`[DEV ONLY] Reset token: ${resetToken}`);
+      console.log(`[DEV ONLY] Reset URL: ${resetUrl}`);
+    }
+    
     return res.status(200).json({ 
       message: 'If an account with that email exists, a password reset link has been sent' 
     });
