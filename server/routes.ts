@@ -2007,7 +2007,7 @@ export function registerRoutes(app: Express): Server {
             } else {
               // Create new group
               await tx
-                .insert(`eventAgeGroups)
+                .insert(eventAgeGroups)
                 .values({
                   eventId,
                   gender: group.gender,
