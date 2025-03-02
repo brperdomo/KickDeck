@@ -1,22 +1,37 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Mail } from "lucide-react";
+import { Plus, Edit, Trash2, Mail, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { EmailTemplateEditor, EmailTemplate } from "./EmailTemplateEditor";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const EMAIL_TRIGGER_LABELS: Record<string, string> = {
+  "registration_confirmation": "Registration Confirmation",
+  "payment_receipt": "Payment Receipt",
+  "password_reset": "Password Reset",
+  "account_verification": "Account Verification",
+  "event_reminder": "Event Reminder",
+  "schedule_update": "Schedule Update",
+  "team_invitation": "Team Invitation",
+  "welcome": "Welcome Email"
+};
 
 export function EmailTemplateManagement() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | undefined>();
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState<Partial<EmailTemplate>>();
+  const [activeTab, setActiveTab] = useState("all");
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -47,6 +62,17 @@ export function EmailTemplateManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['emailTemplates'] });
       setIsEditorOpen(false);
+      toast({
+        title: "Success",
+        description: "Email template created successfully"
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to create template: ${error.message}`,
+        variant: "destructive"
+      });
     }
   });
 
@@ -65,11 +91,22 @@ export function EmailTemplateManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['emailTemplates'] });
       setIsEditorOpen(false);
+      toast({
+        title: "Success",
+        description: "Email template updated successfully"
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update template: ${error.message}`,
+        variant: "destructive"
+      });
     }
   });
 
   const deleteTemplateMutation = useMutation({
-    mutationFn: async (templateId: string) => {
+    mutationFn: async (templateId: number) => {
       const response = await fetch(`/api/admin/email-templates/${templateId}`, {
         method: 'DELETE',
       });
@@ -125,6 +162,43 @@ export function EmailTemplateManagement() {
     }
   };
 
+  const handleSave = async (template: Omit<EmailTemplate, 'id'>) => {
+    try {
+      if (selectedTemplate) {
+        await updateTemplateMutation.mutateAsync({
+          ...template,
+          id: selectedTemplate.id,
+          createdAt: selectedTemplate.createdAt,
+          updatedAt: new Date().toISOString()
+        });
+      } else {
+        await createTemplateMutation.mutateAsync(template);
+      }
+    } catch (error) {
+      console.error("Error saving template:", error);
+      throw error;
+    }
+  };
+
+  // Group templates by trigger type
+  const templatesByTrigger: Record<string, EmailTemplate[]> = {};
+  const allTemplates = templatesQuery.data || [];
+  
+  allTemplates.forEach(template => {
+    if (!templatesByTrigger[template.type]) {
+      templatesByTrigger[template.type] = [];
+    }
+    templatesByTrigger[template.type].push(template);
+  });
+
+  // Get unique trigger types for the tabs
+  const triggers = Object.keys(templatesByTrigger);
+
+  // Filter templates based on active tab
+  const filteredTemplates = activeTab === "all" 
+    ? allTemplates 
+    : templatesByTrigger[activeTab] || [];
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -140,90 +214,132 @@ export function EmailTemplateManagement() {
         </Button>
       </div>
 
-      <div className="grid gap-4">
-        {templatesQuery.data?.map((template) => (
-          <Card key={template.id}>
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <h4 className="text-lg font-semibold">{template.name}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Type: {template.type.replace('_', ' ')}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Subject: {template.subject}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handlePreview(template)}
-                  >
-                    <Mail className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      setSelectedTemplate(template);
-                      setIsEditorOpen(true);
-                    }}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleDelete(template)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {templatesQuery.isLoading ? (
+        <div className="text-center py-8">Loading templates...</div>
+      ) : templatesQuery.error ? (
+        <div className="bg-destructive/10 p-4 rounded-md flex items-center gap-2">
+          <AlertCircle className="text-destructive" />
+          <span>Failed to load email templates</span>
+        </div>
+      ) : (
+        <>
+          {allTemplates.length === 0 ? (
+            <div className="text-center py-8 border rounded-md">
+              <p className="text-muted-foreground">No email templates created yet</p>
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => {
+                  setSelectedTemplate(undefined);
+                  setIsEditorOpen(true);
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Your First Template
+              </Button>
+            </div>
+          ) : (
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="mb-4">
+                <TabsTrigger value="all">All Templates</TabsTrigger>
+                {triggers.map(trigger => (
+                  <TabsTrigger key={trigger} value={trigger}>
+                    {EMAIL_TRIGGER_LABELS[trigger] || trigger}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              
+              <TabsContent value={activeTab} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredTemplates.map((template) => (
+                  <Card key={template.id}>
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <CardTitle>{template.name}</CardTitle>
+                        <Badge>{EMAIL_TRIGGER_LABELS[template.type] || template.type}</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        <strong>Subject:</strong> {template.subject}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        <strong>From:</strong> {template.senderName} &lt;{template.senderEmail}&gt;
+                      </p>
+                      {template.isDefault && (
+                        <Badge variant="outline" className="mt-2">
+                          Default Template
+                        </Badge>
+                      )}
+                    </CardContent>
+                    <CardFooter className="flex justify-end space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePreview(template)}
+                      >
+                        <Mail className="w-4 h-4 mr-2" />
+                        Preview
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedTemplate(template);
+                          setIsEditorOpen(true);
+                        }}
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(template)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </TabsContent>
+            </Tabs>
+          )}
+        </>
+      )}
 
+      {/* Template Editor Dialog */}
       <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>
-              {selectedTemplate ? 'Edit Email Template' : 'Create Email Template'}
+              {selectedTemplate ? "Edit Email Template" : "Create Email Template"}
             </DialogTitle>
           </DialogHeader>
           <EmailTemplateEditor
             template={selectedTemplate}
-            onSave={async (template) => {
-              if (selectedTemplate) {
-                await updateTemplateMutation.mutateAsync({
-                  ...template,
-                  id: selectedTemplate.id
-                });
-              } else {
-                await createTemplateMutation.mutateAsync(template);
-              }
-            }}
+            onSave={handleSave}
             onPreview={handlePreview}
             onCancel={() => setIsEditorOpen(false)}
           />
         </DialogContent>
       </Dialog>
 
+      {/* Preview Dialog */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Email Preview</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm font-medium">From: {previewTemplate?.senderName} &lt;{previewTemplate?.senderEmail}&gt;</p>
-              <p className="text-sm font-medium">Subject: {previewTemplate?.subject}</p>
+          <div className="border rounded-md p-4">
+            <div className="mb-4 p-2 bg-muted rounded">
+              <p><strong>From:</strong> {previewTemplate?.senderName} &lt;{previewTemplate?.senderEmail}&gt;</p>
+              <p><strong>Subject:</strong> {previewTemplate?.subject}</p>
             </div>
-            <div className="border rounded-md p-4">
-              <div dangerouslySetInnerHTML={{ __html: previewTemplate?.content || '' }} />
-            </div>
+            <div 
+              className="prose max-w-none" 
+              dangerouslySetInnerHTML={{ __html: previewTemplate?.content || '' }}
+            />
           </div>
         </DialogContent>
       </Dialog>
