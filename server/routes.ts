@@ -57,6 +57,11 @@ import activityLogsRouter from "./routes/admin/activity-logs";
 import passwordResetRouter from "./routes/auth/password-reset";
 import verifyTokenRouter from "./routes/auth/verify-token"; // Added import
 import resetConfirmRouter from "./routes/auth/reset-confirm"; // Added import
+import eventCategoriesRouter from "./routes/admin/event-categories";
+import submissionsRouter from "./routes/admin/submissions";
+import formsRouter from "./routes/admin/forms";
+import emailConfigRouter from "./routes/admin/email-config"; // Added import
+import { isAdmin } from "./middleware/auth-middleware"; // Added import
 
 // Test route
 router.get("/test", (req, res) => {
@@ -84,7 +89,7 @@ export function registerRoutes(app: Express): Server {
     // Set up authentication first
     setupAuth(app);
     log("Authentication routes registered successfully");
-    
+
     // Register main router
     app.use('/api', router);
 
@@ -1974,7 +1979,7 @@ res.status(500).send("Failed to update complex status");
           .select({
             event: events,
             applicationCount: sql<number>`count(distinct ${teams.id})`.mapWith(Number),
-            teamCount: sql<number>`count(${teams.id})`.mapWith(Number),
+            teamCount: sql<number>``count(${teams.id})`.mapWith(Number),
           })
           .from(events)
           .leftJoin(teams, eq(events.id, teams.eventId))
@@ -2432,6 +2437,10 @@ res.status(500).send("Failed to update complex status");
     app.use('/api/auth/reset-confirm', resetConfirmRouter); // Added route
 
     app.use('/api/files', uploadRouter);
+    app.use('/api/admin/event-categories', isAdmin, eventCategoriesRouter);
+    app.use('/api/admin/forms', isAdmin, formsRouter);
+    app.use('/api/admin/submissions', isAdmin, submissionsRouter);
+    app.use('/api/admin/email-config', isAdmin, emailConfigRouter); // Register email config routes
 
     return httpServer;
   } catch (error) {
