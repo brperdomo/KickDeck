@@ -19,8 +19,8 @@ export async function createAdmin() {
         email: "bperdomo@zoho.com",
         username: "bperdomo@zoho.com",
         password: hashedPassword,
-        firstname: "Admin",
-        lastname: "User",
+        firstName: "Admin",
+        lastName: "User",
         isAdmin: true,
         isParent: false,
         createdAt: new Date().toISOString()
