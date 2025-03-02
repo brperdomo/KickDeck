@@ -8,6 +8,7 @@ import uploadRouter from "./routes/upload";
 import accountingCodesRouter from "./routes/admin/accounting-codes";
 import feesRouter from "./routes/admin/fees";
 import eventsRouter from "./routes/admin/events";
+import ageGroupsRouter from "./routes/admin/age-groups";
 import { createCoupon, getCoupons, updateCoupon, deleteCoupon } from "./routes/coupons";
 import { sql, eq, and, or, inArray } from "drizzle-orm";
 import {
@@ -76,6 +77,7 @@ export function registerRoutes(app: Express): Server {
     app.use('/api/admin/seasonal-scopes', isAdmin, seasonalScopesRouter);
     app.use('/api/admin/events', isAdmin, eventsRouter);
     app.use('/api/admin/events', isAdmin, feesRouter); // Mount fees router under events path
+    app.use('/api/admin/age-groups', isAdmin, ageGroupsRouter); // Add age groups router
 
     // Register coupon routes
     app.post('/api/admin/coupons', isAdmin, createCoupon);
@@ -991,7 +993,7 @@ export function registerRoutes(app: Express): Server {
     });
 
     // Add complex deletion endpoint
-    app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
+app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
       try {
         const complexId = parseInt(req.params.id);
 
@@ -1979,45 +1981,57 @@ export function registerRoutes(app: Express): Server {
             ])
           );
 
-          // Process each age group from the request
-          for (const group of eventData.ageGroups || []) {
-            const groupKey = `${group.gender}-${group.ageGroup}-${group.fieldSize}`;
+          // Import predefined age groups
+          const { PREDEFINED_AGE_GROUPS } = require('../client/src/components/forms/event-form-types');
+
+          // Always ensure all standard age groups exist for every event
+          for (const group of PREDEFINED_AGE_GROUPS) {
+            const groupKey = group.divisionCode;
             const existingGroup = existingAgeGroupsMap.get(groupKey);
 
+            // Calculate appropriate field size based on age group
+            const ageNum = group.ageGroup.startsWith('U') ? 
+              parseInt(group.ageGroup.substring(1)) : 18;
+
+            const fieldSize = ageNum <= 7 ? '4v4' : 
+                              ageNum <= 10 ? '7v7' : 
+                              ageNum <= 12 ? '9v9' : '11v11';
+
             if (existingGroup) {
-              // Update existing group
-              const updatedGroup = await tx
+              // Update existing group - just maintain the basic info
+              await tx
                 .update(eventAgeGroups)
                 .set({
-                  projectedTeams: group.projectedTeams || 0,
                   ageGroup: group.ageGroup,
-                  birthYear: group.birthYear,
                   gender: group.gender,
-                  fieldSize: group.fieldSize,
-                  scoringRule: group.scoringRule || null,
-                  amountDue: group.amountDue || null,
+                  divisionCode: group.divisionCode,
+                  birthDateStart: existingGroup.birthDateStart,
+                  birthDateEnd: existingGroup.birthDateEnd,
+                  fieldSize: fieldSize,
+                  // Keep existing values for these fields
+                  projectedTeams: existingGroup.projectedTeams,
+                  amountDue: existingGroup.amountDue,
+                  scoringRule: existingGroup.scoringRule,
                 })
-                .where(eq(eventAgeGroups.id, existingGroup.id))
-                .returning();
+                .where(eq(eventAgeGroups.id, existingGroup.id));
 
-              // Fee assignments are now managed through Fee Management component
-
-              // Remove from map to track which ones need to be deleted
+              // Remove from map since we've processed it
               existingAgeGroupsMap.delete(groupKey);
             } else {
-              // Create new group
+              // Create new standard group
               await tx
                 .insert(eventAgeGroups)
                 .values({
                   eventId,
                   gender: group.gender,
-                  projectedTeams: group.projectedTeams,
-                  birthDateStart: group.birthDateStart,
-                  birthDateEnd: group.birthDateEnd,
-                  scoringRule: group.scoringRule,
                   ageGroup: group.ageGroup,
-                  fieldSize: group.fieldSize,
-                  amountDue: group.amountDue || null,
+                  divisionCode: group.divisionCode,
+                  projectedTeams: 0,
+                  birthDateStart: null,
+                  birthDateEnd: null,
+                  scoringRule: null,
+                  fieldSize: fieldSize,
+                  amountDue: null,
                   createdAt: new Date().toISOString(),
                 });
             }
@@ -2790,12 +2804,12 @@ export function registerRoutes(app: Express): Server {
         res.status(500).json({ error: "Failed to fetch form templates" });
       }
     });
-    
+
     // Get a specific form template
     app.get('/api/admin/form-templates/:id', isAdmin, async (req, res) => {
       try {
         const templateId = parseInt(req.params.id);
-        
+
         const [template] = await db
           .select({
             template: eventFormTemplates,
@@ -2897,7 +2911,7 @@ export function registerRoutes(app: Express): Server {
           }
         });
 
-        res.status(201).json({ message: "Form template created successfully" });
+        res.json({ message: "Form template created successfully" });
       } catch (error) {
         console.error('Error creating form template:', error);
         res.status(500).json({ error: "Failed to create form template" });
@@ -2910,7 +2924,7 @@ export function registerRoutes(app: Express): Server {
         const { name, description, isPublished, fields } = req.body;
 
         // Start a transaction
-        await db.transaction(async (tx) => {
+        awaitdb.transaction(async (tx) => {
           // Create form template
           const [template] = await tx
             .insert(eventFormTemplates)
@@ -3589,7 +3603,7 @@ export function registerRoutes(app: Express): Server {
         res.status(500).send("Failed to fetch email templates");
       }
     });
-    
+
     app.post('/api/admin/email-templates', isAdmin, async (req, res) => {
       try {
         const { createEmailTemplate } = await import('./routes/email-templates');
@@ -3599,7 +3613,7 @@ export function registerRoutes(app: Express): Server {
         res.status(500).send("Failed to create email template");
       }
     });
-    
+
     app.put('/api/admin/email-templates/:id', isAdmin, async (req, res) => {
       try {
         const { updateEmailTemplate } = await import('./routes/email-templates');
@@ -3609,7 +3623,7 @@ export function registerRoutes(app: Express): Server {
         res.status(500).send("Failed to update email template");
       }
     });
-    
+
     app.delete('/api/admin/email-templates/:id', isAdmin, async (req, res) => {
       try {
         const { deleteEmailTemplate } = await import('./routes/email-templates');
@@ -3619,7 +3633,7 @@ export function registerRoutes(app: Express): Server {
         res.status(500).send("Failed to delete email template");
       }
     });
-    
+
     app.get('/api/admin/email-templates/preview', isAdmin, async (req, res) => {
       try {
         const { previewEmailTemplate } = await import('./routes/email-templates');
@@ -3636,6 +3650,3 @@ export function registerRoutes(app: Express): Server {
     throw error;
   }
 }
-
-    // Get a specific form template
-    
