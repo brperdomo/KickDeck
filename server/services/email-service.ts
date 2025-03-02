@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm';
 // Configure mail transport
 // For production, use your actual SMTP settings (SendGrid, Amazon SES, etc.)
 // For development/testing, you can use a service like Ethereal or Mailtrap
-let transporter: nodemailer.Transporter;
+export let transporter: nodemailer.Transporter;
 
 // Initialize the email transporter
 export async function initEmailService() {

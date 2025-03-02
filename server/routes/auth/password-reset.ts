@@ -4,7 +4,7 @@ import { users } from "@db/schema";
 import { eq } from "drizzle-orm";
 import { randomBytes } from "crypto";
 // import { emailService } from "../../services/email-service";  Removed as per changes
-import { getEmailTemplate, sendEmail } from "../../services/email-service"; //Assuming these are now exported
+import { getEmailTemplate } from "../../services/email-service";
 
 
 const router = Router();
@@ -50,9 +50,10 @@ router.post("/", async (req, res) => {
     const template = await getEmailTemplate('password_reset');
 
     // Create reset URL
-    const resetUrl = `${process.env.APP_URL || ''}/reset-password?token=${resetToken}`;
+    const appUrl = process.env.APP_URL || 'http://localhost:5000';
+    const resetUrl = `${appUrl}/reset-password?token=${resetToken}`;
 
-    // Replace placeholders in template content if they exist
+    // Prepare email content
     let emailContent = template?.content || `
       <p>You requested a password reset. Click the link below to reset your password:</p>
       <a href="${resetUrl}">Reset Password</a>
@@ -66,8 +67,9 @@ router.post("/", async (req, res) => {
       .replace(/\{username\}/g, user.username || user.email)
       .replace(/\{email\}/g, user.email);
 
-    // Send the password reset email
-    await sendEmail({
+    // Send email using nodemailer directly since it's already initialized
+    const { transporter } = await import("../../services/email-service");
+    await transporter.sendMail({
       to: user.email,
       subject: template?.subject || 'Password Reset Request',
       html: emailContent,
