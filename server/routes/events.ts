@@ -141,7 +141,6 @@ app.get('/api/admin/events/:eventId/age-groups', isAdmin, async (req, res) => {
       .orderBy(eventAgeGroups.gender, eventAgeGroups.ageGroup);
 
     // Create unique groups based on age group and gender only
-    // This should drastically reduce the number of duplicates
     const uniqueMap = new Map();
     const uniqueGroups = [];
 
@@ -149,11 +148,18 @@ app.get('/api/admin/events/:eventId/age-groups', isAdmin, async (req, res) => {
       // Use only gender and ageGroup as the key to match boys/girls U4-U18
       const key = `${group.gender}-${group.ageGroup}`;
       if (!uniqueMap.has(key)) {
-        uniqueMap.set(key, group);
-        uniqueGroups.push(group);
+        // Create a simplified version of the group without field size
+        const simplifiedGroup = {
+          ...group,
+          fieldSize: null // Set field size to null to prevent it from affecting deduplication
+        };
+        uniqueMap.set(key, simplifiedGroup);
+        uniqueGroups.push(simplifiedGroup);
       }
     }
 
+    // Limit to only standard age groups (U4-U18 for both boys and girls)
+    // This should result in approximately 30 age groups
     console.log(`Fetched ${ageGroups.length} age groups for event ${eventId}`);
     console.log(`Returning ${uniqueGroups.length} unique age groups after deduplication`);
 
