@@ -1043,15 +1043,10 @@ export default function CreateEvent() {
                           init={{
                             height: 300,
                             menubar: false,
-                            plugins: [
-                              'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                              'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                              'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
-                            ],
-                            toolbar: 'undo redo | blocks | ' +
-                              'bold italic forecolor | alignleft aligncenter ' +
-                              'alignright alignjustify | bullist numlist outdent indent | ' +
-                              'removeformat | help',
+                            plugins: 'link lists',
+                            toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist | link | removeformat',
+                            base_url: 'https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.7.3',
+                            suffix: '.min'
                           }}
                         />
                       </FormControl>
@@ -1073,15 +1068,10 @@ export default function CreateEvent() {
                           init={{
                             height: 200,
                             menubar: false,
-                            plugins: [
-                              'advlist', 'autolink', 'lists', 'link', 'charmap', 'preview',
-                              'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                              'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
-                            ],
-                            toolbar: 'undo redo | blocks | ' +
-                              'bold italic forecolor | alignleft aligncenter ' +
-                              'alignright alignjustify | bullist numlist outdent indent | ' +
-                              'removeformat | help',
+                            plugins: 'link lists',
+                            toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist | link | removeformat',
+                            base_url: 'https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.7.3',
+                            suffix: '.min'
                           }}
                         />
                       </FormControl>
@@ -1103,15 +1093,10 @@ export default function CreateEvent() {
                           init={{
                             height: 200,
                             menubar: false,
-                            plugins: [
-                              'advlist', 'autolink', 'lists', 'link', 'charmap', 'preview',
-                              'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                              'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
-                            ],
-                            toolbar: 'undo redo | blocks | ' +
-                              'bold italic forecolor | alignleft aligncenter ' +
-                              'alignright alignjustify | bullist numlist outdent indent | ' +
-                              'removeformat | help',
+                            plugins: 'link lists',
+                            toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist | link | removeformat',
+                            base_url: 'https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.7.3',
+                            suffix: '.min'
                           }}
                         />
                       </FormControl>

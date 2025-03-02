@@ -192,20 +192,17 @@ const handleSave = async () => {
         <Label htmlFor="content">Email Content</Label>
         <div className={errors.content ? "border border-red-500 rounded-md" : ""}>
           <Editor
-            // Remove API key to use the free version without plugins
             value={content}
             onEditorChange={(content) => setContent(content)}
             init={{
               height: 350,
               menubar: true,
-              // Use a simplified set of features that doesn't require plugins
-              plugins: [
-                'lists', 'link', 'autolink', 'autoresize'
-              ],
-              toolbar:
-                'undo redo | formatselect | bold italic | \
-                alignleft aligncenter alignright | \
-                bullist numlist | link | removeformat'
+              // Use basic editor without requiring premium plugins
+              plugins: 'link lists',
+              toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link | removeformat',
+              // Use CDN for TinyMCE resources
+              base_url: 'https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.7.3',
+              suffix: '.min'
             }}
           />
         </div>
