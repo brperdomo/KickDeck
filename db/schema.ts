@@ -56,6 +56,20 @@ export const emailTemplates = pgTable("email_templates", {
   isDefault: boolean("is_default").default(false),
 });
 
+// Age Group Settings table
+export const ageGroupSettings = pgTable("age_group_settings", {
+  id: serial("id").primaryKey(),
+  seasonalScopeId: integer("seasonal_scope_id").notNull(),
+  ageGroup: text("age_group").notNull(),
+  birthYear: integer("birth_year").notNull(),
+  gender: text("gender").notNull(),
+  divisionCode: text("division_code").notNull(),
+  minBirthYear: integer("min_birth_year").notNull(),
+  maxBirthYear: integer("max_birth_year").notNull(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at"),
+});
+
 // Schema validation
 export const insertUserSchema = createInsertSchema(users, {
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -93,6 +107,29 @@ export const householdsRelations = relations(households, ({ many }) => ({
   members: many(users),
 }));
 
+// Seasonal Scopes table
+export const seasonalScopes = pgTable("seasonal_scopes", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  isActive: boolean("is_active").default(false),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at"),
+});
+
+// Events table (if not already defined elsewhere)
+export const events = pgTable("events", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  description: text("description"),
+  seasonalScopeId: integer("seasonal_scope_id"),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at"),
+});
+
 export type SelectUser = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
@@ -101,3 +138,12 @@ export type InsertHousehold = typeof households.$inferInsert;
 
 export type SelectEmailTemplate = typeof emailTemplates.$inferSelect;
 export type InsertEmailTemplate = typeof emailTemplates.$inferInsert;
+
+export type SelectSeasonalScope = typeof seasonalScopes.$inferSelect;
+export type InsertSeasonalScope = typeof seasonalScopes.$inferInsert;
+
+export type SelectAgeGroupSetting = typeof ageGroupSettings.$inferSelect;
+export type InsertAgeGroupSetting = typeof ageGroupSettings.$inferInsert;
+
+export type SelectEvent = typeof events.$inferSelect;
+export type InsertEvent = typeof events.$inferInsert;
