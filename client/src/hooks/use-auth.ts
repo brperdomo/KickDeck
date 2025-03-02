@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useUser } from "./use-user";
 import { useToast } from "./use-toast";
@@ -29,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await fetch("/api/auth/me", {
         credentials: "include",
       });
-      
+
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
@@ -53,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (userData: any) => {
     try {
       const result = await userLogin(userData);
-      
+
       if (result.ok) {
         await checkAuth();
         toast({
