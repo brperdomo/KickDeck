@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2, Send } from "lucide-react";
 
 export interface EmailTemplate {
@@ -16,16 +16,6 @@ export interface EmailTemplate {
   type: string;
   senderEmail: string;
   senderName: string;
-}
-
-export interface EmailTemplate {
-  id: string;
-  name: string;
-  type: string;
-  subject: string;
-  content: string;
-  senderName: string;
-  senderEmail: string;
   isDefault?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -37,8 +27,6 @@ interface EmailTemplateEditorProps {
   onPreview?: (template: Partial<EmailTemplate>) => void;
   onCancel: () => void;
 }
-
-import { useToast } from "@/hooks/use-toast";
 
 const TEMPLATE_TYPES = [
   'registration',
@@ -63,33 +51,54 @@ export function EmailTemplateEditor({
   const [senderEmail, setSenderEmail] = useState(template?.senderEmail || '');
   const [senderName, setSenderName] = useState(template?.senderName || '');
   const [isSaving, setIsSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !subject || !content || !type || !senderEmail || !senderName) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsSaving(true);
+  const handleSave = async () => {
     try {
-      await onSave({
+      setIsSaving(true);
+      setErrors({});
+
+      // Validate form data
+      const result = emailTemplateSchema.safeParse({
         name,
+        type,
         subject,
         content,
-        type,
-        senderEmail,
-        senderName
+        senderName,
+        senderEmail
       });
+
+      if (!result.success) {
+        const formattedErrors: Record<string, string> = {};
+        result.error.errors.forEach(err => {
+          formattedErrors[err.path[0].toString()] = err.message;
+        });
+        setErrors(formattedErrors);
+        toast({
+          title: "Validation Error",
+          description: "Please check the form for errors",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Save template
+      await onSave({
+        name,
+        type,
+        subject,
+        content,
+        senderName,
+        senderEmail,
+        isDefault: template?.isDefault || false
+      });
+
       toast({
         title: "Success",
         description: "Email template saved successfully"
       });
     } catch (error) {
+      console.error("Failed to save template:", error);
       toast({
         title: "Error",
         description: "Failed to save email template",
@@ -102,115 +111,115 @@ export function EmailTemplateEditor({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Template Name *</Label>
-          <Input
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g., Welcome Email"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="type">Template Type *</Label>
-          <Select value={type} onValueChange={setType}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select type" />
-            </SelectTrigger>
-            <SelectContent>
-              {TEMPLATE_TYPES.map((t) => (
-                <SelectItem key={t} value={t}>
-                  {t.replace('_', ' ').charAt(0).toUpperCase() + t.slice(1).replace('_', ' ')}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Template Name</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Registration Confirmation"
+                className={errors.name ? "border-red-500" : ""}
+              />
+              {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="type">Template Type</Label>
+              <Select value={type} onValueChange={setType}>
+                <SelectTrigger className={errors.type ? "border-red-500" : ""}>
+                  <SelectValue placeholder="Select a type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TEMPLATE_TYPES.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ')}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.type && <p className="text-sm text-red-500">{errors.type}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="senderName">Sender Name</Label>
+              <Input
+                id="senderName"
+                value={senderName}
+                onChange={(e) => setSenderName(e.target.value)}
+                placeholder="Your Organization"
+                className={errors.senderName ? "border-red-500" : ""}
+              />
+              {errors.senderName && <p className="text-sm text-red-500">{errors.senderName}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="senderEmail">Sender Email</Label>
+              <Input
+                id="senderEmail"
+                value={senderEmail}
+                onChange={(e) => setSenderEmail(e.target.value)}
+                placeholder="noreply@example.com"
+                className={errors.senderEmail ? "border-red-500" : ""}
+              />
+              {errors.senderEmail && <p className="text-sm text-red-500">{errors.senderEmail}</p>}
+            </div>
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="senderName">Sender Name *</Label>
-          <Input
-            id="senderName"
-            value={senderName}
-            onChange={(e) => setSenderName(e.target.value)}
-            placeholder="Organization Name"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="senderEmail">Sender Email *</Label>
-          <Input
-            id="senderEmail"
-            type="email"
-            value={senderEmail}
-            onChange={(e) => setSenderEmail(e.target.value)}
-            placeholder="noreply@organization.com"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="subject">Email Subject *</Label>
+      <div className="space-y-2 mb-4">
+        <Label htmlFor="subject">Email Subject</Label>
         <Input
           id="subject"
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
-          placeholder="Enter email subject"
+          placeholder="Welcome to our platform!"
+          className={errors.subject ? "border-red-500" : ""}
         />
+        {errors.subject && <p className="text-sm text-red-500">{errors.subject}</p>}
       </div>
-
       <div className="space-y-2">
-        <Label htmlFor="content">Email Content *</Label>
-        <Card>
-          <CardContent className="p-0">
-            <Editor
-              apiKey="wysafiugpee0xtyjdnegcq6x43osb81qje582522ekththu8"
-              value={content}
-              onEditorChange={(content) => setContent(content)}
-              init={{
-                height: 400,
-                menubar: false,
-                plugins: [
-                  'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                  'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                  'insertdatetime', 'media', 'table', 'help', 'wordcount'
-                ],
-                toolbar: 'undo redo | blocks | ' +
-                  'bold italic forecolor | alignleft aligncenter ' +
-                  'alignright alignjustify | bullist numlist outdent indent | ' +
-                  'removeformat | help',
-                content_style: 'body { font-family: Inter,sans-serif; font-size: 14px }'
-              }}
-            />
-          </CardContent>
-        </Card>
+        <Label htmlFor="content">Email Content</Label>
+        <div className={errors.content ? "border border-red-500 rounded-md" : ""}>
+          <Editor
+            apiKey="your-tinymce-api-key"
+            value={content}
+            onEditorChange={(content) => setContent(content)}
+            init={{
+              height: 350,
+              menubar: true,
+              plugins: [
+                'advlist autolink lists link image charmap print preview anchor',
+                'searchreplace visualblocks code fullscreen',
+                'insertdatetime media table paste code help wordcount'
+              ],
+              toolbar:
+                'undo redo | formatselect | bold italic backcolor | \
+                alignleft aligncenter alignright alignjustify | \
+                bullist numlist outdent indent | removeformat | help'
+            }}
+          />
+        </div>
+        {errors.content && <p className="text-sm text-red-500">{errors.content}</p>}
       </div>
 
-      <div className="flex justify-end gap-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
+      <div className="flex justify-end space-x-2 mt-4">
         {onPreview && (
-          <Button
-            type="button"
-            variant="outline"
+          <Button 
+            type="button" 
+            variant="outline" 
             onClick={() => onPreview({ subject, content, senderName, senderEmail })}
           >
             <Send className="w-4 h-4 mr-2" />
             Preview
           </Button>
         )}
-        <Button type="submit" disabled={isSaving}>
-          {isSaving ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            'Save Template'
-          )}
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button 
+          type="button"
+          onClick={handleSave}
+          disabled={isSaving}
+        >
+          {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+          Save
         </Button>
       </div>
     </form>
