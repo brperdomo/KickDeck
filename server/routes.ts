@@ -1,5 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import express from "express";
 import { setupAuth } from "./auth";
 import { log } from "./vite";
 import { db } from "@db";
@@ -11,6 +12,9 @@ import eventsRouter from "./routes/admin/events";
 import emailTemplatesRouter from "./routes/admin/email-templates";
 import { createCoupon, getCoupons, updateCoupon, deleteCoupon } from "./routes/coupons";
 import { sql, eq, and, or, inArray } from "drizzle-orm";
+
+// Create router
+const router = express.Router();
 import {
   users,
   organizationSettings,
@@ -53,6 +57,11 @@ import activityLogsRouter from "./routes/admin/activity-logs";
 import passwordResetRouter from "./routes/auth/password-reset";
 import verifyTokenRouter from "./routes/auth/verify-token"; // Added import
 import resetConfirmRouter from "./routes/auth/reset-confirm"; // Added import
+import eventCategoriesRouter from "./routes/admin/event-categories";
+import submissionsRouter from "./routes/admin/submissions";
+import formsRouter from "./routes/admin/forms";
+import emailConfigRouter from "./routes/admin/email-config"; // Added import
+import { isAdmin } from "./middleware/auth-middleware"; // Added import
 
 // Test route
 router.get("/test", (req, res) => {
@@ -80,6 +89,9 @@ export function registerRoutes(app: Express): Server {
     // Set up authentication first
     setupAuth(app);
     log("Authentication routes registered successfully");
+
+    // Register main router
+    app.use('/api', router);
 
     // Register admin routes
     app.use('/api/admin/accounting-codes', isAdmin, accountingCodesRouter);
@@ -2425,6 +2437,10 @@ res.status(500).send("Failed to update complex status");
     app.use('/api/auth/reset-confirm', resetConfirmRouter); // Added route
 
     app.use('/api/files', uploadRouter);
+    app.use('/api/admin/event-categories', isAdmin, eventCategoriesRouter);
+    app.use('/api/admin/forms', isAdmin, formsRouter);
+    app.use('/api/admin/submissions', isAdmin, submissionsRouter);
+    app.use('/api/admin/email-config', isAdmin, emailConfigRouter); // Register email config routes
 
     return httpServer;
   } catch (error) {

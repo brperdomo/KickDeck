@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 import { EmailTemplateEditor, EmailTemplate } from "./EmailTemplateEditor";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PlusCircle } from "lucide-react";
+
 
 const EMAIL_TRIGGER_LABELS: Record<string, string> = {
   "registration_confirmation": "Registration Confirmation",
@@ -26,13 +27,26 @@ const EMAIL_TRIGGER_LABELS: Record<string, string> = {
   "welcome": "Welcome Email"
 };
 
+// Placeholder component for Email Server Configuration
+function EmailServerConfig() {
+  return (
+    <div>
+      <h1>Email Server Configuration</h1>
+      {/* Add your form elements here for SMTP server settings */}
+      <p>This section will contain input fields for configuring the email server.</p>
+    </div>
+  );
+}
+
 export function EmailTemplateManagement() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | undefined>();
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState<Partial<EmailTemplate>>();
   const [activeTab, setActiveTab] = useState("all");
-  
+  const [configTab, setConfigTab] = useState("templates"); // Added state for tabs
+
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -126,11 +140,11 @@ export function EmailTemplateManagement() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(template),
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to preview template');
       }
-      
+
       setPreviewTemplate(template);
       setIsPreviewOpen(true);
     } catch (error) {
@@ -183,7 +197,7 @@ export function EmailTemplateManagement() {
   // Group templates by trigger type
   const templatesByTrigger: Record<string, EmailTemplate[]> = {};
   const allTemplates = templatesQuery.data || [];
-  
+
   allTemplates.forEach(template => {
     if (!templatesByTrigger[template.type]) {
       templatesByTrigger[template.type] = [];
@@ -200,113 +214,151 @@ export function EmailTemplateManagement() {
     : templatesByTrigger[activeTab] || [];
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-2xl font-bold">Email Templates</h3>
-        <Button
-          onClick={() => {
-            setSelectedTemplate(undefined);
-            setIsEditorOpen(true);
-          }}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Create Template
-        </Button>
-      </div>
+    <div className="space-y-4">
+      <Tabs value={configTab} onValueChange={setConfigTab} className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="templates">Email Templates</TabsTrigger>
+          <TabsTrigger value="server">Server Configuration</TabsTrigger>
+        </TabsList>
 
-      {templatesQuery.isLoading ? (
-        <div className="text-center py-8">Loading templates...</div>
-      ) : templatesQuery.error ? (
-        <div className="bg-destructive/10 p-4 rounded-md flex items-center gap-2">
-          <AlertCircle className="text-destructive" />
-          <span>Failed to load email templates</span>
-        </div>
-      ) : (
-        <>
-          {allTemplates.length === 0 ? (
-            <div className="text-center py-8 border rounded-md">
-              <p className="text-muted-foreground">No email templates created yet</p>
-              <Button 
-                variant="outline" 
-                className="mt-4"
-                onClick={() => {
-                  setSelectedTemplate(undefined);
-                  setIsEditorOpen(true);
-                }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Your First Template
-              </Button>
+        <TabsContent value="templates" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-medium mb-2">Email Templates</h3>
+              <p className="text-sm text-muted-foreground">
+                Manage the email templates used throughout the application
+              </p>
+            </div>
+            <Button onClick={() => setIsEditorOpen(true)}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Create Template
+            </Button>
+          </div>
+
+          <div className="flex space-x-2 pb-2 border-b">
+            <Button
+              variant={activeTab === "all" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab("all")}
+            >
+              All
+            </Button>
+            <Button
+              variant={activeTab === "system" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab("system")}
+            >
+              System
+            </Button>
+            <Button
+              variant={activeTab === "custom" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab("custom")}
+            >
+              Custom
+            </Button>
+          </div>
+
+          {templatesQuery.isLoading ? (
+            <div className="text-center py-8">Loading templates...</div>
+          ) : templatesQuery.error ? (
+            <div className="bg-destructive/10 p-4 rounded-md flex items-center gap-2">
+              <AlertCircle className="text-destructive" />
+              <span>Failed to load email templates</span>
             </div>
           ) : (
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="mb-4">
-                <TabsTrigger value="all">All Templates</TabsTrigger>
-                {triggers.map(trigger => (
-                  <TabsTrigger key={trigger} value={trigger}>
-                    {EMAIL_TRIGGER_LABELS[trigger] || trigger}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              
-              <TabsContent value={activeTab} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredTemplates.map((template) => (
-                  <Card key={template.id}>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <CardTitle>{template.name}</CardTitle>
-                        <Badge>{EMAIL_TRIGGER_LABELS[template.type] || template.type}</Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        <strong>Subject:</strong> {template.subject}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        <strong>From:</strong> {template.senderName} &lt;{template.senderEmail}&gt;
-                      </p>
-                      {template.isDefault && (
-                        <Badge variant="outline" className="mt-2">
-                          Default Template
-                        </Badge>
-                      )}
-                    </CardContent>
-                    <CardFooter className="flex justify-end space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePreview(template)}
-                      >
-                        <Mail className="w-4 h-4 mr-2" />
-                        Preview
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedTemplate(template);
-                          setIsEditorOpen(true);
-                        }}
-                      >
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(template)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </TabsContent>
-            </Tabs>
+            <>
+              {allTemplates.length === 0 ? (
+                <div className="text-center py-8 border rounded-md">
+                  <p className="text-muted-foreground">No email templates created yet</p>
+                  <Button 
+                    variant="outline" 
+                    className="mt-4"
+                    onClick={() => {
+                      setSelectedTemplate(undefined);
+                      setIsEditorOpen(true);
+                    }}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Your First Template
+                  </Button>
+                </div>
+              ) : (
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="all">All Templates</TabsTrigger>
+                    {triggers.map(trigger => (
+                      <TabsTrigger key={trigger} value={trigger}>
+                        {EMAIL_TRIGGER_LABELS[trigger] || trigger}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+
+                  <TabsContent value={activeTab} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filteredTemplates.map((template) => (
+                      <Card key={template.id}>
+                        <CardHeader>
+                          <div className="flex justify-between items-start">
+                            <CardTitle>{template.name}</CardTitle>
+                            <Badge>{EMAIL_TRIGGER_LABELS[template.type] || template.type}</Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            <strong>Subject:</strong> {template.subject}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            <strong>From:</strong> {template.senderName} &lt;{template.senderEmail}&gt;
+                          </p>
+                          {template.isDefault && (
+                            <Badge variant="outline" className="mt-2">
+                              Default Template
+                            </Badge>
+                          )}
+                        </CardContent>
+                        <CardFooter className="flex justify-end space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePreview(template)}
+                          >
+                            <Mail className="w-4 h-4 mr-2" />
+                            Preview
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedTemplate(template);
+                              setIsEditorOpen(true);
+                            }}
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(template)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    ))}
+                  </TabsContent>
+                </Tabs>
+              )}
+            </>
           )}
-        </>
-      )}
+
+        </TabsContent>
+
+        <TabsContent value="server">
+          <EmailServerConfig />
+        </TabsContent>
+      </Tabs>
 
       {/* Template Editor Dialog */}
       <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>

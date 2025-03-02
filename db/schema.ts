@@ -855,24 +855,36 @@ export const formResponsesRelations = relations(formResponses, ({ one }) => ({
 
 export const emailTemplates = pgTable("email_templates", {
   id: serial("id").primaryKey(),
+  trigger: text("trigger").notNull(),
   name: text("name").notNull(),
-  type: text("type").notNull(), // registration, payment, password_reset, etc.
   subject: text("subject").notNull(),
-  content: text("content").notNull(),
-  senderName: text("sender_name").notNull(),
+  htmlContent: text("html_content").notNull(),
+  senderEmail: text("sender_email"),
+  senderName: text("sender_name"),
+  isDefault: boolean("is_default").default(false),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+});
+
+export const emailConfig = pgTable("email_config", {
+  id: serial("id").primaryKey(),
+  host: text("host").notNull(),
+  port: integer("port").notNull(),
+  secure: boolean("secure").default(true),
+  auth: jsonb("auth").notNull(),
   senderEmail: text("sender_email").notNull(),
-  isDefault: boolean("is_default").default(false).notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  senderName: text("sender_name"),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
 });
 
 export const insertEmailTemplateSchema = createInsertSchema(emailTemplates, {
   name: z.string().min(1, "Template name is required"),
-  type: z.string().min(1, "Template type is required"),
+  trigger: z.string().min(1, "Trigger is required"),
   subject: z.string().min(1, "Subject is required"),
-  content: z.string().min(1, "Content is required"),
-  senderName: z.string().min(1, "Sender name is required"),
-  senderEmail: z.string().email("Invalid sender email"),
+  htmlContent: z.string().min(1, "Content is required"),
+  senderEmail: z.string().email("Invalid sender email").optional(),
+  senderName: z.string().optional(),
   isDefault: z.boolean().default(false),
 });
 
@@ -880,6 +892,23 @@ export const selectEmailTemplateSchema = createSelectSchema(emailTemplates);
 
 export type InsertEmailTemplate = typeof emailTemplates.$inferInsert;
 export type SelectEmailTemplate = typeof emailTemplates.$inferSelect;
+
+export const insertEmailConfigSchema = createInsertSchema(emailConfig, {
+  host: z.string().min(1, "Host is required"),
+  port: z.number().int().min(1, "Port must be a positive integer"),
+  secure: z.boolean().default(true),
+  auth: z.object({
+    user: z.string().min(1, "Username is required"),
+    pass: z.string().min(1, "Password is required"),
+  }),
+  senderEmail: z.string().email("Invalid sender email"),
+  senderName: z.string().optional(),
+});
+
+export const selectEmailConfigSchema = createSelectSchema(emailConfig);
+
+export type InsertEmailConfig = typeof emailConfig.$inferInsert;
+export type SelectEmailConfig = typeof emailConfig.$inferSelect;
 
 export const adminFormSchema = z.object({
   email: z.string().email("Please enter a valid email address").min(1, "Email is required"),
