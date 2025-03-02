@@ -74,6 +74,11 @@ async function testDbConnection() {
     // Create admin user if it doesn't exist
     await createAdmin();
     log("Admin user setup completed");
+    
+    // Initialize email service
+    const { initEmailService } = await import('./services/email-service');
+    await initEmailService();
+    log("Email service initialized");
 
     // Create seasonal scopes table if it doesn't exist
     await db.execute(`
