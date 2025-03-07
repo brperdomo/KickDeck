@@ -791,4 +791,4 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
   );
 }
 
-export { FileManager };
+// FileManager is already exported above, no need to export it again
