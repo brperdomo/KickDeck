@@ -64,7 +64,6 @@ interface EventFormValues extends EventInformationValues {
   administrators: EventAdministrator[];
   branding: EventBranding;
   seasonalScope?: { name: string; startYear: number; endYear: number };
-  seasonalScopeId?: number;
 }
 
 interface EventFormProps {
@@ -126,7 +125,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
     defaultValues?.seasonalScopeId || null
   );
   const [seasonalScopes, setSeasonalScopes] = useState<any[] | null>(null);
-
+  
   // Fetch seasonal scopes on component mount
   useEffect(() => {
     const fetchSeasonalScopes = async () => {
@@ -135,21 +134,6 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
         if (response.ok) {
           const data = await response.json();
           setSeasonalScopes(data);
-
-          // If we have default values with age groups and a seasonal scope ID,
-          // initialize the form with those values
-          if (defaultValues?.ageGroups && defaultValues?.seasonalScopeId) {
-            const scope = data.find((s: any) => s.id === defaultValues.seasonalScopeId);
-            if (scope) {
-              // Ensure the selected scope is set
-              setSelectedSeasonalScopeId(defaultValues.seasonalScopeId);
-
-              // Initialize the form with the age groups from default values
-              form.setValue('ageGroups', defaultValues.ageGroups);
-            }
-          }
-        } else {
-          console.error('Failed to fetch seasonal scopes');
         }
       } catch (error) {
         console.error('Error fetching seasonal scopes:', error);
@@ -157,7 +141,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
     };
 
     fetchSeasonalScopes();
-  }, [defaultValues, form]);
+  }, []);
 
   const seasonalScopeQuery = useQuery({
     queryKey: ['/api/admin/seasonal-scopes', defaultValues?.seasonalScopeId],
@@ -336,8 +320,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
         logoUrl: '',
         primaryColor: '#000000',
         secondaryColor: '#ffffff'
-      },
-      seasonalScopeId: selectedSeasonalScopeId
+      }
     }
   });
 
@@ -942,9 +925,6 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                           // Auto-select all age groups from the scope
                           // Using form.setValue instead of setFieldValue
                           form.setValue('ageGroups', selectedScope.ageGroups);
-
-                          // Store the selected scope ID in form data to ensure it persists
-                          form.setValue('seasonalScopeId', scopeId);
                         }
                       }}
                       scopes={seasonalScopes}
