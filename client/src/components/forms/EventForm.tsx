@@ -972,12 +972,6 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
     );
   };
 
-  const renderSettingsContent = () => (
-    <div>
-      <SettingsTab />
-    </div>
-  );
-
   const handleTabChange = (tab: EventTab) => {
     onTabChange(tab);
   };
