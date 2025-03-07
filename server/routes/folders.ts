@@ -34,8 +34,8 @@ router.post("/", isAdmin, async (req, res) => {
         id: folderId,
         name,
         parentId: parentId || null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       })
       .returning();
 
@@ -61,7 +61,7 @@ router.patch("/:id", isAdmin, async (req, res) => {
       .set({
         name,
         parentId: parentId || null,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       })
       .where(folders.id.equals(id))
       .returning();
