@@ -3,7 +3,7 @@ import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, ArrowLeft, Plus, Edit, Trash, CheckCircle } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Edit, Trash, CheckCircle, ImageIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -50,9 +50,9 @@ import {
   AdminModalProps,
 } from "./event-form-types";
 import { ComplexSelector } from "@/components/events/ComplexSelector";
-import { InfoPopover } from "@/components/ui/InfoPopover"; // Import added here
-import {SeasonalScopeSelector} from "@/components/events/SeasonalScopeSelector"; // Import added here
-import {AgeGroupSelector} from "@/components/events/AgeGroupSelector"; //Import added here
+import { InfoPopover } from "@/components/ui/InfoPopover";
+import {SeasonalScopeSelector} from "@/components/events/SeasonalScopeSelector";
+import {AgeGroupSelector} from "@/components/events/AgeGroupSelector";
 
 
 interface EventFormValues extends EventInformationValues {
@@ -125,7 +125,16 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
     defaultValues?.seasonalScopeId || null
   );
   const [seasonalScopes, setSeasonalScopes] = useState<any[] | null>(null);
-  
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: acceptedFiles => {
+      setLogo(acceptedFiles[0]);
+      const reader = new FileReader();
+      reader.onload = (e) => setPreviewUrl(e.target?.result as string);
+      reader.readAsDataURL(acceptedFiles[0]);
+    },
+  });
+
+
   // Fetch seasonal scopes on component mount
   useEffect(() => {
     const fetchSeasonalScopes = async () => {
@@ -193,8 +202,8 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
           projectedTeams: group.projectedTeams || 0,
           birthDateStart: `${group.birthYear}-01-01`,
           birthDateEnd: `${group.birthYear}-12-31`,
-          amountDue: group.amountDue || 0, // Added amountDue
-          scoringRule: group.scoringRule || null // Added scoringRule
+          amountDue: group.amountDue || 0,
+          scoringRule: group.scoringRule || null
         }));
 
 
@@ -209,7 +218,6 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
         branding: {
           primaryColor,
           secondaryColor,
-          logo,
           logoUrl: previewUrl || undefined,
         },
       };
@@ -287,7 +295,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
 
   const SaveButton = () => (
     <Button
-      onClick={form.handleSubmit(handleSubmitForm)}
+      onClick={handleSubmitForm}
       disabled={isSubmitting}
     >
       {isSubmitting ? (
@@ -738,8 +746,8 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
 
   const getTabValidationState = () => {
     const errors: Record<EventTab, boolean> = {
-      'information': false, // Don't rely on form validation state
-      'age-groups': false, // No longer requires validation
+      'information': false,
+      'age-groups': false,
       'scoring': scoringRules.length === 0,
       'complexes': selectedComplexIds.length === 0,
       'settings': false,
@@ -799,6 +807,21 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      <div className="mt-4">
+        <label className="block text-sm font-medium text-gray-700">
+          Logo
+        </label>
+        <div {...getRootProps({ className: 'dropzone' })}>
+          <input {...getInputProps()} />
+          {
+            isDragActive ?
+              <p>Drop the files here ...</p> :
+              <p>Drag 'n' drop some files here, or click to select files</p>
+          }
+          {previewUrl && <img src={previewUrl} alt="Preview" width={100} />}
+        </div>
       </div>
 
       <Dialog open={isSettingDialogOpen} onOpenChange={setIsSettingDialogOpen}>
@@ -893,7 +916,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                     data-[state=active]:bg-white data-[state=active]:text-[#007AFF] data-[state=active]:shadow-sm
                     text-[#1C1C1E] hover:text-[#007AFF]`}
                 >
-                  {tab.replace('-', ' ').charAt(0).toUpperCase() + tab.slice(1).replace('-', ' ')}
+                  {tab.replace('-', ' ').charAt(0toUpperCase() + tab.slice(1).replace('-', ' ')}
                 </TabsTrigger>
               ))}
             </TabsList>
