@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Input } from '@/components/ui/input';
@@ -88,7 +87,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [breadcrumbs, setBreadcrumbs] = useState<Folder[]>([]);
-  
+
   const [state, setState] = useState<FileManagerState>({
     selectedFiles: new Set<string>(),
     currentFolder: null,
@@ -140,7 +139,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
       if (state.filter.search) {
         params.append('search', state.filter.search);
       }
-      
+
       const response = await fetch(`/api/files?${params.toString()}`);
       const data = await response.json();
       setFiles(data);
@@ -169,7 +168,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
       setBreadcrumbs([]);
       return;
     }
-    
+
     try {
       const response = await fetch(`/api/folders/breadcrumbs/${state.currentFolder}`);
       if (response.ok) {
@@ -226,7 +225,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
           parentId: state.currentFolder,
         }),
       });
-      
+
       if (response.ok) {
         toast.success('Folder created successfully');
         setIsCreateFolderOpen(false);
@@ -250,12 +249,12 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
       if (state.currentFolder) {
         formData.append('folderId', state.currentFolder);
       }
-      
+
       const response = await fetch('/api/files/upload', {
         method: 'POST',
         body: formData,
       });
-      
+
       if (response.ok) {
         toast.success('File uploaded successfully');
         setIsUploadOpen(false);
@@ -275,12 +274,12 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
     if (!confirm('Are you sure you want to delete this file?')) {
       return;
     }
-    
+
     try {
       const response = await fetch(`/api/files/${fileId}`, {
         method: 'DELETE',
       });
-      
+
       if (response.ok) {
         toast.success('File deleted successfully');
         setState(prev => ({
@@ -302,12 +301,12 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
     if (!confirm('Are you sure you want to delete this folder?')) {
       return;
     }
-    
+
     try {
       const response = await fetch(`/api/folders/${folderId}`, {
         method: 'DELETE',
       });
-      
+
       if (response.ok) {
         toast.success('Folder deleted successfully');
         fetchFolders();
@@ -327,12 +326,12 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
       toast.error('No files selected');
       return;
     }
-    
+
     if (action === 'delete') {
       if (!confirm(`Are you sure you want to delete ${selectedIds.length} file(s)?`)) {
         return;
       }
-      
+
       try {
         const response = await fetch('/api/files/bulk-delete', {
           method: 'POST',
@@ -341,7 +340,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
           },
           body: JSON.stringify({ fileIds: selectedIds }),
         });
-        
+
         if (response.ok) {
           toast.success(`${selectedIds.length} file(s) deleted successfully`);
           setState(prev => ({
@@ -406,7 +405,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
             <ArrowLeftIcon className="h-4 w-4 mr-1" />
             Root
           </Button>
-          
+
           <div className="flex items-center space-x-1">
             {breadcrumbs.map((folder, index) => (
               <React.Fragment key={folder.id}>
@@ -423,7 +422,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
             ))}
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <div className="relative">
             <SearchIcon className="h-4 w-4 absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
@@ -434,7 +433,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
               onChange={handleSearch}
             />
           </div>
-          
+
           <Button
             variant="outline" 
             size="sm"
@@ -443,7 +442,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
           >
             <GridIcon className="h-4 w-4" />
           </Button>
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -452,17 +451,17 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
           >
             <ListIcon className="h-4 w-4" />
           </Button>
-          
+
           <Button variant="outline" size="sm" onClick={() => setIsCreateFolderOpen(true)}>
             <FolderPlusIcon className="h-4 w-4 mr-1" />
             New Folder
           </Button>
-          
+
           <Button variant="outline" size="sm" onClick={() => setIsUploadOpen(true)}>
             <UploadIcon className="h-4 w-4 mr-1" />
             Upload
           </Button>
-          
+
           {state.selectedFiles.size > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -481,7 +480,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
           )}
         </div>
       </div>
-      
+
       {/* Main content area */}
       <ScrollArea className="flex-1">
         {/* Folders */}
@@ -552,7 +551,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
             )}
           </div>
         )}
-        
+
         {/* Files */}
         {isLoading ? (
           <div className="flex justify-center items-center h-32">
@@ -709,7 +708,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
           </div>
         )}
       </ScrollArea>
-      
+
       {/* Create folder dialog */}
       <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
         <DialogContent>
@@ -738,7 +737,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
           </Form>
         </DialogContent>
       </Dialog>
-      
+
       {/* Upload file dialog */}
       <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
         <DialogContent>
@@ -759,7 +758,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
                   </p>
                 </div>
               </div>
-              
+
               {uploadForm.watch('file') && (
                 <FormField
                   control={uploadForm.control}
@@ -775,7 +774,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
                   )}
                 />
               )}
-              
+
               <DialogFooter>
                 <Button 
                   type="submit" 
@@ -791,3 +790,5 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
     </div>
   );
 }
+
+export { FileManager };
