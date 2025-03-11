@@ -852,8 +852,6 @@ export function FeeManagement() {
                 Save Assignments
               </Button>
             </div>
-          </DialogFooter>ton>
-            <Button onClick={handleSaveAssignments}>Save Assignments</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
