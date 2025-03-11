@@ -58,11 +58,7 @@ export function SeasonalScopeSelector({ selectedScopeId, onScopeSelect, scopes }
             onValueChange={(value) => onScopeSelect(parseInt(value))}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Choose a seasonal scope">
-                {normalizedSelectedId && scopes.find(s => s.id === normalizedSelectedId) 
-                  ? `${scopes.find(s => s.id === normalizedSelectedId)?.name} (${scopes.find(s => s.id === normalizedSelectedId)?.startYear}-${scopes.find(s => s.id === normalizedSelectedId)?.endYear})` 
-                  : "Choose a seasonal scope"}
-              </SelectValue>
+              <SelectValue placeholder="Choose a seasonal scope" />
             </SelectTrigger>
             <SelectContent>
               {scopes.map((scope) => (
