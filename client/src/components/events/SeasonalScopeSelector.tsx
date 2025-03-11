@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Select,
@@ -29,7 +28,7 @@ export function SeasonalScopeSelector({ selectedScopeId, onScopeSelect, scopes }
   // For debugging
   console.log('SeasonalScopeSelector - selectedScopeId:', selectedScopeId);
   console.log('SeasonalScopeSelector - available scopes:', scopes);
-  
+
   // Convert selectedScopeId to string for the Select component
   const normalizedSelectedId = selectedScopeId;
 

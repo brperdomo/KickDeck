@@ -48,3 +48,51 @@
                       scopes={seasonalScopes}
                     />
                   )}
+
+const handleSubmitForm = async (data: EventFormValues) => {
+    setIsSaving(true);
+    try {
+      if (!data.name || !data.startDate || !data.endDate || !data.timezone) {
+        throw new Error('Required fields are missing');
+      }
+
+      // Prepare age groups data with only the essential fields
+      const preparedAgeGroups = (event.ageGroups || [])
+        .map(group => ({
+          ...group,
+          projectedTeams: group.projectedTeams || 0,
+          birthDateStart: `${group.birthYear}-01-01`,
+          birthDateEnd: `${group.birthYear}-12-31`,
+          amountDue: group.amountDue || 0,
+          scoringRule: group.scoringRule || null
+        }));
+
+      const combinedData = {
+        ...data,
+        id: defaultValues?.id, // Make sure ID is included
+        seasonalScopeId: selectedSeasonalScopeId, // Make sure seasonalScopeId is included
+        ageGroups: preparedAgeGroups,
+        scoringRules,
+        settings,
+        complexFieldSizes,
+        selectedComplexIds,
+        administrators: defaultValues?.administrators || [],
+        branding: {
+          primaryColor,
+          secondaryColor,
+          logoUrl: previewUrl || undefined,
+        },
+      };
+
+      console.log("Submitting form data:", combinedData);
+      await onSubmit(combinedData);
+    } catch (error: any) {
+      console.error("Error submitting form:", error);
+      // Handle error appropriately, e.g., display an error message to the user
+      setIsSaving(false);
+      // Optionally, you could set an error state here to display to the user
+      // setError(error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };

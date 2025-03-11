@@ -79,22 +79,15 @@ export default function EditEvent() {
 
   const handleSubmit = async (formData: EventFormData) => {
     try {
-      // Only send selected age groups to reduce payload size
-      const selectedAgeGroups = formData.ageGroups?.filter(group => group.selected) || [];
+      // Remove any properties that should not be sent to the API
+      const { onSubmit, defaultValues, mode, ...sanitizedFormData } = formData;
 
-      // Ensure age groups are properly formatted
-      const sanitizedFormData = {
-        ...formData,
-        ageGroups: selectedAgeGroups.map(group => ({
-          ...group,
-          projectedTeams: group.projectedTeams || 0,
-          amountDue: group.amountDue || null,
-          selected: true,
-          feeId: group.feeId || null // Ensure feeId is included
-        }))
-      };
+      // Make sure seasonalScopeId is included in the form data
+      if (selectedSeasonalScopeId) {
+        sanitizedFormData.seasonalScopeId = selectedSeasonalScopeId;
+      }
 
-      console.log(`Submitting form data with ${sanitizedFormData.ageGroups.length} selected age groups`);
+      console.log(`Submitting form data with ${sanitizedFormData.ageGroups?.length || 0} selected age groups`);
       await updateEventMutation.mutateAsync(sanitizedFormData);
     } catch (error) {
       console.error("Submit error:", error);
