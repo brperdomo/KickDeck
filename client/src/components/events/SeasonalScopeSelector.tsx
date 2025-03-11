@@ -34,18 +34,8 @@ export function SeasonalScopeSelector({ selectedScopeId, onScopeSelect, scopes }
   // Convert selectedScopeId to string for the Select component
   const normalizedSelectedId = selectedScopeId;
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="space-y-2">
-            <Label>Select Seasonal Scope</Label>
-            <Skeleton className="h-10 w-full" />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  // We no longer use isLoading since scopes are passed as props
+  if (!scopes || scopes.length === 0) {
 
   if (!scopes || scopes.length === 0) {
     return (
