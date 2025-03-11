@@ -906,6 +906,8 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
   };
 
 
+  const isEditMode = mode === "edit";
+
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-6">
       <Card className="bg-white shadow-sm border border-gray-200">
@@ -918,7 +920,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                   value={tab}
                   className={`wfullpx-4 py-2 rounded-md text-sm font-medium transition-colors
                     data-[state=active]:bg-white data-[state=active]:text-[#007AFF] data-[state=active]:shadow-sm
-                    text-[#1C1C1E] hover:text-[#007AFF]`}
+                    text-[#1C1C1E] hover:text-[#007AFF]`}>
                 >
                   {tab.replace('-', ' ').charAt(0).toUpperCase() + tab.slice(1).replace('-', ' ')}
                 </TabsTrigger>
@@ -957,7 +959,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                       scopes={seasonalScopes}
                     />
                   )}
-                  
+
                   {isEditMode && selectedSeasonalScopeId && (
                     <div className="mb-4">
                       <p className="text-sm text-muted-foreground">
