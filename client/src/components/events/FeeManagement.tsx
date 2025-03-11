@@ -521,16 +521,28 @@ export function FeeManagement() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Age Group</TableHead>
+                      <TableHead className="min-w-[200px]">Age Group / Division</TableHead>
                       {feesQuery.data?.map(fee => (
-                        <TableHead key={fee.id}>{fee.name} ({formatCurrency(fee.amount)})</TableHead>
+                        <TableHead key={fee.id} className="text-center">
+                          <div className="flex flex-col items-center">
+                            <span>{fee.name}</span>
+                            <span className="text-xs font-normal">{formatCurrency(fee.amount)}</span>
+                          </div>
+                        </TableHead>
                       ))}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {ageGroupsQuery.data?.map(ageGroup => (
                       <TableRow key={ageGroup.id}>
-                        <TableCell>{ageGroup.name}</TableCell>
+                        <TableCell className="font-medium">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-semibold">{ageGroup.name}</span>
+                            <span className="text-xs text-gray-500">
+                              {ageGroup.gender} • {ageGroup.divisionCode} • {ageGroup.birthYear}
+                            </span>
+                          </div>
+                        </TableCell>
                         {feesQuery.data?.map(fee => (
                           <TableCell key={fee.id}>
                             <Checkbox
