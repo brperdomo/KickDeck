@@ -16,23 +16,47 @@ export default function EditEvent() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<EventTab>('information');
   const [completedTabs, setCompletedTabs] = useState<EventTab[]>([]);
+  const [selectedSeasonalScopeId, setSelectedSeasonalScopeId] = useState<number | null>(null); // Added state for selectedSeasonalScopeId
+  const [availableAgeGroups, setAvailableAgeGroups] = useState<any[]>([]); //Added state for available age groups.  Type needs to be defined properly.
+
+  const {data: seasonalScopes, isLoading: seasonalScopesLoading} = useQuery({ // Added query for seasonal scopes.
+    queryKey: ['seasonalScopes'],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/seasonal-scopes`); //Endpoint needs to be adjusted to match your backend.
+      if (!response.ok) throw new Error('Failed to fetch seasonal scopes');
+      return response.json();
+    },
+  });
+
 
   const eventQuery = useQuery({
     queryKey: ['event', id],
     queryFn: async () => {
       const response = await fetch(`/api/admin/events/${id}/edit`);
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || 'Failed to fetch event');
-      }
+      if (!response.ok) throw new Error('Failed to fetch event data');
       const data = await response.json();
-      // Ensure seasonalScopeId is a number if present
-      if (data.seasonalScopeId) {
-        data.seasonalScopeId = Number(data.seasonalScopeId);
+
+      // Set the seasonal scope ID when event data is loaded
+      if (data && data.seasonalScopeId) {
+        const scopeId = typeof data.seasonalScopeId === 'string' 
+          ? parseInt(data.seasonalScopeId, 10) 
+          : data.seasonalScopeId;
+
+        setSelectedSeasonalScopeId(scopeId);
+        console.log('Loaded seasonal scope ID from event:', scopeId);
+
+        // If we have seasonal scopes data, load age groups automatically for this scope
+        if (seasonalScopes && seasonalScopes.length > 0) {
+          const selectedScope = seasonalScopes.find(scope => scope.id === scopeId);
+          if (selectedScope && selectedScope.ageGroups) {
+            setAvailableAgeGroups(selectedScope.ageGroups);
+            console.log('Automatically loaded age groups for scope:', selectedScope.ageGroups);
+          }
+        }
       }
-      console.log('Fetched event data:', data);
+
       return data;
-    }
+    },
   });
 
   const updateEventMutation = useMutation({
@@ -78,22 +102,15 @@ export default function EditEvent() {
 
   const handleSubmit = async (formData: EventFormData) => {
     try {
-      // Only send selected age groups to reduce payload size
-      const selectedAgeGroups = formData.ageGroups?.filter(group => group.selected) || [];
+      // Remove any properties that should not be sent to the API
+      const { onSubmit, defaultValues, mode, ...sanitizedFormData } = formData;
 
-      // Ensure age groups are properly formatted
-      const sanitizedFormData = {
-        ...formData,
-        ageGroups: selectedAgeGroups.map(group => ({
-          ...group,
-          projectedTeams: group.projectedTeams || 0,
-          amountDue: group.amountDue || null,
-          selected: true,
-          feeId: group.feeId || null // Ensure feeId is included
-        }))
-      };
+      // Make sure seasonalScopeId is included in the form data
+      if (selectedSeasonalScopeId) {
+        sanitizedFormData.seasonalScopeId = selectedSeasonalScopeId;
+      }
 
-      console.log(`Submitting form data with ${sanitizedFormData.ageGroups.length} selected age groups`);
+      console.log(`Submitting form data with ${sanitizedFormData.ageGroups?.length || 0} selected age groups`);
       await updateEventMutation.mutateAsync(sanitizedFormData);
     } catch (error) {
       console.error("Submit error:", error);
@@ -105,7 +122,7 @@ export default function EditEvent() {
     }
   };
 
-  if (eventQuery.isLoading) {
+  if (eventQuery.isLoading || seasonalScopesLoading) { //Added seasonalScopesLoading to loading condition
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
@@ -155,7 +172,43 @@ export default function EditEvent() {
     }
   };
 
-  console.log('Prepared event data for form:', eventData);
+  // Prepare form data
+  const prepareFormData = (eventData) => {
+    console.log('Prepared event data for form:', eventData);
+
+    // Initialize the selectedSeasonalScopeId from eventData
+    if (eventData.seasonalScopeId) {
+      setSelectedSeasonalScopeId(eventData.seasonalScopeId);
+    }
+
+    return {
+      id: eventData.id,
+      name: eventData.name,
+      startDate: eventData.startDate,
+      endDate: eventData.endDate,
+      timezone: eventData.timezone,
+      location: eventData.location,
+      address: eventData.address,
+      city: eventData.city,
+      state: eventData.state,
+      zipCode: eventData.zipCode,
+      country: eventData.country,
+      description: eventData.description,
+      isPublic: eventData.isPublic,
+      registrationOpen: eventData.registrationOpen,
+      registrationClose: eventData.registrationClose,
+      maxTeams: eventData.maxTeams,
+      logoUrl: eventData.logoUrl,
+      seasonalScopeId: eventData.seasonalScopeId,
+      ageGroups: eventData.ageGroups || [],
+      venue: eventData.venue || { fields: [] },
+      scoring: eventData.scoring || {},
+      schedule: eventData.schedule || { days: [] },
+      customFields: eventData.customFields || [],
+    };
+  };
+
+  console.log('Prepared event data for form:', prepareFormData(eventData));
 
   const navigateTab = (direction: 'prev' | 'next') => {
     const currentIndex = TAB_ORDER.indexOf(activeTab);
@@ -190,7 +243,7 @@ export default function EditEvent() {
 
             <EventForm 
               mode="edit"
-              defaultValues={eventData}
+              defaultValues={prepareFormData(eventData)} // Use prepared data
               onSubmit={handleSubmit}
               isSubmitting={updateEventMutation.isPending}
               activeTab={activeTab}
@@ -198,6 +251,8 @@ export default function EditEvent() {
               completedTabs={completedTabs}
               onCompletedTabsChange={setCompletedTabs}
               navigateTab={navigateTab}
+              selectedSeasonalScopeId={selectedSeasonalScopeId} // Pass the state to EventForm
+              availableAgeGroups={availableAgeGroups} // Pass availableAgeGroups to EventForm
             />
           </CardContent>
         </Card>
