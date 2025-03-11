@@ -919,6 +919,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
       // Fetch age groups for the event in edit mode
       fetch(`/api/admin/events/${event.id}/age-groups`)
         .then(response => {
+          console.log('Age groups response status:', response.status);
           if (!response.ok) {
             throw new Error('Failed to fetch age groups');
           }
@@ -931,7 +932,17 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
             // Include all age groups with selected=true flag
             const selectedGroups = data.filter(group => group.selected);
             console.log('Selected age groups:', selectedGroups);
-            form.setValue('ageGroups', selectedGroups);
+            console.log('All available groups count:', data.length);
+            
+            // Make sure we set the age groups value even if none are selected
+            form.setValue('ageGroups', selectedGroups.length > 0 ? selectedGroups : []);
+            
+            // Store all available groups in state for the UI to use
+            if (typeof setAllAgeGroups === 'function') {
+              setAllAgeGroups(data);
+            }
+          } else {
+            console.error('Age groups data is not an array or is empty:', data);
           }
         })
         .catch(error => {
