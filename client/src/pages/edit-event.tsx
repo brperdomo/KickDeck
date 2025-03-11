@@ -25,10 +25,15 @@ export default function EditEvent() {
       if (!response.ok) throw new Error('Failed to fetch event data');
       const data = await response.json();
 
-      // Set the seasonal scope ID when event data is loaded
+      // Set the seasonal scope ID and age groups when event data is loaded
       if (data && data.seasonalScopeId) {
         setSelectedSeasonalScopeId(data.seasonalScopeId);
         console.log('Loaded seasonal scope ID from event:', data.seasonalScopeId);
+        
+        // Ensure age groups are properly set from the event data
+        if (data.ageGroups && data.ageGroups.length > 0) {
+          console.log('Setting age groups from event data:', data.ageGroups);
+        }
       }
 
       return data;

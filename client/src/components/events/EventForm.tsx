@@ -30,48 +30,63 @@
     }
   }, [initialData]);
 
-{seasonalScopes && (
-                    isEditMode ? (
-                      // In edit mode, show a disabled/read-only view
-                      <div className="mb-4">
-                        <Label>Seasonal Scope</Label>
-                        <div className="p-2 mt-1 bg-muted rounded-md">
-                          {selectedSeasonalScopeId ? 
-                            seasonalScopes.find(scope => scope.id === selectedSeasonalScopeId)?.name || 
-                            `Scope ID: ${selectedSeasonalScopeId}` : 
-                            'No seasonal scope selected'}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Seasonal scope cannot be changed after event creation
-                        </p>
+  {seasonalScopes && (
+                    <TabsContent value="age-groups">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium">Age Groups</h3>
+                    <InfoPopover>
+                      <p>
+                        {isEditMode ? 
+                          "Age groups for this event are set based on the selected seasonal scope." : 
+                          "Select age groups for this event."}
+                      </p>
+                    </InfoPopover>
+                  </div>
+
+                  {/* Only display the read-only view of the selected scope in the age-groups tab for both modes */}
+                  {seasonalScopes && selectedSeasonalScopeId && (
+                    <div className="mb-4">
+                      <Label>Seasonal Scope</Label>
+                      <div className="p-2 mt-1 bg-muted rounded-md">
+                        {seasonalScopes.find(scope => scope.id === selectedSeasonalScopeId)?.name || 
+                        `Scope ID: ${selectedSeasonalScopeId}`}
                       </div>
-                    ) : (
-                      // In create mode, show the selector
-                      <SeasonalScopeSelector
-                        selectedScopeId={selectedSeasonalScopeId}
-                        onScopeSelect={(scopeId) => {
-                          console.log('Scope selected in EventForm:', scopeId);
-                          setSelectedSeasonalScopeId(scopeId);
-                          
-                          try {
-                            // Clear existing age group selections when scope changes
-                            const selectedScope = seasonalScopes.find(scope => scope.id === scopeId);
-                            if (selectedScope && selectedScope.ageGroups) {
-                              console.log('Setting age groups from selected scope:', selectedScope.ageGroups);
-                              // Auto-select all age groups from the scope
-                              form.setValue('ageGroups', selectedScope.ageGroups);
-                              // Also update the form's seasonalScopeId field
-                              form.setValue('seasonalScopeId', scopeId);
-                            } else {
-                              console.warn('Selected scope or age groups not found:', scopeId);
-                            }
-                          } catch (error) {
-                            console.error('Error setting scope-related form values:', error);
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Seasonal scope determines available age groups
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Show seasonal scope selector only in create mode and only if needed */}
+                  {!isEditMode && !selectedSeasonalScopeId && seasonalScopes && (
+                    <SeasonalScopeSelector
+                      selectedScopeId={selectedSeasonalScopeId}
+                      onScopeSelect={(scopeId) => {
+                        console.log('Scope selected in EventForm:', scopeId);
+                        setSelectedSeasonalScopeId(scopeId);
+
+                        try {
+                          // Clear existing age group selections when scope changes
+                          const selectedScope = seasonalScopes.find(scope => scope.id === scopeId);
+                          if (selectedScope && selectedScope.ageGroups) {
+                            console.log('Setting age groups from selected scope:', selectedScope.ageGroups);
+                            // Auto-select all age groups from the scope
+                            form.setValue('ageGroups', selectedScope.ageGroups);
+                            // Also update the form's seasonalScopeId field
+                            form.setValue('seasonalScopeId', scopeId);
+                          } else {
+                            console.warn('Selected scope or age groups not found:', scopeId);
                           }
-                        }}
-                        scopes={seasonalScopes}
-                      />
-                    )
+                        } catch (error) {
+                          console.error('Error setting scope-related form values:', error);
+                        }
+                      }}
+                      scopes={seasonalScopes}
+                    />
+                  )}
+                </div>
+              </TabsContent>
                   )}
 
 const handleSubmitForm = async (data: EventFormValues) => {
@@ -100,7 +115,7 @@ const handleSubmitForm = async (data: EventFormValues) => {
       const scopeId = selectedSeasonalScopeId || 
                       data.seasonalScopeId || 
                       defaultValues?.seasonalScopeId;
-                      
+
       console.log('Using seasonal scope ID for submission:', scopeId);
 
       const combinedData = {
@@ -132,3 +147,44 @@ const handleSubmitForm = async (data: EventFormValues) => {
       setIsSaving(false);
     }
   };
+  <FormField
+                    control={form.control}
+                    name="ageGroups"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="border rounded-lg p-4 mt-4">
+                          {!isEditMode && (
+                            <div className="mb-4 flex items-center gap-4">
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  id="select-all-age-groups"
+                                  checked={selectedAgeGroupIds.length === availableAgeGroups.length && availableAgeGroups.length > 0}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      setSelectedAgeGroupIds(availableAgeGroups.map(group => group.id));
+                                      onAgeGroupsChange(availableAgeGroups);
+                                    } else {
+                                      setSelectedAgeGroupIds([]);
+                                      onAgeGroupsChange([]);
+                                    }
+                                  }}
+                                />
+                                <Label htmlFor="select-all-age-groups">Select All</Label>
+                              </div>
+                            </div>
+                          )}
+                          {isEditMode && availableAgeGroups.length === 0 && selectedSeasonalScopeId && (
+                            <div className="text-center p-4 text-muted-foreground">
+                              Loading age groups for this event...
+                            </div>
+                          )}
+                          {!isEditMode && availableAgeGroups.length === 0 && (
+                            <div className="text-center p-4 text-muted-foreground">
+                              Please select a seasonal scope first to see available age groups.
+                            </div>
+                          )}
+
+                        </div>
+                      </FormItem>
+                    )}
+                  />
