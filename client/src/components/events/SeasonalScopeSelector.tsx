@@ -31,6 +31,13 @@ export function SeasonalScopeSelector({ selectedScopeId, onScopeSelect, scopes }
 
   // Convert selectedScopeId to string for the Select component
   const normalizedSelectedId = selectedScopeId;
+  
+  // Log the actual selected ID in string format
+  React.useEffect(() => {
+    if (selectedScopeId) {
+      console.log('SeasonalScopeSelector - normalized selected ID:', normalizedSelectedId?.toString());
+    }
+  }, [selectedScopeId, normalizedSelectedId]);
 
   if (!scopes || scopes.length === 0) {
     return (
@@ -54,8 +61,10 @@ export function SeasonalScopeSelector({ selectedScopeId, onScopeSelect, scopes }
           <Label>Select Seasonal Scope</Label>
           <Select
             value={normalizedSelectedId?.toString() || ""}
-            onValueChange={(value) => onScopeSelect(parseInt(value))}
-            defaultValue={normalizedSelectedId?.toString()}
+            onValueChange={(value) => {
+              console.log('Select value changed to:', value);
+              if (value) onScopeSelect(parseInt(value));
+            }}
           >
             <SelectTrigger className="w-full">
               <SelectValue 
