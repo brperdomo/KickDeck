@@ -65,7 +65,7 @@ export function AgeGroupSelector({ onAgeGroupsChange }: AgeGroupSelectorProps) {
     const allGroups = ageGroups.map(group => ({
       ...group,
       isSelected: true,
-      projectedTeams: group.projectedTeams || 0,
+      projectedTeams: 0, // Always set projected teams to 0 since we're not tracking it
       fieldSize: group.fieldSize || '11v11',
       scoringRule: group.scoringRule || null,
       amountDue: group.amountDue || null
@@ -92,7 +92,7 @@ export function AgeGroupSelector({ onAgeGroupsChange }: AgeGroupSelectorProps) {
     const allGroups = ageGroups.map(group => ({
       ...group,
       isSelected: true,
-      projectedTeams: group.projectedTeams || 0,
+      projectedTeams: 0, // Always set projected teams to 0 since we're not tracking it
       fieldSize: group.fieldSize || '11v11',
       scoringRule: group.scoringRule || null,
       amountDue: group.amountDue || null
@@ -110,19 +110,7 @@ export function AgeGroupSelector({ onAgeGroupsChange }: AgeGroupSelectorProps) {
     }
   };
 
-  const handleProjectedTeamsChange = (index: number, value: string) => {
-    const parsedValue = parseInt(value);
-    const updatedGroups = [...ageGroups];
-    updatedGroups[index] = { 
-      ...updatedGroups[index], 
-      projectedTeams: isNaN(parsedValue) ? 0 : parsedValue 
-    };
-    setAgeGroups(updatedGroups);
-    if (updatedGroups[index].isSelected) {
-      const selectedGroups = updatedGroups.filter(group => group.isSelected);
-      onAgeGroupsChange(selectedGroups);
-    }
-  };
+  // Removed projected teams change handler as it's no longer needed
 
   return (
     <div className="space-y-4">
@@ -134,7 +122,6 @@ export function AgeGroupSelector({ onAgeGroupsChange }: AgeGroupSelectorProps) {
             <TableHead>Birth Year</TableHead>
             <TableHead>Gender</TableHead>
             <TableHead>Division Code</TableHead>
-            <TableHead>Projected Teams</TableHead>
             <TableHead>Field Size</TableHead>
           </TableRow>
         </TableHeader>
@@ -151,16 +138,6 @@ export function AgeGroupSelector({ onAgeGroupsChange }: AgeGroupSelectorProps) {
               <TableCell>{group.birthYear}</TableCell>
               <TableCell>{group.gender}</TableCell>
               <TableCell>{group.divisionCode}</TableCell>
-              <TableCell>
-                <Input
-                  type="number"
-                  min="0"
-                  value={group.projectedTeams}
-                  onChange={(e) => handleProjectedTeamsChange(index, e.target.value)}
-                  className="w-20"
-                  disabled={!group.isSelected}
-                />
-              </TableCell>
               <TableCell>{group.fieldSize}</TableCell>
             </TableRow>
           ))}
