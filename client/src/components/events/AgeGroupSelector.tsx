@@ -88,11 +88,11 @@ export function AgeGroupSelector({ onAgeGroupsChange }: AgeGroupSelectorProps) {
     // Keep all groups selected regardless of user input
     console.log("All age groups are automatically included - manual selection is disabled");
 
-    // Pass all groups as selected to the parent component
+    // Pass all groups to the parent component with their selection state preserved
     const allGroups = ageGroups.map(group => ({
       ...group,
-      isSelected: true,
-      projectedTeams: 0, // Always set projected teams to 0 since we're not tracking it
+      isSelected: group.selected === undefined ? true : group.selected, // Preserve selection state if available
+      projectedTeams: group.projectedTeams || 0,
       fieldSize: group.fieldSize || '11v11',
       scoringRule: group.scoringRule || null,
       amountDue: group.amountDue || null

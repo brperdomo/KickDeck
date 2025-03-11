@@ -183,18 +183,45 @@ app.get('/api/admin/events/:eventId/age-groups', isAdmin, async (req, res) => {
         // Create a simplified version of the group with standard field size
         const simplifiedGroup = {
           ...group,
-          fieldSize: null, // Set field size to null to prevent it from affecting deduplication
-          selected: true, //Added this line
+          fieldSize: group.fieldSize || null, // Keep original field size if present
+          selected: true, // Mark as selected since it's an existing group
         };
         uniqueMap.set(key, simplifiedGroup);
         uniqueGroups.push(simplifiedGroup);
       }
     }
 
-    // Limit to only standard age groups (U4-U18 for both boys and girls)
-    // This should result in approximately 30 age groups
+    // When editing an event, we want to show ALL age groups including standard ones not initially selected
+    const { PREDEFINED_AGE_GROUPS } = require('../../client/src/components/forms/event-form-types');
+    
+    // Make sure all standard age groups are included in the response
+    for (const stdGroup of PREDEFINED_AGE_GROUPS) {
+      const key = stdGroup.divisionCode;
+      if (!uniqueMap.has(key)) {
+        // Add standard age group if not already present
+        const fieldSize = stdGroup.ageGroup.startsWith('U') ? 
+          (parseInt(stdGroup.ageGroup.substring(1)) <= 7 ? '4v4' : 
+           parseInt(stdGroup.ageGroup.substring(1)) <= 10 ? '7v7' : 
+           parseInt(stdGroup.ageGroup.substring(1)) <= 12 ? '9v9' : '11v11') : '11v11';
+        
+        uniqueGroups.push({
+          id: null,
+          eventId,
+          ageGroup: stdGroup.ageGroup,
+          gender: stdGroup.gender,
+          divisionCode: stdGroup.divisionCode,
+          birthDateStart: null,
+          birthDateEnd: null,
+          fieldSize: fieldSize,
+          projectedTeams: 0,
+          createdAt: new Date().toISOString(),
+          selected: false, // Not initially selected
+        });
+      }
+    }
+    
     console.log(`Fetched ${ageGroups.length} age groups for event ${eventId}`);
-    console.log(`Returning ${uniqueGroups.length} unique age groups after deduplication by division code`);
+    console.log(`Returning ${uniqueGroups.length} unique age groups after deduplication by division code and adding standard groups`);
 
     res.json(uniqueGroups);
   } catch (error) {
