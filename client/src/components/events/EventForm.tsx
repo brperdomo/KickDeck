@@ -31,30 +31,47 @@
   }, [initialData]);
 
 {seasonalScopes && (
-                    <SeasonalScopeSelector
-                      selectedScopeId={selectedSeasonalScopeId}
-                      onScopeSelect={(scopeId) => {
-                        console.log('Scope selected in EventForm:', scopeId);
-                        setSelectedSeasonalScopeId(scopeId);
-                        
-                        try {
-                          // Clear existing age group selections when scope changes
-                          const selectedScope = seasonalScopes.find(scope => scope.id === scopeId);
-                          if (selectedScope && selectedScope.ageGroups) {
-                            console.log('Setting age groups from selected scope:', selectedScope.ageGroups);
-                            // Auto-select all age groups from the scope
-                            form.setValue('ageGroups', selectedScope.ageGroups);
-                            // Also update the form's seasonalScopeId field
-                            form.setValue('seasonalScopeId', scopeId);
-                          } else {
-                            console.warn('Selected scope or age groups not found:', scopeId);
+                    isEditMode ? (
+                      // In edit mode, show a disabled/read-only view
+                      <div className="mb-4">
+                        <Label>Seasonal Scope</Label>
+                        <div className="p-2 mt-1 bg-muted rounded-md">
+                          {selectedSeasonalScopeId ? 
+                            seasonalScopes.find(scope => scope.id === selectedSeasonalScopeId)?.name || 
+                            `Scope ID: ${selectedSeasonalScopeId}` : 
+                            'No seasonal scope selected'}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Seasonal scope cannot be changed after event creation
+                        </p>
+                      </div>
+                    ) : (
+                      // In create mode, show the selector
+                      <SeasonalScopeSelector
+                        selectedScopeId={selectedSeasonalScopeId}
+                        onScopeSelect={(scopeId) => {
+                          console.log('Scope selected in EventForm:', scopeId);
+                          setSelectedSeasonalScopeId(scopeId);
+                          
+                          try {
+                            // Clear existing age group selections when scope changes
+                            const selectedScope = seasonalScopes.find(scope => scope.id === scopeId);
+                            if (selectedScope && selectedScope.ageGroups) {
+                              console.log('Setting age groups from selected scope:', selectedScope.ageGroups);
+                              // Auto-select all age groups from the scope
+                              form.setValue('ageGroups', selectedScope.ageGroups);
+                              // Also update the form's seasonalScopeId field
+                              form.setValue('seasonalScopeId', scopeId);
+                            } else {
+                              console.warn('Selected scope or age groups not found:', scopeId);
+                            }
+                          } catch (error) {
+                            console.error('Error setting scope-related form values:', error);
                           }
-                        } catch (error) {
-                          console.error('Error setting scope-related form values:', error);
-                        }
-                      }}
-                      scopes={seasonalScopes}
-                    />
+                        }}
+                        scopes={seasonalScopes}
+                      />
+                    )
                   )}
 
 const handleSubmitForm = async (data: EventFormValues) => {

@@ -22,18 +22,17 @@ export default function EditEvent() {
     queryKey: ['event', id],
     queryFn: async () => {
       const response = await fetch(`/api/admin/events/${id}/edit`);
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || 'Failed to fetch event');
-      }
+      if (!response.ok) throw new Error('Failed to fetch event data');
       const data = await response.json();
-      // Ensure seasonalScopeId is a number if present
-      if (data.seasonalScopeId) {
-        data.seasonalScopeId = Number(data.seasonalScopeId);
+
+      // Set the seasonal scope ID when event data is loaded
+      if (data && data.seasonalScopeId) {
+        setSelectedSeasonalScopeId(data.seasonalScopeId);
+        console.log('Loaded seasonal scope ID from event:', data.seasonalScopeId);
       }
-      console.log('Fetched event data:', data);
+
       return data;
-    }
+    },
   });
 
   const updateEventMutation = useMutation({

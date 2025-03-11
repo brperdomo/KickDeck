@@ -35,9 +35,10 @@ export function SeasonalScopeSelector({ selectedScopeId, onScopeSelect, scopes }
   // Log the actual selected ID in string format
   React.useEffect(() => {
     if (selectedScopeId) {
-      console.log('SeasonalScopeSelector - normalized selected ID:', normalizedSelectedId?.toString());
+      console.log('SeasonalScopeSelector - selected ID:', selectedScopeId);
+      console.log('SeasonalScopeSelector - available scopes:', scopes?.map(s => `${s.id}: ${s.name}`).join(', '));
     }
-  }, [selectedScopeId, normalizedSelectedId]);
+  }, [selectedScopeId, scopes]);
 
   if (!scopes || scopes.length === 0) {
     return (
