@@ -319,7 +319,7 @@ router.get('/:id/age-groups', async (req, res) => {
   const eventId = req.params.id;
   try {
     // Fetch age groups from the database
-    const results = await db.query.eventAgeGroups.findMany({
+    let results = await db.query.eventAgeGroups.findMany({
       where: eq(eventAgeGroups.eventId, eventId),
     });
 
@@ -343,27 +343,30 @@ router.get('/:id/age-groups', async (req, res) => {
           where: eq(ageGroupSettings.seasonalScopeId, seasonalScopeId)
         });
 
-        if (scopeAgeGroups.length > 0) {
-          console.log(`Found ${scopeAgeGroups.length} age groups in seasonal scope ${seasonalScopeId}`);
+        // If no age groups are already in the event, create them from the seasonal scope
+        if (scopeAgeGroups.length > 0 && results.length === 0) {
+          console.log(`Creating ${scopeAgeGroups.length} age groups from seasonal scope ${seasonalScopeId}`);
 
-          // Convert seasonal scope age groups to event age group format
-          const formattedAgeGroups = scopeAgeGroups.map(ag => ({
-            id: 0, // Temporary ID
-            eventId: eventId,
-            ageGroup: ag.ageGroup,
-            birthYear: ag.birthYear,
-            gender: ag.gender,
-            divisionCode: ag.divisionCode,
-            fieldSize: "Standard", // Default value
-            projectedTeams: 8, // Default value
-            createdAt: new Date().toISOString(),
-            birth_date_start: new Date(ag.minBirthYear, 0, 1).toISOString().split('T')[0],
-            selected: true
-          }));
+          // Insert the age groups into the database for this event
+          for (const group of scopeAgeGroups) {
+            await db.insert(eventAgeGroups).values({
+              eventId,
+              ageGroup: group.ageGroup,
+              birthYear: group.birthYear,
+              gender: group.gender,
+              fieldSize: "11v11", // Default value
+              projectedTeams: 8, // Default value
+              seasonalScopeId: group.seasonalScopeId,
+              divisionCode: group.divisionCode,
+              createdAt: new Date().toISOString(),
+            });
+          }
 
-          // Return these age groups even though they're not saved yet
-          res.json(formattedAgeGroups);
-          return;
+          // Fetch the newly created age groups
+          results = await db.query.eventAgeGroups.findMany({
+            where: eq(eventAgeGroups.eventId, eventId)
+          });
+          console.log(`Created and fetched ${results.length} age groups for event ${eventId}`);
         }
       }
     }
@@ -389,6 +392,87 @@ router.get('/:id/age-groups', async (req, res) => {
   } catch (error) {
     console.error('Error fetching age groups:', error);
     res.status(500).json({ error: 'Failed to fetch age groups' });
+  }
+});
+
+// Update fee endpoint
+router.patch('/fees/:feeId', async (req, res) => {
+  try {
+    const feeId = req.params.feeId;
+    const { name, amount, beginDate, endDate, accountingCodeId } = req.body;
+
+    console.log("Updating fee:", feeId, "with data:", JSON.stringify(req.body));
+
+    // Parse dates properly
+    let parsedBeginDate = null;
+    let parsedEndDate = null;
+
+    if (beginDate) {
+      parsedBeginDate = new Date(beginDate);
+      // Check if valid date
+      parsedBeginDate = isNaN(parsedBeginDate.getTime()) ? null : parsedBeginDate;
+    }
+
+    if (endDate) {
+      parsedEndDate = new Date(endDate);
+      // Check if valid date
+      parsedEndDate = isNaN(parsedEndDate.getTime()) ? null : parsedEndDate;
+    }
+
+    const updatedFee = await db.update(eventFees)
+      .set({ 
+        name, 
+        amount: Number(amount), // Ensure amount is a number
+        beginDate: parsedBeginDate, 
+        endDate: parsedEndDate,
+        accountingCodeId: accountingCodeId || null
+      })
+      .where(eq(eventFees.id, parseInt(feeId)))
+      .returning();
+
+    console.log("Fee updated successfully:", updatedFee[0]);
+    res.json(updatedFee[0]);
+  } catch (error) {
+    console.error("Error updating fee:", error);
+    res.status(500).json({ 
+      error: "Failed to update fee", 
+      details: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// Handle fee assignments
+router.post('/fee-assignments', async (req, res) => {
+  try {
+    const eventId = parseInt(req.params.eventId);
+    const { feeId, assignments } = req.body;
+
+    console.log("Received fee assignment request:", { eventId, feeId, assignments });
+
+    if (!feeId || !assignments || !Array.isArray(assignments)) {
+      return res.status(400).json({ error: 'Invalid request data' });
+    }
+
+    // Start a transaction
+    await db.transaction(async (tx) => {
+      // Delete existing assignments for this fee
+      await tx
+        .delete(eventAgeGroupFees)
+        .where(eq(eventAgeGroupFees.feeId, feeId));
+
+      // Create new assignments
+      for (const assignment of assignments) {
+        await tx.insert(eventAgeGroupFees).values({
+          ageGroupId: assignment.ageGroupId,
+          feeId: feeId
+        });
+      }
+    });
+
+    return res.status(200).json({ message: 'Fee assignments updated successfully' });
+  } catch (error) {
+    console.error('Error updating fee assignments:', error);
+    return res.status(500).json({ error: 'Failed to update fee assignments', details: error.message });
   }
 });
 

@@ -94,12 +94,11 @@ export function FeeManagement() {
       if (!response.ok) throw new Error('Failed to fetch fees');
       const fees = await response.json();
 
-      // Format dates properly
+      // Keep the original date format from the server
       return fees.map(fee => ({
         ...fee,
-        // Format dates if they exist, or provide null
-        beginDate: fee.beginDate ? new Date(fee.beginDate).toLocaleDateString() : null,
-        endDate: fee.endDate ? new Date(fee.endDate).toLocaleDateString() : null
+        beginDate: fee.beginDate || null,
+        endDate: fee.endDate || null
       }));
     },
     enabled: !!eventIdParam,
@@ -183,39 +182,52 @@ export function FeeManagement() {
   // Add fee mutation
   const addFeeMutation = useMutation({
     mutationFn: async (feeData) => {
-      const response = await fetch(`/api/admin/events/${eventIdParam}/fees`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(feeData),
-      });
+      // Format dates properly to avoid JSON parsing issues
+      const cleanedData = {
+        ...feeData,
+        amount: Number(feeData.amount),
+        beginDate: feeData.beginDate ? new Date(feeData.beginDate).toISOString().split('T')[0] : null,
+        endDate: feeData.endDate ? new Date(feeData.endDate).toISOString().split('T')[0] : null,
+        accountingCodeId: feeData.accountingCodeId || null
+      };
 
-      if (!response.ok) {
-        throw new Error('Failed to add fee');
+      console.log("Sending new fee data:", JSON.stringify(cleanedData));
+
+      try {
+        const response = await fetch(`/api/admin/events/${eventIdParam}/fees`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(cleanedData),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Server error response:", errorText);
+          throw new Error(`Failed to create fee: ${errorText}`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.error("Fee creation error:", error);
+        throw error;
       }
-
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['fees', eventIdParam]);
-      setIsAddFeeOpen(false);
-      setNewFee({
-        name: '',
-        amount: '',
-        beginDate: null,
-        endDate: null,
-        applyToAll: false,
-      });
+      setIsDialogOpen(false);
+      form.reset();
       toast({
         title: 'Success',
-        description: 'Fee added successfully',
+        description: 'Fee created successfully',
       });
     },
     onError: (error) => {
+      console.error("Error in mutation:", error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to add fee',
+        description: `Failed to create fee: ${error.message}`,
         variant: 'destructive',
       });
     },
@@ -224,30 +236,46 @@ export function FeeManagement() {
   // Update fee mutation
   const updateFeeMutation = useMutation({
     mutationFn: async (feeData) => {
-      const response = await fetch(`/api/admin/events/${eventIdParam}/fees/${feeData.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(feeData),
-      });
+      // Ensure we're sending valid JSON data
+      const cleanedData = {
+        ...feeData,
+        amount: Number(feeData.amount),
+        beginDate: feeData.beginDate ? new Date(feeData.beginDate).toISOString().split('T')[0] : null,
+        endDate: feeData.endDate ? new Date(feeData.endDate).toISOString().split('T')[0] : null,
+        accountingCodeId: feeData.accountingCodeId || null
+      };
 
-      if (!response.ok) {
-        throw new Error('Failed to update fee');
+      try {
+        const response = await fetch(`/api/admin/events/${eventIdParam}/fees/${feeData.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(cleanedData),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.text();
+          console.error("Server error response:", errorData);
+          throw new Error(`Failed to update fee: ${errorData}`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.error("Fee update error:", error);
+        throw error;
       }
-
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['fees', eventIdParam]);
-      setIsEditFeeOpen(false);
-      setEditingFee(null);
+      setIsDialogOpen(false);
       toast({
         title: 'Success',
         description: 'Fee updated successfully',
       });
     },
     onError: (error) => {
+      console.error("Error in mutation:", error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to update fee',
@@ -324,18 +352,24 @@ export function FeeManagement() {
   });
 
   const handleAddFee = () => {
+    // Ensure proper date formatting
     const feeData = {
       ...newFee,
-      amount: parseFloat(newFee.amount) * 100, // Convert to cents
+      amount: parseFloat(newFee.amount) * 100, // Convert to cents,
+      beginDate: newFee.beginDate ? new Date(newFee.beginDate).toISOString().split('T')[0] : null,
+      endDate: newFee.endDate ? new Date(newFee.endDate).toISOString().split('T')[0] : null
     };
 
     addFeeMutation.mutate(feeData);
   };
 
   const handleUpdateFee = () => {
+    // Ensure proper date formatting
     const feeData = {
       ...editingFee,
       amount: parseFloat(editingFee.amount) * 100, // Convert to cents
+      beginDate: editingFee.beginDate ? new Date(editingFee.beginDate).toISOString().split('T')[0] : null,
+      endDate: editingFee.endDate ? new Date(editingFee.endDate).toISOString().split('T')[0] : null
     };
 
     updateFeeMutation.mutate(feeData);
@@ -347,21 +381,68 @@ export function FeeManagement() {
     }
   };
 
-  const handleSaveAssignments = () => {
-    const selectedAgeGroupIds = [];
+  // Handle saving fee assignments
+  const handleSaveAssignments = async () => {
+    // Prepare assignments data
+    const assignments = [];
+    ageGroupsQuery.data?.forEach(ageGroup => {
+      if (selectedAgeGroups[ageGroup.id] && selectedAgeGroups[ageGroup.id][selectedFeeId]) {
+        assignments.push({
+          ageGroupId: ageGroup.id,
+          feeId: selectedFeeId
+        });
+      }
+    });
 
-    Object.entries(selectedAgeGroups).forEach(([ageGroupId, feeMap]) => {
-      Object.entries(feeMap).forEach(([feeId, isSelected]) => {
-        if (parseInt(feeId) === selectedFeeId && isSelected) {
-          selectedAgeGroupIds.push(parseInt(ageGroupId));
-        }
+    console.log("Saving fee assignments:", JSON.stringify({
+      assignments,
+      feeId: selectedFeeId
+    }));
+
+    try {
+      // Call API to save assignments
+      const response = await fetch(`/api/admin/events/${eventIdParam}/fee-assignments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          assignments,
+          feeId: selectedFeeId
+        }),
       });
-    });
 
-    updateAssignmentsMutation.mutate({
-      feeId: selectedFeeId,
-      ageGroupIds: selectedAgeGroupIds,
-    });
+      // First check for errors by examining the response
+      let responseData;
+      const contentType = response.headers.get('content-type');
+      
+      if (contentType && contentType.includes('application/json')) {
+        responseData = await response.json();
+      } else {
+        const text = await response.text();
+        console.error("Server returned non-JSON response:", text);
+        throw new Error("Server returned an invalid response format");
+      }
+
+      if (!response.ok) {
+        throw new Error(responseData.error || 'Failed to save assignments');
+      }
+
+      setIsAssignFeeOpen(false);
+      toast({
+        title: 'Success',
+        description: 'Fee assignments updated',
+      });
+      // Refresh assignments data
+      feeAssignmentsQuery.refetch();
+    } catch (error) {
+      console.error("Fee assignment error:", error);
+      toast({
+        title: 'Error',
+        description: `Failed to save assignments: ${error.message}`,
+        variant: 'destructive',
+      });
+    }
   };
 
   const openAssignFeeDialog = (feeId) => {
@@ -481,9 +562,9 @@ export function FeeManagement() {
                                 form.reset({
                                   name: fee.name,
                                   amount: (fee.amount / 100).toString(),
-                                  beginDate: fee.beginDate,
-                                  endDate: fee.endDate,
-                                  accountingCodeId: fee.accountingCodeId,
+                                  beginDate: fee.beginDate ? fee.beginDate : "", 
+                                  endDate: fee.endDate ? fee.endDate : "",
+                                  accountingCodeId: fee.accountingCodeId || null,
                                 });
                                 setEditingFee(fee);
                                 setIsDialogOpen(true);
@@ -581,30 +662,7 @@ export function FeeManagement() {
 
               <div className="flex justify-end mt-4">
                 <Button 
-                  onClick={() => {
-                    // Save all fee assignments
-                    const assignments = [];
-
-                    ageGroupsQuery.data?.forEach(ageGroup => {
-                      feesQuery.data?.forEach(fee => {
-                        if (selectedAgeGroups[ageGroup.id]?.[fee.id]) {
-                          assignments.push({
-                            ageGroupId: ageGroup.id,
-                            feeId: fee.id
-                          });
-                        }
-                      });
-                    });
-
-                    // Call API to save assignments
-                    if (assignments.length > 0) {
-                      // Implementation would depend on your API structure
-                      toast({
-                        title: 'Success',
-                        description: 'Fee assignments updated'
-                      });
-                    }
-                  }}
+                  onClick={handleSaveAssignments}
                 >
                   Save Assignments
                 </Button>
