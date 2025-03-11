@@ -162,12 +162,18 @@ export function FeeManagement() {
     if (ageGroupsQuery.data && feeAssignmentsQuery.data) {
       const assignmentMap = {};
       ageGroupsQuery.data.forEach(group => {
-        assignmentMap[group.id] = {};
+        // Handle both normal IDs and predefined IDs (which may be strings)
+        const groupId = group.id || `predefined-${group.divisionCode}`;
+        assignmentMap[groupId] = {};
         feesQuery.data?.forEach(fee => {
           const isAssigned = feeAssignmentsQuery.data.some(
-            assignment => assignment.ageGroupId === group.id && assignment.feeId === fee.id
+            assignment => 
+              // Check if the assignment matches either the ID or the division code
+              (assignment.ageGroupId === group.id) || 
+              (group.id?.toString().startsWith('predefined-') && 
+               assignment.divisionCode === group.divisionCode)
           );
-          assignmentMap[group.id][fee.id] = isAssigned;
+          assignmentMap[groupId][fee.id] = isAssigned;
         });
       });
       setSelectedAgeGroups(assignmentMap);
@@ -787,20 +793,23 @@ export function FeeManagement() {
                 }`}
               >
                 <Checkbox
-                  id={`age-group-${ageGroup.id}`}
+                  id={`age-group-${ageGroup.id || ageGroup.divisionCode}`}
                   className="h-5 w-5 border-2 rounded-sm data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 data-[state=checked]:text-white"
                   checked={
-                    selectedAgeGroups[ageGroup.id]?.[selectedFeeId] || 
+                    // Handle both normal IDs and predefined IDs
+                    selectedAgeGroups[ageGroup.id || `predefined-${ageGroup.divisionCode}`]?.[selectedFeeId] || 
                     feeAssignmentsQuery.data?.some(
-                      a => a.ageGroupId === ageGroup.id && a.feeId === selectedFeeId
+                      a => (a.ageGroupId === ageGroup.id) || 
+                          (a.divisionCode === ageGroup.divisionCode && a.feeId === selectedFeeId)
                     ) || 
                     false
                   }
                   onCheckedChange={(checked) => {
+                    const groupId = ageGroup.id || `predefined-${ageGroup.divisionCode}`;
                     setSelectedAgeGroups(prev => ({
                       ...prev,
-                      [ageGroup.id]: {
-                        ...(prev[ageGroup.id] || {}),
+                      [groupId]: {
+                        ...(prev[groupId] || {}),
                         [selectedFeeId]: !!checked
                       }
                     }));

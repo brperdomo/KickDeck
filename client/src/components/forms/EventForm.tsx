@@ -908,16 +908,18 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
 
   // Set isEditMode explicitly based on mode prop
   const isEditMode = mode === "edit";
-  
+
   // Log for debugging
   console.log('Event Form Mode:', mode, 'isEditMode:', isEditMode);
-  
+
   // Ensure we fetch age groups when in edit mode
   useEffect(() => {
-    if (isEditMode && id) {
+    if (isEditMode && event?.id) {
+      console.log(`Fetching age groups for event ${event.id} in edit mode`);
       // Fetch age groups for the event in edit mode
-      fetch(`/api/admin/events/${id}/age-groups`)
+      fetch(`/api/admin/events/${event.id}/age-groups`)
         .then(response => {
+          console.log('Age groups response status:', response.status);
           if (!response.ok) {
             throw new Error('Failed to fetch age groups');
           }
@@ -926,15 +928,30 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
         .then(data => {
           console.log('Fetched age groups:', data);
           // Update the form with the fetched age groups
-          if (data && data.length > 0) {
-            setFieldValue('ageGroups', data.filter(group => group.selected));
+          if (data && Array.isArray(data)) {
+            console.log('All available age groups count:', data.length);
+            
+            // Make age groups data available to the form component
+            // Store all groups first so they can be displayed in the UI
+            if (typeof setAllAgeGroups === 'function') {
+              setAllAgeGroups(data);
+            }
+            
+            // Find any selected groups (or use an empty array)
+            const selectedGroups = data.filter(group => group.selected);
+            console.log('Selected age groups:', selectedGroups);
+            
+            // Set the form value for age groups - even if it's an empty array
+            form.setValue('ageGroups', selectedGroups);
+          } else {
+            console.error('Age groups data is not an array or is empty:', data);
           }
         })
         .catch(error => {
           console.error('Error fetching age groups:', error);
         });
     }
-  }, [isEditMode, id]);
+  }, [isEditMode, event?.id, form]);
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-6">
