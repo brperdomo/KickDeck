@@ -744,13 +744,40 @@ export function FeeManagement() {
 
       {/* Assign Fee Dialog (simplified) */}
       <Dialog open={isAssignFeeOpen} onOpenChange={setIsAssignFeeOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Assign Fee to Age Groups</DialogTitle>
+            <p className="text-sm text-gray-500 mt-2">
+              Select the age groups this fee should be assigned to. The fee will be applied to all participants in the selected age groups.
+            </p>
           </DialogHeader>
-          <div className="space-y-4">
+          
+          {/* Fee being assigned */}
+          {selectedFeeId && feesQuery.data && (
+            <div className="bg-blue-50 p-3 rounded-md mb-4">
+              <h4 className="text-sm font-medium text-blue-800 mb-1">Selected Fee</h4>
+              <p className="text-sm text-blue-900">
+                {feesQuery.data.find(f => f.id === selectedFeeId)?.name} - 
+                {formatCurrency(feesQuery.data.find(f => f.id === selectedFeeId)?.amount || 0)}
+              </p>
+            </div>
+          )}
+          
+          {/* Search input */}
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Search age groups..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              onChange={(e) => {
+                // Implement search functionality if needed
+              }}
+            />
+          </div>
+          
+          <div className="space-y-2 border rounded-md p-3 bg-gray-50">
             {ageGroupsQuery.data?.map(ageGroup => (
-              <div key={ageGroup.id} className="flex items-center space-x-2">
+              <div key={ageGroup.id} className="flex items-center p-2 hover:bg-gray-100 rounded-md">
                 <Checkbox
                   id={`age-group-${ageGroup.id}`}
                   checked={
@@ -770,14 +797,62 @@ export function FeeManagement() {
                     }));
                   }}
                 />
-                <Label htmlFor={`age-group-${ageGroup.id}`}>{ageGroup.name}</Label>
+                <div className="ml-2 flex-1">
+                  <Label htmlFor={`age-group-${ageGroup.id}`} className="font-medium">
+                    {ageGroup.name}
+                  </Label>
+                  <div className="text-xs text-gray-500">
+                    Gender: {ageGroup.gender} • Division: {ageGroup.divisionCode} • Birth Year: {ageGroup.birthYear}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAssignFeeOpen(false)}>
-              Cancel
-            </Button>
+          <DialogFooter className="flex justify-between items-center">
+            <div className="space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  // Select all age groups
+                  const newSelections = {...selectedAgeGroups};
+                  ageGroupsQuery.data?.forEach(ageGroup => {
+                    if (!newSelections[ageGroup.id]) {
+                      newSelections[ageGroup.id] = {};
+                    }
+                    newSelections[ageGroup.id][selectedFeeId] = true;
+                  });
+                  setSelectedAgeGroups(newSelections);
+                }}
+              >
+                Select All
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  // Deselect all age groups
+                  const newSelections = {...selectedAgeGroups};
+                  ageGroupsQuery.data?.forEach(ageGroup => {
+                    if (newSelections[ageGroup.id]) {
+                      newSelections[ageGroup.id][selectedFeeId] = false;
+                    }
+                  });
+                  setSelectedAgeGroups(newSelections);
+                }}
+              >
+                Deselect All
+              </Button>
+            </div>
+            <div className="space-x-2">
+              <Button variant="outline" onClick={() => setIsAssignFeeOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveAssignments}>
+                Save Assignments
+              </Button>
+            </div>
+          </DialogFooter>ton>
             <Button onClick={handleSaveAssignments}>Save Assignments</Button>
           </DialogFooter>
         </DialogContent>
