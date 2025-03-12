@@ -3,19 +3,18 @@ import {
   Card,
   CardContent,
   CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
-  PlusCircle,
-  Paintbrush,
-  Building,
   Settings,
+  PlusCircle,
   Upload,
   Download,
   Users,
   FileText
 } from "lucide-react";
-
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 type InternalOperationsPanelProps = {
   setActiveView: (view: string) => void;
@@ -35,7 +34,7 @@ export function InternalOperationsPanel({
             <Settings className="h-4 w-4" />
           </Button>
         </div>
-        
+
         <div className="space-y-4">
           <Card className="border-primary/20">
             <CardHeader className="pb-2">
@@ -48,7 +47,7 @@ export function InternalOperationsPanel({
               </div>
             </CardContent>
           </Card>
-          
+
           <div className="space-y-2">
             <h3 className="text-sm font-medium mb-2">Quick Actions</h3>
             <Button 
@@ -70,99 +69,95 @@ export function InternalOperationsPanel({
               Generate Reports
             </Button>
           </div>
-        </div>
-      </div>
-    </div>
-  );
+          <div className="space-y-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <h3 className="text-sm font-medium">Client Management</h3>
+              </CardHeader>
+              <CardContent className="pt-0 space-y-2">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-sm"
+                  onClick={() => setActiveView("households")}
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  New Client Setup
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-sm"
+                  onClick={() => openSettings("style")}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  UI Styling Settings
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-sm"
+                  onClick={() => openSettings("general")}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  General Settings
+                </Button>
+              </CardContent>
+            </Card>
 
-        <div className="space-y-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <h3 className="text-sm font-medium">Client Management</h3>
-            </CardHeader>
-            <CardContent className="pt-0 space-y-2">
-              <Button
-                variant="outline"
-                className="w-full justify-start text-sm"
-                onClick={() => setActiveView("households")}
-              >
-                <PlusCircle className="h-4 w-4 mr-2" />
-                New Client Setup
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-start text-sm"
-                onClick={() => openSettings("style")}
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                UI Styling Settings
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-start text-sm"
-                onClick={() => openSettings("general")}
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                General Settings
-              </Button>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <h3 className="text-sm font-medium">Style Settings</h3>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-sm mb-2"
+                  onClick={() => openSettings("styling")}
+                >
+                  <Paintbrush className="h-4 w-4 mr-2" />
+                  UI Customization
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-sm"
+                  onClick={() => openSettings("general")}
+                >
+                  <Building className="h-4 w-4 mr-2" />
+                  Organization Info
+                </Button>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <h3 className="text-sm font-medium">Style Settings</h3>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <Button
-                variant="outline"
-                className="w-full justify-start text-sm mb-2"
-                onClick={() => openSettings("styling")}
-              >
-                <Paintbrush className="h-4 w-4 mr-2" />
-                UI Customization
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-start text-sm"
-                onClick={() => openSettings("general")}
-              >
-                <Building className="h-4 w-4 mr-2" />
-                Organization Info
-              </Button>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <h3 className="text-sm font-medium">User Management</h3>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-sm"
+                  onClick={() => setActiveView("administrators")}
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Manage Administrators
+                </Button>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <h3 className="text-sm font-medium">User Management</h3>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <Button
-                variant="outline"
-                className="w-full justify-start text-sm"
-                onClick={() => setActiveView("administrators")}
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Manage Administrators
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <h3 className="text-sm font-medium">Quick Actions</h3>
-            </CardHeader>
-            <CardContent className="pt-0 space-y-2">
-              <Button variant="outline" className="w-full justify-start text-sm">
-                <Upload className="h-4 w-4 mr-2" />
-                Import Data
-              </Button>
-              <Button variant="outline" className="w-full justify-start text-sm">
-                <Download className="h-4 w-4 mr-2" />
-                Export Data
-              </Button>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <h3 className="text-sm font-medium">Quick Actions</h3>
+              </CardHeader>
+              <CardContent className="pt-0 space-y-2">
+                <Button variant="outline" className="w-full justify-start text-sm">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import Data
+                </Button>
+                <Button variant="outline" className="w-full justify-start text-sm">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Data
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
