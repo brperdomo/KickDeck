@@ -954,3 +954,263 @@ export function StyleSettingsView() {
 }
 
 export default StyleSettingsView;
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
+import { HexColorPicker } from 'react-colorful';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tab, Tabs, TabList, TabPanel } from '@/components/ui/tabs';
+import { useStyleConfig } from '@/hooks/useStyleConfig';
+import axios from 'axios';
+import { Loader2 } from 'lucide-react';
+
+export function StyleSettingsView() {
+  const { styleConfig, isLoading, mutate } = useStyleConfig();
+  const [isDirty, setIsDirty] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    primary: '#000000',
+    secondary: '#32CD32',
+    accent: '#FF8C00',
+    background: '#F5F5F6',
+    foreground: '#000000',
+    logoUrl: '',
+    adminNavBackground: '#FFFFFF',
+    adminNavText: '#000000',
+    adminNavActive: '#000000',
+    adminNavHover: '#f3f4f6',
+  });
+  const [activeTab, setActiveTab] = useState('brand');
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (styleConfig && !isLoading) {
+      setFormData({
+        primary: styleConfig.primary || '#000000',
+        secondary: styleConfig.secondary || '#32CD32',
+        accent: styleConfig.accent || '#FF8C00',
+        background: styleConfig.background || '#F5F5F6',
+        foreground: styleConfig.foreground || '#000000',
+        logoUrl: styleConfig.logoUrl || '',
+        adminNavBackground: styleConfig.adminNavBackground || '#FFFFFF',
+        adminNavText: styleConfig.adminNavText || '#000000',
+        adminNavActive: styleConfig.adminNavActive || styleConfig.primary || '#000000',
+        adminNavHover: styleConfig.adminNavHover || '#f3f4f6',
+      });
+    }
+  }, [styleConfig, isLoading]);
+
+  const handleChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setIsDirty(true);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSaving(true);
+
+    try {
+      await axios.post('/api/admin/styling', formData);
+      toast({
+        title: 'Success',
+        description: 'Style settings updated successfully',
+        variant: 'success',
+      });
+      mutate();
+      setIsDirty(false);
+    } catch (error) {
+      console.error('Error saving style settings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update style settings',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const ColorPicker = ({ color, onChange, label }) => (
+    <div className="mb-4">
+      <Label className="mb-2 block">{label}</Label>
+      <div className="flex items-center gap-2">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="h-10 w-10 p-0 border-2"
+              style={{ backgroundColor: color }}
+            >
+              <span className="sr-only">Pick a color</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <HexColorPicker color={color} onChange={onChange} />
+          </PopoverContent>
+        </Popover>
+        <Input
+          value={color}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-10"
+        />
+      </div>
+    </div>
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-full">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Style Settings</h2>
+      <form onSubmit={handleSubmit}>
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabList className="mb-4">
+                <Tab value="brand">Brand Colors</Tab>
+                <Tab value="dashboard">Dashboard Theme</Tab>
+                <Tab value="assets">Assets</Tab>
+              </TabList>
+              
+              <TabPanel value="brand">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <ColorPicker
+                    color={formData.primary}
+                    onChange={(value) => handleChange('primary', value)}
+                    label="Primary Color"
+                  />
+                  <ColorPicker
+                    color={formData.secondary}
+                    onChange={(value) => handleChange('secondary', value)}
+                    label="Secondary Color"
+                  />
+                  <ColorPicker
+                    color={formData.accent}
+                    onChange={(value) => handleChange('accent', value)}
+                    label="Accent Color"
+                  />
+                  <ColorPicker
+                    color={formData.background}
+                    onChange={(value) => handleChange('background', value)}
+                    label="Background Color"
+                  />
+                </div>
+              </TabPanel>
+              
+              <TabPanel value="dashboard">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <ColorPicker
+                    color={formData.adminNavBackground}
+                    onChange={(value) => handleChange('adminNavBackground', value)}
+                    label="Navigation Background"
+                  />
+                  <ColorPicker
+                    color={formData.adminNavText}
+                    onChange={(value) => handleChange('adminNavText', value)}
+                    label="Navigation Text"
+                  />
+                  <ColorPicker
+                    color={formData.adminNavActive}
+                    onChange={(value) => handleChange('adminNavActive', value)}
+                    label="Active Item"
+                  />
+                  <ColorPicker
+                    color={formData.adminNavHover}
+                    onChange={(value) => handleChange('adminNavHover', value)}
+                    label="Hover State"
+                  />
+                </div>
+              </TabPanel>
+              
+              <TabPanel value="assets">
+                <div className="mb-4">
+                  <Label className="mb-2 block">Logo URL</Label>
+                  <Input
+                    value={formData.logoUrl}
+                    onChange={(e) => handleChange('logoUrl', e.target.value)}
+                    placeholder="/uploads/your-logo.png"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Upload your logo using the File Manager and enter the URL path here
+                  </p>
+                </div>
+                {formData.logoUrl && (
+                  <div className="mt-4">
+                    <Label className="mb-2 block">Logo Preview</Label>
+                    <div className="border rounded p-4 max-w-[300px] bg-white">
+                      <img 
+                        src={formData.logoUrl} 
+                        alt="Logo Preview" 
+                        className="max-h-[100px] max-w-full object-contain"
+                      />
+                    </div>
+                  </div>
+                )}
+              </TabPanel>
+            </Tabs>
+          </CardContent>
+        </Card>
+        
+        <div className="flex justify-end gap-2">
+          <Button
+            type="submit"
+            disabled={!isDirty || isSaving}
+            className="w-full sm:w-auto"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save Changes'
+            )}
+          </Button>
+        </div>
+      </form>
+
+      <div className="mt-8">
+        <h3 className="text-lg font-medium mb-2">Preview</h3>
+        <Card>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="rounded-md p-4 flex flex-col items-center justify-center" style={{ backgroundColor: formData.primary, color: '#fff' }}>
+                <span>Primary</span>
+                <span className="text-sm">{formData.primary}</span>
+              </div>
+              <div className="rounded-md p-4 flex flex-col items-center justify-center" style={{ backgroundColor: formData.secondary, color: '#fff' }}>
+                <span>Secondary</span>
+                <span className="text-sm">{formData.secondary}</span>
+              </div>
+              <div className="rounded-md p-4 flex flex-col items-center justify-center" style={{ backgroundColor: formData.accent, color: '#fff' }}>
+                <span>Accent</span>
+                <span className="text-sm">{formData.accent}</span>
+              </div>
+              <div className="rounded-md p-4 flex flex-col items-center justify-center border" style={{ backgroundColor: formData.background, color: formData.foreground }}>
+                <span>Background</span>
+                <span className="text-sm">{formData.background}</span>
+              </div>
+              <div className="rounded-md p-4 flex flex-col items-center justify-center" style={{ backgroundColor: formData.adminNavBackground, color: formData.adminNavText }}>
+                <span>Nav Background</span>
+                <span className="text-sm">{formData.adminNavBackground}</span>
+              </div>
+              <div className="rounded-md p-4 flex flex-col items-center justify-center" style={{ backgroundColor: formData.adminNavActive, color: '#fff' }}>
+                <span>Active Item</span>
+                <span className="text-sm">{formData.adminNavActive}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
