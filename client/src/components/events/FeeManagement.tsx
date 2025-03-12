@@ -189,17 +189,25 @@ export function FeeManagement() {
         // Handle both normal IDs and predefined IDs (which may be strings)
         const groupId = group.id || `predefined-${group.divisionCode}`;
         assignmentMap[groupId] = {};
+        
         feesQuery.data?.forEach((fee) => {
+          // Check if this age group is assigned to this fee
           const isAssigned = feeAssignmentsQuery.data.some(
             (assignment) =>
-              // Check if the assignment matches either the ID or the division code
-              assignment.ageGroupId === group.id ||
-              (group.id?.toString().startsWith("predefined-") &&
-                assignment.divisionCode === group.divisionCode),
+              assignment.feeId === fee.id && 
+              (
+                // Check if the assignment matches either the ID or the division code
+                assignment.ageGroupId === group.id ||
+                (group.id?.toString().startsWith("predefined-") &&
+                 assignment.divisionCode === group.divisionCode)
+              )
           );
+          
           assignmentMap[groupId][fee.id] = isAssigned;
         });
       });
+      
+      console.log("Setting selected age groups:", assignmentMap);
       setSelectedAgeGroups(assignmentMap);
     }
   }, [feeAssignmentsQuery.data, ageGroupsQuery.data, feesQuery.data, location]);
@@ -355,6 +363,8 @@ export function FeeManagement() {
   // Update fee assignments mutation
   const updateAssignmentsMutation = useMutation({
     mutationFn: async ({ feeId, ageGroupIds }) => {
+      console.log(`Sending request to update fee assignments for fee ${feeId} with ${ageGroupIds.length} age groups`);
+      
       const response = await fetch(
         `/api/admin/events/${eventIdParam}/fee-assignments`,
         {
@@ -369,6 +379,9 @@ export function FeeManagement() {
         },
       );
 
+      // Log the response status to help with debugging
+      console.log(`Fee assignment update response status: ${response.status}`);
+      
       if (!response.ok) {
         const contentType = response.headers.get("content-type");
         if (contentType && contentType.includes("application/json")) {
@@ -388,7 +401,9 @@ export function FeeManagement() {
       // Safely handle JSON parsing
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {
-        return response.json();
+        const jsonData = await response.json();
+        console.log("Received JSON response:", jsonData);
+        return jsonData;
       } else {
         const text = await response.text();
         console.warn("Server returned non-JSON response:", text);
@@ -396,16 +411,13 @@ export function FeeManagement() {
         return { success: true };
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Fee assignment mutation succeeded:", data);
       queryClient.invalidateQueries(["feeAssignments", eventIdParam]);
-      setIsAssignFeeOpen(false);
-      setSelectedFeeId(null);
-      toast({
-        title: "Success",
-        description: "Fee assignments updated successfully",
-      });
+      // We'll handle dialog closing in the handleSaveAssignments function
     },
     onError: (error) => {
+      console.error("Fee assignment mutation failed:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to update fee assignments",
@@ -456,12 +468,15 @@ export function FeeManagement() {
   const handleSaveAssignments = async () => {
     // Prepare assignments data
     const ageGroupIds = [];
+    
+    // Collect all selected age group IDs for the current fee
     ageGroupsQuery.data?.forEach((ageGroup) => {
+      const groupId = ageGroup.id;
       if (
-        selectedAgeGroups[ageGroup.id] &&
-        selectedAgeGroups[ageGroup.id][selectedFeeId]
+        selectedAgeGroups[groupId] &&
+        selectedAgeGroups[groupId][selectedFeeId]
       ) {
-        ageGroupIds.push(ageGroup.id);
+        ageGroupIds.push(groupId);
       }
     });
 
@@ -487,19 +502,27 @@ export function FeeManagement() {
         // Still continue as user might want to clear all assignments
       }
 
-      // Use the React Query mutation instead of direct fetch
+      // Use the React Query mutation
       try {
-        await updateAssignmentsMutation.mutateAsync({
+        const result = await updateAssignmentsMutation.mutateAsync({
           feeId: selectedFeeId,
           ageGroupIds,
         });
 
-        // The mutation's onSuccess handler will take care of:
-        // - invalidating queries
-        // - closing the dialog
-        // - showing success toast
+        console.log("Fee assignment update result:", result);
+        
+        // Force refetch to ensure we have the latest data
+        await feeAssignmentsQuery.refetch();
+        
+        toast({
+          title: "Success",
+          description: `Fee assignments updated successfully. ${ageGroupIds.length} age groups assigned.`,
+        });
+        
+        // Close the dialog
+        setIsAssignFeeOpen(false);
       } catch (mutationError) {
-        // Handle specific mutationError types
+        console.error("Mutation error:", mutationError);
         throw new Error(`Failed to save assignments: ${mutationError.message}`);
       }
     } catch (error) {
