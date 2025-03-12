@@ -1521,6 +1521,8 @@ function ComplexesView() {
 
 // Using the simpler EventsView implementation from line 126
 
+import { ClientManagementView } from "@/components/admin/ClientManagementView";
+
 function HouseholdsView() {
   return <ClientManagementView />;
 }
@@ -1928,7 +1930,6 @@ function SettingsView({ activeSettingsView }: { activeSettingsView: SettingsView
       );
     case 'general':
     case 'styling':
-      // Import is already in the header
       return <GeneralSettingsView />;
     case 'payments':
       return (
@@ -1953,7 +1954,6 @@ function SettingsView({ activeSettingsView }: { activeSettingsView: SettingsView
         </div>
       );
   }
-}
 }
 
 function ThemeEditor() {
