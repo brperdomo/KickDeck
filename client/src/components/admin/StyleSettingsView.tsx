@@ -35,28 +35,19 @@ export function StyleSettingsView() {
     let styleElement = document.getElementById('admin-dashboard-styles');
 
     if (!styleElement) {
+      // Create it if it doesn't exist
       styleElement = document.createElement('style');
       styleElement.id = 'admin-dashboard-styles';
       document.head.appendChild(styleElement);
     }
 
-    // Update the style element with our custom CSS
+    // Update the style content
     styleElement.textContent = `
       :root {
         --color-primary: ${previewStyles.primary};
         --color-secondary: ${previewStyles.secondary};
         --color-accent: ${previewStyles.accent};
         --color-background: ${previewStyles.background};
-        --color-admin-nav-bg: ${previewStyles.adminNavBackground};
-        --color-admin-nav-text: ${previewStyles.adminNavText};
-        --color-admin-nav-active: ${previewStyles.adminNavActive};
-        --color-admin-nav-hover: ${previewStyles.adminNavHover};
-        --color-table-header-bg: ${previewStyles.tableHeaderBg};
-        --color-table-row-hover-bg: ${previewStyles.tableRowHoverBg};
-        --color-card-bg: ${previewStyles.cardBg};
-        --color-card-header-bg: ${previewStyles.cardHeaderBg};
-        --color-input-bg: ${previewStyles.inputBg};
-        --color-input-border: ${previewStyles.inputBorder};
       }
     `;
 
@@ -76,42 +67,23 @@ export function StyleSettingsView() {
     }));
   };
 
-  const handleSaveStyles = async () => {
+  const handleSave = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch('/api/admin/style-settings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(previewStyles),
+      await updateSettings({
+        primaryColor: previewStyles.primary,
+        secondaryColor: previewStyles.secondary,
       });
 
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Style settings saved successfully",
-        });
-
-        // Update the organization settings if needed
-        if (updateSettings) {
-          await updateSettings({
-            primaryColor: previewStyles.primary,
-            secondaryColor: previewStyles.secondary
-          });
-        }
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to save style settings",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Success",
+        description: "Style settings updated successfully",
+      });
     } catch (error) {
-      console.error('Error saving style settings:', error);
+      console.error("Error saving style settings:", error);
       toast({
         title: "Error",
-        description: "An error occurred while saving",
+        description: "Failed to update style settings",
         variant: "destructive",
       });
     } finally {
@@ -119,158 +91,79 @@ export function StyleSettingsView() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-10">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
-        <span className="ml-2 text-gray-500">Loading style settings</span>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Style Settings</h2>
-        <Button onClick={handleSaveStyles} disabled={isSaving}>
-          {isSaving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            "Save Changes"
-          )}
-        </Button>
-      </div>
-
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col space-y-4">
-            <div className="flex justify-between items-center">
-              <div className="space-y-1">
-                <h3 className="text-lg font-medium">Live Preview</h3>
-                <p className="text-sm text-gray-500">This is how your color scheme will look</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="primary">Primary Color</Label>
-                  <div className="flex space-x-2">
-                    <Input
-                      id="primary"
-                      name="primary"
-                      value={previewStyles.primary}
-                      onChange={handleColorChange}
-                    />
-                    <input
-                      type="color"
-                      name="primary"
-                      value={previewStyles.primary}
-                      onChange={handleColorChange}
-                      className="w-10 h-10 rounded cursor-pointer"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="secondary">Secondary Color</Label>
-                  <div className="flex space-x-2">
-                    <Input
-                      id="secondary"
-                      name="secondary"
-                      value={previewStyles.secondary}
-                      onChange={handleColorChange}
-                    />
-                    <input
-                      type="color"
-                      name="secondary"
-                      value={previewStyles.secondary}
-                      onChange={handleColorChange}
-                      className="w-10 h-10 rounded cursor-pointer"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="accent">Accent Color</Label>
-                  <div className="flex space-x-2">
-                    <Input
-                      id="accent"
-                      name="accent"
-                      value={previewStyles.accent}
-                      onChange={handleColorChange}
-                    />
-                    <input
-                      type="color"
-                      name="accent"
-                      value={previewStyles.accent}
-                      onChange={handleColorChange}
-                      className="w-10 h-10 rounded cursor-pointer"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="background">Background Color</Label>
-                  <div className="flex space-x-2">
-                    <Input
-                      id="background"
-                      name="background"
-                      value={previewStyles.background}
-                      onChange={handleColorChange}
-                    />
-                    <input
-                      type="color"
-                      name="background"
-                      value={previewStyles.background}
-                      onChange={handleColorChange}
-                      className="w-10 h-10 rounded cursor-pointer"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="p-4 rounded-md" style={{ backgroundColor: previewStyles.primary, color: 'white' }}>
-                  <h4 className="font-medium">Primary Color</h4>
-                  <p className="text-sm mt-1">This is your primary brand color</p>
-                  <Button 
-                    className="mt-4" 
-                    style={{ backgroundColor: 'white', color: previewStyles.primary }}
-                  >
-                    Button
-                  </Button>
-                </div>
-
-                <div className="p-4 rounded-md" style={{ backgroundColor: previewStyles.secondary, color: 'white' }}>
-                  <h4 className="font-medium">Secondary Color</h4>
-                  <p className="text-sm mt-1">This is your secondary brand color</p>
-                  <Button 
-                    className="mt-4" 
-                    style={{ backgroundColor: 'white', color: previewStyles.secondary }}
-                  >
-                    Button
-                  </Button>
-                </div>
-
-                <div
-                  className="p-4 rounded-md border mt-4"
-                  style={{
-                    borderColor: previewStyles.accent + '40',
-                    backgroundColor: previewStyles.accent + '10',
-                  }}
-                >
-                  <h5 style={{ color: previewStyles.accent }}>Accent Section</h5>
-                  <p className="text-sm mt-1">This section uses the accent color for highlighting.</p>
-                </div>
-              </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>UI Styling</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="primary">Primary Color</Label>
+            <div className="flex gap-2">
+              <Input 
+                id="primary" 
+                name="primary"
+                value={previewStyles.primary} 
+                onChange={handleColorChange}
+              />
+              <input 
+                type="color" 
+                name="primary"
+                value={previewStyles.primary} 
+                onChange={handleColorChange}
+                className="w-10 h-10 rounded cursor-pointer"
+              />
             </div>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="secondary">Secondary Color</Label>
+            <div className="flex gap-2">
+              <Input 
+                id="secondary" 
+                name="secondary"
+                value={previewStyles.secondary} 
+                onChange={handleColorChange}
+              />
+              <input 
+                type="color" 
+                name="secondary"
+                value={previewStyles.secondary} 
+                onChange={handleColorChange}
+                className="w-10 h-10 rounded cursor-pointer"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Changes
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <h3 className="text-lg font-medium mb-4">Preview</h3>
+          <div className="grid gap-4">
+            <div className="p-4 rounded" style={{ backgroundColor: previewStyles.primary, color: 'white' }}>
+              Primary Color
+            </div>
+            <div className="p-4 rounded" style={{ backgroundColor: previewStyles.secondary, color: 'white' }}>
+              Secondary Color
+            </div>
+            <div className="p-4 border rounded">
+              <button className="px-4 py-2 rounded text-white" style={{ backgroundColor: previewStyles.primary }}>
+                Primary Button
+              </button>
+              <button className="px-4 py-2 rounded text-white ml-2" style={{ backgroundColor: previewStyles.secondary }}>
+                Secondary Button
+              </button>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

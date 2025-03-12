@@ -1928,6 +1928,7 @@ function SettingsView({ activeSettingsView }: { activeSettingsView: SettingsView
       );
     case 'general':
     case 'styling':
+      // Import is already in the header
       return <GeneralSettingsView />;
     case 'payments':
       return (
@@ -1952,6 +1953,7 @@ function SettingsView({ activeSettingsView }: { activeSettingsView: SettingsView
         </div>
       );
   }
+}
 }
 
 function ThemeEditor() {
