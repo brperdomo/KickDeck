@@ -392,7 +392,7 @@ export function FeeManagement() {
     });
 
     console.log("Saving fee assignments:", JSON.stringify({
-      assignments,
+      ageGroupIds,
       feeId: selectedFeeId
     }));
 
