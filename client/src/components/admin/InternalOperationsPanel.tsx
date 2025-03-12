@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Card,
@@ -14,11 +13,9 @@ import {
   Upload,
   Download,
   Users,
+  FileText
 } from "lucide-react";
 
-import { Settings, PlusCircle, Upload, Download, FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 type InternalOperationsPanelProps = {
   setActiveView: (view: string) => void;
