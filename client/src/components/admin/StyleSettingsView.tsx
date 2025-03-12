@@ -653,3 +653,121 @@ export function StyleSettingsView() {
     </div>
   );
 }
+import { useState } from "react";
+import { useOrganizationSettings } from "@/hooks/use-organization-settings";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/ui/use-toast";
+import { Loader2 } from "lucide-react";
+
+export function StyleSettingsView() {
+  const { settings, updateSettings, isLoading } = useOrganizationSettings();
+  const [primaryColor, setPrimaryColor] = useState(settings?.primaryColor || "#0f766e");
+  const [secondaryColor, setSecondaryColor] = useState(settings?.secondaryColor || "#14b8a6");
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await updateSettings({
+        primaryColor,
+        secondaryColor
+      });
+      toast({
+        title: "Success",
+        description: "UI styles updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update UI styles",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>UI Styling</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="primaryColor">Primary Color</Label>
+            <div className="flex space-x-2">
+              <Input 
+                id="primaryColor"
+                value={primaryColor}
+                onChange={(e) => setPrimaryColor(e.target.value)}
+              />
+              <input 
+                type="color" 
+                value={primaryColor}
+                onChange={(e) => setPrimaryColor(e.target.value)}
+                className="w-10 h-10 rounded cursor-pointer"
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="secondaryColor">Secondary Color</Label>
+            <div className="flex space-x-2">
+              <Input 
+                id="secondaryColor"
+                value={secondaryColor}
+                onChange={(e) => setSecondaryColor(e.target.value)}
+              />
+              <input 
+                type="color" 
+                value={secondaryColor}
+                onChange={(e) => setSecondaryColor(e.target.value)}
+                className="w-10 h-10 rounded cursor-pointer"
+              />
+            </div>
+          </div>
+          
+          <div className="mt-4">
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Changes
+            </Button>
+          </div>
+        </div>
+        
+        <div className="mt-6">
+          <h3 className="text-lg font-medium mb-4">Preview</h3>
+          <div className="grid gap-4">
+            <div className="p-4 rounded" style={{ backgroundColor: primaryColor, color: 'white' }}>
+              Primary Color
+            </div>
+            <div className="p-4 rounded" style={{ backgroundColor: secondaryColor, color: 'white' }}>
+              Secondary Color
+            </div>
+            <div className="p-4 border rounded">
+              <button className="px-4 py-2 rounded text-white" style={{ backgroundColor: primaryColor }}>
+                Primary Button
+              </button>
+              <button className="px-4 py-2 rounded text-white ml-2" style={{ backgroundColor: secondaryColor }}>
+                Secondary Button
+              </button>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
