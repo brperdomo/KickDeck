@@ -88,7 +88,7 @@ export function StyleSettingsView() {
         }
         const settings = await response.json();
         setPreviewStyles(settings);
-        
+
         // Apply loaded settings to CSS variables
         Object.entries(settings).forEach(([key, value]) => {
           if (typeof value === 'string' && value.startsWith('#')) {
@@ -109,19 +109,19 @@ export function StyleSettingsView() {
 
     loadStylingSettings();
   }, []);
-  
+
   // The handleSave function is defined elsewhere in the file
 
   const handleColorChange = (section: string, colorKey: string, value: string) => {
     // Ensure the value is a valid hex color
     const hexColor = value.startsWith('#') ? value : `#${value}`;
-    
+
     // Update local preview state
     setPreviewStyles((prev) => ({
       ...prev,
       [colorKey]: hexColor,
     }));
-    
+
     // Apply the color change to CSS variables for immediate visual feedback
     document.documentElement.style.setProperty(`--${colorKey}`, hexColor);
   };
@@ -152,29 +152,24 @@ export function StyleSettingsView() {
       // Update theme color
       await setColor(previewStyles.primary || colors.branding.colors.primary);
 
-      // Update all styling settings
-      const response = await fetch('/api/admin/styling', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(previewStyles),
-      });
+      // Make API call to save all styling settings
+      await updateStyleConfig(previewStyles);
 
-      if (!response.ok) {
-        throw new Error('Failed to save styling changes');
-      }
+      // Apply the changes to CSS variables for branding colors
+      document.documentElement.style.setProperty('--primary', previewStyles.primary || colors.branding.colors.primary);
+      document.documentElement.style.setProperty('--secondary', previewStyles.secondary || colors.branding.colors.secondary);
+      document.documentElement.style.setProperty('--accent', previewStyles.accent || colors.branding.colors.accent);
 
       toast({
         title: "Success",
-        description: "UI styling updated successfully",
+        description: "Styling settings updated successfully",
       });
     } catch (error) {
-      console.error('Error saving styling changes:', error);
+      console.error('Failed to save styling settings:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update styling",
+        description: "Failed to save styling settings",
       });
     }
   };
@@ -224,7 +219,7 @@ export function StyleSettingsView() {
               </div>
             </CardContent>
           </Card>
-          
+
           {/* Preview Panel */}
           <Card className="mt-4 sticky top-64">
             <CardHeader className="pb-2">
