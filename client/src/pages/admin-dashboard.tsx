@@ -94,6 +94,7 @@ import { AccountingCodeModal } from "@/components/admin/AccountingCodeModal";
 import FormTemplateEditPage from "@/pages/form-template-edit";
 import FormTemplateCreatePage from "@/pages/form-template-create";
 import FormTemplatesPage from "@/pages/form-templates";
+import { InternalOperationsPanel } from "@/components/admin/InternalOperationsPanel"; // Added import
 
 
 function AdminBanner() {
@@ -975,9 +976,7 @@ function OrganizationSettingsForm() {
       const v = new Vibrant(objectUrl);
 
       //      // Get the palette with error handling
-      const palette = await v.getPalette();
-
-      // Set primary color from the Vibrant swatch
+      const palette = await v.getPalette();      // Set primary color from the Vibrant swatch
       if (palette.Vibrant) {
         setPrimaryColor(palette.Vibrant.hex);
 console.log('Primarycolor extracted:', palette.Vibrant.hex);
