@@ -38,6 +38,28 @@ export function StyleSettingsView() {
       styleElement.id = 'admin-dashboard-styles';
       document.head.appendChild(styleElement);
     }
+    
+    // Update CSS variables for admin navigation
+    styleElement.innerHTML = `
+      :root {
+        --admin-nav-bg: ${previewStyles.adminNavBackground || '#FFFFFF'};
+        --admin-nav-text: ${previewStyles.adminNavText || '#000000'};
+        --admin-nav-active: ${previewStyles.adminNavActive || '#E6F7FF'};
+        --admin-nav-hover: ${previewStyles.adminNavHover || '#f3f4f6'};
+      }
+      
+      .admin-sidebar-item {
+        transition: background-color 0.2s ease;
+      }
+      
+      .admin-sidebar-item:hover {
+        background-color: var(--admin-nav-hover) !important;
+      }
+      
+      .admin-sidebar-item.active {
+        background-color: var(--admin-nav-active) !important;
+      }
+    `;
 
     // Update the CSS variables
     styleElement.textContent = `
@@ -340,6 +362,28 @@ export function StyleSettingsView() {
               />
             </div>
             <p className="text-sm text-gray-500 mt-1">Background color of the active/selected navigation item</p>
+          </div>
+          
+          <div>
+            <Label htmlFor="adminNavHoverColor">Navigation Hover</Label>
+            <div className="flex items-center gap-2 mt-1.5">
+              <div className="w-12 h-12 rounded-md border overflow-hidden">
+                <Input
+                  id="adminNavHoverColor"
+                  type="color"
+                  value={previewStyles.adminNavHover || "#f3f4f6"}
+                  onChange={(e) => handleStyleChange('adminNavHover', e.target.value)}
+                  className="w-16 h-16 transform scale-150 -translate-x-2 -translate-y-2 cursor-pointer"
+                />
+              </div>
+              <Input
+                value={previewStyles.adminNavHover || "#f3f4f6"}
+                onChange={(e) => handleStyleChange('adminNavHover', e.target.value)}
+                className="font-mono"
+                placeholder="#f3f4f6"
+              />
+            </div>
+            <p className="text-sm text-gray-500 mt-1">Background color when hovering over navigation items</p>
           </div>
 
           <div>

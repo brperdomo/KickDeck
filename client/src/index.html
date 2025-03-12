@@ -5,6 +5,26 @@
     <link rel="preconnect" href="https://rsms.me/">
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style id="admin-dashboard-styles">
+      :root {
+        --admin-nav-bg: #FFFFFF;
+        --admin-nav-text: #000000;
+        --admin-nav-active: #E6F7FF;
+        --admin-nav-hover: #f3f4f6;
+      }
+      
+      .admin-sidebar-item {
+        transition: background-color 0.2s ease;
+      }
+      
+      .admin-sidebar-item:hover {
+        background-color: var(--admin-nav-hover) !important;
+      }
+      
+      .admin-sidebar-item.active {
+        background-color: var(--admin-nav-active) !important;
+      }
+    </style>
     <title>MatchPro</title>
     <style>
       /* Base styles for admin navigation */
