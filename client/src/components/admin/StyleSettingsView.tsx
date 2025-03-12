@@ -137,6 +137,95 @@ export function StyleSettingsView() {
 
   return (
     <div className="space-y-6">
+      <div className="bg-white p-4 rounded-md shadow mb-6">
+        <h3 className="text-lg font-medium mb-4">Color Settings</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <Label htmlFor="primaryColor">Primary Color</Label>
+            <div className="flex items-center gap-2 mt-1.5">
+              <div className="w-12 h-12 rounded-md border overflow-hidden">
+                <Input
+                  id="primaryColor"
+                  type="color"
+                  value={previewStyles.primary || "#000000"}
+                  onChange={(e) => handleStyleChange('primary', e.target.value)}
+                  className="w-16 h-16 transform scale-150 -translate-x-2 -translate-y-2 cursor-pointer"
+                />
+              </div>
+              <Input
+                value={previewStyles.primary || "#000000"}
+                onChange={(e) => handleStyleChange('primary', e.target.value)}
+                className="font-mono"
+                placeholder="#000000"
+              />
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="secondaryColor">Secondary Color</Label>
+            <div className="flex items-center gap-2 mt-1.5">
+              <div className="w-12 h-12 rounded-md border overflow-hidden">
+                <Input
+                  id="secondaryColor"
+                  type="color"
+                  value={previewStyles.secondary || "#000000"}
+                  onChange={(e) => handleStyleChange('secondary', e.target.value)}
+                  className="w-16 h-16 transform scale-150 -translate-x-2 -translate-y-2 cursor-pointer"
+                />
+              </div>
+              <Input
+                value={previewStyles.secondary || "#000000"}
+                onChange={(e) => handleStyleChange('secondary', e.target.value)}
+                className="font-mono"
+                placeholder="#000000"
+              />
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="accentColor">Accent Color</Label>
+            <div className="flex items-center gap-2 mt-1.5">
+              <div className="w-12 h-12 rounded-md border overflow-hidden">
+                <Input
+                  id="accentColor"
+                  type="color"
+                  value={previewStyles.accent || "#000000"}
+                  onChange={(e) => handleStyleChange('accent', e.target.value)}
+                  className="w-16 h-16 transform scale-150 -translate-x-2 -translate-y-2 cursor-pointer"
+                />
+              </div>
+              <Input
+                value={previewStyles.accent || "#000000"}
+                onChange={(e) => handleStyleChange('accent', e.target.value)}
+                className="font-mono"
+                placeholder="#000000"
+              />
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="backgroundColor">Background Color</Label>
+            <div className="flex items-center gap-2 mt-1.5">
+              <div className="w-12 h-12 rounded-md border overflow-hidden">
+                <Input
+                  id="backgroundColor"
+                  type="color"
+                  value={previewStyles.background || "#FFFFFF"}
+                  onChange={(e) => handleStyleChange('background', e.target.value)}
+                  className="w-16 h-16 transform scale-150 -translate-x-2 -translate-y-2 cursor-pointer"
+                />
+              </div>
+              <Input
+                value={previewStyles.background || "#FFFFFF"}
+                onChange={(e) => handleStyleChange('background', e.target.value)}
+                className="font-mono"
+                placeholder="#FFFFFF"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Style Settings</h2>
         <Button onClick={handleSaveStyles} disabled={isLoading}>
