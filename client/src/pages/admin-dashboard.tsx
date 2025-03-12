@@ -51,6 +51,7 @@ import {
   CalendarDays,
   ImageIcon,
   FormInput,
+  Bell
 } from "lucide-react";
 import {
   Table,
@@ -977,8 +978,7 @@ function OrganizationSettingsForm() {
 
       //      // Get the palette with error handling
       const palette = await v.getPalette();      // Set primary color from the Vibrant swatch
-      if (palette.Vibrant) {
-        setPrimaryColor(palette.Vibrant.hex);
+      if (palette.Vibrant) {        setPrimaryColor(palette.Vibrant.hex);
 console.log('Primarycolor extracted:', palette.Vibrant.hex);
       }
 
@@ -1995,11 +1995,9 @@ function ThemeEditor() {
             value={theme.backgroundColor}
             onChange={(e) => handleColorChange('backgroundColor', e.target.value)}
           />
-        ```javascript
         </div>
         <div>
-          <Label htmlFor="textColor">Text Color</Label>
-          <Input
+          <Label htmlFor="textColor">Text Color</Label><Input
             id="textColor"
             type="color"
             value={theme.textColor}
