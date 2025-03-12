@@ -328,10 +328,27 @@ export function FeeManagement() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update fee assignments');
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `Server error: ${response.status}`);
+        } else {
+          const text = await response.text();
+          console.error("Server returned non-JSON error response:", text);
+          throw new Error(`Server error: ${response.status}. The server returned an invalid response.`);
+        }
       }
 
-      return response.json();
+      // Safely handle JSON parsing
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return response.json();
+      } else {
+        const text = await response.text();
+        console.warn("Server returned non-JSON response:", text);
+        // Return a valid object since we know the operation was successful
+        return { success: true };
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['feeAssignments', eventIdParam]);
@@ -411,15 +428,20 @@ export function FeeManagement() {
       }
 
       // Use the React Query mutation instead of direct fetch
-      await updateAssignmentsMutation.mutateAsync({
-        feeId: selectedFeeId,
-        ageGroupIds
-      });
+      try {
+        await updateAssignmentsMutation.mutateAsync({
+          feeId: selectedFeeId,
+          ageGroupIds
+        });
 
-      // The mutation's onSuccess handler will take care of:
-      // - invalidating queries
-      // - closing the dialog
-      // - showing success toast
+        // The mutation's onSuccess handler will take care of:
+        // - invalidating queries
+        // - closing the dialog
+        // - showing success toast
+      } catch (mutationError) {
+        // Handle specific mutationError types
+        throw new Error(`Failed to save assignments: ${mutationError.message}`);
+      }
 
     } catch (error) {
       console.error("Fee assignment error:", error);
@@ -428,7 +450,10 @@ export function FeeManagement() {
         description: `Failed to save assignments: ${error.message}`,
         variant: 'destructive',
       });
+      
+      // Keep the dialog open so user can retry
     }
+</old_str>
   };
 
   const openAssignFeeDialog = (feeId) => {
