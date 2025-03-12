@@ -18,7 +18,7 @@ const sidebarItemStyles = {
   }
 };
 
-function StyleSettingsView() {
+function AdminStyleSettings() {
     const [styles, setStyles] = useState({
         adminNavBackground: '#FFFFFF',
         adminNavText: '#000000',
@@ -108,4 +108,4 @@ export function AdminSidebarItem({ active, activePath, item, styles, ...props })
   );
 }
 
-export { StyleSettingsView };
+export { AdminStyleSettings };
