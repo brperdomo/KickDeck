@@ -1520,23 +1520,10 @@ function ComplexesView() {
 
 // Using the simpler EventsView implementation from line 126
 
+import { ClientManagementView } from "@/components/admin/ClientManagementView";
+
 function HouseholdsView() {
-  return (
-    <>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">MatchPro Client</h2>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Client
-        </Button>
-      </div>
-      <Card>
-        <CardContent className="p-6">
-          <p className="text-muted-foreground">Client management coming soon</p>
-        </CardContent>
-      </Card>
-    </>
-  );
+  return <ClientManagementView />;
 }
 
 function SchedulingView() {
