@@ -6,6 +6,7 @@ import { z } from "zod";
 export const organizationSettings = pgTable("organization_settings", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  domain: text("domain").unique(),
   primaryColor: text("primary_color").notNull(),
   secondaryColor: text("secondary_color"),
   logoUrl: text("logo_url"),

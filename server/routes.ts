@@ -51,6 +51,43 @@ import passport from "passport";
 import { setupWebSocketServer } from "./websocket";
 import { randomBytes } from "crypto";
 
+// Domain-based organization identification middleware
+const identifyOrganization = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const hostname = req.hostname;
+    
+    // Extract the subdomain (e.g., 'client' from 'client.matchpro.ai')
+    const parts = hostname.split('.');
+    const isSubdomain = parts.length > 2;
+    
+    if (isSubdomain) {
+      const subdomain = parts[0];
+      
+      // Skip for specific subdomains that aren't client organizations
+      if (subdomain === 'app' || subdomain === 'www' || subdomain === 'api') {
+        return next();
+      }
+      
+      // Look up organization by domain
+      const [organization] = await db
+        .select()
+        .from(organizationSettings)
+        .where(eq(organizationSettings.domain, subdomain))
+        .limit(1);
+      
+      if (organization) {
+        // Attach organization to request object for use in route handlers
+        (req as any).organization = organization;
+      }
+    }
+    
+    next();
+  } catch (error) {
+    console.error('Error identifying organization:', error);
+    next();
+  }
+};
+
 // Admin middleware (unchanged)
 const isAdmin = (req: Request, res: Response, next: Function) => {
   if (!req.isAuthenticated()) {
@@ -72,6 +109,9 @@ export function registerRoutes(app: Express): Server {
     // Set up authentication first
     setupAuth(app);
     log("Authentication routes registered successfully");
+    
+    // Add organization identification middleware
+    app.use(identifyOrganization);
 
     // Register admin routes
     app.use('/api/admin/accounting-codes', isAdmin, accountingCodesRouter);
@@ -1140,6 +1180,58 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         console.error('Error updating organization settings:', error);
         console.error("Error details:", error);
         res.status(500).send("Internal server error");
+      }
+    });
+    
+    // Add endpoints for organization domain management
+    app.get('/api/admin/organizations', isAdmin, async (req, res) => {
+      try {
+        const organizations = await db
+          .select()
+          .from(organizationSettings)
+          .orderBy(organizationSettings.name);
+          
+        res.json(organizations);
+      } catch (error) {
+        console.error('Error fetching organizations:', error);
+        res.status(500).send("Failed to fetch organizations");
+      }
+    });
+    
+    app.post('/api/admin/organizations', isAdmin, async (req, res) => {
+      try {
+        const { name, domain, primaryColor, secondaryColor, logoUrl } = req.body;
+        
+        // Check if domain is already in use
+        if (domain) {
+          const [existingOrg] = await db
+            .select()
+            .from(organizationSettings)
+            .where(eq(organizationSettings.domain, domain))
+            .limit(1);
+            
+          if (existingOrg) {
+            return res.status(400).json({ error: "Domain is already in use" });
+          }
+        }
+        
+        const [organization] = await db
+          .insert(organizationSettings)
+          .values({
+            name,
+            domain,
+            primaryColor: primaryColor || '#000000',
+            secondaryColor: secondaryColor || '#32CD32',
+            logoUrl,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })
+          .returning();
+          
+        res.status(201).json(organization);
+      } catch (error) {
+        console.error('Error creating organization:', error);
+        res.status(500).send("Failed to create organization");
       }
     });
 

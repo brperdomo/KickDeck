@@ -107,6 +107,14 @@ async function testDbConnection() {
     } catch (error) {
       log("Error creating email templates table: " + (error as Error).message);
     }
+    
+    // Add domain field to organization_settings table
+    try {
+      const { addDomainToOrganizationSettings } = await import('./migrations/add_domain_to_organization_settings');
+      await addDomainToOrganizationSettings();
+    } catch (error) {
+      log("Error updating organization_settings table: " + (error as Error).message);
+    }
 
 
     // Register routes first to ensure all middleware is set up
