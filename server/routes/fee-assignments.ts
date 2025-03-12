@@ -27,22 +27,22 @@ export const getFeeAssignments = async (req: Request, res: Response) => {
     let assignments = [];
     
     if (allAgeGroupIds.length > 0 && allFeeIds.length > 0) {
-      assignments = await db.query.eventAgeGroupFees.findMany({
-        where: and(
-          inArray(eventAgeGroupFees.ageGroupId, allAgeGroupIds),
-          inArray(eventAgeGroupFees.feeId, allFeeIds)
-        ),
-      });
+      try {
+        assignments = await db.query.eventAgeGroupFees.findMany({
+          where: and(
+            inArray(eventAgeGroupFees.ageGroupId, allAgeGroupIds),
+            inArray(eventAgeGroupFees.feeId, allFeeIds)
+          ),
+        });
+        console.log(`Found ${assignments.length} fee assignments for event ${eventId}`);
+      } catch (dbError) {
+        console.error('Database error when fetching assignments:', dbError);
+        assignments = []; // Ensure we have an empty array to return
+      }
     }
     
-    // Include more detailed information in the response
-    console.log(`Found ${assignments.length} fee assignments for event ${eventId}`);
-    
-    return res.status(200).json({
-      assignments,
-      totalAssignments: assignments.length,
-      message: "Fee assignments retrieved successfully"
-    });
+    // Make sure we return an array for clients
+    return res.status(200).json(assignments);
   } catch (error) {
     console.error('Error fetching fee assignments:', error);
     return res.status(500).json({ error: 'Failed to fetch fee assignments' });
@@ -107,11 +107,12 @@ export const updateFeeAssignments = async (req: Request, res: Response) => {
       }
     });
 
-    return res.status(200).json({ 
-      success: true,
-      message: 'Fee assignments updated successfully',
-      assignedCount: validAgeGroupIds.length
-    });
+    // Query the updated assignments to return to client
+const updatedAssignments = await db.query.eventAgeGroupFees.findMany({
+  where: eq(eventAgeGroupFees.feeId, feeId)
+});
+
+return res.status(200).json(updatedAssignments);
   } catch (error) {
     console.error('Error updating fee assignments:', error);
     return res.status(500).json({ 

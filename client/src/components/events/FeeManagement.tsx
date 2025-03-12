@@ -164,20 +164,46 @@ export function FeeManagement() {
   const feeAssignmentsQuery = useQuery({
     queryKey: ["feeAssignments", eventIdParam],
     queryFn: async () => {
-      const response = await fetch(
-        `/api/admin/events/${eventIdParam}/fee-assignments`,
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch fee assignments");
+      console.log(`Fetching fee assignments for event ${eventIdParam}`);
+      try {
+        const response = await fetch(
+          `/api/admin/events/${eventIdParam}/fee-assignments`,
+        );
+        
+        if (!response.ok) {
+          console.error(`Failed to fetch fee assignments: ${response.status}`);
+          throw new Error(`Failed to fetch fee assignments: ${response.status}`);
+        }
+        
+        // Check if response is JSON
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          const text = await response.text();
+          console.error("Server returned non-JSON response:", text);
+          return []; // Return empty array on invalid response
+        }
+        
+        const data = await response.json();
+        console.log("Received fee assignments:", data);
+        
+        // Return just the assignments array if the response has the new format
+        const assignments = data.assignments || data;
+        
+        if (!Array.isArray(assignments)) {
+          console.error("Unexpected assignments format:", assignments);
+          return [];
+        }
+        
+        return assignments;
+      } catch (error) {
+        console.error("Error fetching fee assignments:", error);
+        return []; // Return empty array on error
       }
-      const data = await response.json();
-      console.log("Received fee assignments:", data);
-      // Return just the assignments array if the response has the new format
-      return data.assignments || data; 
     },
     enabled: !!eventIdParam,
-    staleTime: 30000, // Keep data fresh for 30 seconds
+    staleTime: 5000, // Keep data fresh for only 5 seconds to ensure updates
     refetchOnWindowFocus: true, // Refresh when window regains focus
+    retry: 2, // Retry failed requests twice
   });
 
   // Initialize selected age groups when fee assignments load
@@ -193,8 +219,9 @@ export function FeeManagement() {
 
       // First initialize all groups and fees with false (not assigned)
       ageGroupsQuery.data.forEach((group) => {
-        // Handle both normal IDs and predefined IDs (which may be strings)
-        const groupId = group.id || `predefined-${group.divisionCode}`;
+        const groupId = group.id;
+        if (!groupId) return; // Skip if no ID
+        
         assignmentMap[groupId] = {};
 
         feesQuery.data.forEach((fee) => {
@@ -203,26 +230,21 @@ export function FeeManagement() {
       });
 
       // Then mark assignments as true based on the fetched data
-      feeAssignmentsQuery.data.forEach((assignment) => {
-        // Find the group this assignment belongs to 
-        const matchingGroup = ageGroupsQuery.data.find(
-          group => group.id === assignment.ageGroupId || 
-                  (group.divisionCode === assignment.divisionCode)
-        );
-
-        if (matchingGroup) {
-          const groupId = matchingGroup.id || `predefined-${matchingGroup.divisionCode}`;
-          if (!assignmentMap[groupId]) {
-            assignmentMap[groupId] = {};
+      if (Array.isArray(feeAssignmentsQuery.data)) {
+        feeAssignmentsQuery.data.forEach((assignment) => {
+          const ageGroupId = assignment.ageGroupId;
+          const feeId = assignment.feeId;
+          
+          if (ageGroupId && feeId && assignmentMap[ageGroupId]) {
+            assignmentMap[ageGroupId][feeId] = true;
           }
-          assignmentMap[groupId][assignment.feeId] = true;
-        }
-      });
+        });
+      }
 
-      console.log("Setting selected age groups:", assignmentMap);
+      console.log("Setting selected age groups with assignments:", assignmentMap);
       setSelectedAgeGroups(assignmentMap);
     }
-  }, [feeAssignmentsQuery.data, ageGroupsQuery.data, feesQuery.data, location]);
+  }, [feeAssignmentsQuery.data, ageGroupsQuery.data, feesQuery.data, location, eventIdParam]);
 
   // Add fee mutation
   const addFeeMutation = useMutation({
@@ -478,6 +500,19 @@ export function FeeManagement() {
 
   // Handle saving fee assignments
   const handleSaveAssignments = async () => {
+    // Determine which fee we're working with
+    const currentFeeId = selectedFeeId || (feesQuery.data && feesQuery.data.length > 0 ? feesQuery.data[0].id : null);
+    
+    if (!currentFeeId) {
+      console.error("No fee selected and no fees available");
+      toast({
+        title: "Error",
+        description: "No fee selected",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Prepare assignments data
     const ageGroupIds = [];
 
@@ -485,8 +520,9 @@ export function FeeManagement() {
     ageGroupsQuery.data?.forEach((ageGroup) => {
       const groupId = ageGroup.id;
       if (
+        groupId && 
         selectedAgeGroups[groupId] &&
-        selectedAgeGroups[groupId][selectedFeeId]
+        selectedAgeGroups[groupId][currentFeeId]
       ) {
         ageGroupIds.push(groupId);
       }
@@ -496,7 +532,7 @@ export function FeeManagement() {
       "Saving fee assignments:",
       JSON.stringify({
         ageGroupIds,
-        feeId: selectedFeeId,
+        feeId: currentFeeId,
       }),
     );
 
@@ -505,35 +541,29 @@ export function FeeManagement() {
         throw new Error("Event ID is missing");
       }
 
-      if (!selectedFeeId) {
-        throw new Error("No fee selected");
-      }
-
-      if (!ageGroupIds.length) {
-        console.warn("No age groups selected for this fee");
-        // Still continue as user might want to clear all assignments
-      }
-
       // Use the React Query mutation
       try {
         const result = await updateAssignmentsMutation.mutateAsync({
-          feeId: selectedFeeId,
+          feeId: currentFeeId,
           ageGroupIds,
         });
 
         console.log("Fee assignment update result:", result);
-
-        // Force refetch to ensure we have the latest data
-        await Promise.all([
-          feeAssignmentsQuery.refetch(),
-          queryClient.invalidateQueries(['feeAssignments', eventIdParam])
-        ]);
-
+        
+        // Show success message
         toast({
           title: "Success",
           description: `Fee assignments updated successfully. ${ageGroupIds.length} age groups assigned.`,
         });
-        setIsAssignFeeOpen(false); //Removed Duplicate Code
+
+        // Make sure to invalidate and refetch data to update the UI
+        queryClient.invalidateQueries(['feeAssignments', eventIdParam]);
+        await feeAssignmentsQuery.refetch();
+        
+        // Close dialog if we're in one
+        if (isAssignFeeOpen) {
+          setIsAssignFeeOpen(false);
+        }
 
       } catch (mutationError) {
         console.error("Mutation error:", mutationError);
@@ -546,7 +576,6 @@ export function FeeManagement() {
         description: `Failed to save assignments: ${error.message}`,
         variant: "destructive",
       });
-
       // Keep the dialog open so user can retry
     }
   };
