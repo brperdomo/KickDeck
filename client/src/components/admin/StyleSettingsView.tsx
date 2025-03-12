@@ -653,3 +653,304 @@ export function StyleSettingsView() {
     </div>
   );
 }
+import React, { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { Label } from "@/components/ui/label";
+import DashboardPreview from './DashboardPreview';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+
+export function StyleSettingsView() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+  const [settings, setSettings] = useState({
+    primaryColor: '#1E40AF',
+    secondaryColor: '#1C64F2',
+    accentColor: '#3B82F6',
+    logoUrl: '',
+    navBackgroundColor: '#ffffff',
+    navTextColor: '#1E293B',
+    buttonStyle: 'rounded',
+    fontFamily: 'Inter, sans-serif'
+  });
+
+  useEffect(() => {
+    // Fetch current organization settings
+    const fetchSettings = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch('/api/admin/organization/settings');
+        if (response.ok) {
+          const data = await response.json();
+          setSettings({
+            ...settings,
+            primaryColor: data.primaryColor || settings.primaryColor,
+            secondaryColor: data.secondaryColor || settings.secondaryColor,
+            accentColor: data.accentColor || settings.accentColor,
+            logoUrl: data.logoUrl || settings.logoUrl,
+            navBackgroundColor: data.navBackgroundColor || settings.navBackgroundColor,
+            navTextColor: data.navTextColor || settings.navTextColor,
+            buttonStyle: data.buttonStyle || settings.buttonStyle,
+            fontFamily: data.fontFamily || settings.fontFamily
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching organization settings:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setSettings(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setSettings(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+
+    try {
+      const response = await fetch('/api/admin/organization/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(settings)
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Organization style settings updated successfully",
+          variant: "default"
+        });
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update settings');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to update style settings: ${(error as Error).message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="w-full md:w-1/2">
+          <Card>
+            <CardContent className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <h3 className="text-lg font-medium mb-4">Style Settings</h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="primaryColor">Primary Color</Label>
+                    <div className="flex mt-1">
+                      <Input
+                        id="primaryColor"
+                        name="primaryColor"
+                        type="color"
+                        value={settings.primaryColor}
+                        onChange={handleInputChange}
+                        className="w-12 p-1 h-10"
+                      />
+                      <Input
+                        name="primaryColor"
+                        value={settings.primaryColor}
+                        onChange={handleInputChange}
+                        className="ml-2 flex-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="secondaryColor">Secondary Color</Label>
+                    <div className="flex mt-1">
+                      <Input
+                        id="secondaryColor"
+                        name="secondaryColor"
+                        type="color"
+                        value={settings.secondaryColor}
+                        onChange={handleInputChange}
+                        className="w-12 p-1 h-10"
+                      />
+                      <Input
+                        name="secondaryColor"
+                        value={settings.secondaryColor}
+                        onChange={handleInputChange}
+                        className="ml-2 flex-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="accentColor">Accent Color</Label>
+                    <div className="flex mt-1">
+                      <Input
+                        id="accentColor"
+                        name="accentColor"
+                        type="color"
+                        value={settings.accentColor}
+                        onChange={handleInputChange}
+                        className="w-12 p-1 h-10"
+                      />
+                      <Input
+                        name="accentColor"
+                        value={settings.accentColor}
+                        onChange={handleInputChange}
+                        className="ml-2 flex-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="navBackgroundColor">Navigation Background Color</Label>
+                    <div className="flex mt-1">
+                      <Input
+                        id="navBackgroundColor"
+                        name="navBackgroundColor"
+                        type="color"
+                        value={settings.navBackgroundColor}
+                        onChange={handleInputChange}
+                        className="w-12 p-1 h-10"
+                      />
+                      <Input
+                        name="navBackgroundColor"
+                        value={settings.navBackgroundColor}
+                        onChange={handleInputChange}
+                        className="ml-2 flex-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="navTextColor">Navigation Text Color</Label>
+                    <div className="flex mt-1">
+                      <Input
+                        id="navTextColor"
+                        name="navTextColor"
+                        type="color"
+                        value={settings.navTextColor}
+                        onChange={handleInputChange}
+                        className="w-12 p-1 h-10"
+                      />
+                      <Input
+                        name="navTextColor"
+                        value={settings.navTextColor}
+                        onChange={handleInputChange}
+                        className="ml-2 flex-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="logoUrl">Logo URL</Label>
+                    <Input
+                      id="logoUrl"
+                      name="logoUrl"
+                      value={settings.logoUrl}
+                      onChange={handleInputChange}
+                      className="mt-1"
+                      placeholder="/uploads/your-logo.png"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="buttonStyle">Button Style</Label>
+                    <Select
+                      value={settings.buttonStyle}
+                      onValueChange={(value) => handleSelectChange('buttonStyle', value)}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select button style" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="rounded">Rounded</SelectItem>
+                        <SelectItem value="squared">Squared</SelectItem>
+                        <SelectItem value="pill">Pill</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="fontFamily">Font Family</Label>
+                    <Select
+                      value={settings.fontFamily}
+                      onValueChange={(value) => handleSelectChange('fontFamily', value)}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select font family" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Inter, sans-serif">Inter</SelectItem>
+                        <SelectItem value="Roboto, sans-serif">Roboto</SelectItem>
+                        <SelectItem value="'Open Sans', sans-serif">Open Sans</SelectItem>
+                        <SelectItem value="'Montserrat', sans-serif">Montserrat</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full mt-6"
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Settings'
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="w-full md:w-1/2">
+          <DashboardPreview 
+            primaryColor={settings.primaryColor}
+            secondaryColor={settings.secondaryColor}
+            accentColor={settings.accentColor}
+            logoUrl={settings.logoUrl}
+            navBackgroundColor={settings.navBackgroundColor}
+            navTextColor={settings.navTextColor}
+            buttonStyle={settings.buttonStyle}
+            fontFamily={settings.fontFamily}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default StyleSettingsView;
