@@ -110,41 +110,7 @@ export function StyleSettingsView() {
     loadStylingSettings();
   }, []);
   
-  // Add save handler function
-  const handleSave = async () => {
-    try {
-      const response = await fetch('/api/admin/styling', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(previewStyles),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to save styling settings');
-      }
-      
-      // Refresh CSS variables from saved settings
-      Object.entries(previewStyles).forEach(([key, value]) => {
-        if (typeof value === 'string' && value.startsWith('#')) {
-          document.documentElement.style.setProperty(`--${key}`, value);
-        }
-      });
-      
-      toast({
-        title: "Success",
-        description: "Styling settings saved successfully",
-      });
-    } catch (error) {
-      console.error('Error saving styling settings:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save styling settings",
-      });
-    }
-  };
+  // The handleSave function is defined elsewhere in the file
 
   const handleColorChange = (section: string, colorKey: string, value: string) => {
     // Ensure the value is a valid hex color
@@ -180,6 +146,7 @@ export function StyleSettingsView() {
     });
   };
 
+  // Combined handleSave function with all necessary functionality
   const handleSave = async () => {
     try {
       // Update theme color
