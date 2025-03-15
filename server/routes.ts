@@ -337,6 +337,8 @@ export function registerRoutes(app: Express): Server {
 
     // Administrator creation endpoint
     app.post('/api/admin/administrators', isAdmin, async (req, res) => {
+      const tx = db.transaction();
+
       try {
         const { email, firstName, lastName, password, roles } = req.body;
 
@@ -348,11 +350,13 @@ export function registerRoutes(app: Express): Server {
           .limit(1);
 
         if (existingUser) {
-          return res.status(400).send("Email already registered");
+          return res.status(400).json({ 
+            error: "Email already registered" 
+          });
         }
 
-        // Start a transaction to create user and assign roles
-        await db.transaction(async (tx) => {
+        // Start a transaction
+        const result = await tx(async (tx) => {
           // Create the user
           const hashedPassword = await crypto.hash(password);
           const [newAdmin] = await tx
@@ -364,39 +368,35 @@ export function registerRoutes(app: Express): Server {
               lastName,
               password: hashedPassword,
               isAdmin: true,
+              isParent: false,
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString()
             })
-            .returning({
-              id: users.id,
-              email: users.email,
-              username: users.username,
-              firstName: users.firstName,
-              lastName: users.lastName,
-              isAdmin: users.isAdmin
-            });
+            .returning();
 
-          // Ensure we have valid roles
+          // Validate roles
           if (!Array.isArray(roles) || roles.length === 0) {
             throw new Error("At least one role is required");
           }
 
-          // Get or create roles
+          // Get or create roles and assign them
           for (const roleName of roles) {
             // Get or create the role
-            let role = await tx
+            let [role] = await tx
               .select()
               .from(roles)
               .where(eq(roles.name, roleName))
-              .limit(1)
-              .then(rows => rows[0]);
+              .limit(1);
 
             if (!role) {
               [role] = await tx
                 .insert(roles)
                 .values({
                   name: roleName,
-                  description: `${roleName.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} role`,
+                  description: `${roleName.split('_').map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                  ).join(' ')} role`,
+                  createdAt: new Date()
                 })
                 .returning();
             }
@@ -407,16 +407,27 @@ export function registerRoutes(app: Express): Server {
               .values({
                 userId: newAdmin.id,
                 roleId: role.id,
+                createdAt: new Date()
               });
           }
+
+          return newAdmin;
         });
 
-        res.json({ message: "Administrator created successfully" });
+        await tx.commit();
+
+        res.json({ 
+          message: "Administrator created successfully",
+          admin: result
+        });
+
       } catch (error) {
+        await tx.rollback();
         console.error('Error creating administrator:', error);
-        // Added basic error logging for white screen debugging.
-        console.error("Error details:", error);
-        res.status(500).send(error instanceof Error ? error.message : "Failed to create administrator");
+
+        res.status(500).json({ 
+          error: error instanceof Error ? error.message : "Failed to create administrator"
+        });
       }
     });
 
