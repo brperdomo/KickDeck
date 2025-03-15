@@ -335,7 +335,7 @@ export function registerRoutes(app: Express): Server {
       }
     });
 
-    // Administrator creation endpoint
+    // Update the administrator creation endpoint
     app.post('/api/admin/administrators', isAdmin, async (req, res) => {
       try {
         const { email, firstName, lastName, password, roles } = req.body;
@@ -343,11 +343,11 @@ export function registerRoutes(app: Express): Server {
         // Input validation
         if (!email || !firstName || !lastName || !password || !roles || !Array.isArray(roles) || roles.length === 0) {
           return res.status(400).json({
-            error: "Invalid input data. All fields are required and roles must be a non-empty array."
+            error: "All fields are required and roles must be a non-empty array"
           });
         }
 
-        // Check for existing user
+        // Check if email exists
         const [existingUser] = await db
           .select()
           .from(users)
@@ -360,11 +360,13 @@ export function registerRoutes(app: Express): Server {
           });
         }
 
-        // Create user and assign roles in a transaction
-        try {
-          const hashedPassword = await crypto.hash(password);
-          
-          const [newAdmin] = await db
+        // Hash password
+        const hashedPassword = await crypto.hash(password);
+
+        // Create user in a transaction
+        const [newAdmin] = await db.transaction(async (tx) => {
+          // Create user
+          const [user] = await tx
             .insert(users)
             .values({
               email,
@@ -379,23 +381,17 @@ export function registerRoutes(app: Express): Server {
             })
             .returning();
 
-          console.log('Created new user:', newAdmin);
-
-          // Assign roles one by one
+          // Get or create roles and assign them
           for (const roleName of roles) {
-            // First get or create the role
-            let roleId: number;
-            
-            const [existingRole] = await db
+            // Get or create role
+            let [role] = await tx
               .select()
               .from(roles)
               .where(eq(roles.name, roleName))
               .limit(1);
 
-            if (existingRole) {
-              roleId = existingRole.id;
-            } else {
-              const [newRole] = await db
+            if (!role) {
+              [role] = await tx
                 .insert(roles)
                 .values({
                   name: roleName,
@@ -405,41 +401,36 @@ export function registerRoutes(app: Express): Server {
                   createdAt: new Date().toISOString()
                 })
                 .returning();
-              roleId = newRole.id;
             }
 
-            // Then create the admin role assignment
-            await db
+            // Create role assignment
+            await tx
               .insert(adminRoles)
               .values({
-                userId: newAdmin.id,
-                roleId: roleId,
+                userId: user.id,
+                roleId: role.id,
                 createdAt: new Date().toISOString()
               });
-
-            console.log(`Assigned role ${roleName} to user ${newAdmin.id}`);
           }
 
-          // Send success response
-          res.json({ 
-            message: "Administrator created successfully",
-            admin: {
-              id: newAdmin.id,
-              email: newAdmin.email,
-              firstName: newAdmin.firstName,
-              lastName: newAdmin.lastName,
-              roles: roles
-            }
-          });
+          return [user];
+        });
 
-        } catch (error) {
-          console.error('Database operation failed:', error);
-          throw error;
-        }
+        // Return success response
+        res.json({
+          message: "Administrator created successfully",
+          admin: {
+            id: newAdmin.id,
+            email: newAdmin.email,
+            firstName: newAdmin.firstName,
+            lastName: newAdmin.lastName,
+            roles
+          }
+        });
 
       } catch (error) {
         console.error('Error creating administrator:', error);
-        res.status(500).json({ 
+        res.status(500).json({
           error: "Failed to create administrator",
           details: error instanceof Error ? error.message : "Unknown error"
         });
