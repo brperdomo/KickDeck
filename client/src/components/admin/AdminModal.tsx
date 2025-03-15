@@ -1,14 +1,14 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,148 +18,86 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { adminFormSchema } from "@db/schema";
-import type { AdminFormValues } from "@db/schema";
 
-const availableRoles = [
-  { id: "super_admin", name: "Super Admin", description: "Full system access and overrides all other roles" },
-  { id: "tournament_admin", name: "Tournament Admin", description: "Manage tournaments and events" },
-  { id: "score_admin", name: "Score Admin", description: "Manage scores and results" },
-  { id: "finance_admin", name: "Finance Admin", description: "Manage financial aspects" },
-] as const;
+// Form schema
+const formSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  roles: z.array(z.string()).min(1, "At least one role is required"),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+const ROLES = [
+  {
+    id: "super_admin",
+    name: "Super Admin",
+    description: "Full system access and overrides all other roles",
+  },
+  {
+    id: "tournament_admin",
+    name: "Tournament Admin",
+    description: "Manage tournaments and events",
+  },
+  {
+    id: "score_admin",
+    name: "Score Admin",
+    description: "Manage scores and results",
+  },
+  {
+    id: "finance_admin",
+    name: "Finance Admin",
+    description: "Manage financial aspects",
+  },
+];
 
 interface AdminModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  adminToEdit?: {
-    id: number;
-    email: string;
-    firstName: string;
-    lastName: string;
-    roles: string[];
-  };
 }
 
-export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps) {
+export function AdminModal({ open, onOpenChange }: AdminModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [emailToCheck, setEmailToCheck] = useState("");
+  const [emailExists, setEmailExists] = useState(false);
 
-  const form = useForm<AdminFormValues>({
-    resolver: zodResolver(adminFormSchema),
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      firstName: adminToEdit?.firstName ?? "",
-      lastName: adminToEdit?.lastName ?? "",
-      email: adminToEdit?.email ?? "",
+      email: "",
+      firstName: "",
+      lastName: "",
       password: "",
-      roles: adminToEdit?.roles ?? [],
+      roles: [],
     },
   });
 
-  useEffect(() => {
-    if (adminToEdit) {
-      form.reset({
-        firstName: adminToEdit.firstName,
-        lastName: adminToEdit.lastName,
-        email: adminToEdit.email,
-        password: "",
-        roles: adminToEdit.roles,
-      });
-    } else {
-      form.reset({
-        firstName: "",
-        lastName: "",
-        email: "",
-        password: "",
-        roles: [],
-      });
-    }
-  }, [adminToEdit, form]);
-
-  const emailCheckQuery = useQuery({
-    queryKey: ['checkAdminEmail', emailToCheck],
-    queryFn: async () => {
-      if (!emailToCheck || (adminToEdit && adminToEdit.email === emailToCheck)) return null;
-      const response = await fetch(`/api/admin/check-email?email=${encodeURIComponent(emailToCheck)}`);
-      if (!response.ok) throw new Error('Failed to check email');
-      return response.json();
-    },
-    enabled: !!emailToCheck && emailToCheck.includes('@'),
-  });
-
-  const handleEmailChange = useCallback((email: string) => {
-    setEmailToCheck(email);
-  }, []);
-
-  const updateAdminMutation = useMutation({
-    mutationFn: async (data: AdminFormValues) => {
-      if (!adminToEdit) throw new Error("No administrator to update");
-
-      const response = await fetch(`/api/admin/administrators/${adminToEdit.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: data.email,
-          roles: data.roles,
-        }),
+  // Create admin mutation
+  const createAdmin = useMutation({
+    mutationFn: async (data: FormValues) => {
+      const response = await fetch("/api/admin/administrators", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to update administrator");
+        throw new Error(error.error || "Failed to create administrator");
       }
 
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/administrators"] });
-      toast({
-        title: "Success",
-        description: "Administrator updated successfully",
-      });
-      onOpenChange(false);
-    },
-    onError: (error: Error) => {
-      console.error('Update error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update administrator",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const createAdminMutation = useMutation({
-    mutationFn: async (data: AdminFormValues) => {
-      const response = await fetch("/api/admin/administrators", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        throw new Error(responseData.error || responseData.details || "Failed to create administrator");
-      }
-
-      return responseData;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/administrators"] });
+      queryClient.invalidateQueries({ queryKey: ["administrators"] });
       toast({
         title: "Success",
         description: "Administrator created successfully",
@@ -168,7 +106,6 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
       onOpenChange(false);
     },
     onError: (error: Error) => {
-      console.error('Create error:', error);
       toast({
         title: "Error",
         description: error.message,
@@ -177,38 +114,44 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
     },
   });
 
-  const onSubmit = async (data: AdminFormValues) => {
+  // Check email existence
+  const checkEmail = async (email: string) => {
     try {
-      if (emailCheckQuery.data?.exists && data.email !== adminToEdit?.email) {
-        form.setError('email', {
-          type: 'manual',
-          message: 'This email is already registered'
-        });
-        return;
-      }
-
-      if (adminToEdit) {
-        await updateAdminMutation.mutateAsync(data);
-      } else {
-        await createAdminMutation.mutateAsync(data);
+      const response = await fetch(`/api/admin/check-email?email=${encodeURIComponent(email)}`);
+      const data = await response.json();
+      setEmailExists(data.exists);
+      if (data.exists) {
+        form.setError("email", { message: "This email is already registered" });
       }
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("Error checking email:", error);
     }
+  };
+
+  const onSubmit = async (data: FormValues) => {
+    if (emailExists) {
+      form.setError("email", { message: "This email is already registered" });
+      return;
+    }
+    await createAdmin.mutateAsync(data);
   };
 
   const toggleRole = (roleId: string) => {
     const currentRoles = form.getValues("roles");
-    let newRoles: string[];
+    const isSuperAdmin = roleId === "super_admin";
 
-    if (roleId === "super_admin") {
-      newRoles = currentRoles.includes("super_admin") ? [] : ["super_admin"];
+    let newRoles: string[];
+    if (isSuperAdmin) {
+      // If selecting super_admin, it becomes the only role
+      newRoles = currentRoles.includes(roleId) ? [] : [roleId];
     } else {
       if (currentRoles.includes("super_admin")) {
+        // If super_admin was selected, remove it and add the new role
         newRoles = [roleId];
       } else {
+        // Toggle the selected role
         newRoles = currentRoles.includes(roleId)
-          ? currentRoles.filter(id => id !== roleId)
+          ? currentRoles.filter((r) => r !== roleId)
           : [...currentRoles, roleId];
       }
     }
@@ -216,147 +159,41 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
     form.setValue("roles", newRoles, { shouldValidate: true });
   };
 
-  const isSubmitting = createAdminMutation.isPending || updateAdminMutation.isPending;
-  const currentRoles = form.watch("roles");
-  const isSuperAdmin = currentRoles.includes("super_admin");
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="px-6 pt-6 pb-4 sticky top-0 bg-background z-10 border-b">
-          <DialogTitle>{adminToEdit ? 'Edit Administrator' : 'Add New Administrator'}</DialogTitle>
+      <DialogContent className="max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>Add New Administrator</DialogTitle>
           <DialogDescription>
-            {adminToEdit 
-              ? 'Update the administrator details and roles below.' 
-              : 'Create a new administrator by filling out the information below.'}
+            Create a new administrator by filling out the information below.
           </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="px-6">
-            <div className="py-4 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>First Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="John" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Last Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Doe" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
 
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="email"
+                name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>First Name</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Input 
-                          {...field} 
-                          type="email" 
-                          placeholder="john.doe@example.com"
-                          onChange={(e) => {
-                            field.onChange(e);
-                            handleEmailChange(e.target.value);
-                          }}
-                        />
-                        {emailCheckQuery.isPending && (
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
+                      <Input {...field} placeholder="John" />
                     </FormControl>
-                    {emailCheckQuery.data?.exists && field.value !== adminToEdit?.email && (
-                      <p className="text-sm font-medium text-destructive">
-                        This email is already registered
-                      </p>
-                    )}
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {!adminToEdit && (
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Temporary Password</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="password" placeholder="Minimum 8 characters" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
               <FormField
                 control={form.control}
-                name="roles"
+                name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Administrator Roles</FormLabel>
-                    <FormDescription>
-                      {isSuperAdmin 
-                        ? "Super Admin role provides full access and overrides all other roles."
-                        : "Select one or more roles. Super Admin overrides all other roles if selected."}
-                    </FormDescription>
+                    <FormLabel>Last Name</FormLabel>
                     <FormControl>
-                      <div className="space-y-2">
-                        {availableRoles.map((role) => {
-                          const isSelected = field.value.includes(role.id);
-                          const isDisabled = isSuperAdmin && role.id !== "super_admin";
-
-                          return (
-                            <div
-                              key={role.id}
-                              className={`p-3 rounded-lg border transition-colors ${
-                                isDisabled
-                                  ? "opacity-50 cursor-not-allowed border-input"
-                                  : isSelected
-                                  ? "border-primary bg-primary/5 cursor-pointer"
-                                  : "border-input hover:bg-accent cursor-pointer"
-                              }`}
-                              onClick={() => !isDisabled && toggleRole(role.id)}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="font-medium">{role.name}</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {role.description}
-                                  </p>
-                                </div>
-                                {isSelected && (
-                                  <Badge variant="secondary">Selected</Badge>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                      <Input {...field} placeholder="Doe" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -364,25 +201,104 @@ export function AdminModal({ open, onOpenChange, adminToEdit }: AdminModalProps)
               />
             </div>
 
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="email"
+                      placeholder="john.doe@example.com"
+                      onChange={(e) => {
+                        field.onChange(e);
+                        checkEmail(e.target.value);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="password"
+                      placeholder="Minimum 8 characters"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="roles"
+              render={() => (
+                <FormItem>
+                  <FormLabel>Roles</FormLabel>
+                  <div className="space-y-2">
+                    {ROLES.map((role) => {
+                      const isSelected = form.watch("roles").includes(role.id);
+                      const isSuperAdmin = form.watch("roles").includes("super_admin");
+                      const isDisabled = isSuperAdmin && role.id !== "super_admin";
+
+                      return (
+                        <div
+                          key={role.id}
+                          onClick={() => !isDisabled && toggleRole(role.id)}
+                          className={`
+                            p-4 rounded-lg border transition-colors cursor-pointer
+                            ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}
+                            ${isSelected ? "border-primary bg-primary/5" : "hover:bg-accent"}
+                          `}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium">{role.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {role.description}
+                              </p>
+                            </div>
+                            {isSelected && (
+                              <Badge variant="secondary">Selected</Badge>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
               >
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
-                disabled={
-                  isSubmitting ||
-                  emailCheckQuery.isPending || 
-                  (emailCheckQuery.data?.exists && form.getValues("email") !== adminToEdit?.email)
-                }
+              <Button
+                type="submit"
+                disabled={createAdmin.isPending || emailExists}
               >
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {adminToEdit ? "Update Administrator" : "Create Administrator"}
+                {createAdmin.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Create Administrator
               </Button>
             </DialogFooter>
           </form>
