@@ -596,6 +596,20 @@ export type SelectRole = typeof roles.$inferSelect;
 export type InsertAdminRole = typeof adminRoles.$inferInsert;
 export type SelectAdminRole = typeof adminRoles.$inferSelect;
 
+export const adminRolesRelations = relations(adminRoles, ({ one }) => ({
+  user: one(users, {
+    fields: [adminRoles.userId],
+    references: [users.id],
+  }),
+  role: one(roles, {
+    fields: [adminRoles.roleId],
+    references: [roles.id],
+  }),
+}));
+
+export const insertAdminRoleSchema = createInsertSchema(adminRoles);
+export const selectAdminRoleSchema = createSelectSchema(adminRoles);
+
 export const adminFormSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   firstName: z.string().min(1, "First name is required"),
