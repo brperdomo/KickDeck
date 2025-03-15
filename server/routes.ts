@@ -2731,13 +2731,13 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         }
 
         // Check if user exists
-        const [existingUser] = await db
+        const existingUser = await db
           .select()
           .from(users)
           .where(eq(users.email, email))
           .limit(1);
 
-        if (existingUser) {
+        if (existingUser.length > 0) {
           return res.status(400).json({ error: "User with this email already exists" });
         }
 
@@ -2745,7 +2745,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         const hashedPassword = await crypto.hash(password);
 
         // Start a transaction
-        const result = await db.transaction(async (tx) => {
+        await db.transaction(async (tx) => {
           // Create the administrator
           const [newAdmin] = await tx
             .insert(users)
@@ -2762,75 +2762,54 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             })
             .returning();
 
-          // Ensure super_admin role exists
-          let superAdminRole = await tx
-            .select()
-            .from(roles)
-            .where(eq(roles.name, 'super_admin'))
-            .limit(1)
-            .then(rows => rows[0]);
-
-          if (!superAdminRole) {
-            [superAdminRole] = await tx
-              .insert(roles)
-              .values({
-                name: 'super_admin',
-                description: 'Super Administrator role',
-              })
-              .returning();
-          }
-
-          // Create other roles if they don't exist and assign them
+          // Process each role
           for (const roleName of roles) {
-            let role = await tx
+            // Get or create the role
+            const existingRole = await tx
               .select()
               .from(roles)
               .where(eq(roles.name, roleName))
-              .limit(1)
-              .then(rows => rows[0]);
+              .limit(1);
 
-            if (!role) {
-              [role] = await tx
+            let roleId;
+            if (existingRole.length === 0) {
+              const [newRole] = await tx
                 .insert(roles)
                 .values({
                   name: roleName,
-                  description: `${roleName.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} role`,
+                  description: `${roleName.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} role`
                 })
                 .returning();
+              roleId = newRole.id;
+            } else {
+              roleId = existingRole[0].id;
             }
 
+            // Assign role to admin
             await tx
               .insert(adminRoles)
               .values({
                 userId: newAdmin.id,
-                roleId: role.id,
+                roleId: roleId,
                 createdAt: new Date().toISOString()
               });
           }
 
-          // Get all roles for the new admin
-          const adminRolesList = await tx
-            .select({
-              name: roles.name
-            })
-            .from(adminRoles)
-            .innerJoin(roles, eq(adminRoles.roleId, roles.id))
-            .where(eq(adminRoles.userId, newAdmin.id));
-
-          return {
+          // Return the created admin with roles
+          res.status(201).json({
             id: newAdmin.id,
             email: newAdmin.email,
             firstName: newAdmin.firstName,
             lastName: newAdmin.lastName,
-            roles: adminRolesList.map(r => r.name)
-          };
+            roles
+          });
         });
-
-        res.status(201).json(result);
       } catch (error) {
         console.error('Error creating administrator:', error);
-        console.error("Error details:", error);
-        res.status(500).json({ error: "Failed to create administrator" });
+        res.status(500).json({ 
+          error: "Failed to create administrator",
+          details: error instanceof Error ? error.message : "Unknown error"
+        });
       }
     });
 
