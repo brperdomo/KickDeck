@@ -72,17 +72,13 @@ export function AdminModal({ open, onOpenChange, admin }: AdminModalProps) {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: admin ? {
-      firstName: admin.firstName,
-      lastName: admin.lastName,
-      email: admin.email,
-      roles: admin.roles || [],
-    } : {
-      firstName: "",
-      lastName: "",
-      email: "",
-      roles: [],
-    },
+    defaultValues: {
+      firstName: admin?.firstName || "",
+      lastName: admin?.lastName || "",
+      email: admin?.email || "",
+      password: "",
+      roles: admin?.roles || [],
+    }
   });
 
   // Reset form when admin prop changes
