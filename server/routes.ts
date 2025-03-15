@@ -336,8 +336,11 @@ export function registerRoutes(app: Express): Server {
 
     // Administrator creation endpoint
     app.post('/api/admin/administrators', isAdmin, async (req, res) => {
+      console.log('Starting admin creation process');
+      
       try {
         const { email, firstName, lastName, password, roles } = req.body;
+        console.log('Received request data:', { email, firstName, lastName, roles });
 
         // Input validation
         if (!email || !firstName || !lastName || !password || !roles || !Array.isArray(roles) || roles.length === 0) {
@@ -346,100 +349,97 @@ export function registerRoutes(app: Express): Server {
           });
         }
 
-        // Check if email exists 
-        const [existingUser] = await db
-          .select()
-          .from(users)
-          .where(eq(users.email, email))
-          .limit(1);
+        // Check for existing user
+        const existingUser = await db.query.users.findFirst({
+          where: eq(users.email, email)
+        });
 
         if (existingUser) {
-          return res.status(400).json({ 
-            error: "Email already registered" 
+          return res.status(400).json({
+            error: "Email already registered"
           });
         }
 
         // Hash password
         const hashedPassword = await crypto.hash(password);
 
-        // Create user and assign roles in a transaction
-        const newAdmin = await db.transaction(async (tx) => {
-          // Create the user first
-          const [user] = await tx
-            .insert(users)
-            .values({
-              email: email,
-              username: email,
-              password: hashedPassword,
-              firstName: firstName,
-              lastName: lastName,
-              isAdmin: true,
-              isParent: false,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            })
-            .returning();
+        // Create user
+        console.log('Creating new user...');
+        const [newUser] = await db
+          .insert(users)
+          .values({
+            email,
+            username: email,
+            password: hashedPassword,
+            firstName,
+            lastName,
+            isAdmin: true,
+            isParent: false,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          })
+          .returning();
 
-          // Add roles one by one
-          for (const roleName of roles) {
-            // Get or create role
-            const existingRole = await tx
-              .select()
-              .from(roles)
-              .where(eq(roles.name, roleName))
-              .limit(1)
-              .then(rows => rows[0]);
+        console.log('User created:', newUser);
 
-            let roleId: number;
+        // Create role assignments
+        for (const roleName of roles) {
+          console.log('Processing role:', roleName);
+          
+          // Get existing role or create new one
+          let role = await db
+            .select()
+            .from(roles)
+            .where(eq(roles.name, roleName))
+            .limit(1)
+            .then(rows => rows[0]);
 
-            if (!existingRole) {
-              // Create role if it doesn't exist
-              const [newRole] = await tx
-                .insert(roles)
-                .values({
-                  name: roleName,
-                  description: `${roleName.split('_')
-                    .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' ')} role`,
-                  createdAt: new Date().toISOString()
-                })
-                .returning();
-
-              roleId = newRole.id;
-            } else {
-              roleId = existingRole.id;
-            }
-
-            // Create role assignment
-            await tx
-              .insert(adminRoles)
+          if (!role) {
+            console.log('Creating new role:', roleName);
+            const [newRole] = await db
+              .insert(roles)
               .values({
-                userId: user.id,
-                roleId: roleId,
+                name: roleName,
+                description: `${roleName} role`,
                 createdAt: new Date().toISOString()
-              });
+              })
+              .returning();
+            role = newRole;
           }
 
-          return user;
-        });
+          console.log('Creating role assignment');
+          await db
+            .insert(adminRoles)
+            .values({
+              userId: newUser.id,
+              roleId: role.id,
+              createdAt: new Date().toISOString()
+            });
+        }
 
-        // Send success response
-        res.json({ 
+        res.json({
           message: "Administrator created successfully",
           admin: {
-            id: newAdmin.id,
-            email: newAdmin.email,
-            firstName: newAdmin.firstName,
-            lastName: newAdmin.lastName,
-            roles: roles
+            id: newUser.id,
+            email: newUser.email,
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
+            roles
           }
         });
 
       } catch (error) {
         console.error('Error creating administrator:', error);
+        console.error('Error stack:', error.stack);
+        console.error('Error details:', {
+          name: error.name,
+          message: error.message,
+          code: error.code
+        });
+
         res.status(500).json({
-          error: "Failed to create administrator",
-          details: error instanceof Error ? error.message : "Unknown error"
+          error: "Failed to create administrator", 
+          details: error.message || "Unknown error"
         });
       }
     });
