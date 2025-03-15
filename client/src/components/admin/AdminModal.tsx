@@ -83,18 +83,24 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
   // Create admin mutation
   const createAdmin = useMutation({
     mutationFn: async (data: FormValues) => {
+      console.log('Submitting admin creation with data:', data);
+
       const response = await fetch("/api/admin/administrators", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify(data),
       });
 
+      const responseData = await response.json();
+      console.log('Server response:', responseData);
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create administrator");
+        throw new Error(responseData.error || responseData.details || "Failed to create administrator");
       }
 
-      return response.json();
+      return responseData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["administrators"] });
@@ -106,8 +112,9 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
       onOpenChange(false);
     },
     onError: (error: Error) => {
+      console.error('Create admin error:', error);
       toast({
-        title: "Error",
+        title: "Error Creating Administrator",
         description: error.message,
         variant: "destructive",
       });
