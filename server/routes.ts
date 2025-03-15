@@ -2750,14 +2750,17 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         }
 
         // Check if user exists
-        const existingUser = await db
+        const [existingUser] = await db
           .select()
           .from(users)
           .where(eq(users.email, email))
           .limit(1);
 
-        if (existingUser.length > 0) {
-          return res.status(400).json({ error: "User with this email already exists" });
+        if (existingUser) {
+          return res.status(400).json({ 
+            error: "Email already registered",
+            code: "EMAIL_EXISTS"
+          });
         }
 
         // Hash the password
