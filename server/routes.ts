@@ -992,7 +992,7 @@ export function registerRoutes(app: Express): Server {
           });
         }
 
-        // Check if admin exists
+        // Verify admin exists
         const [existingAdmin] = await db
           .select()
           .from(users)
@@ -1020,7 +1020,18 @@ export function registerRoutes(app: Express): Server {
           }
         }
 
-        const timestamp = new Date().toISOString();
+        // Get existing admin roles
+        const adminRolesList = await db
+          .select({
+            role: roles
+          })
+          .from(adminRoles)
+          .innerJoin(roles, eq(adminRoles.roleId, roles.id))
+          .where(eq(adminRoles.userId, adminId));
+
+        const currentRoles = adminRolesList.map(r => r.role.name);
+        const rolesToAdd = roleNames.filter(role => !currentRoles.includes(role));
+        const rolesToRemove = currentRoles.filter(role => !roleNames.includes(role));
 
         // Update user and roles in a transaction
         await db.transaction(async (tx) => {
@@ -1031,32 +1042,44 @@ export function registerRoutes(app: Express): Server {
               email,
               username: email,
               firstName,
-              lastName,
-              updatedAt: timestamp
+              lastName
             })
             .where(eq(users.id, adminId));
 
-          // Remove existing role assignments
-          await tx
-            .delete(adminRoles)
-            .where(eq(adminRoles.userId, adminId));
+          // Remove roles that are no longer assigned
+          if (rolesToRemove.length > 0) {
+            const roleIds = await tx
+              .select()
+              .from(roles)
+              .where(inArray(roles.name, rolesToRemove))
+              .then(roles => roles.map(r => r.id));
+
+            await tx
+              .delete(adminRoles)
+              .where(
+                and(
+                  eq(adminRoles.userId, adminId),
+                  inArray(adminRoles.roleId, roleIds)
+                )
+              );
+          }
 
           // Add new role assignments
-          for (const roleName of roleNames) {
+          for (const roleName of rolesToAdd) {
             // Get or create role
-            let [existingRole] = await tx
+            let [role] = await tx
               .select()
               .from(roles)
               .where(eq(roles.name, roleName))
               .limit(1);
 
-            if (!existingRole) {
-              [existingRole] = await tx
+            if (!role) {
+              [role] = await tx
                 .insert(roles)
                 .values({
                   name: roleName,
                   description: `${roleName} role`,
-                  createdAt: timestamp
+                  createdAt: new Date()
                 })
                 .returning();
             }
@@ -1066,8 +1089,8 @@ export function registerRoutes(app: Express): Server {
               .insert(adminRoles)
               .values({
                 userId: adminId,
-                roleId: existingRole.id,
-                createdAt: timestamp
+                roleId: role.id,
+                createdAt: new Date()
               });
           }
         });
