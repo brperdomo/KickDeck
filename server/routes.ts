@@ -2726,6 +2726,10 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
       try {
         const { firstName, lastName, email, password, roles } = req.body;
 
+        if (!firstName || !lastName || !email || !password || !roles || !Array.isArray(roles)) {
+          return res.status(400).json({ error: "Missing required fields" });
+        }
+
         // Check if user exists
         const [existingUser] = await db
           .select()
@@ -2734,14 +2738,14 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           .limit(1);
 
         if (existingUser) {
-          return res.status(400).send("User with this email already exists");
+          return res.status(400).json({ error: "User with this email already exists" });
         }
 
         // Hash the password
         const hashedPassword = await crypto.hash(password);
 
         // Start a transaction
-        await db.transaction(async (tx) => {
+        const result = await db.transaction(async (tx) => {
           // Create the administrator
           const [newAdmin] = await tx
             .insert(users)
@@ -2758,13 +2762,32 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             })
             .returning();
 
-          // Create roles if they don't exist and assign them
+          // Ensure super_admin role exists
+          let superAdminRole = await tx
+            .select()
+            .from(roles)
+            .where(eq(roles.name, 'super_admin'))
+            .limit(1)
+            .then(rows => rows[0]);
+
+          if (!superAdminRole) {
+            [superAdminRole] = await tx
+              .insert(roles)
+              .values({
+                name: 'super_admin',
+                description: 'Super Administrator role',
+              })
+              .returning();
+          }
+
+          // Create other roles if they don't exist and assign them
           for (const roleName of roles) {
-            let [role] = await tx
+            let role = await tx
               .select()
               .from(roles)
               .where(eq(roles.name, roleName))
-              .limit(1);
+              .limit(1)
+              .then(rows => rows[0]);
 
             if (!role) {
               [role] = await tx
@@ -2785,15 +2808,29 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
               });
           }
 
-          // Send response without password
-          const { password: _, ...adminWithoutPassword } = newAdmin;
-          res.status(201).json(adminWithoutPassword);
+          // Get all roles for the new admin
+          const adminRolesList = await tx
+            .select({
+              name: roles.name
+            })
+            .from(adminRoles)
+            .innerJoin(roles, eq(adminRoles.roleId, roles.id))
+            .where(eq(adminRoles.userId, newAdmin.id));
+
+          return {
+            id: newAdmin.id,
+            email: newAdmin.email,
+            firstName: newAdmin.firstName,
+            lastName: newAdmin.lastName,
+            roles: adminRolesList.map(r => r.name)
+          };
         });
+
+        res.status(201).json(result);
       } catch (error) {
         console.error('Error creating administrator:', error);
-        // Added basic error logging for white screen debugging.
         console.error("Error details:", error);
-        res.status(500).send("Failed to create administrator");
+        res.status(500).json({ error: "Failed to create administrator" });
       }
     });
 
