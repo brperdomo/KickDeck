@@ -2810,7 +2810,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
               .values({
                 userId: newAdmin.id,
                 roleId: roleId,
-                createdAt: new Date().toISOString()
+                createdAt: new Date()
               });
           }
 
