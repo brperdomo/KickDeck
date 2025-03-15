@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -39,6 +39,7 @@ type FormValues = z.infer<typeof formSchema>;
 interface AdminModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  admin?: FormValues; // Added admin prop
 }
 
 const ROLES = [
@@ -64,21 +65,37 @@ const ROLES = [
   },
 ];
 
-export function AdminModal({ open, onOpenChange }: AdminModalProps) {
+export function AdminModal({ open, onOpenChange, admin }: AdminModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [emailExists, setEmailExists] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
+    defaultValues: admin ? {
+      firstName: admin.firstName,
+      lastName: admin.lastName,
+      email: admin.email,
+      roles: admin.roles || [],
+    } : {
       firstName: "",
       lastName: "",
-      password: "",
+      email: "",
       roles: [],
     },
   });
+
+  // Reset form when admin prop changes
+  useEffect(() => {
+    if (admin) {
+      form.reset({
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        email: admin.email,
+        roles: admin.roles || [],
+      });
+    }
+  }, [admin, form.reset]);
 
   // Check email existence
   const checkEmail = async (email: string) => {
@@ -98,9 +115,11 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
   const createAdmin = useMutation({
     mutationFn: async (values: FormValues) => {
       try {
-        console.log('Creating administrator:', values);
-        const response = await fetch("/api/admin/administrators", {
-          method: "POST",
+        console.log('Creating/Updating administrator:', values); //Updated log message
+        const method = admin ? "PUT" : "POST";
+        const url = admin ? `/api/admin/administrators/${admin.email}` : "/api/admin/administrators";
+        const response = await fetch(url, {
+          method,
           headers: {
             "Content-Type": "application/json",
           },
@@ -111,7 +130,7 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
         console.log('Server response:', data);
 
         if (!response.ok) {
-          throw new Error(data.error || data.details || "Failed to create administrator");
+          throw new Error(data.error || data.details || "Failed to create/update administrator");
         }
 
         return data;
@@ -124,15 +143,15 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
       queryClient.invalidateQueries({ queryKey: ["administrators"] });
       toast({
         title: "Success",
-        description: "Administrator created successfully",
+        description: admin ? "Administrator updated successfully" : "Administrator created successfully",
       });
       form.reset();
       onOpenChange(false);
     },
     onError: (error: Error) => {
-      console.error('Create admin error:', error);
+      console.error('Create/Update admin error:', error);
       toast({
-        title: "Error Creating Administrator",
+        title: admin ? "Error Updating Administrator" : "Error Creating Administrator",
         description: error.message,
         variant: "destructive",
       });
@@ -175,9 +194,9 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Add New Administrator</DialogTitle>
+          <DialogTitle>{admin ? "Edit Administrator" : "Add New Administrator"}</DialogTitle>
           <DialogDescription>
-            Create a new administrator by filling out the information below.
+            {admin ? "Update administrator information below." : "Create a new administrator by filling out the information below."}
           </DialogDescription>
         </DialogHeader>
 
@@ -310,7 +329,7 @@ export function AdminModal({ open, onOpenChange }: AdminModalProps) {
                 {createAdmin.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Create Administrator
+                {admin ? "Update Administrator" : "Create Administrator"}
               </Button>
             </DialogFooter>
           </form>
