@@ -35,7 +35,6 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { ComplexEditor } from "@/components/ComplexEditor";
 import { ComplexSelector } from "@/components/events/ComplexSelector";
@@ -75,6 +74,7 @@ interface EventData {
   complexFieldSizes: Record<number, FieldSize>;
   selectedComplexIds: number[];
   branding?: EventBranding;
+  seasonalScopeId: number;
 }
 
 const validateEventData = (data: Partial<EventData>): { isValid: boolean; errors: string[] } => {
@@ -259,7 +259,7 @@ export default function CreateEvent() {
   const { toast } = useToast();
   const [isComplexDialogOpen, setIsComplexDialogOpen] = useState(false);
   const [editingComplex, setEditingComplex] = useState<Complex | null>(null);
-  const queryClient = useQueryClient(); // Add queryClient hook
+  const queryClient = useQueryClient();
   const [logo, setLogo] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [primaryColor, setPrimaryColor] = useState('#000000');
@@ -275,7 +275,7 @@ export default function CreateEvent() {
   });
   const [selectedComplexIds, setSelectedComplexIds] = useState<number[]>([]);
   const [selectedScopeId, setSelectedScopeId] = useState<number | null>(null);
-  const [selectedAgeGroupIds, setSelectedAgeGroupIds] = useState<number[]>([]);
+  const [selectedSeasonalScopeId, setSelectedSeasonalScopeId] = useState<number | null>(null);
 
 
   const complexesQuery = useQuery({
@@ -761,25 +761,24 @@ export default function CreateEvent() {
       setIsSaving(true);
       const formValues = form.getValues();
 
-      // Get the selected age groups from the seasonal scope
-      const selectedScope = seasonalScopesQuery.data?.find(scope => scope.id === selectedScopeId);
-      const selectedAgeGroupsData = selectedScope?.ageGroups.filter(group =>
-        selectedAgeGroupIds.includes(group.id)
-      ) || [];
+      // Get all age groups from the selected scope
+      const selectedScope = seasonalScopesQuery.data?.find(scope => scope.id === selectedSeasonalScopeId);
+      const ageGroupsData = selectedScope?.ageGroups || [];
 
-      // Create event data object with age groups
-      const eventData = {
+      // Create event data object with all age groups
+      const eventData: EventData = {
         name: formValues.name?.trim(),
         startDate: formValues.startDate,
         endDate: formValues.endDate,
         applicationDeadline: formValues.applicationDeadline,
-        ageGroups: selectedAgeGroupsData,
+        ageGroups: ageGroupsData, // Include all age groups
         selectedComplexIds: selectedComplexIds,
         complexFieldSizes: eventFieldSizes,
         details: formValues.details,
         timezone: formValues.timezone,
         agreement: formValues.agreement,
         refundPolicy: formValues.refundPolicy,
+        seasonalScopeId: selectedSeasonalScopeId!,
         branding: {
           logoUrl: previewUrl,
           primaryColor,
@@ -839,7 +838,7 @@ export default function CreateEvent() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
-          <h3 className="text-lg font-semibold">Select Age Groups</h3>
+          <h3 className="text-lg font-semibold">Age Groups</h3>
         </div>
         <Button variant="outline" onClick={() => navigateTab('next')}>
           Continue
@@ -853,10 +852,9 @@ export default function CreateEvent() {
             <div>
               <Label>Select Seasonal Scope</Label>
               <Select
-                value={selectedScopeId?.toString() || ""}
+                value={selectedSeasonalScopeId?.toString() || ""}
                 onValueChange={(value) => {
-                  setSelectedScopeId(parseInt(value));
-                  setSelectedAgeGroupIds([]);
+                  setSelectedSeasonalScopeId(parseInt(value));
                 }}
               >
                 <SelectTrigger className="w-full">
@@ -872,26 +870,26 @@ export default function CreateEvent() {
               </Select>
             </div>
 
-            {selectedScopeId && (
+            {selectedSeasonalScopeId && (
               <div className="border rounded-lg p-4 mt-4">
-                <div className="mb-4 flex items-center gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="select-all"
-                      checked={selectedAgeGroupIds.length === seasonalScopesQuery.data?.find(scope => scope.id === selectedScopeId)?.ageGroups.length}
-                      onCheckedChange={(checked) => {
-                        const scope = seasonalScopesQuery.data?.find(scope => scope.id === selectedScopeId);
-                        if (!scope) return;
-                        setSelectedAgeGroupIds(checked ? scope.ageGroups.map(group => group.id) : []);
-                      }}
-                    />
-                    <Label htmlFor="select-all">Select All</Label>
+                <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-green-800">Age groups automatically configured</h3>
+                      <div className="mt-2 text-sm text-green-700">
+                        <p>All age groups from this seasonal scope will be automatically included in your event.</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-12"></TableHead>
                       <TableHead>Age Group</TableHead>
                       <TableHead>Birth Year</TableHead>
                       <TableHead>Gender</TableHead>
@@ -900,21 +898,9 @@ export default function CreateEvent() {
                   </TableHeader>
                   <TableBody>
                     {seasonalScopesQuery.data
-                      ?.find(scope => scope.id === selectedScopeId)
+                      ?.find(scope => scope.id === selectedSeasonalScopeId)
                       ?.ageGroups.map((group) => (
                         <TableRow key={group.id}>
-                          <TableCell>
-                            <Checkbox
-                              checked={selectedAgeGroupIds.includes(group.id)}
-                              onCheckedChange={(checked) => {
-                                setSelectedAgeGroupIds(prev =>
-                                  checked
-                                    ? [...prev, group.id]
-                                    : prev.filter(id => id !== group.id)
-                                );
-                              }}
-                            />
-                          </TableCell>
                           <TableCell>{group.ageGroup}</TableCell>
                           <TableCell>{group.birthYear}</TableCell>
                           <TableCell>{group.gender}</TableCell>
