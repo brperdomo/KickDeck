@@ -11,7 +11,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
+import { useDropzone } from 'react-dropzone';
+import { AdminModal } from "@/components/admin/AdminModal";
 import {
   Table,
   TableBody,
@@ -20,20 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Editor } from "@tinymce/tinymce-react";
-import { useDropzone } from 'react-dropzone';
-import { AdminModal } from "@/components/admin/AdminModal";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 import {
   PREDEFINED_AGE_GROUPS,
@@ -59,9 +49,7 @@ import {
 } from "./event-form-types";
 import { ComplexSelector } from "@/components/events/ComplexSelector";
 import { InfoPopover } from "@/components/ui/InfoPopover";
-import {SeasonalScopeSelector} from "@/components/events/SeasonalScopeSelector";
 import { Textarea } from "@/components/ui/textarea";
-
 
 interface EventFormValues extends EventInformationValues {
   ageGroups: AgeGroup[];
@@ -174,7 +162,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
       const submitData = {
         ...data,
         seasonalScopeId: selectedSeasonalScopeId,
-        ageGroups: ageGroups,
+        ageGroups,
         scoringRules,
         settings,
         complexFieldSizes,
@@ -268,7 +256,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
             <SelectValue placeholder="Select a seasonal scope" />
           </SelectTrigger>
           <SelectContent>
-            {seasonalScopesQuery.data?.map((scope:any) => (
+            {seasonalScopesQuery.data?.map((scope) => (
               <SelectItem key={scope.id} value={scope.id.toString()}>
                 {scope.name} ({scope.startYear}-{scope.endYear})
               </SelectItem>
