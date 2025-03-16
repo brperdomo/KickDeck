@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { EventForm, type EventFormData } from "@/components/forms/EventForm";
+import { EventForm } from "@/components/forms/EventForm";
 import { type EventTab, TAB_ORDER } from "@/components/forms/event-form-types";
 import { ProgressIndicator } from "@/components/ui/progress-indicator";
 
@@ -16,47 +16,20 @@ export default function EditEvent() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<EventTab>('information');
   const [completedTabs, setCompletedTabs] = useState<EventTab[]>([]);
-  const [selectedSeasonalScopeId, setSelectedSeasonalScopeId] = useState<number | null>(null); // Added state for selectedSeasonalScopeId
-  const [availableAgeGroups, setAvailableAgeGroups] = useState<any[]>([]); //Added state for available age groups.  Type needs to be defined properly.
 
-  const {data: seasonalScopes, isLoading: seasonalScopesLoading} = useQuery({ // Added query for seasonal scopes.
-    queryKey: ['seasonalScopes'],
-    queryFn: async () => {
-      const response = await fetch(`/api/admin/seasonal-scopes`); //Endpoint needs to be adjusted to match your backend.
-      if (!response.ok) throw new Error('Failed to fetch seasonal scopes');
-      return response.json();
-    },
-  });
-
-
+  // Query for event data
   const eventQuery = useQuery({
     queryKey: ['event', id],
     queryFn: async () => {
       const response = await fetch(`/api/admin/events/${id}/edit`);
       if (!response.ok) throw new Error('Failed to fetch event data');
-      const data = await response.json();
-
-      // Set the seasonal scope ID when event data is loaded
-      if (data && data.seasonalScopeId) {
-        setSelectedSeasonalScopeId(Number(data.seasonalScopeId));
-        console.log('Loaded seasonal scope ID from event:', data.seasonalScopeId);
-
-        // If we have seasonal scopes data, load age groups automatically for this scope
-        if (seasonalScopes && seasonalScopes.length > 0) {
-          const selectedScope = seasonalScopes.find(scope => scope.id === data.seasonalScopeId);
-          if (selectedScope && selectedScope.ageGroups) {
-            setAvailableAgeGroups(selectedScope.ageGroups);
-            console.log('Automatically loaded age groups for scope:', selectedScope.ageGroups);
-          }
-        }
-      }
-
-      return data;
+      return response.json();
     },
   });
 
+  // Mutation for updating event
   const updateEventMutation = useMutation({
-    mutationFn: async (data: EventFormData) => {
+    mutationFn: async (data: any) => {
       console.log('Submitting event update with data:', data);
       try {
         const response = await fetch(`/api/admin/events/${id}`, {
@@ -71,21 +44,19 @@ export default function EditEvent() {
           throw new Error(`Failed to update event: ${errorData || response.statusText}`);
         }
 
-        const responseData = await response.json();
-        console.log('Server response after update:', responseData);
-        return responseData;
+        return await response.json();
       } catch (error) {
         console.error('Error updating event:', error);
         throw error;
       }
     },
-    onSuccess: (data) => {
-      console.log('Update successful, invalidating queries');
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['event', id] });
       toast({
         title: "Success",
         description: "Event updated successfully",
       });
+      navigate("/admin");
     },
     onError: (error: Error) => {
       toast({
@@ -96,29 +67,16 @@ export default function EditEvent() {
     },
   });
 
-  const handleSubmit = async (formData: EventFormData) => {
+  const handleSubmit = async (formData: any) => {
     try {
-      // Remove any properties that should not be sent to the API
-      const { onSubmit, defaultValues, mode, ...sanitizedFormData } = formData;
-
-      // Make sure seasonalScopeId is included in the form data
-      if (selectedSeasonalScopeId) {
-        sanitizedFormData.seasonalScopeId = selectedSeasonalScopeId;
-      }
-
-      console.log(`Submitting form data with ${sanitizedFormData.ageGroups?.length || 0} selected age groups`);
-      await updateEventMutation.mutateAsync(sanitizedFormData);
+      const { mode, defaultValues, ...submitData } = formData;
+      await updateEventMutation.mutateAsync(submitData);
     } catch (error) {
       console.error("Submit error:", error);
-      toast({
-        title: "Update Failed",
-        description: "Failed to update event. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
-  if (eventQuery.isLoading || seasonalScopesLoading) { //Added seasonalScopesLoading to loading condition
+  if (eventQuery.isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
@@ -151,66 +109,19 @@ export default function EditEvent() {
     );
   }
 
+  // Prepare the event data for the form
   const eventData = {
     ...eventQuery.data,
-    complexFieldSizes: eventQuery.data.complexFieldSizes || {},
-    ageGroups: eventQuery.data.ageGroups?.map(group => ({
-      ...group,
-      selected: true, // Mark existing age groups as selected
-      feeId: group.feeId // Ensure feeId is included from the server response
-    })) || [],
-    scoringRules: eventQuery.data.scoringRules || [],
+    ageGroups: eventQuery.data.ageGroups || [],
     selectedComplexIds: eventQuery.data.selectedComplexIds || [],
+    complexFieldSizes: eventQuery.data.complexFieldSizes || {},
+    scoringRules: eventQuery.data.scoringRules || [],
+    settings: eventQuery.data.settings || [],
+    seasonalScopeId: eventQuery.data.seasonalScopeId,
     branding: eventQuery.data.branding || {
       logoUrl: "",
       primaryColor: "#000000",
       secondaryColor: "#ffffff"
-    }
-  };
-
-  // Prepare form data
-  const prepareFormData = (eventData) => {
-    console.log('Prepared event data for form:', eventData);
-
-    // Initialize the selectedSeasonalScopeId from eventData
-    if (eventData.seasonalScopeId) {
-      setSelectedSeasonalScopeId(eventData.seasonalScopeId);
-    }
-
-    return {
-      id: eventData.id,
-      name: eventData.name,
-      startDate: eventData.startDate,
-      endDate: eventData.endDate,
-      timezone: eventData.timezone,
-      location: eventData.location,
-      address: eventData.address,
-      city: eventData.city,
-      state: eventData.state,
-      zipCode: eventData.zipCode,
-      country: eventData.country,
-      description: eventData.description,
-      isPublic: eventData.isPublic,
-      registrationOpen: eventData.registrationOpen,
-      registrationClose: eventData.registrationClose,
-      maxTeams: eventData.maxTeams,
-      logoUrl: eventData.logoUrl,
-      seasonalScopeId: eventData.seasonalScopeId,
-      ageGroups: eventData.ageGroups || [],
-      venue: eventData.venue || { fields: [] },
-      scoring: eventData.scoring || {},
-      schedule: eventData.schedule || { days: [] },
-      customFields: eventData.customFields || [],
-    };
-  };
-
-  console.log('Prepared event data for form:', prepareFormData(eventData));
-
-  const navigateTab = (direction: 'prev' | 'next') => {
-    const currentIndex = TAB_ORDER.indexOf(activeTab);
-    const newIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
-    if (newIndex >= 0 && newIndex < TAB_ORDER.length) {
-      setActiveTab(TAB_ORDER[newIndex]);
     }
   };
 
@@ -237,18 +148,22 @@ export default function EditEvent() {
               completedSteps={completedTabs}
             />
 
-            <EventForm 
+            <EventForm
               mode="edit"
-              defaultValues={prepareFormData(eventData)} // Use prepared data
+              defaultValues={eventData}
               onSubmit={handleSubmit}
               isSubmitting={updateEventMutation.isPending}
               activeTab={activeTab}
               onTabChange={setActiveTab}
               completedTabs={completedTabs}
               onCompletedTabsChange={setCompletedTabs}
-              navigateTab={navigateTab}
-              selectedSeasonalScopeId={selectedSeasonalScopeId} // Pass the state to EventForm
-              availableAgeGroups={availableAgeGroups} // Pass availableAgeGroups to EventForm
+              navigateTab={(direction) => {
+                const currentIndex = TAB_ORDER.indexOf(activeTab);
+                const newIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
+                if (newIndex >= 0 && newIndex < TAB_ORDER.length) {
+                  setActiveTab(TAB_ORDER[newIndex]);
+                }
+              }}
             />
           </CardContent>
         </Card>
