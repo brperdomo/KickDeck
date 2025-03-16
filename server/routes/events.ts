@@ -603,4 +603,46 @@ router.post('/:eventId/fee-assignments', async (req, res) => {
   }
 });
 
+// Add DELETE route for events
+router.delete('/:id', async (req, res) => {
+  const eventId = req.params.id;
+  console.log(`Starting event deletion for ID: ${eventId}`);
+
+  try {
+    // Delete in correct order to maintain referential integrity
+    // First delete event settings
+    await db.delete(eventSettings)
+      .where(eq(eventSettings.eventId, eventId));
+    console.log('Deleted event settings');
+
+    // Delete event age groups
+    await db.delete(eventAgeGroups)
+      .where(eq(eventAgeGroups.eventId, eventId));
+    console.log('Deleted event age groups');
+
+    // Delete event fees
+    await db.delete(eventFees)
+      .where(eq(eventFees.eventId, eventId));
+    console.log('Deleted event fees');
+
+    // Finally delete the event itself
+    const [deletedEvent] = await db.delete(events)
+      .where(eq(events.id, parseInt(eventId)))
+      .returning();
+
+    if (!deletedEvent) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    console.log(`Successfully deleted event ${eventId}`);
+    res.json({ message: 'Event deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting event:', error);
+    res.status(500).json({
+      error: 'Failed to delete event',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default router;
