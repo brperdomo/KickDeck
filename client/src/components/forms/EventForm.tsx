@@ -20,7 +20,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Editor } from "@tinymce/tinymce-react";
+import { useDropzone } from 'react-dropzone';
+import { AdminModal } from "@/components/admin/AdminModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 import {
   PREDEFINED_AGE_GROUPS,
   EventBranding,
@@ -47,7 +61,6 @@ import { ComplexSelector } from "@/components/events/ComplexSelector";
 import { InfoPopover } from "@/components/ui/InfoPopover";
 import {SeasonalScopeSelector} from "@/components/events/SeasonalScopeSelector";
 import { Textarea } from "@/components/ui/textarea";
-import { useDropzone } from 'react-dropzone'; // Added import
 
 
 interface EventFormValues extends EventInformationValues {
