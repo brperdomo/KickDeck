@@ -64,8 +64,7 @@ interface EventFormValues extends EventInformationValues {
   settings: EventSetting[];
   administrators: EventAdministrator[];
   branding: EventBranding;
-  seasonalScope?: { name: string; startYear: number; endYear: number };
-  logo?: string; // Added logo field
+  seasonalScopeId?: number; // Add seasonalScopeId to form values
 }
 
 interface EventFormProps {
@@ -79,7 +78,6 @@ interface EventFormProps {
   onCompletedTabsChange: (tabs: EventTab[]) => void;
   navigateTab: (direction: 'next' | 'prev') => void;
 }
-
 
 export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false, activeTab, onTabChange, completedTabs, onCompletedTabsChange, navigateTab }: EventFormProps) => {
   const [, setLocation] = useLocation();
@@ -105,7 +103,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
     settings: [],
     administrators: [],
     branding: {} as EventBranding,
-    logo: "" // Added logo field
+    logo: "" 
   });
 
   const [selectedComplexIds, setSelectedComplexIds] = useState<number[]>(defaultValues?.selectedComplexIds || []);
@@ -127,6 +125,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
   const [selectedSeasonalScopeId, setSelectedSeasonalScopeId] = useState<number | null>(
     defaultValues?.seasonalScopeId || null
   );
+  const [ageGroups, setAgeGroups] = useState<AgeGroup[]>([]);
   const [seasonalScopes, setSeasonalScopes] = useState<any[] | null>(null);
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: acceptedFiles => {
@@ -138,33 +137,45 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
   });
 
 
-  // Fetch seasonal scopes on component mount
-  useEffect(() => {
-    const fetchSeasonalScopes = async () => {
-      try {
-        const response = await fetch('/api/admin/seasonal-scopes');
-        if (response.ok) {
-          const data = await response.json();
-          setSeasonalScopes(data);
-        }
-      } catch (error) {
-        console.error('Error fetching seasonal scopes:', error);
-      }
-    };
-
-    fetchSeasonalScopes();
-  }, []);
-
-  const seasonalScopeQuery = useQuery({
-    queryKey: ['/api/admin/seasonal-scopes', defaultValues?.seasonalScopeId],
+  // Query to fetch seasonal scopes
+  const seasonalScopesQuery = useQuery({
+    queryKey: ['/api/admin/seasonal-scopes'],
     queryFn: async () => {
-      if (!defaultValues?.seasonalScopeId) return null;
-      const response = await fetch(`/api/admin/seasonal-scopes/${defaultValues.seasonalScopeId}`);
-      if (!response.ok) throw new Error('Failed to fetch seasonal scope');
+      const response = await fetch('/api/admin/seasonal-scopes');
+      if (!response.ok) throw new Error('Failed to fetch seasonal scopes');
+      return response.json();
+    }
+  });
+
+  // Query to fetch age groups for selected seasonal scope
+  const ageGroupsQuery = useQuery({
+    queryKey: ['/api/admin/seasonal-scopes/age-groups', selectedSeasonalScopeId],
+    queryFn: async () => {
+      if (!selectedSeasonalScopeId) return [];
+      const response = await fetch(`/api/admin/seasonal-scopes/${selectedSeasonalScopeId}/age-groups`);
+      if (!response.ok) throw new Error('Failed to fetch age groups');
       return response.json();
     },
-    enabled: !!defaultValues?.seasonalScopeId
+    enabled: !!selectedSeasonalScopeId
   });
+
+  // Effect to update age groups when seasonal scope changes
+  useEffect(() => {
+    if (ageGroupsQuery.data) {
+      setAgeGroups(ageGroupsQuery.data.map(group => ({
+        ...group,
+        selected: true,
+        projectedTeams: 0,
+        amountDue: 0
+      })));
+    }
+  }, [ageGroupsQuery.data]);
+
+  const handleSeasonalScopeChange = (scopeId: number) => {
+    setSelectedSeasonalScopeId(scopeId);
+    // Update form value
+    form.setValue('seasonalScopeId', scopeId);
+  };
 
   const complexesQuery = useQuery({
     queryKey: ['complexes'],
@@ -198,7 +209,6 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
         throw new Error('Required fields are missing');
       }
 
-      // Prepare age groups data with only the essential fields
       const preparedAgeGroups = event.ageGroups
         .map(group => ({
           ...group,
@@ -223,6 +233,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
           secondaryColor,
           logoUrl: previewUrl || undefined,
         },
+        seasonalScopeId: selectedSeasonalScopeId, // Include seasonalScopeId
       };
 
       await onSubmit(combinedData);
@@ -260,34 +271,6 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
     }));
   };
 
-  // Update handler - now automatically includes all predefined age groups
-  const handleAgeGroupsChange = () => {
-    // Set all predefined age groups, marked as selected by default
-    const allStandardAgeGroups = PREDEFINED_AGE_GROUPS.map(group => ({
-      ...group,
-      isSelected: true,
-      projectedTeams: 0,
-      fieldSize: group.ageGroup.startsWith('U') ?
-        (parseInt(group.ageGroup.substring(1)) <= 7 ? '4v4' :
-          parseInt(group.ageGroup.substring(1)) <= 10 ? '7v7' :
-            parseInt(group.ageGroup.substring(1)) <= 12 ? '9v9' : '11v11') : '11v11',
-      scoringRule: null,
-      amountDue: null
-    }));
-
-    setEvent(prev => ({
-      ...prev,
-      ageGroups: allStandardAgeGroups
-    }));
-  };
-
-  // Auto-set age groups when form loads if not already set
-  useEffect(() => {
-    if (!event.ageGroups || event.ageGroups.length === 0) {
-      handleAgeGroupsChange();
-    }
-  }, []);
-
 
   const handleDeleteAgeGroup = (id: string) => {
     setEvent(prevEvent => ({
@@ -312,7 +295,6 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
     </Button>
   );
 
-  // Make sure form is initialized at the component level
   const form = useForm<EventFormValues>({
     defaultValues: {
       name: event.name || '',
@@ -332,7 +314,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
         primaryColor: '#000000',
         secondaryColor: '#ffffff'
       },
-      logo: "" // Added logo field
+      logo: "" 
     }
   });
 
@@ -504,63 +486,67 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
 
   const renderAgeGroupsContent = () => (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Age Groups</h3>
-        {defaultValues?.seasonalScopeName && (
-          <Badge variant="outline" className="text-sm">
-            {defaultValues.seasonalScopeName} ({defaultValues.seasonalStartYear}-{defaultValues.seasonalEndYear})
-          </Badge>
-        )}
+      <div className="mb-6">
+        <Label htmlFor="seasonalScope">Seasonal Scope</Label>
+        <Select 
+          onValueChange={(value) => handleSeasonalScopeChange(Number(value))}
+          value={selectedSeasonalScopeId?.toString()}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select a seasonal scope" />
+          </SelectTrigger>
+          <SelectContent>
+            {seasonalScopesQuery.data?.map((scope:any) => (
+              <SelectItem key={scope.id} value={scope.id.toString()}>
+                {scope.name} ({scope.startYear}-{scope.endYear})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Age Groups</CardTitle>
-          <CardDescription>
-            All standard age groups (U4-U18 for both boys and girls) are automatically included in this event.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
+      {selectedSeasonalScopeId && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Age Groups</CardTitle>
+            <CardDescription>
+              Age groups from the selected seasonal scope
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {ageGroupsQuery.isLoading ? (
+              <div className="flex justify-center p-4">
+                <Loader2 className="h-6 w-6 animate-spin" />
               </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-green-800">Age groups automatically configured</h3>
-                <div className="mt-2 text-sm text-green-700">
-                  <p>All 30 standard age groups (15 for boys and 15 for girls) have been automatically added to this event.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            <div>
-              <h3 className="font-medium mb-2">Boys Divisions</h3>
-              <ul className="list-disc pl-5 space-y-1">
-                {PREDEFINED_AGE_GROUPS
-                  .filter(group => group.gender === 'Boys')
-                  .map(group => (
-                    <li key={group.divisionCode}>{group.ageGroup} Boys</li>
+            ) : ageGroups.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Age Group</TableHead>
+                    <TableHead>Gender</TableHead>
+                    <TableHead>Birth Year</TableHead>
+                    <TableHead>Division Code</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {ageGroups.map((group) => (
+                    <TableRow key={group.id}>
+                      <TableCell>{group.ageGroup}</TableCell>
+                      <TableCell>{group.gender}</TableCell>
+                      <TableCell>{group.birthYear}</TableCell>
+                      <TableCell>{group.divisionCode}</TableCell>
+                    </TableRow>
                   ))}
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-medium mb-2">Girls Divisions</h3>
-              <ul className="list-disc pl-5 space-y-1">
-                {PREDEFINED_AGE_GROUPS
-                  .filter(group => group.gender === 'Girls')
-                  .map(group => (
-                    <li key={group.divisionCode}>{group.ageGroup} Girls</li>
-                  ))}
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-center text-muted-foreground">
+                No age groups found for this seasonal scope
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 
@@ -888,61 +874,20 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
     onTabChange(tab);
   };
 
-
-  const submitFormData = async (formData: any) => {
-    // Prepare full form data including ageGroups
-    const fullFormData = {
-      ...formData,
-      ageGroups: event.ageGroups.map(group => ({
-        ...group,
-        selected: group.isSelected,
-        // Ensure fees array is properly included
-        fees: group.fees || []
-      })),
-    };
-
-    console.log("Submitting form with age groups:", fullFormData.ageGroups);
-    onSubmit(fullFormData);
-  };
-
-
-  // Set isEditMode explicitly based on mode prop
   const isEditMode = mode === "edit";
 
-  // Log for debugging
-  console.log('Event Form Mode:', mode, 'isEditMode:', isEditMode);
-
-  // Ensure we fetch age groups when in edit mode
   useEffect(() => {
     if (isEditMode && event?.id) {
-      console.log(`Fetching age groups for event ${event.id} in edit mode`);
-      // Fetch age groups for the event in edit mode
       fetch(`/api/admin/events/${event.id}/age-groups`)
         .then(response => {
-          console.log('Age groups response status:', response.status);
           if (!response.ok) {
             throw new Error('Failed to fetch age groups');
           }
           return response.json();
         })
         .then(data => {
-          console.log('Fetched age groups:', data);
-          // Update the form with the fetched age groups
           if (data && Array.isArray(data)) {
-            console.log('All available age groups count:', data.length);
-            
-            // Make age groups data available to the form component
-            // Store all groups first so they can be displayed in the UI
-            if (typeof setAllAgeGroups === 'function') {
-              setAllAgeGroups(data);
-            }
-            
-            // Find any selected groups (or use an empty array)
-            const selectedGroups = data.filter(group => group.selected);
-            console.log('Selected age groups:', selectedGroups);
-            
-            // Set the form value for age groups - even if it's an empty array
-            form.setValue('ageGroups', selectedGroups);
+            form.setValue('ageGroups', data);
           } else {
             console.error('Age groups data is not an array or is empty:', data);
           }
@@ -978,52 +923,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
               </TabsContent>
 
               <TabsContent value="age-groups">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium">Age Groups</h3>
-                    <InfoPopover>
-                      <p>
-                        All standard age groups (15 boys, 15 girls) will be automatically included in this event.
-                      </p>
-                    </InfoPopover>
-                  </div>
-
-                  {!isEditMode && seasonalScopes && (
-                    <SeasonalScopeSelector
-                      selectedScopeId={selectedSeasonalScopeId}
-                      onScopeSelect={(scopeId) => {
-                        setSelectedSeasonalScopeId(scopeId);
-                        // Clear existing age group selections when scope changes
-                        const selectedScope = seasonalScopes.find(scope => scope.id === scopeId);
-                        if (selectedScope) {
-                          // Auto-select all age groups from the scope
-                          // Using form.setValue instead of setFieldValue
-                          form.setValue('ageGroups', selectedScope.ageGroups);
-                        }
-                      }}
-                      scopes={seasonalScopes}
-                    />
-                  )}
-
-                  {isEditMode && selectedSeasonalScopeId && (
-                    <div className="mb-4">
-                      <p className="text-sm text-muted-foreground">
-                        Age groups are determined by the seasonal scope selected during event creation.
-                      </p>
-                    </div>
-                  )}
-
-                  {selectedSeasonalScopeId && (
-                    <div className="mt-4">
-                      <Label>Age Groups</Label>
-                      <AgeGroupSelector
-                        values={getValues().ageGroups || []}
-                        onChange={(ageGroups) => setFieldValue('ageGroups', ageGroups)}
-                        seasonalScopeId={selectedSeasonalScopeId}
-                      />
-                    </div>
-                  )}
-                </div>
+                {renderAgeGroupsContent()}
               </TabsContent>
 
               <TabsContent value="scoring">
@@ -1083,12 +983,6 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
   );
 };
 
-// With the new approach, we don't need to select age groups - all standard ones will be included
-// This function is kept for compatibility but doesn't do anything anymore
-const handleAgeGroupsChange = (ageGroups) => {
-  // No selection needed as all standard age groups will be automatically included
-  console.log("Age groups will be automatically created for this event", ageGroups);
-  form.setValue('ageGroups', ageGroups);
-};
+// Removed unused handleAgeGroupsChange function
 
 export default EventForm;
