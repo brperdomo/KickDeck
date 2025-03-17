@@ -705,7 +705,7 @@ export const accountingCodes = pgTable("accounting_codes", {
 });
 
 export const insertAccountingCodeSchema = createInsertSchema(accountingCodes, {
-  code: z.string().min(1, "Code is required"),
+  code: z.string().min(1,"Code is required"),
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
 });
@@ -866,3 +866,27 @@ export const formResponsesRelations = relations(formResponses, ({ one }) => ({
     references: [teams.id],
   }),
 }));
+// Add email provider settings schema
+export const emailProviderSettings = pgTable("email_provider_settings", {
+  id: serial("id").primaryKey(),
+  providerType: text("provider_type").notNull(),
+  providerName: text("provider_name").notNull(),
+  settings: jsonb("settings").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  isDefault: boolean("is_default").default(false).notNull(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
+export const insertEmailProviderSettingsSchema = createInsertSchema(emailProviderSettings, {
+  providerType: z.enum(["smtp", "sendgrid", "mailgun"]),
+  providerName: z.string().min(1, "Provider name is required"),
+  settings: z.record(z.unknown()),
+  isActive: z.boolean().default(true),
+  isDefault: z.boolean().default(false),
+});
+
+export const selectEmailProviderSettingsSchema = createSelectSchema(emailProviderSettings);
+
+export type InsertEmailProviderSettings = typeof emailProviderSettings.$inferInsert;
+export type SelectEmailProviderSettings = typeof emailProviderSettings.$inferSelect;
