@@ -73,9 +73,20 @@ export function EmailProviderSettings() {
         body: JSON.stringify(values),
       });
       
+      const contentType = response.headers.get("content-type");
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.error || 'Failed to create provider');
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `Server error: ${response.status}`);
+        } else {
+          const text = await response.text();
+          console.error("Server returned non-JSON error response:", text);
+          throw new Error(`Server error: ${response.status}. The server returned an invalid response.`);
+        }
+      }
+      
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server returned non-JSON success response");
       }
       
       return response.json();
