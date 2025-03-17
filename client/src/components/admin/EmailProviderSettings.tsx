@@ -74,22 +74,21 @@ export function EmailProviderSettings() {
       });
       
       const contentType = response.headers.get("content-type");
+      const contentType = response.headers.get("content-type");
+      let data;
+      
+      try {
+        data = await response.json();
+      } catch (e) {
+        console.error("Failed to parse JSON response:", e);
+        throw new Error("Server returned invalid JSON response");
+      }
+
       if (!response.ok) {
-        if (contentType && contentType.includes("application/json")) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || `Server error: ${response.status}`);
-        } else {
-          const text = await response.text();
-          console.error("Server returned non-JSON error response:", text);
-          throw new Error(`Server error: ${response.status}. The server returned an invalid response.`);
-        }
+        throw new Error(data?.error || `Server error: ${response.status}`);
       }
       
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Server returned non-JSON success response");
-      }
-      
-      return response.json();
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email-providers'] });

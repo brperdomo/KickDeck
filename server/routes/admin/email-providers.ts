@@ -59,6 +59,7 @@ router.post("/", async (req, res) => {
 
 // Update email provider
 router.patch("/:id", async (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
