@@ -67,27 +67,30 @@ export function EmailProviderSettings() {
 
   const createMutation = useMutation({
     mutationFn: async (values: ProviderFormValues) => {
-      const response = await fetch("/api/admin/email-providers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-
-      const contentType = response.headers.get("content-type");
-      let data;
-
       try {
-        data = await response.json();
-      } catch (e) {
-        console.error("Failed to parse JSON response:", e);
-        throw new Error("Server returned invalid JSON response");
-      }
+        const response = await fetch("/api/admin/email-providers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(values),
+        });
 
-      if (!response.ok) {
-        throw new Error(data?.error || `Server error: ${response.status}`);
-      }
+        const text = await response.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.error('Server response:', text);
+          throw new Error(text || 'Failed to parse server response');
+        }
 
-      return data;
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to save provider settings');
+        }
+        return data;
+      } catch (error: any) {
+        console.error('Error saving provider settings:', error);
+        throw new Error(error.message || 'Failed to save provider settings');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["email-providers"] });

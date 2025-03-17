@@ -3,6 +3,14 @@ import { db } from "@db";
 import { emailProviderSettings } from "@db/schema";
 import { eq } from "drizzle-orm";
 
+// Error handler middleware
+const asyncHandler = (fn: Function) => (req: any, res: any, next: any) => {
+  Promise.resolve(fn(req, res, next)).catch((error) => {
+    console.error('Email provider error:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  });
+};
+
 const router = Router();
 
 // Get all email providers
@@ -22,11 +30,20 @@ router.get("/", async (req, res) => {
 
 // Create email provider
 router.post("/", async (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
   try {
     const { providerType, providerName, settings, isActive, isDefault } = req.body;
     
+    if (!providerType || !providerName || !settings) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+    
     if (!providerType || !providerName) {
       return res.status(400).json({ error: "Provider type and name are required" });
+    }
+
+    if (providerType === 'smtp' && (!settings?.host || !settings?.port || !settings?.username || !settings?.password)) {
+      return res.status(400).json({ error: "SMTP settings are incomplete" });
     }
     
     // If this provider is set as default, unset any existing default
@@ -133,3 +150,30 @@ router.delete("/:id", async (req, res) => {
 });
 
 export default router;
+// Test email provider connection
+router.post("/test-connection", async (req, res) => {
+  const { providerType, settings } = req.body;
+  
+  try {
+    if (providerType === 'smtp') {
+      const nodemailer = require('nodemailer');
+      const transporter = nodemailer.createTransport({
+        host: settings.host,
+        port: settings.port,
+        secure: settings.port === 465,
+        auth: {
+          user: settings.username,
+          pass: settings.password,
+        },
+      });
+
+      await transporter.verify();
+      res.json({ success: true, message: 'Connection successful' });
+    } else {
+      res.status(400).json({ error: 'Unsupported provider type' });
+    }
+  } catch (error) {
+    console.error('Email provider connection test failed:', error);
+    res.status(400).json({ error: 'Connection failed: ' + error.message });
+  }
+});
