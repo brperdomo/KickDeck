@@ -116,7 +116,7 @@ export function EmailProviderSettings() {
                   <FormLabel>Provider Type</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    value={field.value} // Added value prop
+                    defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -141,7 +141,7 @@ export function EmailProviderSettings() {
                 <FormItem>
                   <FormLabel>Provider Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="My SMTP Server" {...field} value={field.value} /> {/* Added value prop */}
+                    <Input placeholder="My SMTP Server" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -157,7 +157,7 @@ export function EmailProviderSettings() {
                     <FormItem>
                       <FormLabel>SMTP Host</FormLabel>
                       <FormControl>
-                        <Input placeholder="smtp.example.com" {...field} value={field.value} /> {/* Added value prop */}
+                        <Input placeholder="smtp.example.com" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -171,7 +171,7 @@ export function EmailProviderSettings() {
                     <FormItem>
                       <FormLabel>SMTP Port</FormLabel>
                       <FormControl>
-                        <Input placeholder="587" {...field} value={field.value} /> {/* Added value prop */}
+                        <Input placeholder="587" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -185,7 +185,7 @@ export function EmailProviderSettings() {
                     <FormItem>
                       <FormLabel>SMTP Username</FormLabel>
                       <FormControl>
-                        <Input placeholder="username" {...field} value={field.value} /> {/* Added value prop */}
+                        <Input placeholder="username" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -199,7 +199,7 @@ export function EmailProviderSettings() {
                     <FormItem>
                       <FormLabel>SMTP Password</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} value={field.value} /> {/* Added value prop */}
+                        <Input type="password" placeholder="••••••••" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -216,7 +216,7 @@ export function EmailProviderSettings() {
                   <FormItem>
                     <FormLabel>SendGrid API Key</FormLabel>
                     <FormControl>
-                      <Input placeholder="SG..." {...field} value={field.value} /> {/* Added value prop */}
+                      <Input placeholder="SG..." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -233,7 +233,7 @@ export function EmailProviderSettings() {
                     <FormItem>
                       <FormLabel>Mailgun API Key</FormLabel>
                       <FormControl>
-                        <Input placeholder="key-..." {...field} value={field.value} /> {/* Added value prop */}
+                        <Input placeholder="key-..." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -247,7 +247,7 @@ export function EmailProviderSettings() {
                     <FormItem>
                       <FormLabel>Mailgun Domain</FormLabel>
                       <FormControl>
-                        <Input placeholder="mg.yourdomain.com" {...field} value={field.value} /> {/* Added value prop */}
+                        <Input placeholder="mg.yourdomain.com" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
