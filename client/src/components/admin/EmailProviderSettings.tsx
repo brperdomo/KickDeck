@@ -72,7 +72,12 @@ export function EmailProviderSettings() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       });
-      if (!response.ok) throw new Error('Failed to create provider');
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || 'Failed to create provider');
+      }
+      
       return response.json();
     },
     onSuccess: () => {
@@ -83,10 +88,10 @@ export function EmailProviderSettings() {
       });
       form.reset();
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to save email provider settings",
+        description: error.message || "Failed to save email provider settings",
         variant: "destructive",
       });
     },
