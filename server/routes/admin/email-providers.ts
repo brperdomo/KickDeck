@@ -34,6 +34,10 @@ router.post("/", async (req, res) => {
   try {
     const { providerType, providerName, settings, isActive, isDefault } = req.body;
     
+    if (!providerType || !providerName || !settings) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+    
     if (!providerType || !providerName) {
       return res.status(400).json({ error: "Provider type and name are required" });
     }

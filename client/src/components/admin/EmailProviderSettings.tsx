@@ -80,7 +80,7 @@ export function EmailProviderSettings() {
           data = JSON.parse(text);
         } catch (e) {
           console.error('Server response:', text);
-          throw new Error('Server returned invalid response');
+          throw new Error(text || 'Failed to parse server response');
         }
 
         if (!response.ok) {
