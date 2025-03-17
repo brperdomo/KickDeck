@@ -59,10 +59,19 @@ router.post("/", async (req, res) => {
 
 // Update email provider
 router.patch("/:id", async (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
   try {
     const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid provider ID" });
+    }
+
     const { providerType, providerName, settings, isActive, isDefault } = req.body;
     
+    if (!providerType || !providerName) {
+      return res.status(400).json({ error: "Provider type and name are required" });
+    }
+
     // Check if provider exists
     const [existingProvider] = await db
       .select()
