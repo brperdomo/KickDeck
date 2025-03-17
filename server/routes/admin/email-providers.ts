@@ -29,12 +29,17 @@ router.get("/", async (req, res) => {
 });
 
 // Create email provider
-router.post("/", asyncHandler(async (req, res) => {
+router.post("/", async (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
   try {
     const { providerType, providerName, settings, isActive, isDefault } = req.body;
     
     if (!providerType || !providerName) {
       return res.status(400).json({ error: "Provider type and name are required" });
+    }
+
+    if (providerType === 'smtp' && (!settings?.host || !settings?.port || !settings?.username || !settings?.password)) {
+      return res.status(400).json({ error: "SMTP settings are incomplete" });
     }
     
     // If this provider is set as default, unset any existing default

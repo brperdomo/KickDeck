@@ -74,14 +74,22 @@ export function EmailProviderSettings() {
           body: JSON.stringify(values),
         });
 
-        const data = await response.json();
+        const text = await response.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.error('Server response:', text);
+          throw new Error('Server returned invalid response');
+        }
+
         if (!response.ok) {
           throw new Error(data.error || 'Failed to save provider settings');
         }
         return data;
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error saving provider settings:', error);
-        throw new Error('Failed to save provider settings. Please try again.');
+        throw new Error(error.message || 'Failed to save provider settings');
       }
     },
     onSuccess: () => {
