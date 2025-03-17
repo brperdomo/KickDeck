@@ -8,24 +8,32 @@ import { useOrganizationSettings } from "@/hooks/use-organization-settings";
 import { useBrandingPreview } from "@/hooks/use-branding-preview";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
+// Components
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EventsTable } from "@/components/events/EventsTable"; 
+import { AdminModal } from "@/components/admin/AdminModal";
+import { GeneralSettingsView } from "@/components/admin/GeneralSettingsView";
+import { FileManager } from "@/components/admin/FileManager";
+import { FormTemplatesView } from "@/components/admin/FormTemplatesView";
+import { AdminBanner } from "@/components/admin/AdminBanner";
+import { BrandingPreviewProvider } from "@/hooks/use-branding-preview";
+import { AccountingCodeModal } from "@/components/admin/AccountingCodeModal";
+import { CouponModal } from "@/components/CouponModal";
+import { UpdatesLogModal } from "@/components/admin/UpdatesLogModal";
+import { InternalOperationsPanel } from "@/components/admin/InternalOperationsPanel";
+import { LogoutOverlay } from "@/components/ui/logout-overlay";
+
 // Icons 
 import {
   Eye, Calendar, Shield, UserPlus, Home, LogOut, FileText,
   User, Palette, ChevronRight, Loader2, CreditCard, Search,
   ClipboardList, MoreHorizontal, Building2, MessageSquare, Trophy,
   DollarSign, Settings, Users, ChevronDown, Edit, Trash, Download,
-  UserCircle, X, Plus, FormInput, CalendarDays, ImageIcon, 
-  Ticket
+  UserCircle, X, Plus, FormInput, CalendarDays, ImageIcon, Ticket
 } from "lucide-react";
 
-// Components
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { EventsTable } from "@/components/events/EventsTable"; 
-import { AdminModal } from "@/components/admin/AdminModal";
-import { GeneralSettingsView } from "@/components/admin/GeneralSettingsView";
-import { FileManager } from "@/components/admin/FileManager";
-import { FormTemplatesView } from "@/components/admin/FormTemplatesView";
+// UI Components
 import {
   Table,
   TableBody,
@@ -43,11 +51,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 // Types
 import type { SelectUser } from "@db/schema";
 
 type View = 'events' | 'teams' | 'administrators' | 'settings' | 'households' | 'reports' | 'account' | 'complexes' | 'scheduling' | 'files' | 'coupons' | 'formTemplates';
+type SettingsView = 'branding' | 'general' | 'payments' | 'styling';
 
 function PreviewButton() {
   const [, navigate] = useLocation();
@@ -352,6 +366,10 @@ function AdminDashboard() {
   const [activeView, setActiveView] = useState<View>('events');
   const [showWelcome, setShowWelcome] = useState(true);
   const [showLogoutOverlay, setShowLogoutOverlay] = useState(false);
+  const [showInternalOps, setShowInternalOps] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [activeSettingsView, setActiveSettingsView] = useState<SettingsView>('general');
+
 
   if (!user) {
     return (
@@ -375,7 +393,11 @@ function AdminDashboard() {
       case 'administrators':
         return <AdministratorsView />;
       case 'settings':
-        return <GeneralSettingsView />;
+        return (
+          <BrandingPreviewProvider>
+            <GeneralSettingsView />
+          </BrandingPreviewProvider>
+        );
       case 'files':
         return (
           <div className="space-y-4">
@@ -441,6 +463,54 @@ function AdminDashboard() {
               Form Templates
             </Button>
 
+            {/* Settings Collapsible */}
+            <Collapsible
+              open={isSettingsOpen}
+              onOpenChange={setIsSettingsOpen}
+              className="space-y-2"
+            >
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant={activeView === 'settings' ? 'secondary' : 'ghost'}
+                  className="w-full justify-between"
+                >
+                  <span className="flex items-center">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </span>
+                  <ChevronRight
+                    className={`h-4 w-4 transition-transform duration-200 ${
+                      isSettingsOpen ? 'rotate-90' : ''
+                    }`}
+                  />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-2 pl-4">
+                <Button
+                  variant={activeSettingsView === 'branding' ? 'secondary' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => {
+                    setActiveView('settings');
+                    setActiveSettingsView('branding');
+                  }}
+                >
+                  <Palette className="mr-2 h-4 w-4" />
+                  Branding
+                </Button>
+                <Button
+                  variant={activeSettingsView === 'general' ? 'secondary' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => {
+                    setActiveView('settings');
+                    setActiveSettingsView('general');
+                  }}
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  General
+                </Button>
+              </CollapsibleContent>
+            </Collapsible>
+
             <Button
               variant="ghost"
               className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -455,6 +525,7 @@ function AdminDashboard() {
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto">
+        <AdminBanner />
         <div className="p-8">
           {/* Welcome Card */}
           {showWelcome && (
@@ -484,9 +555,24 @@ function AdminDashboard() {
           {renderView()}
         </div>
 
+        {/* Internal Operations Panel */}
+        {showInternalOps && (
+          <InternalOperationsPanel
+            setActiveView={(view: string) => setActiveView(view as View)}
+            openSettings={(section: string) => {
+              setIsSettingsOpen(true);
+              setActiveSettingsView(section as SettingsView);
+            }}
+          />
+        )}
+
         {/* Preview Button */}
         <PreviewButton />
       </div>
+
+      {showLogoutOverlay && (
+        <LogoutOverlay onFinished={() => setShowLogoutOverlay(false)} />
+      )}
     </div>
   );
 }
