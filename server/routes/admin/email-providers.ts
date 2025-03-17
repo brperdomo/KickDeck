@@ -3,6 +3,14 @@ import { db } from "@db";
 import { emailProviderSettings } from "@db/schema";
 import { eq } from "drizzle-orm";
 
+// Error handler middleware
+const asyncHandler = (fn: Function) => (req: any, res: any, next: any) => {
+  Promise.resolve(fn(req, res, next)).catch((error) => {
+    console.error('Email provider error:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  });
+};
+
 const router = Router();
 
 // Get all email providers
@@ -21,7 +29,7 @@ router.get("/", async (req, res) => {
 });
 
 // Create email provider
-router.post("/", async (req, res) => {
+router.post("/", asyncHandler(async (req, res) => {
   try {
     const { providerType, providerName, settings, isActive, isDefault } = req.body;
     
