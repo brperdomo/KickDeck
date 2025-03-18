@@ -67,7 +67,7 @@ router.get("/", asyncHandler(async (req, res) => {
     res.json(providers);
   } catch (error) {
     console.error('Error fetching email providers:', error);
-    throw error; // Let asyncHandler handle the error response
+    throw error;
   }
 }));
 
@@ -82,8 +82,17 @@ router.post("/", asyncHandler(async (req, res) => {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
-  if (providerType === 'smtp' && (!settings?.host || !settings?.port || !settings?.username || !settings?.password)) {
-    return res.status(400).json({ error: "SMTP settings are incomplete" });
+  // Validate SMTP settings
+  if (providerType === 'smtp') {
+    if (!settings.host || !settings.port || !settings.username || !settings.password) {
+      return res.status(400).json({ error: "SMTP settings are incomplete" });
+    }
+
+    // Validate port number
+    const port = parseInt(settings.port);
+    if (isNaN(port) || port < 1 || port > 65535) {
+      return res.status(400).json({ error: "Invalid port number" });
+    }
   }
 
   try {
@@ -100,7 +109,7 @@ router.post("/", asyncHandler(async (req, res) => {
       .values({
         providerType,
         providerName,
-        settings,
+        settings: settings as any, // Store settings as JSON
         isActive: isActive ?? true,
         isDefault: isDefault ?? false,
         createdAt: new Date().toISOString(),
@@ -112,7 +121,7 @@ router.post("/", asyncHandler(async (req, res) => {
     res.status(201).json(provider);
   } catch (error) {
     console.error('Error creating email provider:', error);
-    throw error; // Let asyncHandler handle the error response
+    throw error;
   }
 }));
 
@@ -128,6 +137,19 @@ router.patch("/:id", asyncHandler(async (req, res) => {
 
   if (!providerType || !providerName) {
     return res.status(400).json({ error: "Provider type and name are required" });
+  }
+
+  // Validate SMTP settings if they're being updated
+  if (providerType === 'smtp' && settings) {
+    if (!settings.host || !settings.port || !settings.username || !settings.password) {
+      return res.status(400).json({ error: "SMTP settings are incomplete" });
+    }
+
+    // Validate port number
+    const port = parseInt(settings.port);
+    if (isNaN(port) || port < 1 || port > 65535) {
+      return res.status(400).json({ error: "Invalid port number" });
+    }
   }
 
   try {
@@ -155,7 +177,7 @@ router.patch("/:id", asyncHandler(async (req, res) => {
       .set({
         providerType,
         providerName,
-        settings,
+        settings: settings as any,
         isActive,
         isDefault,
         updatedAt: new Date().toISOString(),
@@ -167,7 +189,7 @@ router.patch("/:id", asyncHandler(async (req, res) => {
     res.json(updatedProvider);
   } catch (error) {
     console.error('Error updating email provider:', error);
-    throw error; // Let asyncHandler handle the error response
+    throw error;
   }
 }));
 
@@ -192,7 +214,7 @@ router.delete("/:id", asyncHandler(async (req, res) => {
     res.json({ message: "Provider deleted successfully" });
   } catch (error) {
     console.error('Error deleting email provider:', error);
-    throw error; // Let asyncHandler handle the error response
+    throw error;
   }
 }));
 
