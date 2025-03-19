@@ -324,6 +324,10 @@ export function EmailTemplateModal({ open, onOpenChange, template }: EmailTempla
                             'bold italic forecolor | alignleft aligncenter ' +
                             'alignright alignjustify | bullist numlist outdent indent | ' +
                             'removeformat | mergefields | help',
+                          menubar: 'tools',
+                          menu: {
+                            tools: { title: 'Tools', items: 'mergefields' }
+                          },
                           setup: (editor) => {
                             editor.ui.registry.addMenuButton('mergefields', {
                               text: 'Merge Fields',
