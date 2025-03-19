@@ -1,4 +1,3 @@
-
 import { Request, Response } from 'express';
 import { db } from '@db/index';
 import { emailTemplates } from '@db/schema/emailTemplates';
@@ -104,25 +103,24 @@ export async function updateEmailTemplate(req: Request, res: Response) {
 export async function previewEmailTemplate(req: Request, res: Response) {
   try {
     const templateData = JSON.parse(req.query.template as string);
-    
+
     // Replace variables with sample values
     let content = templateData.content || '';
-    const variables = templateData.variables || ['firstName', 'lastName'];
-    
+    const variables = templateData.variables || [];
+
     // Default sample values for user variables
     const defaultValues = {
       firstName: '[Sample First Name]',
-      lastName: '[Sample Last Name]'
+      lastName: '[Sample Last Name]',
+      // Add other default values as needed
     };
-    
-    // Create sample data for each variable
+
+    // Replace merge fields
     variables.forEach((variable: string) => {
-      const sampleValue = defaultValues[variable as keyof typeof defaultValues] || `[Sample ${variable}]`;
-      content = content.replace(
-        new RegExp(`{{${variable}}}`, 'g'), 
-        `<span style="background-color:#FFFF00">${sampleValue}</span>`
-      );
+      const sampleValue = defaultValues[variable] || `[Sample ${variable}]`;
+      content = content.replace(new RegExp(`{{${variable}}}`, 'g'), sampleValue);
     });
+
 
     // Create HTML for preview
     const html = `
@@ -151,7 +149,7 @@ export async function previewEmailTemplate(req: Request, res: Response) {
           ${content}
         </div>
         <div class="preview-footer">
-          <p>This is a preview. Variables are highlighted in yellow.</p>
+          <p>This is a preview. </p>
           <p>Template Type: ${templateData.type || 'Not specified'}</p>
           <p>Active: ${templateData.isActive ? 'Yes' : 'No'}</p>
         </div>
@@ -159,7 +157,7 @@ export async function previewEmailTemplate(req: Request, res: Response) {
     </body>
     </html>
     `;
-    
+
     res.setHeader('Content-Type', 'text/html');
     res.send(html);
   } catch (error) {
@@ -171,7 +169,7 @@ export async function previewEmailTemplate(req: Request, res: Response) {
 export async function deleteEmailTemplate(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    
+
     const [template] = await db.delete(emailTemplates)
       .where(eq(emailTemplates.id, parseInt(id)))
       .returning();
