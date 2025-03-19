@@ -10,14 +10,14 @@ export function StyleSettingsView() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [previewStyles, setPreviewStyles] = useState({
-    primary: '#000000',
-    secondary: '#32CD32',
-    accent: '#FF8C00',
-    background: '#F5F5F6',
+    primary: '#4A90E2',
+    secondary: '#50C878',
+    accent: '#FF6B6B',
+    background: '#F8F9FA',
     adminNavBackground: '#FFFFFF',
-    adminNavText: '#000000',
-    adminNavActive: '#000000',
-    adminNavHover: '#f3f4f6',
+    adminNavText: '#2C3E50',
+    adminNavActive: '#E3F2FD',
+    adminNavHover: '#F5F7FA',
     tableHeaderBg: "#f9fafb",
     tableRowHoverBg: "#f3f4f6",
     cardBg: "#FFFFFF",
