@@ -323,7 +323,27 @@ export function EmailTemplateModal({ open, onOpenChange, template }: EmailTempla
                           toolbar: 'undo redo | blocks | ' +
                             'bold italic forecolor | alignleft aligncenter ' +
                             'alignright alignjustify | bullist numlist outdent indent | ' +
-                            'removeformat | help',
+                            'removeformat | mergefields | help',
+                          setup: (editor) => {
+                            editor.ui.registry.addMenuButton('mergefields', {
+                              text: 'Merge Fields',
+                              fetch: (callback) => {
+                                const items = [
+                                  {
+                                    type: 'menuitem',
+                                    text: 'First Name',
+                                    onAction: () => editor.insertContent('{{firstName}}')
+                                  },
+                                  {
+                                    type: 'menuitem',
+                                    text: 'Last Name',
+                                    onAction: () => editor.insertContent('{{lastName}}')
+                                  }
+                                ];
+                                callback(items);
+                              }
+                            });
+                          },
                           content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
                         }}
                       />
