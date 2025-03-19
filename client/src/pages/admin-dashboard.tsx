@@ -973,7 +973,7 @@ console.log('Primarycolor extracted:', palette.Vibrant.hex);
       if (palette.LightVibrant) {
         setSecondaryColor(palette.LightVibrant.hex);
         console.log('Secondary color (Light Vibrant) extracted:', palette.LightVibrant.hex);
-      } else if (palette.Muted)) {
+      } else if (palette.Muted) {
         setSecondaryColor(palette.Muted.hex);
         console.log('Secondary color (Muted) extracted:', palette.Muted.hex);
       }
