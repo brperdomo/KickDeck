@@ -100,7 +100,7 @@ export function useTheme() {
       }
 
       return response.json();
-    },
+    }
   });
 
   const styleConfigMutation = useMutation({
@@ -118,7 +118,7 @@ export function useTheme() {
       }
 
       return response.json();
-    },
+    }
   });
 
   const updateStyleConfig = useCallback(async (config: StyleConfig) => {
