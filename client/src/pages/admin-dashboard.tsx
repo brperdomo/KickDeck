@@ -99,9 +99,6 @@ import FormTemplatesPage from "@/pages/form-templates";
 import { InternalOperationsPanel } from "@/components/admin/InternalOperationsPanel"; // Added import
 import { StripeSettingsView } from "@/components/admin/StripeSettingsView"; // Added import
 import { ThemeEditor } from "@/components/admin/ThemeEditor";
-import { ClientManagementView } from "@/components/admin/ClientManagementView";
-import { CouponManagement } from "@/components/admin/CouponManagement";
-import { CouponModal } from "@/components/admin/CouponModal";
 
 function AdminBanner() {
   const { settings } = useOrganizationSettings();
@@ -957,14 +954,14 @@ function OrganizationSettingsForm() {
     setLogo(file);
 
     try {
-      //      // Import Vibrant using dynamic import
+      // Import Vibrant using dynamic import
       const Vibrant = (await import('node-vibrant')).default;
 
       // Create new Vibrant instance
       const v = new Vibrant(objectUrl);
 
       // Get the palette with error handling
-      const palette = await v.getPalette();
+      constpalette = await v.getPalette();
 
       // Set primary color from the Vibrant swatch
       if (palette.Vibrant) {
@@ -1498,6 +1495,8 @@ function ComplexesView() {
 
 // Using the simpler EventsView implementation from line 126
 
+import { ClientManagementView } from "@/components/admin/ClientManagementView";
+
 function HouseholdsView() {
   return <ClientManagementView />;
 }
@@ -1967,62 +1966,8 @@ function SettingsView() {
   );
 }
 
-import { Shield, Calendar, Users, Building2, Home, CalendarDays, FileText, ImageIcon, Ticket, FormInput, User } from 'lucide-react';
-import { useState, useEffect, lazy } from 'react';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { useUser} from '@/hooks/use-user';
-import { useLocation } from '@/hooks/use-location';
-
-const navigationItems = [
-  { icon: Shield, label: "Administrators", value: "administrators" as const },
-  { icon: Calendar, label: "Events", value: "events" as const },
-  { icon: Users, label: "Teams", value: "teams" as const },
-  { icon: Building2, label: "Field Complexes", value: "complexes" as const },
-  { icon: Home, label: "MatchPro Client", value: "households" as const },
-  { icon: CalendarDays, label: "Scheduling", value: "scheduling" as const },
-  { icon: FileText, label: "Reports and Financials", value: "reports" as const },
-  { icon: ImageIcon, label: "File Manager", value: "files" as const },
-  { icon: Ticket, label: "Coupons", value: "coupons" as const },
-  { icon: FormInput, label: "Form Templates", value: "formTemplates" as const },
-  { icon: User, label: "My Account", value: "account" as const },
-];
-
-function AdminDashboard() {
-  const { user, logout } = useUser();
-  const [, setLocation] = useLocation();
-  const [activeView, setActiveView] = useState('events');
-  const [showWelcome, setShowWelcome] = useState(true);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [showUpdatesLog, setShowUpdatesLog] = useState(false);
-  const [showInternalOps, setShowInternalOps] = useState(false);
-  const [theme, setTheme] = useState({
-    backgroundColor: '#ffffff',
-    textColor: '#000000',
-    buttonColor: '#4CAF50',
-  });
-
-  const handleColorChange = (color: string, value: string) => {
-    setTheme({ ...theme, [color]: value });
+// ThemeEditor component moved to client/src/components/admin/ThemeEditor.tsx
   };
-
-  useEffect(() => {
-    if (!user) {
-      return;
-    }
-    if (!isAdminUser(user)) {
-      setLocation("/");
-    }
-  }, [user, setLocation]);
-
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
@@ -2055,8 +2000,10 @@ function AdminDashboard() {
             onChange={(e) => handleColorChange('buttonColor', e.target.value)}
           />
         </div>
+        {/* Add more color pickers as needed */}
       </div>
       <Button onClick={() => {
+        // Apply theme changes here
         console.log("Theme updated:", theme);
       }}>
         Apply Theme
@@ -2064,5 +2011,183 @@ function AdminDashboard() {
     </div>
   );
 }
+
+interface SelectCoupon {
+  id: number;
+  code: string;
+  discountType: 'percentage' | 'amount';
+  amount: number;
+  expirationDate: string;
+  usageCount: number;
+  maxUses: number | null;
+  isActive: boolean;
+  description: string;
+}
+
+function CouponManagement() {
+  const { toast } = useToast();
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedCoupon, setSelectedCoupon] = useState<SelectCoupon | null>(null);
+  const queryClient = useQueryClient();
+  const [, params] = useLocation();
+  const eventId = params.split('/')[2];
+
+  const couponsQuery = useQuery({
+    queryKey: ['/api/admin/coupons', eventId],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/coupons?eventId=${eventId}`);
+      if (!response.ok) throw new Error('Failed to fetch coupons');
+      return response.json();
+    }
+  });
+
+  const deleteCouponMutation = useMutation({
+    mutationFn: async (couponId: number) => {
+      const response = await fetch(`/api/admin/coupons/${couponId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete coupon');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['/api/admin/coupons', eventId]);
+      toast({
+        title: "Success",
+        description: "Coupon deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  if (couponsQuery.isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  const handleEditCoupon = (coupon: SelectCoupon) => {
+    setSelectedCoupon(coupon);
+    setIsAddModalOpen(true);
+  };
+
+  const handleDeleteCoupon = async (couponId: number) => {
+    try {
+      await deleteCouponMutation.mutateAsync(couponId);
+    } catch (error) {
+      console.error('Error deleting coupon:', error);
+    }
+  };
+
+  return (
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Coupon Management</h2>
+        <Button onClick={() => setIsAddModalOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Coupon
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Code</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Expires</TableHead>
+                <TableHead>Uses</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {couponsQuery.data?.map((coupon: SelectCoupon) => (
+                <TableRow key={coupon.id}>
+                  <TableCell className="font-medium">{coupon.code}</TableCell>
+                  <TableCell>
+                    <Badge variant={coupon.discountType === 'percentage' ? 'secondary' : 'outline'}>
+                      {coupon.discountType === 'percentage' ? `${coupon.amount}%` : `$${coupon.amount}`}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{coupon.amount}</TableCell>
+                  <TableCell>
+                    {coupon.expirationDate ?
+                      new Date(coupon.expirationDate).toLocaleDateString() :
+                      'No expiration'
+                    }
+                  </TableCell>
+                  <TableCell>
+                    {coupon.usageCount} {coupon.maxUses ? `/ ${coupon.maxUses}` : ''}
+                  </TableCell>
+                  <TableCell>{coupon.description}</TableCell>
+                  <TableCell>
+                    <Badge variant={coupon.isActive ? 'success' : 'secondary'}>
+                      {coupon.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditCoupon(coupon)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteCoupon(coupon.id)}
+                          className="text-red-600"
+                        >
+                          <Trash className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <CouponModal
+        open={isAddModalOpen}
+        onOpenChange={setIsAddModalOpen}
+        eventId={eventId}
+        couponToEdit={selectedCoupon}
+      />
+    </>
+  );
+}
+
+const navigationItems = [
+  { icon: Shield, label: "Administrators", value: "administrators" as const },
+  { icon: Calendar, label: "Events", value: "events" as const },
+  { icon: Users, label: "Teams", value: "teams" as const },
+  { icon: Building2, label: "Field Complexes", value: "complexes" as const },
+  { icon: Home, label: "MatchPro Client", value: "households" as const },
+  { icon: CalendarDays, label: "Scheduling", value: "scheduling" as const },
+  { icon: FileText, label: "Reports and Financials", value: "reports" as const },
+  { icon: ImageIcon, label: "File Manager", value: "files" as const },
+  { icon: Ticket, label: "Coupons", value: "coupons" as const },
+  { icon: FormInput, label: "Form Templates", value: "formTemplates" as const },
+  { icon: User, label: "My Account", value: "account" as const },
+];
 
 export default AdminDashboard;
