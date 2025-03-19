@@ -106,19 +106,20 @@ export async function previewEmailTemplate(req: Request, res: Response) {
 
     // Replace variables with sample values
     let content = templateData.content || '';
-    const variables = templateData.variables || [];
-
-    // Default sample values for user variables
-    const defaultValues = {
+    
+    // Define all possible merge fields and their sample values
+    const defaultValues: Record<string, string> = {
       firstName: '[Sample First Name]',
       lastName: '[Sample Last Name]',
-      // Add other default values as needed
+      email: '[sample@email.com]',
+      username: '[Sample Username]',
+      resetLink: '[Reset Password Link]'
     };
 
-    // Replace merge fields
-    variables.forEach((variable: string) => {
-      const sampleValue = defaultValues[variable] || `[Sample ${variable}]`;
-      content = content.replace(new RegExp(`{{${variable}}}`, 'g'), sampleValue);
+    // Replace all merge fields
+    Object.entries(defaultValues).forEach(([variable, sampleValue]) => {
+      const regex = new RegExp(`{{${variable}}}`, 'g');
+      content = content.replace(regex, sampleValue);
     });
 
 
