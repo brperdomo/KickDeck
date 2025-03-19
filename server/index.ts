@@ -130,14 +130,18 @@ async function testDbConnection() {
       res.status(status).json({ message });
     });
 
-    // Add health check endpoint
+    // Add health check endpoints
+    app.get('/', (_req, res) => {
+      res.status(200).send('OK');
+    });
+
     app.get('/health', (_req, res) => {
       res.status(200).json({ status: 'healthy' });
     });
 
     // Start the server
-    const PORT = parseInt(process.env.PORT || "80", 10); // Use 80 as default for production
-    const HOST = process.env.HOST || "0.0.0.0"; // Listen on all interfaces
+    const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
+    const HOST = "0.0.0.0"; // Listen on all interfaces
 
     // Serve static files in production
     if (app.get('env') === 'production') {
