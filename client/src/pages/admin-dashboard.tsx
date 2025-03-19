@@ -51,7 +51,9 @@ import {
   CalendarDays,
   ImageIcon,
   FormInput,
-  Bell
+  Bell,
+  Moon,
+  Sun
 } from "lucide-react";
 import {
   Table,
@@ -98,6 +100,7 @@ import FormTemplateCreatePage from "@/pages/form-template-create";
 import FormTemplatesPage from "@/pages/form-templates";
 import { InternalOperationsPanel } from "@/components/admin/InternalOperationsPanel"; // Added import
 import { StripeSettingsView } from "@/components/admin/StripeSettingsView"; // Added import
+import { Toggle } from '@/components/ui/toggle';
 
 
 function AdminBanner() {
@@ -1589,6 +1592,7 @@ function AdminDashboard() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showUpdatesLog, setShowUpdatesLog] = useState(false);
   const [showInternalOps, setShowInternalOps] = useState(false); // Added state for Internal Ops panel
+  const { setAppearance, currentAppearance } = useTheme();
 
   // Add Form Templates to the navigation
   const formTemplatesButton = (
@@ -1627,6 +1631,11 @@ function AdminDashboard() {
     setTimeout(async () => {
       await logout();
     }, 1500);
+  };
+
+  const handleAppearanceToggle = async () => {
+    const newAppearance = currentAppearance === 'dark' ? 'light' : 'dark';
+    await setAppearance(newAppearance);
   };
 
   const renderView = () => {
@@ -1984,8 +1993,7 @@ function ThemeEditor() {
             onChange={(e) => handleColorChange('textColor', e.target.value)}
           />
         </div>
-        <div>
-          <Label htmlFor="buttonColor">Button Color</Label>
+        <div<Label htmlFor="buttonColor">Button Color</Label>
           <Input
             id="buttonColor"
             type="color"
