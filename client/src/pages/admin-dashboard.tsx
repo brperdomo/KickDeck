@@ -51,7 +51,9 @@ import {
   CalendarDays,
   ImageIcon,
   FormInput,
-  Bell
+  Bell,
+  Moon,
+  Sun
 } from "lucide-react";
 import {
   Table,
@@ -98,6 +100,7 @@ import FormTemplateCreatePage from "@/pages/form-template-create";
 import FormTemplatesPage from "@/pages/form-templates";
 import { InternalOperationsPanel } from "@/components/admin/InternalOperationsPanel"; // Added import
 import { StripeSettingsView } from "@/components/admin/StripeSettingsView"; // Added import
+import { Toggle } from '@/components/ui/toggle';
 
 
 function AdminBanner() {
@@ -1589,6 +1592,8 @@ function AdminDashboard() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showUpdatesLog, setShowUpdatesLog] = useState(false);
   const [showInternalOps, setShowInternalOps] = useState(false); // Added state for Internal Ops panel
+  const { setAppearance, currentAppearance } = useTheme();
+  const [theme, setTheme] = useState(currentAppearance); // Added theme state
 
   // Add Form Templates to the navigation
   const formTemplatesButton = (
@@ -1627,6 +1632,11 @@ function AdminDashboard() {
     setTimeout(async () => {
       await logout();
     }, 1500);
+  };
+
+  const handleAppearanceToggle = async () => {
+    const newAppearance = currentAppearance === 'dark' ? 'light' : 'dark';
+    await setAppearance(newAppearance);
   };
 
   const renderView = () => {
@@ -1852,13 +1862,21 @@ function AdminDashboard() {
               My Account
             </Button>
 
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-              onClick={handleLogout}
-            >
+            <Button onClick={handleLogout} className="w-full mb-2" variant="outline">
               <LogOut className="mr-2 h-4 w-4" />
               Logout
+            </Button>
+            <Button 
+              onClick={handleAppearanceToggle} 
+              className="w-full" 
+              variant="outline"
+            >
+              {theme === 'dark' ? (
+                <Sun className="mr-2 h-4 w-4" />
+              ) : (
+                <Moon className="mr-2 h-4 w-4" />
+              )}
+              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
             </Button>
           </div>
         </div>
@@ -1977,7 +1995,8 @@ function ThemeEditor() {
           />
         </div>
         <div>
-          <Label htmlFor="textColor">Text Color</Label><Input
+          <Label htmlFor="textColor">Text Color</Label>
+          <Input
             id="textColor"
             type="color"
             value={theme.textColor}
