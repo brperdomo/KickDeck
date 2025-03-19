@@ -21,6 +21,7 @@ import EmailTemplatesPage from "@/pages/email-templates";
 import { useUser } from "@/hooks/use-user";
 import EventRegistration from "./pages/event-registration";
 import { FeeManagement } from "@/components/events/FeeManagement";
+import { ThemeProvider } from "@/hooks/use-theme"; // Added import
 
 // Placeholder components
 const EventPreviewSelector = () => <div>Event Preview Selector</div>;
@@ -101,12 +102,14 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Router />
-        <Toaster />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ThemeProvider defaultTheme="light"> {/* Wrapped App in ThemeProvider */}
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Router />
+          <Toaster />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 
