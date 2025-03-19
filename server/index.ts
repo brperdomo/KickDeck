@@ -136,7 +136,8 @@ async function testDbConnection() {
     });
 
     // Start the server
-    const PORT = process.env.PORT || 5000;
+    const PORT = parseInt(process.env.PORT || "80", 10); // Use 80 as default for production
+    const HOST = process.env.HOST || "0.0.0.0"; // Listen on all interfaces
 
     // Serve static files in production
     if (app.get('env') === 'production') {
@@ -152,8 +153,8 @@ async function testDbConnection() {
     }
 
     try {
-      server.listen(PORT, "0.0.0.0", () => {
-        log(`Server started successfully on port ${PORT}`);
+      server.listen(PORT, HOST, () => {
+        log(`Server started successfully on ${HOST}:${PORT}`);
       });
     } catch (error) {
       log(`Error starting server: ${(error as Error).message}`);
