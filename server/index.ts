@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { setupVite, log } from "./vite";
 import { db } from "@db";
 import { users } from "@db/schema";
 import { createAdmin } from "./create-admin";
@@ -17,11 +17,17 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
+// Health check endpoints must come first
+app.get('/health', (_req: Request, res: Response) => {
+  res.status(200).json({ status: 'healthy' });
+});
+
+app.get('/', (_req: Request, res: Response) => {
+  res.status(200).send('Health check OK');
+});
+
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
-
-// Register upload routes
-app.use('/api/files', uploadRouter);
 
 // Add request logging middleware
 app.use((req, res, next) => {
@@ -42,17 +48,15 @@ app.use((req, res, next) => {
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
       log(logLine);
     }
   });
 
   next();
 });
+
+// Register upload routes
+app.use('/api/files', uploadRouter);
 
 // Test database connection
 async function testDbConnection() {
@@ -85,7 +89,6 @@ async function testDbConnection() {
     await createAdmin();
     log("Admin user setup completed");
 
-
     // Register routes first to ensure all middleware is set up
     const server = registerRoutes(app);
 
@@ -104,7 +107,6 @@ async function testDbConnection() {
       log("New WebSocket connection established");
 
       ws.on('message', (message) => {
-        // Handle incoming messages
         log("Received WebSocket message: " + message);
       });
 
@@ -113,13 +115,20 @@ async function testDbConnection() {
       });
     });
 
+    // Setup environment-specific middleware
     if (app.get("env") === "development") {
-      // Setup Vite middleware
       await setupVite(app, server);
       log("Vite middleware setup complete");
     } else {
-      // Static file serving in production
-      serveStatic(app);
+      // Serve static files in production
+      app.use(express.static(path.join(process.cwd(), 'dist', 'public')));
+
+      // Handle SPA routing by serving index.html for any unknown routes
+      app.get('*', (req: Request, res: Response) => {
+        // Skip health check paths
+        if (req.path === '/' || req.path === '/health') return;
+        res.sendFile(path.join(process.cwd(), 'dist', 'public', 'index.html'));
+      });
     }
 
     // Error handling middleware
@@ -130,37 +139,9 @@ async function testDbConnection() {
       res.status(status).json({ message });
     });
 
-    // Add health check endpoints
-    app.get('/', (_req, res) => {
-      res.status(200).send('OK');
-    });
-
-    app.get('/health', (_req, res) => {
-      res.status(200).json({ status: 'healthy' });
-    });
-
     // Start the server
     const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
     const HOST = "0.0.0.0"; // Listen on all interfaces
-
-    // Health check endpoint must come before static file handling
-    app.get('/health', (_req: Request, res: Response) => {
-      res.status(200).send('OK');
-    });
-
-    app.get('/', (_req: Request, res: Response) => {
-      res.status(200).send('OK');
-    });
-
-    // Serve static files in production
-    if (app.get('env') === 'production') {
-      app.use(express.static(path.join(process.cwd(), 'dist', 'public')));
-      // Handle SPA routing by serving index.html for any unknown routes
-      app.get('*', (req: Request, res: Response) => {
-        if (req.path === '/' || req.path === '/health') return; // Skip health check paths
-        res.sendFile(path.join(process.cwd(), 'dist', 'public', 'index.html'));
-      });
-    }
 
     try {
       server.listen(PORT, HOST, () => {
@@ -179,6 +160,7 @@ async function testDbConnection() {
         process.exit(0);
       });
     });
+
   } catch (error) {
     log("Failed to start server: " + (error as Error).message);
     process.exit(1);
