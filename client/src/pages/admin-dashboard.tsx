@@ -1966,8 +1966,7 @@ function SettingsView() {
   );
 }
 
-// ThemeEditor component moved to client/src/components/admin/ThemeEditor.tsx
-
+function AdminDashboard() {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Theme Editor</h2>
