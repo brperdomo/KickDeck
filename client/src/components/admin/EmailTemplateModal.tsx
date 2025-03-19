@@ -76,16 +76,16 @@ export function EmailTemplateModal({ open, onOpenChange, template }: EmailTempla
   const form = useForm<FormValues>({
     resolver: zodResolver(insertEmailTemplateSchema),
     defaultValues: {
-      name: "",
-      description: "",
-      type: "welcome",
-      subject: "",
-      content: "",
-      senderName: "",
-      senderEmail: "",
-      isActive: true,
-      variables: [],
-      providerId: "", // Added providerId
+      name: template?.name || "",
+      description: template?.description || "",
+      type: template?.type || "welcome",
+      subject: template?.subject || "",
+      content: template?.content || "",
+      senderName: template?.senderName || "",
+      senderEmail: template?.senderEmail || "",
+      isActive: template?.isActive ?? true,
+      variables: template?.variables || [],
+      providerId: template?.providerId?.toString() || "",
     },
   });
 
@@ -180,7 +180,7 @@ export function EmailTemplateModal({ open, onOpenChange, template }: EmailTempla
                     <FormLabel>Email Provider</FormLabel>
                     <Select 
                       onValueChange={field.onChange}
-                      defaultValue={field.value?.toString()}
+                      value={field.value?.toString() || ""}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -323,7 +323,30 @@ export function EmailTemplateModal({ open, onOpenChange, template }: EmailTempla
                           toolbar: 'undo redo | blocks | ' +
                             'bold italic forecolor | alignleft aligncenter ' +
                             'alignright alignjustify | bullist numlist outdent indent | ' +
-                            'removeformat | help',
+                            'mergefields | removeformat | help',
+                          menu: {
+                            tools: { title: 'Merge Tools', items: 'mergefields' }
+                          },
+                          setup: (editor) => {
+                            editor.ui.registry.addMenuButton('mergefields', {
+                              text: 'Merge Fields',
+                              fetch: (callback) => {
+                                const items = [
+                                  {
+                                    type: 'menuitem',
+                                    text: 'First Name',
+                                    onAction: () => editor.insertContent('{{firstName}}')
+                                  },
+                                  {
+                                    type: 'menuitem',
+                                    text: 'Last Name',
+                                    onAction: () => editor.insertContent('{{lastName}}')
+                                  }
+                                ];
+                                callback(items);
+                              }
+                            });
+                          },
                           content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
                         }}
                       />
