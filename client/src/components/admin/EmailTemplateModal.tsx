@@ -76,16 +76,16 @@ export function EmailTemplateModal({ open, onOpenChange, template }: EmailTempla
   const form = useForm<FormValues>({
     resolver: zodResolver(insertEmailTemplateSchema),
     defaultValues: {
-      name: "",
-      description: "",
-      type: "welcome",
-      subject: "",
-      content: "",
-      senderName: "",
-      senderEmail: "",
-      isActive: true,
-      variables: [],
-      providerId: "", // Added providerId
+      name: template?.name || "",
+      description: template?.description || "",
+      type: template?.type || "welcome",
+      subject: template?.subject || "",
+      content: template?.content || "",
+      senderName: template?.senderName || "",
+      senderEmail: template?.senderEmail || "",
+      isActive: template?.isActive ?? true,
+      variables: template?.variables || [],
+      providerId: template?.providerId?.toString() || "",
     },
   });
 
@@ -180,7 +180,7 @@ export function EmailTemplateModal({ open, onOpenChange, template }: EmailTempla
                     <FormLabel>Email Provider</FormLabel>
                     <Select 
                       onValueChange={field.onChange}
-                      defaultValue={field.value?.toString()}
+                      value={field.value?.toString() || ""}
                     >
                       <FormControl>
                         <SelectTrigger>
