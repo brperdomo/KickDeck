@@ -1691,7 +1691,7 @@ function AdminDashboard() {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
-      <div className="w-64 bg-card border-r flex flex-col h-full">
+      <div className="w-64 bg-card border-r flex flex-col h-full text-foreground">
         <div className="p-4 flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center gap-2 mb-6">
