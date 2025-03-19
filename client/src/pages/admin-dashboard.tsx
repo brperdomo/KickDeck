@@ -96,6 +96,7 @@ import FormTemplateEditPage from "@/pages/form-template-edit";
 import FormTemplateCreatePage from "@/pages/form-template-create";
 import FormTemplatesPage from "@/pages/form-templates";
 import { InternalOperationsPanel } from "@/components/admin/InternalOperationsPanel"; // Added import
+import { StripeSettingsView } from "@/components/admin/StripeSettingsView"; // Added import
 
 
 function AdminBanner() {
