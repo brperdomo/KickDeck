@@ -143,16 +143,18 @@ async function testDbConnection() {
     const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
     const HOST = "0.0.0.0"; // Listen on all interfaces
 
+    // Quick health check endpoint
+    app.get('/', (_req: Request, res: Response) => {
+      res.status(200).send('OK');
+    });
+
     // Serve static files in production
     if (app.get('env') === 'production') {
       app.use(express.static(path.join(process.cwd(), 'dist', 'public')));
       // Handle SPA routing by serving index.html for any unknown routes
       app.get('*', (_req: Request, res: Response) => {
+        if (req.path === '/') return; // Skip for root path as it's handled above
         res.sendFile(path.join(process.cwd(), 'dist', 'public', 'index.html'));
-      });
-    } else {
-      app.get('/', (_req: Request, res: Response) => {
-        res.send('Server is running. In development mode, please use the Vite dev server.');
       });
     }
 
