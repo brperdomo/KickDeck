@@ -324,7 +324,6 @@ export function EmailTemplateModal({ open, onOpenChange, template }: EmailTempla
                             'bold italic forecolor | alignleft aligncenter ' +
                             'alignright alignjustify | bullist numlist outdent indent | ' +
                             'mergefields | removeformat | help',
-                          menubar: 'file edit view insert format tools table help',
                           menu: {
                             tools: { title: 'Merge Tools', items: 'mergefields' }
                           },
