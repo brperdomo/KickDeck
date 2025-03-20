@@ -18,42 +18,21 @@ import ChatPage from "@/pages/chat";
 import EditEvent from "@/pages/edit-event";
 import EventApplicationForm from "@/pages/event-application-form";
 import EmailTemplatesPage from "@/pages/email-templates";
-import { useAuth } from "@/hooks/use-auth";
+import { useUser } from "@/hooks/use-user";
 import EventRegistration from "./pages/event-registration";
 import { FeeManagement } from "@/components/events/FeeManagement";
 import { AuthProvider } from "@/hooks/use-auth";
 
-
-// Protected Route Component
-function ProtectedRoute({ component: Component, adminOnly = false }: { component: React.ComponentType, adminOnly?: boolean }) {
-  const { user, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    window.location.href = '/auth';
-    return null;
-  }
-
-  if (adminOnly && !user.isAdmin) {
-    return <NotFound />;
-  }
-
-  return <Component />;
-}
+// Placeholder components
+const EventPreviewSelector = () => <div>Event Preview Selector</div>;
+const RegistrationPreview = () => <div>Registration Preview</div>;
 
 function Router() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading } = useUser();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -78,20 +57,57 @@ function Router() {
   // Protected routes for authenticated users
   return (
     <Switch>
-      <ProtectedRoute path="/admin/events/create" component={CreateEvent} adminOnly />
-      <ProtectedRoute path="/admin/events/:id/edit" component={EditEvent} adminOnly />
-      <ProtectedRoute path="/admin/events/:id/application-form" component={EventApplicationForm} adminOnly />
-      <ProtectedRoute path="/admin/events/:eventId/fees" component={({eventId}) => <FeeManagement eventId={eventId} />} adminOnly />
-      <ProtectedRoute path="/admin/events/:id" component={EditEvent} adminOnly />
-      <ProtectedRoute path="/admin/events/:id/coupons" component={CouponManagement} adminOnly />
-      <ProtectedRoute path="/admin/accounting-codes" component={AccountingCodeManagement} adminOnly />
-      <ProtectedRoute path="/admin/email-templates" component={EmailTemplatesPage} adminOnly />
-      <ProtectedRoute path="/admin/events" component={AdminDashboard} adminOnly />
-      <ProtectedRoute path="/admin" component={AdminDashboard} adminOnly />
-      <ProtectedRoute path="/household" component={HouseholdPage} />
-      <ProtectedRoute path="/chat" component={ChatPage} />
-      <ProtectedRoute path="/register/event/:eventId" component={EventRegistration} />
-      <ProtectedRoute path="/" component={UserDashboard} />
+      {/* Admin routes */}
+      <Route path="/admin/events/create">
+        {user.isAdmin ? <CreateEvent /> : <NotFound />}
+      </Route>
+      <Route path="/admin/events/:id/edit">
+        {user.isAdmin ? <EditEvent /> : <NotFound />}
+      </Route>
+      <Route path="/admin/events/:id/application-form">
+        {user.isAdmin ? <EventApplicationForm /> : <NotFound />}
+      </Route>
+      <Route path="/admin/events/:eventId/fees">
+        {({ eventId }) => user.isAdmin ? <FeeManagement eventId={eventId} /> : <NotFound />}
+      </Route>
+      <Route path="/admin/events/:id">
+        {user.isAdmin ? <EditEvent /> : <NotFound />}
+      </Route>
+      <Route path="/admin/events/:id/coupons">
+        {user.isAdmin ? <CouponManagement /> : <NotFound />}
+      </Route>
+      <Route path="/admin/accounting-codes">
+        {user.isAdmin ? <AccountingCodeManagement /> : <NotFound />}
+      </Route>
+      <Route path="/admin/email-templates">
+        {user.isAdmin ? <EmailTemplatesPage /> : <NotFound />}
+      </Route>
+      <Route path="/admin/events">
+        {user.isAdmin ? <AdminDashboard /> : <NotFound />}
+      </Route>
+      <Route path="/admin">
+        {user.isAdmin ? <AdminDashboard /> : <NotFound />}
+      </Route>
+
+      {/* User routes */}
+      <Route path="/household" component={HouseholdPage} />
+      <Route path="/chat" component={ChatPage} />
+      <Route path="/register/event/:eventId" component={EventRegistration} />
+
+      {/* Preview routes */}
+      <Route path="/admin/events/preview">
+        {user.isAdmin ? <EventPreviewSelector /> : <NotFound />}
+      </Route>
+      <Route path="/admin/events/:id/preview-registration">
+        {user.isAdmin ? <RegistrationPreview /> : <NotFound />}
+      </Route>
+
+      {/* Home route */}
+      <Route path="/">
+        {user.isAdmin ? <AdminDashboard /> : <UserDashboard />}
+      </Route>
+
+      {/* 404 route */}
       <Route component={NotFound} />
     </Switch>
   );
