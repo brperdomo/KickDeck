@@ -32,7 +32,11 @@ export function StyleSettingsView() {
     darkBackground: '#1D2330',
     darkText: '#E2E8F0',
     darkAccent: '#2C3E50',
-
+    darkPrimary: '#4C9AFF',
+    darkSecondary: '#A2B0C3',
+    darkCardBg: '#2D3748',
+    darkInputBg: '#1D2330',
+    darkInputBorder: '#4A5568'
   });
   const { toast } = useToast();
 
