@@ -3,6 +3,7 @@ import {
   useQuery,
   useMutation,
   UseMutationResult,
+  useQueryClient,
 } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
@@ -42,6 +43,8 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const {
     data: user,
     error,
@@ -71,6 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return res.json();
     },
     onSuccess: (data) => {
+      queryClient.setQueryData(["/api/user"], data.user);
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Success",
         description: "Successfully logged in",
@@ -96,6 +101,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(error);
       }
     },
+    onSuccess: () => {
+      queryClient.setQueryData(["/api/user"], null);
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+    },
     onError: (error: Error) => {
       toast({
         title: "Logout failed",
@@ -118,6 +127,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(error);
       }
       return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/user"], data.user);
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      toast({
+        title: "Success",
+        description: "Registration successful",
+      });
     },
     onError: (error: Error) => {
       toast({

@@ -34,7 +34,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function AuthPage() {
   const { toast } = useToast();
-  const { loginMutation } = useAuth();
+  const { loginMutation, user } = useAuth();
   const [, setLocation] = useLocation();
 
   const loginForm = useForm<LoginFormData>({
@@ -47,7 +47,7 @@ export default function AuthPage() {
 
   // Handle redirect after successful login
   useEffect(() => {
-    if (loginMutation.isSuccess) {
+    if (user) {
       const redirectPath = sessionStorage.getItem('redirectAfterAuth');
       if (redirectPath) {
         sessionStorage.removeItem('redirectAfterAuth');
@@ -56,7 +56,7 @@ export default function AuthPage() {
         setLocation('/');
       }
     }
-  }, [loginMutation.isSuccess, setLocation]);
+  }, [user, setLocation]);
 
   async function onSubmit(data: LoginFormData) {
     try {
