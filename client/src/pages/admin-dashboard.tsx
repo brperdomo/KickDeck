@@ -225,13 +225,31 @@ function AdministratorsView() {
   } | null>(null);
   const queryClient = useQueryClient();
 
+  // Add error boundary for query failures
+  const handleError = (error: Error) => {
+    toast({
+      title: "Error",
+      description: "Failed to load administrator data. Please try refreshing.",
+      variant: "destructive"
+    });
+    console.error("Admin data fetch error:", error);
+  };
+
   const administratorsQuery = useQuery({
     queryKey: ['/api/admin/administrators'],
     queryFn: async () => {
       const response = await fetch('/api/admin/administrators');
-      if (!response.ok) throw new Error('Failed to fetch administrators');
+      if (!response.ok) {
+        if (response.status === 401) {
+          window.location.href = '/login'; // Redirect to login if unauthorized
+          return null;
+        }
+        throw new Error('Failed to fetch administrators');
+      }
       return response.json();
-    }
+    },
+    retry: 1,
+    onError: handleError
   });
 
   const administrators = useMemo(() => {
