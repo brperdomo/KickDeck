@@ -1640,36 +1640,37 @@ function AdminDashboard() {
   };
 
   const renderView = () => {
-    switch (activeView) {
-      case 'administrators':
-        return <AdministratorsView />;
-      case 'events':
-        return <EventsView />;
-      case 'teams':
-        return <TeamsView />;
-      case 'complexes':
-        return <ComplexesView />;
-      case 'households':
-        return <HouseholdsView />;
-      case 'scheduling':
-        return <SchedulingView />;
-      case 'settings':
-        if (activeSettingsView === 'general') {
-          return <GeneralSettingsView />;
-        }
-        return <SettingsView activeSettingsView={activeSettingsView} />;
-      case 'reports':
-        return <ReportsView />;
-      case 'account':
-        return (
-          <Suspense fallback={
-            <div className="flex items-center justify-center min-h-[200px]">
-              <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-          }>
-            <MyAccount />
-          </Suspense>
-        );
+    const LoadingFallback = (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+
+    return (
+      <Suspense fallback={LoadingFallback}>
+        {(() => {
+          switch (activeView) {
+            case 'administrators':
+              return <AdministratorsView />;
+            case 'events':
+              return <EventsView />;
+            case 'teams':
+              return <TeamsView />;
+            case 'complexes':
+              return <ComplexesView />;
+            case 'households':
+              return <HouseholdsView />;
+            case 'scheduling':
+              return <SchedulingView />;
+            case 'settings':
+              if (activeSettingsView === 'general') {
+                return <GeneralSettingsView />;
+              }
+              return <SettingsView activeSettingsView={activeSettingsView} />;
+            case 'reports':
+              return <ReportsView />;
+            case 'account':
+              return <MyAccount />;
       case 'files':
         return (
           <div className="space-y-4">
