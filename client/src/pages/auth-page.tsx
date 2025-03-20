@@ -48,15 +48,20 @@ export default function AuthPage() {
   // Handle redirect after successful login
   useEffect(() => {
     if (user) {
-      const redirectPath = sessionStorage.getItem('redirectAfterAuth');
       console.log('User logged in:', user);
       console.log('isAdmin:', user.isAdmin);
+      
+      // Always redirect admins to admin dashboard first
+      if (user.isAdmin) {
+        console.log('Redirecting to admin dashboard');
+        setLocation('/admin');
+        return;
+      }
+
+      const redirectPath = sessionStorage.getItem('redirectAfterAuth');
       if (redirectPath) {
         sessionStorage.removeItem('redirectAfterAuth');
         setLocation(redirectPath);
-      } else if (user.isAdmin) {
-        console.log('Redirecting to admin dashboard');
-        setLocation('/admin');
       } else {
         console.log('Redirecting to user dashboard');
         setLocation('/dashboard');
