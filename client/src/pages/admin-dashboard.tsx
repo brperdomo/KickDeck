@@ -1635,12 +1635,18 @@ function AdminDashboard() {
     }
   }, [user, setLocation]);
 
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    // Clear query cache on logout
+    if (!user) {
+      queryClient.clear();
+    }
+  }, [user, queryClient]);
+
   if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    setLocation("/login");
+    return null;
   }
 
   const [showLogoutOverlay, setShowLogoutOverlay] = useState(false);
