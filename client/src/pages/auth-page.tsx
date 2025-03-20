@@ -47,16 +47,18 @@ export default function AuthPage() {
 
   // Handle redirect after successful login
   useEffect(() => {
-    if (user) {
-      const redirectPath = sessionStorage.getItem('redirectAfterAuth');
-      if (redirectPath) {
-        sessionStorage.removeItem('redirectAfterAuth');
-        setLocation(redirectPath);
-      } else {
-        setLocation('/');
-      }
+    if (!user) return;
+    
+    const redirectPath = sessionStorage.getItem('redirectAfterAuth');
+    if (redirectPath) {
+      sessionStorage.removeItem('redirectAfterAuth');
+      window.location.href = redirectPath;
+    } else if (user.isAdmin) {
+      window.location.href = '/admin';
+    } else {
+      window.location.href = '/dashboard';
     }
-  }, [user, setLocation]);
+  }, [user]);
 
   async function onSubmit(data: LoginFormData) {
     try {

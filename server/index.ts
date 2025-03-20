@@ -17,6 +17,11 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
+// Health check endpoint for Cloud Run
+app.get('/_health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
@@ -132,6 +137,7 @@ async function testDbConnection() {
 
     // Start the server
     const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
+    const HOST = process.env.HOST || "0.0.0.0";
 
     const findAvailablePort = async (startPort: number): Promise<number> => {
       return new Promise((resolve, reject) => {
@@ -157,8 +163,8 @@ async function testDbConnection() {
 
     try {
       const availablePort = await findAvailablePort(PORT);
-      server.listen(availablePort, "0.0.0.0", () => {
-        log(`Server started successfully on port ${availablePort}`);
+      server.listen(availablePort, HOST, () => {
+        log(`Server started successfully on ${HOST}:${availablePort}`);
       });
     } catch (error) {
       log(`Error starting server: ${(error as Error).message}`);
