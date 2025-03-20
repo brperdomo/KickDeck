@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { type InsertUser } from "@db/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { YouTubeBackground } from "@/components/ui/YouTubeBackground";
@@ -15,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Trophy, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { Link } from "wouter";
 import { useEffect } from "react";
@@ -33,7 +34,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function AuthPage() {
   const { toast } = useToast();
-  const { loginMutation, user, isLoading } = useAuth();
+  const { loginMutation, user } = useAuth();
   const [, setLocation] = useLocation();
 
   const loginForm = useForm<LoginFormData>({
@@ -46,7 +47,7 @@ export default function AuthPage() {
 
   // Handle redirect for both successful mutation and existing user
   useEffect(() => {
-    const handleRedirect = (userData: { isAdmin: boolean } | null) => {
+    const redirectUser = (userData: { isAdmin: boolean } | null) => {
       if (!userData) return;
 
       const redirectPath = sessionStorage.getItem('redirectAfterAuth');
@@ -60,34 +61,31 @@ export default function AuthPage() {
       }
     };
 
-    // Handle successful login or existing session
+    // Check for successful login mutation
     if (loginMutation.isSuccess && loginMutation.data?.user) {
-      handleRedirect(loginMutation.data.user);
-    } else if (user && !loginMutation.isPending && !isLoading) {
-      handleRedirect(user);
+      redirectUser(loginMutation.data.user);
     }
-  }, [loginMutation.isSuccess, loginMutation.data?.user, user, loginMutation.isPending, isLoading, setLocation]);
+    // Check for existing user session
+    else if (user) {
+      redirectUser(user);
+    }
+  }, [loginMutation.isSuccess, loginMutation.data, user, setLocation]);
 
-  const onSubmit = async (data: LoginFormData) => {
+  async function onSubmit(data: LoginFormData) {
     try {
       await loginMutation.mutateAsync(data);
     } catch (error: any) {
       console.error('Login error:', error);
     }
-  };
+  }
 
-  // Show loading spinner during transitions
-  if (isLoading || loginMutation.isPending) {
+  // If already logged in, redirect immediately
+  if (user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
-  }
-
-  // Skip rendering login form if already authenticated
-  if (user) {
-    return null;
   }
 
   return (
