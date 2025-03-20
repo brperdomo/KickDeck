@@ -25,13 +25,26 @@ export function OrganizationSettingsForm() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: settings?.name || "",
-      email: settings?.email || "",
-      phone: settings?.phone || "",
-      address: settings?.address || "",
-      logoUrl: settings?.logoUrl || "", // Added default value for logoUrl
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+      logoUrl: "",
     },
   });
+
+  // Update form when settings load
+  useEffect(() => {
+    if (settings) {
+      form.reset({
+        name: settings.name || "",
+        email: settings.email || "",
+        phone: settings.phone || "",
+        address: settings.address || "",
+        logoUrl: settings.logoUrl || "",
+      });
+    }
+  }, [settings, form]);
 
   const onSubmit = async (data: FormValues) => {
     try {
@@ -41,9 +54,10 @@ export function OrganizationSettingsForm() {
         description: "Organization settings updated successfully",
       });
     } catch (error) {
+      console.error('Update error:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update settings",
+        description: error instanceof Error ? error.message : "Failed to update settings. Please try again.",
         variant: "destructive",
       });
     }

@@ -5,26 +5,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/hooks/use-theme"; // Added import for useTheme hook
 
 export function StyleSettingsView() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const { theme } = useTheme(); // Get the current theme
   const [previewStyles, setPreviewStyles] = useState({
-    primary: currentAppearance === 'dark' ? '#4C9AFF' : '#0052CC',
-    secondary: currentAppearance === 'dark' ? '#A2B0C3' : '#344563',
-    accent: currentAppearance === 'dark' ? '#00C7E6' : '#00B8D9',
-    background: currentAppearance === 'dark' ? '#1D2330' : '#FAFBFC',
-    adminNavBackground: currentAppearance === 'dark' ? '#2D3748' : '#FFFFFF',
-    adminNavText: currentAppearance === 'dark' ? '#E2E8F0' : '#42526E',
-    adminNavActive: currentAppearance === 'dark' ? '#2C3E50' : '#DEEBFF',
-    adminNavHover: currentAppearance === 'dark' ? '#364150' : '#F4F5F7',
-    tableHeaderBg: currentAppearance === 'dark' ? '#2D3748' : '#F4F5F7',
-    tableRowHoverBg: currentAppearance === 'dark' ? '#364150' : '#F4F5F7',
-    cardBg: currentAppearance === 'dark' ? '#2D3748' : '#FFFFFF',
-    textColor: currentAppearance === 'dark' ? '#E2E8F0' : '#172B4D',
-    cardHeaderBg: currentAppearance === 'dark' ? '#364150' : '#f9fafb',
-    inputBg: currentAppearance === 'dark' ? '#1D2330' : '#FFFFFF',
-    inputBorder: currentAppearance === 'dark' ? '#4A5568' : '#d1d5db',
+    primary: theme === 'dark' ? '#4C9AFF' : '#0052CC',
+    secondary: theme === 'dark' ? '#A2B0C3' : '#344563',
+    accent: theme === 'dark' ? '#00C7E6' : '#00B8D9',
+    background: theme === 'dark' ? '#1D2330' : '#FAFBFC',
+    adminNavBackground: theme === 'dark' ? '#2D3748' : '#FFFFFF',
+    adminNavText: theme === 'dark' ? '#E2E8F0' : '#42526E',
+    adminNavActive: theme === 'dark' ? '#2C3E50' : '#DEEBFF',
+    adminNavHover: theme === 'dark' ? '#364150' : '#F4F5F7',
+    tableHeaderBg: theme === 'dark' ? '#2D3748' : '#F4F5F7',
+    tableRowHoverBg: theme === 'dark' ? '#364150' : '#F4F5F7',
+    cardBg: theme === 'dark' ? '#2D3748' : '#FFFFFF',
+    textColor: theme === 'dark' ? '#E2E8F0' : '#172B4D',
+    cardHeaderBg: theme === 'dark' ? '#364150' : '#f9fafb',
+    inputBg: theme === 'dark' ? '#1D2330' : '#FFFFFF',
+    inputBorder: theme === 'dark' ? '#4A5568' : '#d1d5db',
   });
   const { toast } = useToast();
 
@@ -39,24 +41,24 @@ export function StyleSettingsView() {
       styleElement.id = 'admin-dashboard-styles';
       document.head.appendChild(styleElement);
     }
-    
+
     // Update CSS variables for admin navigation
     styleElement.innerHTML = `
       :root {
         --admin-nav-bg: ${previewStyles.adminNavBackground || '#FFFFFF'};
         --admin-nav-text: ${previewStyles.adminNavText || '#000000'};
-        --admin-nav-active: ${previewStyles.adminNavActive || '#E6F7FF'};
+        --admin-nav-active: ${previewStyles.adminNavActive || previewStyles.primary || '#000000'};
         --admin-nav-hover: ${previewStyles.adminNavHover || '#f3f4f6'};
       }
-      
+
       .admin-sidebar-item {
         transition: background-color 0.2s ease;
       }
-      
+
       .admin-sidebar-item:hover {
         background-color: var(--admin-nav-hover) !important;
       }
-      
+
       .admin-sidebar-item.active {
         background-color: var(--admin-nav-active) !important;
       }
@@ -364,7 +366,7 @@ export function StyleSettingsView() {
             </div>
             <p className="text-sm text-gray-500 mt-1">Background color of the active/selected navigation item</p>
           </div>
-          
+
           <div>
             <Label htmlFor="adminNavHoverColor">Navigation Hover</Label>
             <div className="flex items-center gap-2 mt-1.5">
