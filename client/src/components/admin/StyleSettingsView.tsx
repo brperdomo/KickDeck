@@ -13,6 +13,17 @@ export function StyleSettingsView() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { theme, setAppearance } = useTheme();
+  const [currentTheme, setCurrentTheme] = useState(theme);
+
+  useEffect(() => {
+    setCurrentTheme(theme);
+  }, [theme]);
+
+  const handleThemeToggle = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setAppearance(newTheme);
+  };
+
   const defaultStyles = {
     primary: '#0052CC',
     secondary: '#344563',
@@ -164,8 +175,8 @@ export function StyleSettingsView() {
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">UI Colors</h3>
         <Toggle
-          pressed={theme === 'dark'}
-          onPressedChange={() => setAppearance(theme === 'dark' ? 'light' : 'dark')}
+          pressed={currentTheme === 'dark'}
+          onPressedChange={handleThemeToggle}
           aria-label="Toggle dark mode"
           className="p-2"
         >
