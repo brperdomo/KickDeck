@@ -17,26 +17,14 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
-// Quick health check endpoint before any expensive operations
-app.get('/_health', (req, res) => {
-  res.status(200).send('OK');
+// Health check endpoint that works in both dev and prod
+app.get('/', (req, res, next) => {
+  if (process.env.NODE_ENV !== 'production' && req.headers.accept?.includes('text/html')) {
+    next(); // Let Vite handle HTML requests in development
+  } else {
+    res.status(200).send('OK'); // Handle health checks and API requests
+  }
 });
-
-// Root path handler that serves static files in production
-if (process.env.NODE_ENV === 'production') {
-  app.get('/', (req, res) => {
-    res.status(200).send('OK');
-  });
-} else {
-  // In development, let Vite handle the root path
-  app.get('/', (req, res, next) => {
-    if (req.headers.accept?.includes('text/html')) {
-      next();
-    } else {
-      res.status(200).send('OK');
-    }
-  });
-}
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
