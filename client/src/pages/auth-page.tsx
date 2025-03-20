@@ -49,12 +49,16 @@ export default function AuthPage() {
   useEffect(() => {
     if (user) {
       const redirectPath = sessionStorage.getItem('redirectAfterAuth');
+      console.log('User logged in:', user);
+      console.log('isAdmin:', user.isAdmin);
       if (redirectPath) {
         sessionStorage.removeItem('redirectAfterAuth');
         setLocation(redirectPath);
-      } else if (user && user.isAdmin === true) {
+      } else if (user.isAdmin) {
+        console.log('Redirecting to admin dashboard');
         setLocation('/admin');
       } else {
+        console.log('Redirecting to user dashboard');
         setLocation('/dashboard');
       }
     }
