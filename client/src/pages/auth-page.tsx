@@ -47,26 +47,26 @@ export default function AuthPage() {
 
   // Handle redirect after successful login
   useEffect(() => {
-    if (user) {
-      console.log('User logged in:', user);
-      console.log('isAdmin:', user.isAdmin);
-      
-      // Always redirect admins to admin dashboard first
-      if (user.isAdmin) {
-        console.log('Redirecting to admin dashboard');
-        setLocation('/admin');
-        return;
-      }
+    if (!user) return;
 
-      const redirectPath = sessionStorage.getItem('redirectAfterAuth');
-      if (redirectPath) {
-        sessionStorage.removeItem('redirectAfterAuth');
-        setLocation(redirectPath);
+    const handleRedirect = async () => {
+      const response = await fetch('/api/user');
+      const userData = await response.json();
+      
+      if (userData.isAdmin) {
+        window.location.href = '/admin';
       } else {
-        console.log('Redirecting to user dashboard');
-        setLocation('/dashboard');
+        const redirectPath = sessionStorage.getItem('redirectAfterAuth');
+        if (redirectPath) {
+          sessionStorage.removeItem('redirectAfterAuth');
+          window.location.href = redirectPath;
+        } else {
+          window.location.href = '/dashboard';
+        }
       }
-    }
+    };
+
+    handleRedirect();
   }, [user, setLocation]);
 
   async function onSubmit(data: LoginFormData) {
