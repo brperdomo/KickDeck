@@ -13,7 +13,6 @@ export function StyleSettingsView() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { theme, setAppearance } = useTheme();
-  const [currentAppearance, setCurrentAppearance] = useState(theme || 'light');
   const defaultStyles = {
     primary: '#0052CC',
     secondary: '#344563',
@@ -166,15 +165,11 @@ export function StyleSettingsView() {
         <h3 className="text-lg font-medium">UI Colors</h3>
         <Toggle
           pressed={theme === 'dark'}
-          onPressedChange={() => {
-            const newTheme = theme === 'dark' ? 'light' : 'dark';
-            setAppearance(newTheme);
-            setCurrentAppearance(newTheme);
-          }}
+          onPressedChange={() => setAppearance(theme === 'dark' ? 'light' : 'dark')}
           aria-label="Toggle dark mode"
           className="p-2"
         >
-          {currentAppearance === 'dark' ? (
+          {theme === 'dark' ? (
             <Moon className="h-5 w-5" />
           ) : (
             <Sun className="h-5 w-5" />
