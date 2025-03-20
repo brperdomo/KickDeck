@@ -72,17 +72,23 @@ async function testDbConnection() {
 }
 
 (async () => {
+  let server;
+  
   try {
     // Test database connection first
     const dbConnected = await testDbConnection();
     if (!dbConnected) {
-      throw new Error("Could not connect to database");
+      log("Database connection failed - retrying in 5 seconds...");
+      setTimeout(() => testDbConnection(), 5000);
+      return;
     }
 
     // Run database migrations
     const migrationsResult = await createTables();
     if (!migrationsResult.success) {
-      throw new Error("Failed to run migrations: " + migrationsResult.error);
+      log("Migration failed: " + migrationsResult.error + " - retrying in 5 seconds...");
+      setTimeout(() => createTables(), 5000);
+      return;
     }
     log("Database migrations completed successfully");
 
@@ -90,9 +96,8 @@ async function testDbConnection() {
     await createAdmin();
     log("Admin user setup completed");
 
-
     // Register routes first to ensure all middleware is set up
-    const server = registerRoutes(app);
+    server = registerRoutes(app);
 
     // Create WebSocket server
     const wss = new WebSocketServer({ 
