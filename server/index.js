@@ -1,38 +1,74 @@
 
-// Production server for Replit deployment
-const express = require('express');
-const { createServer } = require('http');
-const path = require('path');
-const fs = require('fs');
+/**
+ * Replit production server entry point
+ * This file is designed to automatically redirect to our CommonJS implementation for Replit deployment
+ */
 
-async function startServer() {
-  console.log('Starting production server...');
-  const app = express();
-  const server = createServer(app);
+// Check if we have the deployment bridge files
+try {
+  const path = require('path');
+  const fs = require('fs');
   
-  // Parse JSON
-  app.use(express.json());
+  console.log('Production environment detected, loading deployment bridge...');
   
-  // Add production server middlewares
-  const { configureProductionServer } = require('./production-server');
-  configureProductionServer(app);
+  // First, check if we have the replit.cjs entry point
+  const replitPath = path.join(process.cwd(), 'replit.cjs');
   
-  // Custom API routes would go here
-  app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', environment: 'production' });
-  });
-  
-  // Start the server
-  const port = process.env.PORT || 5000;
-  const host = process.env.HOST || '0.0.0.0';
-  
-  server.listen(port, host, () => {
-    console.log(`Server running at http://${host}:${port}`);
-  });
-}
-
-// Start the server
-startServer().catch(error => {
-  console.error('Failed to start server:', error);
+  if (fs.existsSync(replitPath)) {
+    console.log('Found replit.cjs - loading production configuration');
+    require('../replit.cjs');
+  } else {
+    // Check for server/index.cjs bridge
+    const bridgePath = path.join(__dirname, 'index.cjs');
+    
+    if (fs.existsSync(bridgePath)) {
+      console.log('Found server/index.cjs - loading bridge');
+      require('./index.cjs');
+    } else {
+      console.error('ERROR: Deployment bridge files not found!');
+      console.error('Please run deployment scripts first: node deploy-starter.cjs');
+      
+      // Fallback to basic express server if bridges not found
+      console.log('Starting minimal fallback server...');
+      
+      const express = require('express');
+      const { createServer } = require('http');
+      
+      const app = express();
+      const server = createServer(app);
+      
+      // Basic health check
+      app.get('/', (req, res) => {
+        res.send(`
+          <html>
+            <head><title>Deployment Error</title></head>
+            <body>
+              <h1>Deployment Configuration Error</h1>
+              <p>The application was not properly prepared for deployment.</p>
+              <p>Please run the deployment script: <code>node deploy-starter.cjs</code></p>
+            </body>
+          </html>
+        `);
+      });
+      
+      // Health check
+      app.get('/api/health', (req, res) => {
+        res.json({ 
+          status: 'error', 
+          message: 'Deployment not properly configured',
+          error: 'Bridge files missing',
+          timestamp: new Date().toISOString()
+        });
+      });
+      
+      // Start server
+      const port = process.env.PORT || 8080;
+      server.listen(port, '0.0.0.0', () => {
+        console.log(`Fallback server running on port ${port}`);
+      });
+    }
+  }
+} catch (error) {
+  console.error('Error loading production configuration:', error);
   process.exit(1);
-});
+}
