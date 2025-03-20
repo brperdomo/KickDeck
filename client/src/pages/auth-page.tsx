@@ -52,8 +52,10 @@ export default function AuthPage() {
       if (redirectPath) {
         sessionStorage.removeItem('redirectAfterAuth');
         setLocation(redirectPath);
+      } else if (user.isAdmin) {
+        setLocation('/admin');
       } else {
-        setLocation('/');
+        setLocation('/dashboard');
       }
     }
   }, [user, setLocation]);
