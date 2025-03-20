@@ -29,6 +29,10 @@ export function StyleSettingsView() {
     cardHeaderBg: theme === 'dark' ? '#364150' : '#f9fafb',
     inputBg: theme === 'dark' ? '#1D2330' : '#FFFFFF',
     inputBorder: theme === 'dark' ? '#4A5568' : '#d1d5db',
+    darkBackground: theme === 'dark' ? '#1D2330' : '#FAFBFC',
+    darkText: theme === 'dark' ? '#E2E8F0' : '#172B4D',
+    darkAccent: theme === 'dark' ? '#2C3E50' : '#DEEBFF',
+
   });
   const { toast } = useToast();
 
@@ -254,6 +258,68 @@ export function StyleSettingsView() {
             <p className="text-sm text-gray-500 mt-1">Used for page backgrounds</p>
           </div>
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="darkBackground">Dark Background</Label>
+              <div className="flex items-center gap-2 mt-1.5">
+                <div className="w-12 h-12 rounded-md border overflow-hidden">
+                  <Input
+                    id="darkBackground"
+                    type="color"
+                    value={previewStyles.darkBackground}
+                    onChange={(e) => handleStyleChange('darkBackground', e.target.value)}
+                    className="w-16 h-16 transform scale-150 -translate-x-2 -translate-y-2 cursor-pointer"
+                  />
+                </div>
+                <Input
+                  value={previewStyles.darkBackground}
+                  onChange={(e) => handleStyleChange('darkBackground', e.target.value)}
+                  className="font-mono"
+                  placeholder="#1D2330"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="darkText">Dark Mode Text</Label>
+              <div className="flex items-center gap-2 mt-1.5">
+                <div className="w-12 h-12 rounded-md border overflow-hidden">
+                  <Input
+                    id="darkText"
+                    type="color"
+                    value={previewStyles.darkText}
+                    onChange={(e) => handleStyleChange('darkText', e.target.value)}
+                    className="w-16 h-16 transform scale-150 -translate-x-2 -translate-y-2 cursor-pointer"
+                  />
+                </div>
+                <Input
+                  value={previewStyles.darkText}
+                  onChange={(e) => handleStyleChange('darkText', e.target.value)}
+                  className="font-mono"
+                  placeholder="#E2E8F0"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="darkAccent">Dark Mode Accent</Label>
+              <div className="flex items-center gap-2 mt-1.5">
+                <div className="w-12 h-12 rounded-md border overflow-hidden">
+                  <Input
+                    id="darkAccent"
+                    type="color"
+                    value={previewStyles.darkAccent}
+                    onChange={(e) => handleStyleChange('darkAccent', e.target.value)}
+                    className="w-16 h-16 transform scale-150 -translate-x-2 -translate-y-2 cursor-pointer"
+                  />
+                </div>
+                <Input
+                  value={previewStyles.darkAccent}
+                  onChange={(e) => handleStyleChange('darkAccent', e.target.value)}
+                  className="font-mono"
+                  placeholder="#2C3E50"
+                />
+              </div>
+            </div>
+          </div>
       </div>
 
       <div 
