@@ -6,6 +6,13 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { SoccerFieldBackground } from "@/components/ui/SoccerFieldBackground";
 import { useAuth } from "@/hooks/use-auth";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useMutation } from "@tanstack/react-query";
 
 interface AgeGroup {
   id: number;
@@ -27,6 +34,19 @@ interface Event {
 
 type RegistrationStep = 'auth' | 'personal' | 'team' | 'review' | 'complete';
 
+const personalDetailsSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(10, "Phone number must be at least 10 digits"),
+  address: z.string().min(1, "Address is required"),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(2, "State is required"),
+  zipCode: z.string().min(5, "ZIP code must be at least 5 digits"),
+});
+
+type PersonalDetailsForm = z.infer<typeof personalDetailsSchema>;
+
 export default function EventRegistration() {
   const { eventId } = useParams();
   const { toast } = useToast();
@@ -35,6 +55,65 @@ export default function EventRegistration() {
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState<RegistrationStep>('auth');
+
+  const form = useForm<PersonalDetailsForm>({
+    resolver: zodResolver(personalDetailsSchema),
+    defaultValues: {
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+      address: '',
+      city: '',
+      state: '',
+      zipCode: '',
+    },
+  });
+
+  useEffect(() => {
+    if (user) {
+      form.reset({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        address: '',
+        city: '',
+        state: '',
+        zipCode: '',
+      });
+    }
+  }, [user]);
+
+  const updatePersonalDetailsMutation = useMutation({
+    mutationFn: async (data: PersonalDetailsForm) => {
+      const response = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Personal details updated successfully",
+      });
+      setCurrentStep('team');
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -62,7 +141,6 @@ export default function EventRegistration() {
     fetchEvent();
   }, [eventId]);
 
-  // Effect to handle step transitions based on auth state
   useEffect(() => {
     if (!authLoading && user) {
       setCurrentStep('personal');
@@ -138,9 +216,12 @@ export default function EventRegistration() {
   };
 
   const handleAuthRedirect = () => {
-    // Store the current URL in session storage
     sessionStorage.setItem('redirectAfterAuth', window.location.pathname);
     setLocation('/auth');
+  };
+
+  const onSubmitPersonalDetails = (data: PersonalDetailsForm) => {
+    updatePersonalDetailsMutation.mutate(data);
   };
 
   if (loading || authLoading) {
@@ -208,7 +289,146 @@ export default function EventRegistration() {
               </div>
             )}
 
-            {(currentStep !== 'auth' || user) && (
+            {currentStep === 'personal' && user && (
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmitPersonalDetails)} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>First Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Last Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="email" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="tel" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem className="col-span-2">
+                          <FormLabel>Street Address</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>City</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="state"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>State</FormLabel>
+                            <FormControl>
+                              <Input {...field} maxLength={2} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="zipCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>ZIP Code</FormLabel>
+                            <FormControl>
+                              <Input {...field} maxLength={5} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end space-x-4 pt-6">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setCurrentStep('auth')}
+                    >
+                      Back
+                    </Button>
+                    <Button 
+                      type="submit"
+                      className="bg-[#2C5282] hover:bg-[#1A365D] text-white"
+                      disabled={updatePersonalDetailsMutation.isPending}
+                    >
+                      {updatePersonalDetailsMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        'Next'
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            )}
+
+            {(currentStep === 'auth' || currentStep === 'personal') && (
               <>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
