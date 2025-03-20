@@ -14,7 +14,7 @@ export function StyleSettingsView() {
   const [isSaving, setIsSaving] = useState(false);
   const { theme, setAppearance } = useTheme();
   const [currentAppearance, setCurrentAppearance] = useState(theme || 'light');
-  const [previewStyles, setPreviewStyles] = useState({
+  const defaultStyles = {
     primary: '#0052CC',
     secondary: '#344563',
     accent: '#00B8D9',
@@ -38,7 +38,16 @@ export function StyleSettingsView() {
     darkCardBg: '#2D3748',
     darkInputBg: '#1D2330',
     darkInputBorder: '#4A5568'
-  });
+  };
+  const [previewStyles, setPreviewStyles] = useState(defaultStyles);
+
+  useEffect(() => {
+    // Ensure all style values are defined
+    setPreviewStyles(current => ({
+      ...defaultStyles,
+      ...current
+    }));
+  }, []);
   const { toast } = useToast();
 
   useEffect(() => {
