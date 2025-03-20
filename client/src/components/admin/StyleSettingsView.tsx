@@ -5,12 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useTheme } from "@/hooks/use-theme"; // Added import for useTheme hook
+import { useTheme } from "@/hooks/use-theme";
+import { Toggle } from "@/components/ui/toggle";
+import { Moon, Sun } from "lucide-react";
 
 export function StyleSettingsView() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const { theme } = useTheme(); // Get the current theme
+  const { theme, setAppearance, currentAppearance } = useTheme();
   const [previewStyles, setPreviewStyles] = useState({
     primary: theme === 'dark' ? '#4C9AFF' : '#0052CC',
     secondary: theme === 'dark' ? '#A2B0C3' : '#344563',
@@ -30,41 +32,13 @@ export function StyleSettingsView() {
   });
   const { toast } = useToast();
 
-  // Apply CSS styles to document head
   useEffect(() => {
-    // Check if our custom style element already exists
     let styleElement = document.getElementById('admin-dashboard-styles');
-
-    // Create it if it doesn't exist
     if (!styleElement) {
       styleElement = document.createElement('style');
       styleElement.id = 'admin-dashboard-styles';
       document.head.appendChild(styleElement);
     }
-
-    // Update CSS variables for admin navigation
-    styleElement.innerHTML = `
-      :root {
-        --admin-nav-bg: ${previewStyles.adminNavBackground || '#FFFFFF'};
-        --admin-nav-text: ${previewStyles.adminNavText || '#000000'};
-        --admin-nav-active: ${previewStyles.adminNavActive || previewStyles.primary || '#000000'};
-        --admin-nav-hover: ${previewStyles.adminNavHover || '#f3f4f6'};
-      }
-
-      .admin-sidebar-item {
-        transition: background-color 0.2s ease;
-      }
-
-      .admin-sidebar-item:hover {
-        background-color: var(--admin-nav-hover) !important;
-      }
-
-      .admin-sidebar-item.active {
-        background-color: var(--admin-nav-active) !important;
-      }
-    `;
-
-    // Update the CSS variables
     styleElement.textContent = `
       :root {
         --admin-nav-bg: ${previewStyles.adminNavBackground || '#FFFFFF'};
@@ -113,10 +87,8 @@ export function StyleSettingsView() {
   const handleSaveStyles = async () => {
     setIsSaving(true);
     try {
-      // Make sure we include all style settings
       const completeStyles = {
         ...previewStyles,
-        // Ensure the admin dashboard specific colors are included
         adminNavBackground: previewStyles.adminNavBackground || '#FFFFFF',
         adminNavText: previewStyles.adminNavText || '#000000',
         adminNavActive: previewStyles.adminNavActive || previewStyles.primary || '#000000',
@@ -128,8 +100,6 @@ export function StyleSettingsView() {
         inputBg: previewStyles.inputBg || "#FFFFFF",
         inputBorder: previewStyles.inputBorder || "#d1d5db",
       };
-
-      console.log('Saving complete style settings:', completeStyles);
 
       const response = await fetch('/api/admin/styling', {
         method: 'POST',
@@ -174,6 +144,21 @@ export function StyleSettingsView() {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">UI Colors</h3>
+        <Toggle
+          pressed={currentAppearance === 'dark'}
+          onPressedChange={() => setAppearance(currentAppearance === 'dark' ? 'light' : 'dark')}
+          aria-label="Toggle dark mode"
+          className="p-2"
+        >
+          {currentAppearance === 'dark' ? (
+            <Moon className="h-5 w-5" />
+          ) : (
+            <Sun className="h-5 w-5" />
+          )}
+        </Toggle>
+      </div>
       <div 
         className="p-4 rounded-md shadow mb-6" 
         style={{ backgroundColor: previewStyles.adminSectionBg || "#FFFFFF" }}
