@@ -1644,6 +1644,15 @@ function AdminDashboard() {
     }
   }, [user, queryClient]);
 
+  // Clear any stale TinyMCE instances on unmount
+  useEffect(() => {
+    return () => {
+      if (window.tinymce) {
+        window.tinymce.remove();
+      }
+    };
+  }, []);
+
   if (!user) {
     setLocation("/login");
     return null;
