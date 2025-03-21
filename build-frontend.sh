@@ -1,20 +1,36 @@
 #!/bin/bash
+# Enhanced frontend build script for Replit deployment
 
-# Separate frontend build script for Replit
-# Run this after deploy-chunked.sh if the frontend build times out
+set -e  # Exit on error
 
-set -e # Exit on error
+echo "===== STARTING FRONTEND BUILD PROCESS ====="
 
-echo "------------------------------------------------"
-echo "🚀 Starting frontend build process"
-echo "------------------------------------------------"
+# Set NODE_ENV to production for optimized build
+export NODE_ENV=production 
 
-# Ensure build directory exists
+# Ensure the build directory exists
 mkdir -p dist/public
 
-# Run the Vite build
-echo "📦 Building frontend assets with Vite..."
-npm run build
+# Run the Vite build command
+echo "Running Vite build..."
+npx vite build --outDir dist/public
 
-echo "✅ Frontend build completed successfully!"
-echo "Restart your Replit to see the changes."
+# Verify the build was created successfully
+if [ -f "dist/public/index.html" ]; then
+  echo "✅ Frontend build completed successfully!"
+  echo "Build files are in dist/public/"
+  
+  # Count the files in the build directory
+  FILE_COUNT=$(find dist/public -type f | wc -l)
+  echo "Total files in build: $FILE_COUNT"
+  
+  # List key files
+  echo "Key files:"
+  find dist/public -name "index.html" -o -name "*.js" -o -name "*.css" | sort
+else
+  echo "❌ Frontend build failed - index.html not found in dist/public/"
+  echo "Check for errors above."
+  exit 1
+fi
+
+echo "===== FRONTEND BUILD PROCESS COMPLETED ====="

@@ -1,52 +1,79 @@
 #!/bin/bash
 # Simplified deployment script for Replit
-# This script builds the frontend and prepares all necessary files
-# for deployment without modifying protected Replit configurations.
 
-echo "🚀 Starting deployment preparation..."
+set -e  # Exit on error
 
-# Ensure we're in the project root
-cd "$(dirname "$0")"
+echo "===== STARTING SIMPLIFIED DEPLOYMENT PROCESS ====="
 
-# Start with a clean slate
-echo "🧹 Cleaning previous builds..."
-rm -rf dist
+# Make all scripts executable
+chmod +x make-executable.sh
+./make-executable.sh
 
 # Build the frontend
-echo "🏗️ Building frontend..."
-NODE_ENV=production npm run build
+echo "Building frontend..."
+chmod +x build-frontend.sh
+./build-frontend.sh
 
-# Success message if build succeeded
-if [ $? -eq 0 ]; then
-  echo "✅ Frontend built successfully!"
-else
-  echo "❌ Frontend build failed. Please check for errors and try again."
-  exit 1
-fi
+# Ensure server directory exists
+mkdir -p dist/server
 
-# Check if build artifacts exist
-if [ -d "./dist/public" ]; then
-  echo "✅ Build artifacts exist in dist/public/"
-else
-  echo "❌ Build directory not found. Something went wrong with the build process."
-  exit 1
-fi
+# Copy server files
+echo "Setting up server files..."
+cp -v index.js dist/
+cp -v index.cjs dist/
+cp -v replit.js dist/
+cp -v replit.cjs dist/
+cp -v replit-bridge.cjs dist/
 
-# Make sure all deployment scripts are executable
-echo "🔑 Making deployment scripts executable..."
-chmod +x *.sh
+# Copy readme and deployment guides
+cp -v README.md dist/
+cp -v SIMPLIFIED-DEPLOYMENT.md dist/
 
-echo "
-🎉 Deployment preparation complete! 
+# Copy database connection configuration
+mkdir -p dist/db
+cp -v db/index.js dist/db/
+cp -v db/index.cjs dist/db/ 2>/dev/null || :  # Ignore if file doesn't exist
 
-To deploy on Replit:
-1. Click the 'Deploy' button in the Replit UI
-2. Replit will use one of the entry points: index.js, index.cjs, replit.js, replit.cjs, or replit-bridge.cjs
+# Create simple node server
+cat > dist/server.js << 'EOL'
+/**
+ * Simple server entry point for deployment
+ */
+try {
+  console.log("Starting server via bridge...");
+  require('./replit-bridge.cjs');
+} catch (error) {
+  console.error("Critical error in server startup:", error);
+  process.exit(1);
+}
+EOL
 
-If you face any issues:
-- Check the deployment logs
-- Visit /deployment-status on your deployed app for diagnostics
-- Ensure DATABASE_URL environment variable is set in the Replit Secrets
-"
+# Create package.json for deployment
+cat > dist/package.json << 'EOL'
+{
+  "name": "soccer-platform-deployment",
+  "version": "1.0.0",
+  "description": "Soccer Platform Deployment Package",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.11.3"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
+EOL
 
-exit 0
+echo "===== DEPLOYMENT FILES PREPARED ====="
+echo "Your application is ready for deployment."
+echo "To deploy:"
+echo "1. Commit your changes"
+echo "2. Use the Replit deployment interface to deploy your application"
+echo ""
+echo "Files are prepared in the dist/ directory"
+echo "===== DEPLOYMENT PROCESS COMPLETED ====="
