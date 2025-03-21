@@ -19,9 +19,11 @@ Our solution maintains ES Module syntax while ensuring deployment compatibility 
 We've created multiple deployment solutions to address different needs:
 
 1. **Full Deployment (`deploy-replit.sh`)**: Builds both frontend and backend for complete application deployment
-2. **Server-Only Deployment (`deploy-server-only.sh`)**: Faster deployment focusing only on backend API functionality
-3. **Replit Starter (`start-replit.sh`)**: Optimized script for launching in Replit's environment
-4. **Run Production Server (`run-prod-server.sh`)**: Quick script to test the production build locally
+2. **Chunked Deployment (`deploy-chunked.sh`)**: Optimized deployment that avoids timeouts by separating server and frontend builds
+3. **Server-Only Deployment (`deploy-server-only.sh`)**: Faster deployment focusing only on backend API functionality
+4. **Frontend-Only Build (`build-frontend.sh`)**: Separate frontend build process to run after server deployment
+5. **Replit Starter (`start-replit.sh`)**: Unified script for launching both dev and prod environments
+6. **Run Production Server (`run-prod-server.sh`)**: Quick script to test the production build locally
 
 ## Enhanced Resilience Features
 
@@ -32,6 +34,40 @@ The deployment solution includes enhanced fallback mechanisms for improved relia
 - **Intelligent Error Handling**: Detailed diagnostics for quicker troubleshooting
 - **SPA Routing Support**: Proper client-side routing even in fallback mode
 - **API Health Endpoint**: Always-available `/api/health` endpoint for status checks
+
+### Pure CommonJS Deployment for Replit
+
+We've added specialized files specifically for Replit deployment:
+
+- **replit.cjs**: A CommonJS-compatible server entry point that avoids ESM conflicts
+- **deploy-replit.sh**: A script that builds the application in a way compatible with Replit
+
+This approach completely sidesteps the ESM vs. CommonJS conflict by:
+1. Using pure CommonJS syntax for the server
+2. Ensuring the frontend is properly served as static files
+3. Avoiding complex dynamic imports that could fail in production
+4. Creating a simplified server architecture with proper SPA routing support
+
+## Chunked Deployment Strategy
+
+Our chunked deployment strategy addresses the specific constraints of Replit's environment:
+
+- **Problem**: Replit has resource limitations that cause timeouts when building large frontend assets.
+- **Solution**: Separate the deployment process into modular steps that can be run independently.
+
+The chunked deployment follows this sequence:
+
+1. **Server-Side Build**: Quickly compile server components with ESBuild (takes seconds).
+2. **Temporary Interface**: Create a basic loading page that works immediately.
+3. **Frontend Attempt**: Try to build the frontend, but continue even if it times out.
+4. **Post-Deployment Frontend Build**: Complete the frontend build as a separate step.
+
+This approach ensures:
+
+- The API server is always deployed successfully, even if frontend timeouts occur.
+- Users see a meaningful loading interface rather than a white screen or error.
+- Frontend builds can be completed without restarting the entire deployment process.
+- Deployment reliability is significantly improved on resource-constrained environments.
 
 ## Understanding the Replit Bridge Solution
 
@@ -74,7 +110,32 @@ This will:
 - Create a minimal placeholder frontend
 - Set up the bridge for Replit compatibility
 
-### Option 3: Starting on Replit (Recommended for Deployment)
+### Option 3: Chunked Deployment (Recommended for Replit)
+
+```bash
+# Make the script executable if needed
+chmod +x deploy-chunked.sh
+
+# Run the chunked deployment script
+./deploy-chunked.sh
+```
+
+This will:
+- Build the backend server components with ESBuild (fast)
+- Create a temporary loading page for immediate deployment
+- Attempt to build the frontend but continue if it times out
+- Create a separate script to complete the frontend build if needed
+
+If the frontend build times out (common on Replit):
+
+```bash
+# Complete the frontend build separately
+./build-frontend.sh
+```
+
+This deployment approach is optimized for Replit's resource constraints and prevents timeouts by separating the resource-intensive frontend build process.
+
+### Option 4: Starting on Replit (Recommended for Deployment)
 
 ```bash
 # Make the script executable if needed
@@ -85,11 +146,13 @@ chmod +x start-replit.sh
 ```
 
 This will:
-- Verify deployment files exist (and run server-only deployment if needed)
-- Set the proper production environment variables
-- Start the server with the correct configuration for Replit
+- Automatically detect development or production environment
+- For production: verify deployment files exist (and run chunked deployment if needed)
+- For development: run the standard development server
+- Set the proper environment variables
+- Start the server with the correct configuration
 
-### Option 4: Testing Production Build Locally
+### Option 5: Testing Production Build Locally
 
 ```bash
 # Make the script executable if needed
@@ -123,7 +186,10 @@ The application uses ES Modules (ESM) in development, but Replit's production en
 
 **Deployment Scripts:**
 - `deploy-replit.sh`: Full deployment script (frontend + backend)
+- `deploy-chunked.sh`: Chunked deployment optimized for Replit resources
 - `deploy-server-only.sh`: Backend-only deployment (faster)
+- `build-frontend.sh`: Separate frontend build script
+- `start-replit.sh`: Unified launcher for both dev and prod
 - `run-prod-server.sh`: Local production testing
 
 ### Recovery Mechanism
@@ -143,20 +209,49 @@ The deployment includes a multi-layered recovery system:
 
 ## Deployment to Replit
 
-To deploy on Replit:
+### Recommended Deployment Flow
 
-1. Run the appropriate deployment script (`./deploy-replit.sh` recommended)
-2. Start the server with `./start-replit.sh` (this will also deploy if needed)
-3. Click the "Run" button in Replit or use their deployment feature
-4. The bridge will automatically redirect to the proper production build
+The following approach is optimized for Replit's environment and prevents deployment timeouts:
+
+1. Make all deployment scripts executable:
+   ```bash
+   chmod +x *.sh
+   ```
+
+2. Run the chunked deployment script to set up the backend and temp frontend:
+   ```bash
+   ./deploy-chunked.sh
+   ```
+
+3. If the frontend build times out (which is common), use the unified starter:
+   ```bash
+   ./start-replit.sh
+   ```
+   This will launch the backend with a temporary loading page.
+
+4. In a separate terminal or after confirming the backend is running, build the frontend:
+   ```bash
+   ./build-frontend.sh
+   ```
+
+5. After the frontend build completes, restart your Replit application.
+
+### Automated Deployment
 
 For CI/CD or automated deployments, use this sequence:
-```bash
-# Full deployment (one-time or when frontend changes)
-./deploy-replit.sh
 
-# Start server (for subsequent deployments)
+```bash
+# Make scripts executable
+chmod +x *.sh
+
+# Run chunked deployment (safer on Replit)
+./deploy-chunked.sh
+
+# Start the server with proper environment detection
 ./start-replit.sh
+
+# Optionally build frontend separately if the initial build timed out
+./build-frontend.sh
 ```
 
 ## Troubleshooting
@@ -175,13 +270,27 @@ For CI/CD or automated deployments, use this sequence:
 3. **Static Files Not Loading**:
    - Ensure the frontend build completed successfully
    - Check the logs to see if frontend detection was successful
+   - If using chunked deployment, make sure to run `./build-frontend.sh` after initial deployment
 
 4. **White Screen with "ok" Text**:
    - This indicates the server is running but static file serving is not configured correctly
    - Make sure the deployment script completed successfully
    - Verify the static file paths in `dist/index.js`
+   - Check if you're seeing the temporary loading page from chunked deployment; this is expected
 
-5. **ES Module/CommonJS Conflicts**:
+5. **Frontend Build Timeouts**:
+   - If the frontend build times out during deployment, this is expected behavior on Replit
+   - The chunked deployment will complete server-side deployment and create a temporary interface
+   - Run `./build-frontend.sh` separately after the server is running to complete the frontend build
+   - Restart your Replit after the frontend build completes
+
+6. **Temporary Loading Page Persists**:
+   - If you still see the temporary loading page after running frontend build:
+     - Verify the frontend build completed successfully (check for dist/public/assets files)
+     - Restart your Replit application completely
+     - Check server logs for static file serving errors
+
+7. **ES Module/CommonJS Conflicts**:
    - Error: `__filename is not defined in ES module scope`
    - Error: `This file is being treated as an ES module because it has a '.js' file extension and package.json contains "type": "module"`
    - Solution: Make sure all server files use proper ES module syntax:
@@ -221,3 +330,39 @@ The deployment scripts handle several ESM-specific fixes:
 - Adding `.js` extensions to all local imports
 - Creating proper ES module structure for the production build
 - Handling directory imports by targeting specific index.js files
+
+### Directory Import Error Fix
+
+One common ES Module error is the "ERR_UNSUPPORTED_DIR_IMPORT" that occurs when trying to import a directory:
+
+```
+Error [ERR_UNSUPPORTED_DIR_IMPORT]: Directory import '/workspace/dist/db/schema' is not supported resolving ES modules imported from /workspace/dist/db/index.js
+```
+
+The deployment scripts automatically fix this by:
+
+1. Adding `.js` extensions to all import paths
+2. Replacing directory imports with explicit file imports (e.g., `../db/schema` → `../db/schema.js`)
+3. Correctly handling nested directory structures
+
+This error specifically happens because ES Modules require explicit file paths and don't support the Node.js CommonJS behavior of automatically resolving `index.js` in directories.
+
+### Testing API Health
+
+A public health endpoint is available at `/api/health` that doesn't require authentication. Use this to verify the server is running properly:
+
+```bash
+curl http://localhost:5000/api/health
+```
+
+Expected response:
+```json
+{
+  "status": "ok",
+  "timestamp": "2025-03-21T01:37:33.490Z",
+  "db": "connected",
+  "environment": "development"
+}
+```
+
+This endpoint is implemented in both development and production environments and provides a quick way to verify server functionality and database connectivity.

@@ -1,13 +1,18 @@
 // Production static file server configuration
-const express = require('express');
-const path = require('path');
-const fs = require('fs');
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+// Get equivalent of __dirname in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Configure the server to serve static files in production mode
  * This addresses the specific requirements for Replit deployment
  */
-function configureStaticServer(app) {
+export function configureStaticServer(app) {
   console.log('Setting up production static file server...');
   
   // Check multiple possible locations for static assets
@@ -133,4 +138,5 @@ function configureStaticServer(app) {
   console.log('Production static file server configured successfully');
 }
 
-module.exports = { configureStaticServer };
+// Export the configureStaticServer function (ES Module format)
+// Already exported using 'export' keyword above
