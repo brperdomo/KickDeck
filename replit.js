@@ -1,13 +1,18 @@
 /**
- * CommonJS version of the Replit bridge
- * This file provides a CommonJS-compatible entry point for Replit deployments
+ * Replit deployment bridge file (ES Module version)
+ * This file serves as the entry point for Replit deployments
  */
 
-const express = require('express');
-const path = require('path');
-const fs = require('fs');
-const pg = require('pg');
-const { drizzle } = require('drizzle-orm/node-postgres');
+import express from 'express';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import pg from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
+
+// ES Module dirname compatibility
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Create a PostgreSQL client
 const client = new pg.Client({
@@ -53,7 +58,7 @@ async function startServer() {
       status: 'ok',
       timestamp: new Date().toISOString(),
       dbConnected,
-      mode: 'commonjs'
+      mode: 'esm'
     });
   });
   
@@ -63,12 +68,12 @@ async function startServer() {
     if (fs.existsSync(indexPath)) {
       return res.sendFile(indexPath);
     }
-    res.send('Server is running in CommonJS mode, but no frontend files were found.');
+    res.send('Server is running in ESM mode, but no frontend files were found.');
   });
   
   // Start the server
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Replit CommonJS server running on http://0.0.0.0:${PORT}`);
+    console.log(`Replit ESM server running on http://0.0.0.0:${PORT}`);
   });
 }
 
