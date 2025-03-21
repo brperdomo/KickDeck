@@ -1,24 +1,30 @@
 /**
- * ABSOLUTE MINIMAL SERVER ENTRY POINT FOR REPLIT (CommonJS version)
- * This file is intentionally kept as simple as possible to work around
- * module system compatibility issues on Replit.
+ * SIMPLIFIED COMMONJS ENTRY POINT FOR REPLIT
+ * This file is intentionally kept as simple as possible
+ * with no module system complexities or fancy imports.
  */
 
-const express = require('express');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
+const express = require('express');
 const { Client } = require('pg');
 
-// Initialize Express app
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Test database connection
+/**
+ * Tests the database connection
+ */
 async function testDbConnection() {
+  console.log('Testing database connection...');
+  
   try {
+    if (!process.env.DATABASE_URL) {
+      console.error('DATABASE_URL environment variable is not set');
+      return false;
+    }
+    
     const client = new Client({
       connectionString: process.env.DATABASE_URL
     });
+    
     await client.connect();
     const result = await client.query('SELECT NOW()');
     console.log('Database connection successful:', result.rows[0].now);
@@ -30,74 +36,109 @@ async function testDbConnection() {
   }
 }
 
-// Main server setup function
+/**
+ * Start the server with minimal required functionality
+ */
 async function startServer() {
+  const app = express();
+  const PORT = process.env.PORT || 3000;
+  
   // Test database connection first
   const dbConnected = await testDbConnection();
   
-  // Set up static file serving
-  const staticDir = path.join(__dirname, 'dist/public');
+  // Setup JSON parsing middleware
+  app.use(express.json());
   
-  if (fs.existsSync(staticDir)) {
+  // Serve static files if they exist
+  const staticDir = path.join(__dirname, 'dist/public');
+  if (fs.existsSync(path.join(staticDir, 'index.html'))) {
     console.log(`Serving static files from: ${staticDir}`);
     app.use(express.static(staticDir));
-    
-    // SPA fallback for client-side routing
-    app.get('*', (req, res) => {
-      // Skip API routes
-      if (req.path.startsWith('/api/')) {
-        return res.status(404).json({ error: 'API endpoint not found' });
-      }
-      
-      // Send index.html for all other routes (client-side routing)
-      const indexFile = path.join(staticDir, 'index.html');
-      if (fs.existsSync(indexFile)) {
-        return res.sendFile(indexFile);
-      }
-      
-      res.send('Application is running, but frontend files are not found.');
-    });
   } else {
-    console.warn('Static directory not found:', staticDir);
-    app.get('*', (req, res) => {
-      res.status(200).send(`
-        <html>
-          <head>
-            <title>Soccer Management Platform</title>
-            <style>
-              body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-              h1 { color: #3498db; }
-              pre { background: #f8f9fa; padding: 15px; border-radius: 5px; overflow: auto; }
-              .success { color: #2ecc71; }
-              .error { color: #e74c3c; }
-            </style>
-          </head>
-          <body>
-            <h1>Soccer Management Platform</h1>
-            <p>The server is running, but the frontend build was not found.</p>
-            
-            <h2>Server Status:</h2>
-            <ul>
-              <li>Database connection: <span class="${dbConnected ? 'success' : 'error'}">${dbConnected ? 'Connected' : 'Failed'}</span></li>
-              <li>Frontend files: <span class="error">Not found</span></li>
-            </ul>
-            
-            <p>Run 'npm run build' to build the frontend, then restart the server.</p>
-          </body>
-        </html>
-      `);
-    });
+    console.warn('Warning: Static files not found in dist/public');
   }
   
-  // Start the server
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Database connection: ${dbConnected ? 'Connected' : 'Failed'}`);
-    console.log(`Static files: ${fs.existsSync(staticDir) ? 'Found' : 'Not found'}`);
+  // Basic health endpoint
+  app.get('/api/health', (req, res) => {
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      mode: 'CommonJS',
+      database: {
+        connected: dbConnected
+      }
+    });
   });
+  
+  // Deployment status diagnostic endpoint
+  app.get('/api/deployment/status', (req, res) => {
+    const staticFilesExist = fs.existsSync(path.join(staticDir, 'index.html'));
+    
+    res.json({
+      status: 'operational',
+      entryPoint: 'index.cjs',
+      environment: {
+        nodeVersion: process.version,
+        platform: process.platform,
+        arch: process.arch,
+        env: process.env.NODE_ENV
+      },
+      database: {
+        connected: dbConnected,
+        url: process.env.DATABASE_URL ? '****' : undefined
+      },
+      frontend: {
+        built: staticFilesExist,
+        path: staticDir
+      }
+    });
+  });
+  
+  // API routes fallback for when API server module didn't load
+  app.use('/api', (req, res, next) => {
+    if (req.path !== '/health' && req.path !== '/deployment/status') {
+      res.status(502).json({
+        error: 'API server not initialized',
+        message: 'The server is running in fallback mode. API functionality is limited.'
+      });
+    } else {
+      next();
+    }
+  });
+  
+  // Catch-all route for SPA
+  app.get('*', (req, res) => {
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ error: 'API endpoint not found' });
+    }
+    
+    const indexPath = path.join(staticDir, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      return res.sendFile(indexPath);
+    } else {
+      return res.status(404).send('Application not found. Please check your deployment.');
+    }
+  });
+  
+  // Start the server
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT} (CommonJS mode)`);
+  });
+  
+  // Handle shutdown gracefully
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully');
+    server.close(() => {
+      console.log('Server closed');
+      process.exit(0);
+    });
+  });
+  
+  return { app, server };
 }
 
 // Start the server
 startServer().catch(error => {
   console.error('Failed to start server:', error);
+  process.exit(1);
 });

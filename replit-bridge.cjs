@@ -1,202 +1,245 @@
 /**
- * Replit deployment bridge (CommonJS version)
- * This file handles the connection between Replit deployments
- * and our application, working around module system challenges.
+ * REPLIT BRIDGE COMPONENT
+ * This serves as a fallback mechanism when both ES Module and CommonJS approaches fail.
+ * It implements a layered strategy to maximize deployment success chances.
  */
 
-const express = require('express');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
+const express = require('express');
 const { Client } = require('pg');
 
-// Setup Express app
-const app = express();
-const PORT = process.env.PORT || 3000;
+/**
+ * Checks if the build files exist
+ * @returns {boolean} Whether the build files exist
+ */
+function checkBuildExists() {
+  const indexHtmlPath = path.join(__dirname, 'dist/public/index.html');
+  return fs.existsSync(indexHtmlPath);
+}
 
-// Enable JSON and URL-encoded bodies
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Test database connection - critical for deployment
+/**
+ * Tests the database connection
+ * @returns {Promise<boolean>} Whether the database is connected
+ */
 async function testDbConnection() {
-  console.log("Testing database connection...");
+  console.log('Testing database connection from bridge...');
   
-  // Verify we have DATABASE_URL set
-  if (!process.env.DATABASE_URL) {
-    console.error("ERROR: DATABASE_URL environment variable not set!");
-    return false;
-  }
-
   try {
-    // Create and test a PostgreSQL connection
+    if (!process.env.DATABASE_URL) {
+      console.error('DATABASE_URL environment variable is not set');
+      return false;
+    }
+    
     const client = new Client({
       connectionString: process.env.DATABASE_URL
     });
     
     await client.connect();
     const result = await client.query('SELECT NOW()');
-    console.log('✅ Database connection successful:', result.rows[0].now);
-    
-    // Close the test connection
+    console.log('Database connection successful:', result.rows[0].now);
     await client.end();
     return true;
   } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
+    console.error('Database connection failed:', error.message);
     return false;
   }
 }
 
-// Check if build files exist
-function checkBuildExists() {
-  const staticDir = path.join(__dirname, 'dist/public');
-  const indexFile = path.join(staticDir, 'index.html');
+/**
+ * Creates a fallback error server
+ * @param {Error} error The error that occurred during startup
+ */
+async function createFallbackServer(error) {
+  console.error('Creating fallback server due to error:', error);
   
-  if (fs.existsSync(staticDir) && fs.existsSync(indexFile)) {
-    return true;
-  }
-  return false;
-}
-
-// Status details page to diagnose deployment issues
-function setupStatusRoutes(app, dbStatus) {
-  // Add a diagnostic endpoint
-  app.get('/deployment-status', (req, res) => {
-    const buildExists = checkBuildExists();
+  const app = express();
+  const PORT = process.env.PORT || 3000;
+  const dbConnected = await testDbConnection();
+  const buildExists = checkBuildExists();
+  
+  // Serve static files if they exist
+  if (buildExists) {
+    const staticDir = path.join(__dirname, 'dist/public');
+    app.use(express.static(staticDir));
+    console.log(`Serving static files from: ${staticDir}`);
     
-    res.send(`
-      <html>
+    // SPA fallback
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api/')) {
+        next();
+      } else {
+        res.sendFile(path.join(staticDir, 'index.html'));
+      }
+    });
+  }
+  
+  // Health check endpoint
+  app.get('/api/health', (req, res) => {
+    res.json({
+      status: 'degraded',
+      message: 'Running in fallback mode',
+      timestamp: new Date().toISOString(),
+      mode: 'Bridge Fallback',
+      database: {
+        connected: dbConnected
+      }
+    });
+  });
+  
+  // Deployment status diagnostic endpoint
+  app.get('/api/deployment/status', (req, res) => {
+    res.json({
+      status: 'degraded',
+      entryPoint: 'replit-bridge.cjs',
+      error: error.message,
+      stack: error.stack,
+      environment: {
+        nodeVersion: process.version,
+        platform: process.platform,
+        arch: process.arch,
+        env: process.env.NODE_ENV
+      },
+      database: {
+        connected: dbConnected,
+        url: process.env.DATABASE_URL ? '****' : undefined
+      },
+      frontend: {
+        built: buildExists,
+        path: buildExists ? path.join(__dirname, 'dist/public') : null
+      }
+    });
+  });
+  
+  // Other API routes fallback
+  app.use('/api', (req, res, next) => {
+    if (req.path !== '/health' && req.path !== '/deployment/status') {
+      res.status(503).json({
+        error: 'Service Unavailable',
+        message: 'The server is running in fallback mode. API functionality is limited.',
+        details: error.message
+      });
+    } else {
+      next();
+    }
+  });
+  
+  // If no build exists, serve an error page
+  if (!buildExists) {
+    app.get('*', (req, res) => {
+      if (req.path.startsWith('/api/')) return next();
+      
+      res.status(500).send(`
+        <!DOCTYPE html>
+        <html>
         <head>
-          <title>Deployment Status</title>
+          <title>Deployment Error</title>
           <style>
-            body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
-            h1 { color: #3498db; margin-bottom: 10px; }
-            h2 { margin-top: 30px; color: #2c3e50; }
-            .status { display: flex; align-items: center; margin-bottom: 10px; }
-            .indicator { display: inline-block; width: 20px; height: 20px; border-radius: 50%; margin-right: 10px; }
-            .success { background-color: #2ecc71; }
-            .warning { background-color: #f39c12; }
-            .error { background-color: #e74c3c; }
-            pre { background: #f8f9fa; padding: 15px; border-radius: 5px; overflow: auto; }
-            code { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 14px; }
-            .card { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: 0 auto; }
+            h1 { color: #e74c3c; }
+            pre { background: #f8f8f8; padding: 15px; border-radius: 5px; overflow-x: auto; }
+            .info { background: #f1f1f1; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
           </style>
         </head>
         <body>
-          <h1>Deployment Status</h1>
-          <p>This diagnostic page shows the current status of your application deployment.</p>
-          
-          <div class="card">
-            <h2>Critical Components</h2>
-            
-            <div class="status">
-              <span class="indicator ${dbStatus ? 'success' : 'error'}"></span>
-              <strong>Database Connection:</strong> ${dbStatus ? 'Connected' : 'Failed'} 
-            </div>
-            
-            <div class="status">
-              <span class="indicator ${buildExists ? 'success' : 'error'}"></span>
-              <strong>Frontend Build:</strong> ${buildExists ? 'Found' : 'Not found'}
-            </div>
-            
-            <div class="status">
-              <span class="indicator success"></span>
-              <strong>Server Status:</strong> Running
-            </div>
+          <h1>Deployment Error</h1>
+          <div class="info">
+            <p>The application could not be started properly. Please check the logs for more information.</p>
+            <p>Server is running in fallback mode with limited functionality.</p>
           </div>
-          
-          <div class="card">
-            <h2>Environment</h2>
-            <pre><code>Node Version: ${process.version}
+          <h2>Error Details</h2>
+          <pre>${error.stack || error.message}</pre>
+          <h2>System Information</h2>
+          <pre>
+Node Version: ${process.version}
 Platform: ${process.platform}
-Architecture: ${process.arch}
-Database URL: ${process.env.DATABASE_URL ? '✓ Set' : '✗ Not set'}
-PORT: ${process.env.PORT || '3000 (default)'}</code></pre>
-          </div>
-          
-          ${!buildExists ? `
-          <div class="card">
-            <h2>Missing Build</h2>
-            <p>The frontend build files could not be found. To fix this issue:</p>
-            <ol>
-              <li>Run <code>npm run build</code> to build the frontend</li>
-              <li>Verify that files exist in <code>dist/public</code> directory</li>
-              <li>Redeploy the application</li>
-            </ol>
-          </div>
-          ` : ''}
-          
-          ${!dbStatus ? `
-          <div class="card">
-            <h2>Database Connection Issue</h2>
-            <p>The application could not connect to the database. To fix this issue:</p>
-            <ol>
-              <li>Verify that the <code>DATABASE_URL</code> environment variable is set correctly</li>
-              <li>Check if your database is running and accessible</li>
-              <li>Ensure that database credentials are correct</li>
-            </ol>
-          </div>
-          ` : ''}
+Environment: ${process.env.NODE_ENV || 'development'}
+Database Connected: ${dbConnected ? 'Yes' : 'No'}
+          </pre>
         </body>
-      </html>
-    `);
-  });
-}
-
-// Main function to start the bridge
-async function startBridge() {
-  console.log("Starting Replit deployment bridge...");
-  
-  // Test database connection
-  const dbConnected = await testDbConnection();
-  
-  // Setup diagnostic routes
-  setupStatusRoutes(app, dbConnected);
-  
-  // Try to serve static files if they exist
-  const staticDir = path.join(__dirname, 'dist/public');
-  if (fs.existsSync(staticDir)) {
-    console.log(`Serving static files from: ${staticDir}`);
-    app.use(express.static(staticDir));
-    
-    // Fallback route for SPA
-    app.get('*', (req, res) => {
-      // Skip API routes
-      if (req.path.startsWith('/api/')) {
-        return res.status(404).json({ error: 'API endpoint not found' });
-      }
-      
-      const indexPath = path.join(staticDir, 'index.html');
-      if (fs.existsSync(indexPath)) {
-        return res.sendFile(indexPath);
-      }
-      
-      // Fallback if index.html can't be found
-      res.redirect('/deployment-status');
-    });
-  } else {
-    console.warn('⚠️ Static directory not found:', staticDir);
-    
-    // Redirect all routes to status page if no static files
-    app.get('*', (req, res) => {
-      // Skip API routes
-      if (req.path.startsWith('/api/')) {
-        return res.status(404).json({ error: 'API endpoint not found' });
-      }
-      
-      res.redirect('/deployment-status');
+        </html>
+      `);
     });
   }
   
-  // Start the server
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Replit bridge server running on port ${PORT}`);
-    console.log(`Database connection: ${dbConnected ? '✅ Connected' : '❌ Failed'}`);
-    console.log(`Static files: ${checkBuildExists() ? '✅ Found' : '❌ Not found'}`);
-    console.log(`Diagnostic page: http://localhost:${PORT}/deployment-status`);
+    console.log(`Fallback server running on port ${PORT}`);
   });
 }
 
+/**
+ * Provides bridge functionality for the Replit environment
+ */
+async function initializeBridge() {
+  console.log('Initializing Replit bridge...');
+  
+  try {
+    // First attempt to import ES Module version of index.js
+    try {
+      // This is a dynamic import which works in newer Node.js versions
+      import('./index.js')
+        .then(() => {
+          console.log('Successfully loaded ES Module version (index.js)');
+        })
+        .catch(esModuleError => {
+          console.error('Failed to load ES Module version (index.js):', esModuleError.message);
+          
+          // Next try the replit.js ES Module version
+          import('./replit.js')
+            .then(() => {
+              console.log('Successfully loaded ES Module version (replit.js)');
+            })
+            .catch(replitEsError => {
+              console.error('Failed to load ES Module version (replit.js):', replitEsError.message);
+              
+              // Then try CommonJS versions
+              try {
+                require('./index.cjs');
+                console.log('Successfully loaded CommonJS version (index.cjs)');
+              } catch (indexCjsError) {
+                console.error('Failed to load CommonJS version (index.cjs):', indexCjsError.message);
+                
+                try {
+                  require('./replit.cjs');
+                  console.log('Successfully loaded CommonJS version (replit.cjs)');
+                } catch (replitCjsError) {
+                  console.error('Failed to load CommonJS version (replit.cjs):', replitCjsError.message);
+                  
+                  // If all else fails, create a fallback server
+                  createFallbackServer(new Error('All module loading attempts failed'));
+                }
+              }
+            });
+        });
+    } catch (dynamicImportError) {
+      console.error('Dynamic import not supported, trying CommonJS versions:', dynamicImportError.message);
+      
+      // Try CommonJS versions if dynamic import is not supported
+      try {
+        require('./index.cjs');
+        console.log('Successfully loaded CommonJS version (index.cjs)');
+      } catch (indexCjsError) {
+        console.error('Failed to load CommonJS version (index.cjs):', indexCjsError.message);
+        
+        try {
+          require('./replit.cjs');
+          console.log('Successfully loaded CommonJS version (replit.cjs)');
+        } catch (replitCjsError) {
+          console.error('Failed to load CommonJS version (replit.cjs):', replitCjsError.message);
+          
+          // If all else fails, create a fallback server
+          createFallbackServer(new Error('All module loading attempts failed'));
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Critical error in bridge initialization:', error);
+    createFallbackServer(error);
+  }
+}
+
 // Initialize the bridge
-startBridge().catch(err => {
-  console.error('Failed to start bridge server:', err);
+initializeBridge().catch(error => {
+  console.error('Unhandled error in bridge initialization:', error);
+  createFallbackServer(error);
 });
