@@ -99,8 +99,7 @@ async function testDbConnection() {
     // Register routes first to ensure all middleware is set up
 
     const PORT = process.env.PORT || 5000;
-    server = app.listen();
-    server.close(); // Create but don't start listening yet
+    server = app.listen(PORT, '0.0.0.0');
 
     // Register routes
     registerRoutes(app);
