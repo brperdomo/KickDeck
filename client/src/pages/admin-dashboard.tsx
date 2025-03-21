@@ -1682,8 +1682,6 @@ function AdminDashboard() {
     );
   }
 
-  const [showLogoutOverlay, setShowLogoutOverlay] = useState(false);
-
   const handleLogout = () => {
     setShowLogoutOverlay(true);
     setTimeout(async () => {
