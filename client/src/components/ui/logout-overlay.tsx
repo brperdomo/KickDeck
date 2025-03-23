@@ -50,16 +50,18 @@ export function LogoutOverlay({ className, onFinished, ...props }: LogoutOverlay
       console.error("Error clearing browser data during logout:", e);
     }
     
-    // Skip the animation and redirect immediately
-    onFinished();
-    
-    // Force redirect as a fallback if the callback doesn't work
-    const fallbackTimer = setTimeout(() => {
-      console.log("Forcing logout redirect via fallback");
-      window.location.replace("/");
-    }, 800); // Use a shorter timeout for better UX
+    // Show the message for a moment before redirecting
+    const redirectTimer = setTimeout(() => {
+      onFinished();
+      
+      // Force redirect as a fallback if the callback doesn't work
+      setTimeout(() => {
+        console.log("Forcing logout redirect via fallback");
+        window.location.replace("/");
+      }, 200);
+    }, 1500); // Show the message for 1.5 seconds
 
-    return () => clearTimeout(fallbackTimer);
+    return () => clearTimeout(redirectTimer);
   }, [onFinished]);
 
   return (
@@ -84,9 +86,12 @@ export function LogoutOverlay({ className, onFinished, ...props }: LogoutOverlay
               >
                 {message}
               </h2>
-              <p className="text-sm text-muted-foreground">
-                Clearing session data...
-              </p>
+              <div className="mt-2 flex flex-col items-center">
+                <div className="mb-2 animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#36C5F0]"></div>
+                <p className="text-sm text-muted-foreground">
+                  Clearing session data...
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
