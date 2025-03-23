@@ -49,7 +49,9 @@ const TINYMCE_API_KEY = "wysafiugpee0xtyjdnegcq6x43osb81qje582522ekththu8";
 export default function EmailTemplateEdit() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
-  const isCreateMode = !id || id === 'create';
+  // Check if we're in create mode by examining the path
+  const path = window.location.pathname;
+  const isCreateMode = path.includes('/create') || !id;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [variables, setVariables] = useState<string[]>([]);
@@ -132,6 +134,13 @@ export default function EmailTemplateEdit() {
 
   const mutation = useMutation({
     mutationFn: async (data: EmailTemplateFormValues) => {
+      // Log operation mode for debugging
+      console.log(`Template operation mode: ${isCreateMode ? 'CREATE' : 'EDIT'}`, { 
+        path: window.location.pathname,
+        id,
+        isCreateMode
+      });
+      
       // Ensure all required fields are present and of the correct type
       const cleanedData = {
         ...data,
