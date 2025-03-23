@@ -109,6 +109,8 @@ export default function EmailTemplateEdit() {
 
   useEffect(() => {
     if (template) {
+      console.log("Loading template data:", template);
+      
       form.reset({
         name: template.name,
         description: template.description || "",
@@ -268,7 +270,7 @@ export default function EmailTemplateEdit() {
                       <FormLabel>Template Type</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>

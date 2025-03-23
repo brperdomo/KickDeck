@@ -28,6 +28,8 @@ export async function createEmailTemplate(req: Request, res: Response) {
       providerId
     } = req.body;
 
+    console.log("Creating template with data:", req.body);
+
     // Validate required fields
     if (!name || !type || !subject || !content || !senderName || !senderEmail) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -35,15 +37,15 @@ export async function createEmailTemplate(req: Request, res: Response) {
 
     const [template] = await db.insert(emailTemplates).values({
       name,
-      description,
+      description: description || null,
       type,
       subject,
       content,
       senderName,
       senderEmail,
-      isActive: isActive ?? true,
-      variables,
-      providerId: providerId ? parseInt(providerId) : null,
+      isActive: isActive === false ? false : true,
+      variables: variables || [],
+      providerId: providerId ? parseInt(providerId.toString()) : null,
       createdAt: new Date(),
       updatedAt: new Date()
     }).returning();
@@ -71,6 +73,8 @@ export async function updateEmailTemplate(req: Request, res: Response) {
       providerId
     } = req.body;
 
+    console.log("Updating template with data:", req.body);
+
     // Validate required fields
     if (!name || !type || !subject || !content || !senderName || !senderEmail) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -79,15 +83,15 @@ export async function updateEmailTemplate(req: Request, res: Response) {
     const [template] = await db.update(emailTemplates)
       .set({
         name,
-        description,
+        description: description || null,
         type,
         subject,
         content,
         senderName,
         senderEmail,
-        isActive,
-        variables,
-        providerId: providerId ? parseInt(providerId) : null,
+        isActive: isActive === false ? false : true,
+        variables: variables || [],
+        providerId: providerId ? parseInt(providerId.toString()) : null,
         updatedAt: new Date()
       })
       .where(eq(emailTemplates.id, parseInt(id)))
