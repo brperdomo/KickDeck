@@ -86,9 +86,35 @@ export default function AuthPage() {
 
   async function onSubmit(data: LoginFormData) {
     try {
+      loginForm.clearErrors();
       await loginMutation.mutateAsync(data);
+      
+      // Login success is handled in useEffect for redirects
     } catch (error: any) {
       console.error('Login error:', error);
+      
+      // Show detailed error messages
+      if (error.message?.toLowerCase().includes("password")) {
+        loginForm.setError("password", { 
+          message: "Invalid password" 
+        });
+      } else if (error.message?.toLowerCase().includes("email") || 
+                error.message?.toLowerCase().includes("user not found")) {
+        loginForm.setError("email", { 
+          message: "Email not found or invalid" 
+        });
+      } else {
+        // Generic error
+        loginForm.setError("root.serverError", { 
+          message: error.message || "Login failed. Please check your credentials and try again."
+        });
+        
+        toast({
+          title: "Login failed",
+          description: error.message || "An error occurred during login",
+          variant: "destructive"
+        });
+      }
     }
   }
 
@@ -179,6 +205,11 @@ export default function AuthPage() {
                       'Login'
                     )}
                   </Button>
+                  {loginForm.formState.errors.root?.serverError && (
+                    <div className="p-3 text-sm font-medium text-white bg-red-500 rounded-md">
+                      {loginForm.formState.errors.root.serverError.message}
+                    </div>
+                  )}
                   <Link href="/forgot-password">
                     <Button variant="link" className="w-full text-sm text-green-600 p-0 h-auto font-semibold hover:text-green-700">
                       Forgot Password?
