@@ -54,11 +54,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery<User | null>({
     queryKey: ["/api/user"],
     queryFn: async () => {
-      const res = await fetch("/api/user");
+      const res = await fetch("/api/user", {
+        credentials: "include", // Add this to ensure cookies are sent
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       if (res.status === 401) return null;
       if (!res.ok) throw new Error("Failed to fetch user");
       return res.json();
     },
+    retry: 1, // Limit retries to prevent excessive requests
+    refetchOnWindowFocus: false, // Don't refetch on focus to reduce load
   });
 
   const loginMutation = useMutation({
