@@ -203,8 +203,9 @@ export function FeeManagement() {
       }
     },
     enabled: !!eventIdParam,
-    staleTime: 5000, // Keep data fresh for only 5 seconds to ensure updates
+    staleTime: 0, // Don't cache - always fetch fresh data
     refetchOnWindowFocus: true, // Refresh when window regains focus
+    refetchOnMount: true, // Always refetch when component mounts
     retry: 2, // Retry failed requests twice
   });
 
@@ -558,9 +559,17 @@ export function FeeManagement() {
           description: `Fee assignments updated successfully. ${ageGroupIds.length} age groups assigned.`,
         });
 
-        // Make sure to invalidate and refetch data to update the UI
+        // Force fresh data retrieval from server
         queryClient.invalidateQueries(['feeAssignments', eventIdParam]);
-        await feeAssignmentsQuery.refetch();
+        queryClient.invalidateQueries(['fees', eventIdParam]);
+        queryClient.invalidateQueries(['eventAgeGroups', eventIdParam]);
+        
+        // Immediately refetch to update the UI with fresh data
+        await Promise.all([
+          feeAssignmentsQuery.refetch(), 
+          feesQuery.refetch(), 
+          ageGroupsQuery.refetch()
+        ]);
         
         // Close dialog if we're in one
         if (isAssignFeeOpen) {
