@@ -323,7 +323,7 @@ export function EmailTemplateModal({ open, onOpenChange, template }: EmailTempla
                           toolbar: 'undo redo | blocks | ' +
                             'bold italic forecolor | alignleft aligncenter ' +
                             'alignright alignjustify | bullist numlist outdent indent | ' +
-                            'mergefields | removeformat | help',
+                            'mergefields code | removeformat | help',
                           menu: {
                             tools: { title: 'Merge Tools', items: 'mergefields' }
                           },
@@ -341,6 +341,21 @@ export function EmailTemplateModal({ open, onOpenChange, template }: EmailTempla
                                     type: 'menuitem',
                                     text: 'Last Name',
                                     onAction: () => editor.insertContent('{{lastName}}')
+                                  },
+                                  {
+                                    type: 'menuitem',
+                                    text: 'Username',
+                                    onAction: () => editor.insertContent('{{username}}')
+                                  },
+                                  {
+                                    type: 'menuitem',
+                                    text: 'Reset URL',
+                                    onAction: () => editor.insertContent('{{resetUrl}}')
+                                  },
+                                  {
+                                    type: 'menuitem',
+                                    text: 'Reset Token',
+                                    onAction: () => editor.insertContent('{{token}}')
                                   }
                                 ];
                                 callback(items);
