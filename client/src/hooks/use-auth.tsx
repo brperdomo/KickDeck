@@ -16,6 +16,8 @@ type User = {
   isAdmin: boolean;
   isParent: boolean;
   householdId?: number;
+  phone?: string;
+  metadata?: string; // JSON string containing address details
 };
 
 type AuthContextType = {

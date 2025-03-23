@@ -56,6 +56,26 @@ export default function EventRegistration() {
   const [loading, setLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState<RegistrationStep>('auth');
 
+  // Helper function to parse user metadata
+  const getUserAddressData = () => {
+    if (!user?.metadata) return { address: '', city: '', state: '', zipCode: '' };
+    
+    try {
+      const parsedMetadata = JSON.parse(user.metadata);
+      return {
+        address: parsedMetadata.address || '',
+        city: parsedMetadata.city || '',
+        state: parsedMetadata.state || '',
+        zipCode: parsedMetadata.zipCode || '',
+      };
+    } catch (e) {
+      console.error("Error parsing user metadata:", e);
+      return { address: '', city: '', state: '', zipCode: '' };
+    }
+  };
+  
+  const addressData = getUserAddressData();
+  
   const form = useForm<PersonalDetailsForm>({
     resolver: zodResolver(personalDetailsSchema),
     defaultValues: {
@@ -63,27 +83,41 @@ export default function EventRegistration() {
       lastName: user?.lastName || '',
       email: user?.email || '',
       phone: user?.phone || '',
-      address: '',
-      city: '',
-      state: '',
-      zipCode: '',
+      address: addressData.address,
+      city: addressData.city,
+      state: addressData.state,
+      zipCode: addressData.zipCode,
     },
   });
 
   useEffect(() => {
     if (user) {
+      // Parse address data from metadata if it exists
+      let addressData = { address: '', city: '', state: '', zipCode: '' };
+      
+      if (user.metadata) {
+        try {
+          const parsedMetadata = JSON.parse(user.metadata);
+          addressData = {
+            address: parsedMetadata.address || '',
+            city: parsedMetadata.city || '',
+            state: parsedMetadata.state || '',
+            zipCode: parsedMetadata.zipCode || '',
+          };
+        } catch (e) {
+          console.error("Error parsing user metadata:", e);
+        }
+      }
+      
       form.reset({
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         email: user.email || '',
         phone: user.phone || '',
-        address: '',
-        city: '',
-        state: '',
-        zipCode: '',
+        ...addressData
       });
     }
-  }, [user]);
+  }, [user, form]);
 
   const updatePersonalDetailsMutation = useMutation({
     mutationFn: async (data: PersonalDetailsForm) => {
