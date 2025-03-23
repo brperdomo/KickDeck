@@ -67,13 +67,21 @@ export default function ResetPassword() {
 
   const verifyToken = async (token: string) => {
     try {
+      console.log('Verifying token:', token);
       const response = await fetch('/api/auth/verify-reset-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token }),
+        credentials: 'include',
       });
 
+      if (!response.ok) {
+        console.error('Token verification failed:', await response.text());
+        throw new Error('Token verification failed');
+      }
+
       const data = await response.json();
+      console.log('Token verification response:', data);
 
       if (data.valid) {
         setIsTokenValid(true);
