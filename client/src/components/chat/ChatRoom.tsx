@@ -41,7 +41,7 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
 
   useEffect(() => {
     // Create WebSocket connection
-    const socket = new WebSocket(`ws://${window.location.host}`);
+    const socket = new WebSocket(`ws://${window.location.host}/api/ws`);
     setWs(socket);
 
     socket.onopen = () => {
