@@ -127,7 +127,8 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
     console.log(`Email sent to ${options.to}`);
   } catch (error) {
     console.error('Error sending email:', error);
-    throw new Error(`Failed to send email: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw new Error(`Failed to send email: ${errorMessage}`);
   }
 }
 

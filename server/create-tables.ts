@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { createEmailTemplatesTable } from "./migrations/create_email_templates";
 import { createEmailTemplateRoutingTable } from "./migrations/create_email_template_routing";
 import { createPasswordResetTokensTable } from "./migrations/create_password_reset_tokens";
+import { createDefaultEmailTemplates } from "./migrations/create_default_email_templates";
 
 export async function createTables() {
   try {
@@ -104,6 +105,9 @@ export async function createTables() {
     
     console.log('Creating password reset tokens table...');
     await createPasswordResetTokensTable();
+    
+    console.log('Creating default email templates...');
+    await createDefaultEmailTemplates();
 
     console.log("All tables created successfully");
     return { success: true };

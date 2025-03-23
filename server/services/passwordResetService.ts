@@ -45,25 +45,18 @@ export async function createPasswordResetToken(userId: number): Promise<string> 
  */
 export async function verifyPasswordResetToken(token: string): Promise<number | null> {
   try {
-    const currentTime = new Date();
-    
     // Find the token in the database
     const [resetToken] = await db
       .select()
       .from(passwordResetTokens)
-      .where(
-        and(
-          eq(passwordResetTokens.token, token),
-          lt(currentTime, passwordResetTokens.expiresAt),
-          eq(passwordResetTokens.usedAt, null)
-        )
-      );
-    
-    if (!resetToken) {
-      return null;
+      .where(eq(passwordResetTokens.token, token))
+      
+    // Check if token exists and is not expired and not used
+    if (resetToken && new Date() < resetToken.expiresAt && resetToken.usedAt === null) {
+      return resetToken.userId;
     }
     
-    return resetToken.userId;
+    return null;
   } catch (error) {
     console.error('Error verifying password reset token:', error);
     return null;
@@ -134,7 +127,6 @@ export async function resetPassword(token: string, newPassword: string): Promise
       .update(users)
       .set({
         password: hashedPassword,
-        updatedAt: new Date().toISOString(),
       })
       .where(eq(users.id, userId));
     
