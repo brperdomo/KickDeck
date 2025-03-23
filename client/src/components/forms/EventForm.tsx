@@ -137,9 +137,27 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
     }
   }, [ageGroupsQuery.data, form.setValue]);
 
-  const handleSeasonalScopeChange = (scopeId: number) => {
+  const handleSeasonalScopeChange = async (scopeId: number) => {
     setSelectedSeasonalScopeId(scopeId);
     form.setValue('seasonalScopeId', scopeId);
+    
+    // Immediately fetch age groups when seasonal scope changes
+    try {
+      const response = await fetch(`/api/admin/seasonal-scopes/${scopeId}/age-groups`);
+      if (response.ok) {
+        const ageGroupsData = await response.json();
+        // Update age groups state and form value
+        setAgeGroups(ageGroupsData);
+        form.setValue('ageGroups', ageGroupsData);
+      }
+    } catch (error) {
+      console.error('Error fetching age groups for scope:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load age groups for the selected seasonal scope",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleSubmit = async (data: EventFormValues) => {
@@ -255,7 +273,7 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
         </Select>
       </div>
 
-      {((mode === 'create' && selectedSeasonalScopeId) || mode === 'edit') && (
+      {selectedSeasonalScopeId && (
         <Card>
           <CardHeader>
             <CardTitle>Age Groups</CardTitle>
