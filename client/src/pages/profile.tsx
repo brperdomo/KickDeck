@@ -11,21 +11,19 @@ export default function Profile() {
   const [, setLocation] = useLocation();
   const [showLogoutOverlay, setShowLogoutOverlay] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     // First show the overlay
     setShowLogoutOverlay(true);
-
-    // After 1.5 seconds (matching the overlay timing), perform logout
-    setTimeout(async () => {
-      await logout();
-      setLocation("/");
-    }, 1500);
   };
 
   return (
     <>
       {showLogoutOverlay && (
-        <LogoutOverlay onFinished={() => {}} />
+        <LogoutOverlay onFinished={async () => {
+          await logout();
+          setLocation("/auth");
+          setShowLogoutOverlay(false);
+        }} />
       )}
       <div className="min-h-screen bg-background p-8">
         <Card className="max-w-2xl mx-auto">

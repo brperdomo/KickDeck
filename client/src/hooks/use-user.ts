@@ -98,7 +98,19 @@ export function useUser() {
   const logoutMutation = useMutation<RequestResult, Error>({
     mutationFn: () => handleRequest('/api/logout', 'POST'),
     onSuccess: () => {
+      // Clear the user data from cache
       queryClient.setQueryData(['user'], null);
+      
+      // Invalidate all queries to ensure they are refetched when needed
+      queryClient.invalidateQueries();
+      
+      // Clear browser session storage/local storage if used
+      try {
+        sessionStorage.clear();
+        localStorage.removeItem('user');
+      } catch (e) {
+        console.error('Error clearing storage:', e);
+      }
     },
   });
 
