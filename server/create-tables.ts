@@ -4,6 +4,7 @@ import { createEmailTemplatesTable } from "./migrations/create_email_templates";
 import { createEmailTemplateRoutingTable } from "./migrations/create_email_template_routing";
 import { createPasswordResetTokensTable } from "./migrations/create_password_reset_tokens";
 import { createDefaultEmailTemplates } from "./migrations/create_default_email_templates";
+import { addProviderIdToEmailTemplates } from "./migrations/add_provider_id_to_email_templates";
 
 export async function createTables() {
   try {
@@ -108,6 +109,9 @@ export async function createTables() {
     
     console.log('Creating default email templates...');
     await createDefaultEmailTemplates();
+    
+    console.log('Adding providerId to email templates...');
+    await addProviderIdToEmailTemplates();
 
     console.log("All tables created successfully");
     return { success: true };
