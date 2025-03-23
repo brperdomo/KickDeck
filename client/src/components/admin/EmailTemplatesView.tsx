@@ -4,7 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Edit, Eye, Trash2, MoreHorizontal } from "lucide-react";
+import { Plus, Edit, Eye, MoreHorizontal, Copy } from "lucide-react";
+import { Link, useLocation } from "wouter";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +14,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { EmailTemplateModal } from "@/components/admin/EmailTemplateModal";
 import type { EmailTemplate } from "@db/schema/emailTemplates";
 
 interface EmailTemplatesViewProps {
@@ -23,8 +23,7 @@ interface EmailTemplatesViewProps {
 export function EmailTemplatesView({ isEmbedded = false }: EmailTemplatesViewProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
+  const [, navigate] = useLocation();
 
   const templatesQuery = useQuery({
     queryKey: ['email-templates'],
@@ -36,21 +35,42 @@ export function EmailTemplatesView({ isEmbedded = false }: EmailTemplatesViewPro
   });
 
   const handleEdit = (template: EmailTemplate) => {
-    // Ensure we pass the complete template data including provider
-    setSelectedTemplate({
-      ...template,
-      providerId: template.providerId || null
-    });
-    setIsModalOpen(true);
+    navigate(`/admin/email-templates/${template.id}`);
   };
 
   const handleCreate = () => {
-    setSelectedTemplate(null);
-    setIsModalOpen(true);
+    navigate('/admin/email-templates/create');
   };
 
   const handlePreview = (template: EmailTemplate) => {
-    window.open(`/api/admin/email-templates/preview?template=${encodeURIComponent(JSON.stringify(template))}`, '_blank');
+    window.open(`/api/admin/email-templates/preview?id=${template.id}`, '_blank');
+  };
+
+  const handleDuplicate = async (template: EmailTemplate) => {
+    try {
+      const { id, createdAt, updatedAt, ...templateData } = template;
+      templateData.name = `${templateData.name} (Copy)`;
+      
+      const response = await fetch("/api/admin/email-templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(templateData),
+      });
+      
+      if (!response.ok) throw new Error("Failed to duplicate template");
+      
+      queryClient.invalidateQueries({ queryKey: ["email-templates"] });
+      toast({
+        title: "Template Duplicated",
+        description: "A copy of the template has been created successfully."
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: (error as Error).message,
+        variant: "destructive",
+      });
+    }
   };
 
   if (templatesQuery.isLoading) {
@@ -69,8 +89,9 @@ export function EmailTemplatesView({ isEmbedded = false }: EmailTemplatesViewPro
         </div>
       )}
       {isEmbedded && (
-        <div className="flex justify-end mb-4">
-          <Button onClick={handleCreate} size="sm">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium">Email Templates</h3>
+          <Button onClick={handleCreate} size="sm" variant="outline">
             <Plus className="mr-2 h-4 w-4" />
             Create Template
           </Button>
@@ -84,10 +105,7 @@ export function EmailTemplatesView({ isEmbedded = false }: EmailTemplatesViewPro
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead>Subject</TableHead>
-                <TableHead>Sender</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Last Modified</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -100,15 +118,10 @@ export function EmailTemplatesView({ isEmbedded = false }: EmailTemplatesViewPro
                       {template.type.replace('_', ' ')}
                     </Badge>
                   </TableCell>
-                  <TableCell>{template.subject}</TableCell>
-                  <TableCell>{template.senderName}</TableCell>
                   <TableCell>
                     <Badge variant={template.isActive ? "default" : "secondary"}>
                       {template.isActive ? "Active" : "Inactive"}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {template.updatedAt ? new Date(template.updatedAt).toLocaleDateString() : 'Not modified'}
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
@@ -125,6 +138,10 @@ export function EmailTemplatesView({ isEmbedded = false }: EmailTemplatesViewPro
                         <DropdownMenuItem onClick={() => handlePreview(template)}>
                           <Eye className="mr-2 h-4 w-4" />
                           Preview
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDuplicate(template)}>
+                          <Copy className="mr-2 h-4 w-4" />
+                          Duplicate
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -180,44 +197,13 @@ export function EmailTemplatesView({ isEmbedded = false }: EmailTemplatesViewPro
                             <Edit className="mr-2 h-4 w-4" />
                             Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => {
-                            window.open(`/api/admin/email-templates/preview?template=${encodeURIComponent(JSON.stringify(template))}`, '_blank');
-                          }}>
+                          <DropdownMenuItem onClick={() => handlePreview(template)}>
                             <Eye className="mr-2 h-4 w-4" />
                             Preview
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => {
-                              if (window.confirm('Are you sure you want to delete this template?')) {
-                                fetch(`/api/admin/email-templates/${template.id}`, {
-                                  method: 'DELETE',
-                                })
-                                .then(async (response) => {
-                                  if (response.ok) {
-                                    queryClient.invalidateQueries({ queryKey: ['email-templates'] });
-                                    toast({
-                                      title: "Success",
-                                      description: "Template deleted successfully",
-                                    });
-                                  } else {
-                                    const errorData = await response.json();
-                                    throw new Error(errorData.error || 'Failed to delete template');
-                                  }
-                                })
-                                .catch((error) => {
-                                  queryClient.invalidateQueries({ queryKey: ['email-templates'] });
-                                  toast({
-                                    title: "Error",
-                                    description: error.message,
-                                    variant: "destructive",
-                                  });
-                                });
-                              }
-                            }}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
+                          <DropdownMenuItem onClick={() => handleDuplicate(template)}>
+                            <Copy className="mr-2 h-4 w-4" />
+                            Duplicate
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -230,11 +216,15 @@ export function EmailTemplatesView({ isEmbedded = false }: EmailTemplatesViewPro
         </Card>
       )}
 
-      <EmailTemplateModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        template={selectedTemplate}
-      />
+      {isEmbedded && (
+        <div className="mt-4 text-center">
+          <Button variant="link" asChild className="text-primary">
+            <Link href="/admin/email-templates">
+              View All Templates
+            </Link>
+          </Button>
+        </div>
+      )}
     </>
   );
 }
