@@ -242,17 +242,17 @@ export default function EmulationManager() {
                         {statusData.emulatedAdmin.roles.map((role) => {
                           let badgeClass = "capitalize";
                           
-                          // Apply different colors based on role type
+                          // Apply different colors based on role type with more modern gradient styling
                           if (role === 'tournament_admin') {
-                            badgeClass += " bg-blue-100 text-blue-800 border-blue-300";
+                            badgeClass += " bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-sm";
                           } else if (role === 'score_admin') {
-                            badgeClass += " bg-green-100 text-green-800 border-green-300";
+                            badgeClass += " bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm";
                           } else if (role === 'finance_admin') {
-                            badgeClass += " bg-amber-100 text-amber-800 border-amber-300";
+                            badgeClass += " bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm";
                           }
                           
                           return (
-                            <Badge key={role} variant="outline" className={badgeClass}>
+                            <Badge key={role} className={badgeClass}>
                               {role.replace('_', ' ')}
                             </Badge>
                           );
