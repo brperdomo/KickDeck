@@ -212,11 +212,24 @@ export default function EmulationManager() {
                     <div className="mt-2">
                       <p className="text-sm font-medium mb-1">Active roles:</p>
                       <div className="flex flex-wrap gap-1">
-                        {statusData.emulatedAdmin.roles.map((role) => (
-                          <Badge key={role} variant="outline" className="capitalize bg-white/10">
-                            {role.replace('_', ' ')}
-                          </Badge>
-                        ))}
+                        {statusData.emulatedAdmin.roles.map((role) => {
+                          let badgeClass = "capitalize";
+                          
+                          // Apply different colors based on role type
+                          if (role === 'tournament_admin') {
+                            badgeClass += " bg-blue-100 text-blue-800 border-blue-300";
+                          } else if (role === 'score_admin') {
+                            badgeClass += " bg-green-100 text-green-800 border-green-300";
+                          } else if (role === 'finance_admin') {
+                            badgeClass += " bg-amber-100 text-amber-800 border-amber-300";
+                          }
+                          
+                          return (
+                            <Badge key={role} variant="outline" className={badgeClass}>
+                              {role.replace('_', ' ')}
+                            </Badge>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -256,11 +269,24 @@ export default function EmulationManager() {
                       </CardHeader>
                       <CardContent className="flex-1">
                         <div className="flex flex-wrap gap-1 mb-4">
-                          {admin.roles.map((role) => (
-                            <Badge key={role} variant="outline" className="capitalize">
-                              {role.replace('_', ' ')}
-                            </Badge>
-                          ))}
+                          {admin.roles.map((role) => {
+                            let badgeClass = "capitalize";
+                            
+                            // Apply different colors based on role type
+                            if (role === 'tournament_admin') {
+                              badgeClass += " bg-blue-100 text-blue-800 hover:bg-blue-200";
+                            } else if (role === 'score_admin') {
+                              badgeClass += " bg-green-100 text-green-800 hover:bg-green-200";
+                            } else if (role === 'finance_admin') {
+                              badgeClass += " bg-amber-100 text-amber-800 hover:bg-amber-200";
+                            }
+                            
+                            return (
+                              <Badge key={role} variant="outline" className={badgeClass}>
+                                {role.replace('_', ' ')}
+                              </Badge>
+                            );
+                          })}
                         </div>
                         <Button
                           size="sm"
