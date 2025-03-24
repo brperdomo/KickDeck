@@ -28,7 +28,6 @@ export async function getEventAdministrators(req: Request, res: Response) {
         eventId: eventAdministrators.eventId,
         userId: eventAdministrators.userId,
         role: eventAdministrators.role,
-        adminType: eventAdministrators.adminType,
         createdAt: eventAdministrators.createdAt,
         user: users,
         roles: sql<string[]>`array_agg(distinct ${roles.name})`
@@ -43,7 +42,6 @@ export async function getEventAdministrators(req: Request, res: Response) {
         eventAdministrators.eventId,
         eventAdministrators.userId,
         eventAdministrators.role,
-        eventAdministrators.adminType,
         eventAdministrators.createdAt,
         users.id
       );
@@ -66,7 +64,7 @@ export async function getAvailableAdministrators(req: Request, res: Response) {
       return res.status(400).json({ error: "Event ID is required" });
     }
 
-    // Get all admins
+    // Get only tournament admins (not super admins)
     const allAdmins = await db
       .select({
         id: users.id,
@@ -78,7 +76,12 @@ export async function getAvailableAdministrators(req: Request, res: Response) {
       .from(users)
       .innerJoin(adminRoles, eq(users.id, adminRoles.userId))
       .innerJoin(roles, eq(adminRoles.roleId, roles.id))
-      .where(eq(users.isAdmin, true))
+      .where(
+        and(
+          eq(users.isAdmin, true),
+          not(eq(roles.name, 'super_admin'))
+        )
+      )
       .groupBy(users.id);
 
     // Get the IDs of admins already assigned to this event
@@ -133,7 +136,6 @@ export async function addEventAdministrator(req: Request, res: Response) {
         eventId,
         userId,
         role,
-        adminType: adminType || 'tournament_admin',
         createdAt: new Date().toISOString()
       })
       .returning();
