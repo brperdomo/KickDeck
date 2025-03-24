@@ -29,6 +29,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Team {
   id: number;
@@ -44,6 +52,7 @@ interface AgeGroup {
   id: number;
   ageGroup: string;
   gender: string;
+  divisionCode?: string;
 }
 
 interface TeamsManagementProps {
@@ -123,7 +132,7 @@ export function TeamsManagement({ eventId }: TeamsManagementProps) {
             <SelectItem value="all">All Age Groups</SelectItem>
             {ageGroupsQuery.data?.map((group) => (
               <SelectItem key={group.id} value={group.id.toString()}>
-                {`${group.ageGroup} ${group.gender}`}
+                {group.divisionCode ? `${group.divisionCode} - ${group.gender} ${group.ageGroup}` : `${group.gender} ${group.ageGroup}`}
               </SelectItem>
             ))}
           </SelectContent>
@@ -203,13 +212,24 @@ export function TeamsManagement({ eventId }: TeamsManagementProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* TeamModal component will be implemented separately */}
+      {/* TeamModal component would be implemented separately - using Dialog for now */}
       {teamToEdit && (
-        <TeamModal
-          team={teamToEdit}
-          isOpen={!!teamToEdit}
-          onClose={() => setTeamToEdit(null)}
-        />
+        <Dialog open={!!teamToEdit} onOpenChange={(open) => !open && setTeamToEdit(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Team</DialogTitle>
+              <DialogDescription>
+                Edit details for team {teamToEdit.name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <p>Team editing functionality will be fully implemented later.</p>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setTeamToEdit(null)}>Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
