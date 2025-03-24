@@ -239,7 +239,11 @@ export function registerRoutes(app: Express): Server {
           managerName,
           managerEmail,
           managerPhone,
-          players 
+          players,
+          // New fields for registration status and terms
+          termsAcknowledged,
+          termsAcknowledgedAt,
+          registrationFee
         } = req.body;
         
         // Validate required fields
@@ -292,7 +296,7 @@ export function registerRoutes(app: Express): Server {
         
         // Create the team in a transaction to ensure all operations succeed or fail together
         const result = await db.transaction(async (tx) => {
-          // Insert team
+          // Insert team with registration info
           const [team] = await tx
             .insert(teams)
             .values({
@@ -307,6 +311,11 @@ export function registerRoutes(app: Express): Server {
               managerEmail,
               managerPhone,
               userId,
+              // Add new registration fields
+              registrationStatus: "Registered", // Initial status
+              registrationFee: registrationFee || null,
+              termsAcknowledged: termsAcknowledged || false,
+              termsAcknowledgedAt: termsAcknowledgedAt || new Date().toISOString(),
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             })
