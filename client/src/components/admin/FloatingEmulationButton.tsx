@@ -23,6 +23,11 @@ export function FloatingEmulationButton() {
   // Check for emulation token on mount and window focus
   useEffect(() => {
     const checkEmulationStatus = async () => {
+      // Skip check if we're already emulating to reduce API calls
+      if (isEmulating && emulationToken) {
+        return;
+      }
+      
       try {
         console.log('Checking emulation status');
         
@@ -39,14 +44,22 @@ export function FloatingEmulationButton() {
 
         console.log(`Found emulation token: ${token.substring(0, 5)}...`);
         
+        // Create an AbortController with timeout to prevent hanging requests
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
         // Verify if the token is valid by checking emulation status
         const response = await fetch('/api/admin/emulation/status', {
           headers: {
             'X-Emulation-Token': token,
             'Cache-Control': 'no-cache, no-store',
             'Pragma': 'no-cache'
-          }
+          },
+          signal: controller.signal
         });
+        
+        // Clear the timeout since the request completed
+        clearTimeout(timeoutId);
         
         if (response.ok) {
           const data = await response.json();
@@ -112,20 +125,31 @@ export function FloatingEmulationButton() {
       setCheckCount(prev => prev + 1);
     }
 
-    // Setup interval for continued checking (every 10 seconds)
-    const intervalId = setInterval(checkEmulationStatus, 10000);
+    // Only set up the interval if we don't already know we're emulating
+    // This prevents excessive API calls once we've determined status
+    let intervalId: NodeJS.Timeout | null = null;
+    if (!isEmulating) {
+      // Setup interval for continued checking (every 30 seconds instead of 10)
+      intervalId = setInterval(checkEmulationStatus, 30000);
+    }
 
     // Setup focus event for checking when tab regains focus
+    // But only if we aren't already emulating
     const handleFocus = () => {
-      checkEmulationStatus();
+      // Only check status on focus if we're not already emulating
+      if (!isEmulating) {
+        checkEmulationStatus();
+      }
     };
     window.addEventListener('focus', handleFocus);
     
     return () => {
-      clearInterval(intervalId);
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
       window.removeEventListener('focus', handleFocus);
     };
-  }, [checkCount]);
+  }, [checkCount, isEmulating, emulationToken]);
 
   const handleStopEmulation = async () => {
     if (!emulationToken) return;
