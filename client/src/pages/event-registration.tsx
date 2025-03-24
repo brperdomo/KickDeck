@@ -357,16 +357,21 @@ export default function EventRegistration() {
   
   // Fetch fee information when age group is selected
   useEffect(() => {
-    if (selectedAgeGroup) {
+    if (selectedAgeGroup && selectedAgeGroup.id) {
+      // Add a check to prevent repeated API calls for the same age group
+      const ageGroupId = selectedAgeGroup.id;
+      
       const fetchFees = async () => {
         try {
-          const response = await fetch(`/api/events/${eventId}/fees?ageGroupId=${selectedAgeGroup.id}`);
+          const response = await fetch(`/api/events/${eventId}/fees?ageGroupId=${ageGroupId}`);
           if (response.ok) {
             const data = await response.json();
             if (data.fee) {
               setRegistrationFee(data.fee.amount);
-              // Also update the selected age group with fee information
-              setSelectedAgeGroup(prev => prev ? { ...prev, registrationFee: data.fee.amount } : prev);
+              // Only update if we don't already have the fee information to avoid infinite loop
+              if (!selectedAgeGroup.registrationFee) {
+                setSelectedAgeGroup(prev => prev ? { ...prev, registrationFee: data.fee.amount } : prev);
+              }
             }
           }
         } catch (error) {
@@ -376,7 +381,7 @@ export default function EventRegistration() {
       
       fetchFees();
     }
-  }, [selectedAgeGroup, eventId]);
+  }, [selectedAgeGroup?.id, eventId]); // Only depend on the ID, not the whole object
   
   const registerTeamMutation = useMutation({
     mutationFn: async (data: TeamRegistrationForm) => {
@@ -427,6 +432,19 @@ export default function EventRegistration() {
   };
   
   const onSubmitTeamRegistration = (data: TeamRegistrationForm) => {
+    console.log("Team form submission attempted with data:", data);
+    console.log("Form errors:", teamForm.formState.errors);
+    
+    // Check required fields
+    if (!data.name || !data.ageGroupId || !data.headCoachName || !data.headCoachEmail || !data.headCoachPhone) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required team and coach information fields",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (players.length === 0) {
       toast({
         title: "Error",
@@ -437,6 +455,7 @@ export default function EventRegistration() {
     }
     
     // Now proceed to the agreement step instead of submitting right away
+    console.log("Form validation passed, proceeding to agreement step");
     setCurrentStep('agreement');
   };
 
