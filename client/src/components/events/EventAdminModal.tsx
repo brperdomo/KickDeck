@@ -85,30 +85,30 @@ export default function EventAdminModal({
   const [adminType, setAdminType] = useState<AdminType>('tournament_admin');
   
   // Fetch event administrators
-  const { data: eventAdmins, isLoading: isLoadingAdmins } = useQuery(
-    ['event-admins', eventId],
-    async () => {
+  const { data: eventAdmins, isLoading: isLoadingAdmins } = useQuery({
+    queryKey: ['event-admins', eventId],
+    queryFn: async () => {
       const response = await fetch(`/api/admin/events/${eventId}/administrators`);
       if (!response.ok) throw new Error('Failed to fetch event administrators');
       return response.json() as Promise<EventAdmin[]>;
     },
-    { enabled: open }
-  );
+    enabled: open
+  });
 
   // Fetch available administrators (admins who aren't assigned to this event yet)
-  const { data: availableAdmins, isLoading: isLoadingAvailable } = useQuery(
-    ['available-admins', eventId],
-    async () => {
+  const { data: availableAdmins, isLoading: isLoadingAvailable } = useQuery({
+    queryKey: ['available-admins', eventId],
+    queryFn: async () => {
       const response = await fetch(`/api/admin/available-admins?eventId=${eventId}`);
       if (!response.ok) throw new Error('Failed to fetch available administrators');
       return response.json() as Promise<Admin[]>;
     },
-    { enabled: open }
-  );
+    enabled: open
+  });
 
   // Add administrator to event mutation
-  const addAdminMutation = useMutation(
-    async (data: { userId: number; role: string; adminType: string }) => {
+  const addAdminMutation = useMutation({
+    mutationFn: async (data: { userId: number; role: string; adminType: string }) => {
       const response = await fetch(`/api/admin/events/${eventId}/administrators`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -122,30 +122,28 @@ export default function EventAdminModal({
       
       return response.json();
     },
-    {
-      onSuccess: () => {
-        // Refetch data after successful addition
-        queryClient.invalidateQueries(['event-admins', eventId]);
-        queryClient.invalidateQueries(['available-admins', eventId]);
-        toast({
-          title: "Administrator Added",
-          description: "Administrator has been added to this event.",
-        });
-        resetForm();
-      },
-      onError: (error: Error) => {
-        toast({
-          title: "Failed to Add Administrator",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
+    onSuccess: () => {
+      // Refetch data after successful addition
+      queryClient.invalidateQueries({ queryKey: ['event-admins', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['available-admins', eventId] });
+      toast({
+        title: "Administrator Added",
+        description: "Administrator has been added to this event.",
+      });
+      resetForm();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to Add Administrator",
+        description: error.message,
+        variant: "destructive",
+      });
     }
-  );
+  });
 
   // Update administrator role mutation
-  const updateAdminMutation = useMutation(
-    async ({ adminId, data }: { adminId: number; data: { role: string; adminType: string } }) => {
+  const updateAdminMutation = useMutation({
+    mutationFn: async ({ adminId, data }: { adminId: number; data: { role: string; adminType: string } }) => {
       const response = await fetch(`/api/admin/events/${eventId}/administrators/${adminId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -159,27 +157,25 @@ export default function EventAdminModal({
       
       return response.json();
     },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['event-admins', eventId]);
-        toast({
-          title: "Administrator Updated",
-          description: "Administrator roles have been updated.",
-        });
-      },
-      onError: (error: Error) => {
-        toast({
-          title: "Failed to Update Administrator",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['event-admins', eventId] });
+      toast({
+        title: "Administrator Updated",
+        description: "Administrator roles have been updated.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to Update Administrator",
+        description: error.message,
+        variant: "destructive",
+      });
     }
-  );
+  });
 
   // Remove administrator mutation
-  const removeAdminMutation = useMutation(
-    async (adminId: number) => {
+  const removeAdminMutation = useMutation({
+    mutationFn: async (adminId: number) => {
       const response = await fetch(`/api/admin/events/${eventId}/administrators/${adminId}`, {
         method: 'DELETE',
       });
@@ -191,24 +187,22 @@ export default function EventAdminModal({
       
       return response.json();
     },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['event-admins', eventId]);
-        queryClient.invalidateQueries(['available-admins', eventId]);
-        toast({
-          title: "Administrator Removed",
-          description: "Administrator has been removed from this event.",
-        });
-      },
-      onError: (error: Error) => {
-        toast({
-          title: "Failed to Remove Administrator",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['event-admins', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['available-admins', eventId] });
+      toast({
+        title: "Administrator Removed",
+        description: "Administrator has been removed from this event.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to Remove Administrator",
+        description: error.message,
+        variant: "destructive",
+      });
     }
-  );
+  });
 
   // Reset form after adding admin
   const resetForm = () => {
