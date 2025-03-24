@@ -7,14 +7,52 @@ import { useToast } from "@/hooks/use-toast";
 export function FloatingEmulationButton() {
   const [emulationToken, setEmulationToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isEmulating, setIsEmulating] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   // Check for emulation token on mount and window focus
   useEffect(() => {
-    const checkEmulationStatus = () => {
+    const checkEmulationStatus = async () => {
       const token = localStorage.getItem('emulationToken');
-      setEmulationToken(token);
+      
+      // If no token exists, we're definitely not emulating
+      if (!token) {
+        setEmulationToken(null);
+        setIsEmulating(false);
+        return;
+      }
+      
+      // Verify if the token is valid by checking emulation status
+      try {
+        const response = await fetch('/api/admin/emulation/status', {
+          headers: {
+            'X-Emulation-Token': token
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.isEmulating) {
+            setEmulationToken(token);
+            setIsEmulating(true);
+          } else {
+            // Token exists but is invalid - clean it up
+            localStorage.removeItem('emulationToken');
+            setEmulationToken(null);
+            setIsEmulating(false);
+          }
+        } else {
+          // Token is invalid - clean it up
+          localStorage.removeItem('emulationToken');
+          setEmulationToken(null);
+          setIsEmulating(false);
+        }
+      } catch (error) {
+        console.error("Error checking emulation status:", error);
+        // Don't remove token on network errors to prevent
+        // flashing of the UI if there's a temporary network issue
+      }
     };
 
     // Check on mount
@@ -39,13 +77,16 @@ export function FloatingEmulationButton() {
         },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to stop emulation');
-      }
-
-      // Remove token from local storage
+      // Always clean up the local storage, even if the API call fails
       localStorage.removeItem('emulationToken');
       setEmulationToken(null);
+      setIsEmulating(false);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error stopping emulation:", errorData);
+        // Still continue with UI refresh since we want to reset the state regardless
+      }
 
       // Refresh all queries
       queryClient.invalidateQueries();
@@ -63,16 +104,18 @@ export function FloatingEmulationButton() {
       });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'An error occurred stopping emulation',
+        title: 'Emulation Reset',
+        description: 'Emulation mode has been reset due to an error',
         variant: 'destructive',
       });
+      console.error("Error in emulation stop handler:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!emulationToken) return null;
+  // Only show the button if we're actually emulating
+  if (!isEmulating) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
