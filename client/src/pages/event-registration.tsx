@@ -922,6 +922,8 @@ export default function EventRegistration() {
                                     const newPlayers = [...players];
                                     newPlayers[index].lastName = e.target.value;
                                     setPlayers(newPlayers);
+                                    // Update form state with the modified players array
+                                    teamForm.setValue('players', newPlayers);
                                   }}
                                   className="w-full"
                                 />
@@ -937,6 +939,8 @@ export default function EventRegistration() {
                                     const newPlayers = [...players];
                                     newPlayers[index].dateOfBirth = e.target.value;
                                     setPlayers(newPlayers);
+                                    // Update form state with the modified players array
+                                    teamForm.setValue('players', newPlayers);
                                   }}
                                   className="w-full"
                                 />
@@ -951,6 +955,8 @@ export default function EventRegistration() {
                                     const newPlayers = [...players];
                                     newPlayers[index].position = e.target.value;
                                     setPlayers(newPlayers);
+                                    // Update form state with the modified players array
+                                    teamForm.setValue('players', newPlayers);
                                   }}
                                   className="w-full"
                                   placeholder="Optional"
@@ -966,6 +972,8 @@ export default function EventRegistration() {
                                     const newPlayers = [...players];
                                     newPlayers[index].jerseyNumber = e.target.value;
                                     setPlayers(newPlayers);
+                                    // Update form state with the modified players array
+                                    teamForm.setValue('players', newPlayers);
                                   }}
                                   className="w-full"
                                   maxLength={2}
@@ -982,6 +990,8 @@ export default function EventRegistration() {
                                     const newPlayers = [...players];
                                     newPlayers[index].medicalNotes = e.target.value;
                                     setPlayers(newPlayers);
+                                    // Update form state with the modified players array
+                                    teamForm.setValue('players', newPlayers);
                                   }}
                                   className="w-full"
                                   placeholder="Optional"
@@ -1001,6 +1011,8 @@ export default function EventRegistration() {
                                       const newPlayers = [...players];
                                       newPlayers[index].parentGuardianName = e.target.value;
                                       setPlayers(newPlayers);
+                                      // Update form state with the modified players array
+                                      teamForm.setValue('players', newPlayers);
                                     }}
                                     className="w-full"
                                     placeholder="Optional"
@@ -1017,6 +1029,8 @@ export default function EventRegistration() {
                                       const newPlayers = [...players];
                                       newPlayers[index].parentGuardianEmail = e.target.value;
                                       setPlayers(newPlayers);
+                                      // Update form state with the modified players array
+                                      teamForm.setValue('players', newPlayers);
                                     }}
                                     className="w-full"
                                     placeholder="Optional"
@@ -1033,6 +1047,8 @@ export default function EventRegistration() {
                                       const newPlayers = [...players];
                                       newPlayers[index].parentGuardianPhone = e.target.value;
                                       setPlayers(newPlayers);
+                                      // Update form state with the modified players array
+                                      teamForm.setValue('players', newPlayers);
                                     }}
                                     className="w-full"
                                     placeholder="Optional"
