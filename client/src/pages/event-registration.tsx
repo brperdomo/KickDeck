@@ -32,6 +32,7 @@ interface AgeGroup {
   gender: string;
   divisionCode: string | null;
   birthYear: number | null;
+  registrationFee?: number; // Optional fee until loaded
 }
 
 interface Event {
@@ -41,10 +42,18 @@ interface Event {
   endDate: string;
   applicationDeadline: string;
   details: string;
+  agreement?: string; // Terms and conditions text
+  refundPolicy?: string; // Refund policy text
   ageGroups: AgeGroup[];
 }
 
-type RegistrationStep = 'auth' | 'personal' | 'team' | 'review' | 'complete';
+interface Fee {
+  id: number;
+  name: string;
+  amount: number; // In cents
+}
+
+type RegistrationStep = 'auth' | 'personal' | 'team' | 'agreement' | 'review' | 'complete';
 
 const personalDetailsSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -235,6 +244,7 @@ export default function EventRegistration() {
       { key: 'auth', label: 'Sign In' },
       { key: 'personal', label: 'Personal Details' },
       { key: 'team', label: 'Team Information' },
+      { key: 'agreement', label: 'Terms & Fees' },
       { key: 'review', label: 'Review & Confirm' }
     ];
 
@@ -394,7 +404,8 @@ export default function EventRegistration() {
       return;
     }
     
-    registerTeamMutation.mutate(data);
+    // Now proceed to the agreement step instead of submitting right away
+    setCurrentStep('agreement');
   };
 
   if (loading || authLoading) {

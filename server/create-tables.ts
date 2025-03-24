@@ -121,6 +121,9 @@ export async function createTables() {
     
     console.log('Updating division codes to new format...');
     await updateDivisionCodes();
+    
+    console.log('Adding team registration fields...');
+    await addTeamRegistrationFields();
 
     console.log("All tables created successfully");
     return { success: true };
