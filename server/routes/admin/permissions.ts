@@ -10,10 +10,16 @@ import { eq, and, inArray } from 'drizzle-orm';
 export async function getCurrentUserPermissions(req: Request, res: Response) {
   try {
     // Get the user ID, considering emulation
-    const userId = req.emulatedUserId || req.user?.id;
+    const emulatedUserId = (req as any).emulatedUserId;
+    const userId = emulatedUserId || req.user?.id;
     
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    // Log emulation status for debugging
+    if (emulatedUserId) {
+      console.log(`Using emulated user ID: ${emulatedUserId} for permissions`);
     }
 
     // Fetch the user's roles with a join to get role names

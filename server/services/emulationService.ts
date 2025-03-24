@@ -125,10 +125,16 @@ export function emulationMiddleware(req: Request, res: Response, next: NextFunct
     // Check if session has expired
     if (new Date() > session.expiresAt) {
       delete emulationSessions[emulationToken];
+      console.log(`Emulation session expired: ${emulationToken}`);
     } else {
       // Store both the actual and emulated user IDs in the request
       (req as any).actualUserId = session.actualUserId;
       (req as any).emulatedUserId = session.emulatedUserId;
+      
+      // Log detailed emulation status (only on authorization routes to avoid log spam)
+      if (req.path.includes('/api/user') || req.path.includes('/api/admin/permissions')) {
+        console.log(`Emulating user ID ${session.emulatedUserId} from actual user ${session.actualUserId} on path ${req.path}`);
+      }
     }
   }
   
