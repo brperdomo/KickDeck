@@ -185,19 +185,19 @@ export function FloatingEmulationButton() {
     console.error('Error parsing stored roles:', e);
   }
 
-  // Function to get badge color based on role
+  // Function to get badge color based on role - using updated modern color scheme
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'super_admin':
-        return 'bg-red-500 hover:bg-red-600';
+        return 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-sm';
       case 'tournament_admin':
-        return 'bg-blue-500 hover:bg-blue-600';
+        return 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-sm';
       case 'score_admin':
-        return 'bg-green-500 hover:bg-green-600';
+        return 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-sm';
       case 'finance_admin':
-        return 'bg-yellow-500 hover:bg-yellow-600';
+        return 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-sm';
       default:
-        return 'bg-gray-500 hover:bg-gray-600';
+        return 'bg-gray-500 hover:bg-gray-600 text-white shadow-sm';
     }
   };
 
@@ -214,7 +214,7 @@ export function FloatingEmulationButton() {
         <PopoverTrigger asChild>
           <Button 
             size="lg"
-            className="shadow-lg bg-red-600 hover:bg-red-700 text-white"
+            className="shadow-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-full px-6"
           >
             <LogOut className="mr-2 h-4 w-4" />
             {emulatedName 
