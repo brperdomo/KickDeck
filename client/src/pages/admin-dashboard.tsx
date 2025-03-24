@@ -4,6 +4,7 @@ import { Link2, X, Ticket, Plus, Mail, KeyRound } from "lucide-react";
 import { EventsTable } from "@/components/events/EventsTable";
 import { GeneralSettingsView } from "@/components/admin/GeneralSettingsView";
 import EmulationManager from "@/components/admin/EmulationManager";
+import FloatingEmulationButton from "@/components/admin/FloatingEmulationButton";
 import { useToast } from "@/hooks/use-toast";
 import {
   Collapsible,
@@ -1668,6 +1669,7 @@ function AdminDashboard() {
   const [showInternalOps, setShowInternalOps] = useState(false);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [showLogoutOverlay, setShowLogoutOverlay] = useState(false);
+  const [showEmulationModal, setShowEmulationModal] = useState(false);
   const { setAppearance, currentAppearance } = useTheme();
   const [theme, setTheme] = useState(currentAppearance);
   const queryClient = useQueryClient();
