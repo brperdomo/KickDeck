@@ -85,23 +85,28 @@ export default function EmulationManager() {
       return response.json();
     },
     onSuccess: (data) => {
-      setEmulationToken(data.token);
-      localStorage.setItem('emulationToken', data.token);
-      
-      // Refresh all queries to reflect emulated user data
-      queryClient.invalidateQueries();
-      
-      // Force refresh the user data with proper query key that includes the token
-      queryClient.invalidateQueries({ queryKey: ['user', data.token] });
-      queryClient.invalidateQueries({ queryKey: ['user-permissions', data.token] });
-      
-      // Reload the page to ensure all components update properly with the emulated user
-      window.location.reload();
-      
+      // First show toast before reload
       toast({
         title: 'Emulation Started',
         description: `You are now viewing the system as ${data.emulatedAdmin.firstName} ${data.emulatedAdmin.lastName}`,
       });
+      
+      // Set emulation token in localStorage
+      setEmulationToken(data.token);
+      localStorage.setItem('emulationToken', data.token);
+      
+      // Wait a brief moment to ensure the toast is displayed
+      setTimeout(() => {
+        // Refresh all queries to reflect emulated user data
+        queryClient.invalidateQueries();
+        
+        // Force refresh the user data with proper query key that includes the token
+        queryClient.invalidateQueries({ queryKey: ['user'] });
+        queryClient.invalidateQueries({ queryKey: ['user-permissions'] });
+        
+        // Reload the page to ensure all components update properly with the emulated user
+        window.location.reload();
+      }, 500);
     },
     onError: (error: Error) => {
       toast({
@@ -127,23 +132,28 @@ export default function EmulationManager() {
       return response.json();
     },
     onSuccess: () => {
-      setEmulationToken(null);
-      localStorage.removeItem('emulationToken');
-      
-      // Refresh all queries to reflect actual user data
-      queryClient.invalidateQueries();
-      
-      // Force refresh the user data after removing emulation
-      queryClient.invalidateQueries({ queryKey: ['user'] });
-      queryClient.invalidateQueries({ queryKey: ['user-permissions'] });
-      
-      // Reload the page to ensure all components update properly
-      window.location.reload();
-      
+      // First show toast before reload
       toast({
         title: 'Emulation Stopped',
         description: 'You are now viewing the system as yourself',
       });
+      
+      // Clear emulation token
+      setEmulationToken(null);
+      localStorage.removeItem('emulationToken');
+      
+      // Wait a brief moment to ensure the toast is displayed
+      setTimeout(() => {
+        // Refresh all queries to reflect actual user data
+        queryClient.invalidateQueries();
+        
+        // Force refresh the user data after removing emulation
+        queryClient.invalidateQueries({ queryKey: ['user'] });
+        queryClient.invalidateQueries({ queryKey: ['user-permissions'] });
+        
+        // Reload the page to ensure all components update properly
+        window.location.reload();
+      }, 500);
     },
     onError: (error: Error) => {
       toast({
