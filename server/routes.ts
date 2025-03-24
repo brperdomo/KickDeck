@@ -203,10 +203,148 @@ export function registerRoutes(app: Express): Server {
           return res.status(404).send("Event not found");
         }
 
-        res.json(event);
+        // Also get the age groups for this event
+        const ageGroups = await db
+          .select()
+          .from(eventAgeGroups)
+          .where(eq(eventAgeGroups.eventId, String(eventId)));
+
+        // Send both event details and age groups
+        res.json({
+          ...event,
+          ageGroups
+        });
       } catch (error) {
         console.error('Error fetching event:', error);
         res.status(500).send("Failed to fetch event details");
+      }
+    });
+    
+    // Team registration endpoint for participants
+    app.post('/api/events/:eventId/register-team', async (req: Request, res: Response) => {
+      if (!req.user) {
+        return res.status(401).json({ error: 'You must be logged in to register a team' });
+      }
+      
+      try {
+        const { eventId } = req.params;
+        const userId = req.user.id;
+        const { 
+          name, 
+          ageGroupId, 
+          headCoachName, 
+          headCoachEmail, 
+          headCoachPhone,
+          assistantCoachName,
+          managerName,
+          managerEmail,
+          managerPhone,
+          players 
+        } = req.body;
+        
+        // Validate required fields
+        if (!name || !ageGroupId || !headCoachName || !headCoachEmail || !headCoachPhone || 
+            !managerName || !managerEmail || !managerPhone) {
+          return res.status(400).json({ 
+            error: 'Missing required team information. Please fill out all required fields.' 
+          });
+        }
+        
+        if (!Array.isArray(players) || players.length === 0) {
+          return res.status(400).json({ 
+            error: 'At least one player is required to register a team.' 
+          });
+        }
+        
+        // Check if event exists and is open for registration
+        const [event] = await db
+          .select({
+            id: events.id,
+            applicationDeadline: events.applicationDeadline
+          })
+          .from(events)
+          .where(eq(events.id, eventId));
+          
+        if (!event) {
+          return res.status(404).json({ error: 'Event not found' });
+        }
+        
+        // Check if registration deadline has passed
+        const deadlineDate = new Date(event.applicationDeadline);
+        const currentDate = new Date();
+        
+        if (deadlineDate < currentDate) {
+          return res.status(400).json({ error: 'Registration deadline has passed' });
+        }
+        
+        // Validate age group
+        const [ageGroup] = await db
+          .select()
+          .from(eventAgeGroups)
+          .where(and(
+            eq(eventAgeGroups.id, ageGroupId),
+            eq(eventAgeGroups.eventId, eventId)
+          ));
+          
+        if (!ageGroup) {
+          return res.status(404).json({ error: 'Selected age group not found for this event' });
+        }
+        
+        // Create the team in a transaction to ensure all operations succeed or fail together
+        const result = await db.transaction(async (tx) => {
+          // Insert team
+          const [team] = await tx
+            .insert(teams)
+            .values({
+              name,
+              eventId,
+              ageGroupId,
+              headCoachName,
+              headCoachEmail,
+              headCoachPhone,
+              assistantCoachName,
+              managerName,
+              managerEmail,
+              managerPhone,
+              userId,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            })
+            .returning();
+            
+          // Insert players
+          const playerRecords = players.map(player => ({
+            teamId: team.id,
+            firstName: player.firstName,
+            lastName: player.lastName,
+            jerseyNumber: player.jerseyNumber ? parseInt(player.jerseyNumber) : null,
+            dateOfBirth: player.dateOfBirth,
+            position: player.position || null,
+            medicalNotes: player.medicalNotes || null,
+            parentGuardianName: player.parentGuardianName || null,
+            parentGuardianEmail: player.parentGuardianEmail || null,
+            parentGuardianPhone: player.parentGuardianPhone || null,
+            emergencyContactName: player.emergencyContactName,
+            emergencyContactPhone: player.emergencyContactPhone,
+            isActive: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }));
+          
+          await tx.insert(players).values(playerRecords);
+          
+          return { team, playerCount: playerRecords.length };
+        });
+        
+        res.status(201).json({
+          message: 'Team registered successfully',
+          team: result.team,
+          playerCount: result.playerCount
+        });
+        
+      } catch (error) {
+        console.error('Error registering team:', error);
+        res.status(500).json({ error: 'Failed to register team. Please try again.' });
       }
     });
 
