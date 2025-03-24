@@ -350,8 +350,36 @@ export default function EventRegistration() {
     setPlayers(players.filter(player => player.id !== playerId));
   };
 
+  // State to track terms agreement
+  const [termsAgreed, setTermsAgreed] = useState(false);
+  const [registrationFee, setRegistrationFee] = useState<number | null>(null);
+  
+  // Fetch fee information when age group is selected
+  useEffect(() => {
+    if (selectedAgeGroup) {
+      const fetchFees = async () => {
+        try {
+          const response = await fetch(`/api/events/${eventId}/fees?ageGroupId=${selectedAgeGroup.id}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.fee) {
+              setRegistrationFee(data.fee.amount);
+              // Also update the selected age group with fee information
+              setSelectedAgeGroup(prev => prev ? { ...prev, registrationFee: data.fee.amount } : prev);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching fees:', error);
+        }
+      };
+      
+      fetchFees();
+    }
+  }, [selectedAgeGroup, eventId]);
+  
   const registerTeamMutation = useMutation({
     mutationFn: async (data: TeamRegistrationForm) => {
+      // Include terms agreement and fee in submission
       const response = await fetch(`/api/events/${eventId}/register-team`, {
         method: 'POST',
         headers: {
@@ -363,6 +391,9 @@ export default function EventRegistration() {
             ...player,
             dateOfBirth: new Date(player.dateOfBirth).toISOString(),
           })),
+          termsAcknowledged: termsAgreed,
+          registrationFee: registrationFee,
+          termsAcknowledgedAt: new Date().toISOString()
         }),
       });
       
@@ -1024,6 +1055,122 @@ export default function EventRegistration() {
               </Form>
             )}
 
+            {currentStep === 'agreement' && user && (
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold text-[#2C5282]">Terms and Registration Fee</h3>
+                
+                {/* Fee Display */}
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-blue-800 mb-2">Registration Fee</h4>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-700">
+                        {selectedAgeGroup?.divisionCode || selectedAgeGroup?.ageGroup} Team Registration
+                      </p>
+                      {selectedAgeGroup?.registrationFee && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          This fee includes entry for {event.name} tournament
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-xl font-bold text-blue-800">
+                      {selectedAgeGroup?.registrationFee 
+                        ? `$${(selectedAgeGroup.registrationFee / 100).toFixed(2)}` 
+                        : "Fee not available"}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Agreement Section */}
+                <div className="border rounded-lg p-4 space-y-4">
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-blue-800">Tournament Agreement</h4>
+                    <ScrollArea className="h-48 w-full rounded-md border p-4 bg-white">
+                      <div className="text-sm text-gray-700 space-y-3">
+                        {event.agreement ? (
+                          <div dangerouslySetInnerHTML={{ __html: event.agreement }} />
+                        ) : (
+                          <p>
+                            By registering for {event.name}, you agree to abide by all tournament rules and regulations.
+                            The tournament director's decisions are final in all matters. All participants must follow
+                            the governing body's code of conduct.
+                          </p>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                  
+                  {/* Refund Policy */}
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-blue-800">Refund Policy</h4>
+                    <ScrollArea className="h-32 w-full rounded-md border p-4 bg-white">
+                      <div className="text-sm text-gray-700 space-y-3">
+                        {event.refundPolicy ? (
+                          <div dangerouslySetInnerHTML={{ __html: event.refundPolicy }} />
+                        ) : (
+                          <p>
+                            Registration fees are non-refundable after the application deadline. 
+                            A 50% refund may be issued for cancellations made at least 14 days before the event.
+                            No refunds will be provided for teams that withdraw within 14 days of the event.
+                          </p>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                  
+                  {/* Agreement Checkbox */}
+                  <div className="flex items-center space-x-2 mt-4">
+                    <input
+                      type="checkbox"
+                      id="terms-agreement"
+                      className="w-4 h-4 rounded border-gray-300"
+                      checked={termsAgreed}
+                      onChange={(e) => setTermsAgreed(e.target.checked)}
+                    />
+                    <label htmlFor="terms-agreement" className="text-sm text-gray-700">
+                      I have read and agree to the tournament terms, conditions, and refund policy
+                    </label>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between pt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setCurrentStep('team')}
+                  >
+                    Back
+                  </Button>
+                  
+                  <Button 
+                    type="button"
+                    className="bg-[#2C5282] hover:bg-[#1A365D] text-white"
+                    disabled={!termsAgreed || registerTeamMutation.isPending}
+                    onClick={() => {
+                      if (termsAgreed && teamForm.getValues()) {
+                        registerTeamMutation.mutate(teamForm.getValues());
+                      } else {
+                        toast({
+                          title: "Agreement Required",
+                          description: "You must agree to the terms to continue",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                  >
+                    {registerTeamMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      'Complete Registration'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+            
             {currentStep === 'review' && user && (
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold text-[#2C5282]">Registration Complete</h3>
