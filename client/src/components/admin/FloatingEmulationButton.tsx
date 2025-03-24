@@ -33,7 +33,7 @@ export function FloatingEmulationButton() {
         
         if (response.ok) {
           const data = await response.json();
-          if (data.isEmulating) {
+          if (data.emulating) {
             setEmulationToken(token);
             setIsEmulating(true);
           } else {
