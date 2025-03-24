@@ -1875,7 +1875,7 @@ function AdminDashboard() {
       case 'reports':
         return <ReportsView />;
       case 'members':
-        return <MembersView />;
+        return <Members />;
       case 'account':
         return (
           <Suspense fallback={
