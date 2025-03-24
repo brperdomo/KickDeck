@@ -4,7 +4,7 @@ import { Link2, X, Ticket, Plus, Mail, KeyRound } from "lucide-react";
 import { EventsTable } from "@/components/events/EventsTable";
 import { GeneralSettingsView } from "@/components/admin/GeneralSettingsView";
 import EmulationManager from "@/components/admin/EmulationManager";
-import FloatingEmulationButton from "@/components/admin/FloatingEmulationButton";
+import { FloatingEmulationButton } from "@/components/admin/FloatingEmulationButton";
 import { useToast } from "@/hooks/use-toast";
 import {
   Collapsible,
