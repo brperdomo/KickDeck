@@ -228,6 +228,13 @@ export const teams = pgTable("teams", {
   seedRanking: integer("seed_ranking"),
   createdAt: text("created_at").notNull().default(new Date().toISOString()),
   userId: integer("user_id").references(() => users.id),
+  // New fields for registration status and fee tracking
+  status: text("status").notNull().default("registered"), // registered, approved, rejected, etc.
+  registrationFee: integer("registration_fee"), // Store amount in cents
+  termsAcknowledged: boolean("terms_acknowledged").default(false),
+  termsAcknowledgedAt: timestamp("terms_acknowledged_at"),
+  termsAcknowledgementRecord: text("terms_acknowledgement_record"), // Path to PDF or record ID
+  notes: text("notes"), // Admin notes about the team
 });
 
 export const games = pgTable("games", {

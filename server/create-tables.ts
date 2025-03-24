@@ -7,6 +7,7 @@ import { createDefaultEmailTemplates } from "./migrations/create_default_email_t
 import { addProviderIdToEmailTemplates } from "./migrations/add_provider_id_to_email_templates";
 import { createRolePermissions } from "./migrations/create_role_permissions";
 import { updateDivisionCodes } from "./migrations/update_division_codes";
+import { addTeamRegistrationFields } from "./migrations/add_team_registration_fields";
 
 export async function createTables() {
   try {
