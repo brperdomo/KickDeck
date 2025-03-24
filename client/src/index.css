@@ -83,27 +83,28 @@ body {
     --radius: 0.5rem;
   }
 
+  /* DARK MODE DISABLED - Use light mode variables for dark theme */
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-    --chart-1: 217.2 91.2% 59.8%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --chart-1: 221.2 83.2% 53.3%;
     --chart-2: 47.9 95.8% 53.1%;
     --chart-3: 0 84.2% 60.2%;
     --chart-4: 262.1 83.3% 57.8%;
@@ -118,76 +119,81 @@ body {
     @apply font-sans antialiased bg-background text-foreground;
   }
 
-  /* Enhanced dark mode for surfaces */
+  /* DARK MODE DISABLED - Force light mode appearance for all elements */
   .dark .bg-white {
-    @apply bg-gray-900;
+    background-color: white !important;
   }
 
   .dark .bg-gray-50 {
-    @apply bg-gray-900;
+    background-color: #F9FAFB !important;
   }
 
   .dark .bg-gray-100 {
-    @apply bg-gray-800;
+    background-color: #F3F4F6 !important;
   }
 
   .dark .bg-gray-200 {
-    @apply bg-gray-800;
+    background-color: #E5E7EB !important;
   }
 
   .dark .border-gray-200 {
-    @apply border-gray-700;
+    border-color: #E5E7EB !important;
   }
 
   .dark .shadow-md {
-    @apply shadow-lg shadow-gray-900/60;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
   }
 
-  /* Improve card contrast in dark mode */
+  /* Force light mode for cards */
   .dark .card {
-    @apply bg-gray-900 border-gray-800;
+    background-color: white !important;
+    border-color: #E5E7EB !important;
   }
 
-  /* Enhanced table styles for dark mode */
+  /* Force light mode for tables */
   .dark table tbody tr {
-    @apply border-gray-800;
+    border-color: #E5E7EB !important;
   }
 
   .dark table thead th {
-    @apply bg-gray-900 text-gray-200;
+    background-color: white !important;
+    color: #1F2937 !important;
   }
 
   .dark table tbody tr:hover {
-    @apply bg-gray-800/50;
+    background-color: #F9FAFB !important;
   }
 
-  /* Inputs and form elements in dark mode */
+  /* Force light mode for inputs and form elements */
   .dark input, 
   .dark textarea, 
   .dark select {
-    @apply bg-gray-900 border-gray-700;
+    background-color: white !important;
+    border-color: #D1D5DB !important;
   }
 
-  /* Button hover states in dark mode */
+  /* Button hover states in light mode */
   .dark .btn-primary:hover {
-    @apply bg-indigo-600;
+    background-color: #2563EB !important;
   }
 
-  /* Code blocks and pre elements in dark mode */
+  /* Light mode for code blocks */
   .dark pre, 
   .dark code {
-    @apply bg-gray-950 text-gray-200;
+    background-color: #F3F4F6 !important;
+    color: #1F2937 !important;
   }
 
-  /* Improve sidebar and navigation contrast */
+  /* Light mode for sidebar and navigation */
   .dark .sidebar, 
   .dark nav {
-    @apply bg-gray-900 border-gray-800;
+    background-color: white !important;
+    border-color: #E5E7EB !important;
   }
 
-  /* Reduce glaring white borders */
+  /* Light mode borders */
   .dark * {
-    @apply border-gray-800;
+    border-color: #E5E7EB !important;
   }
   
   /* Force light mode styling for event registration pages */
@@ -212,6 +218,45 @@ body {
   [class*="register-event-page"] h4, 
   [class*="register-event-page"] p, 
   [class*="register-event-page"] span {
+    color: #333333 !important;
+  }
+  
+  /* Force light mode for all Select, Popover, Dropdown components */
+  [role="combobox"],
+  [role="dialog"],
+  [role="listbox"],
+  [role="menu"],
+  [role="menuitem"],
+  [role="option"],
+  .popover-content,
+  .select-content,
+  .dropdown-content,
+  .SelectContent,
+  .PopoverContent {
+    color: #333333 !important;
+    background-color: #FFFFFF !important;
+    border-color: #D1D5DB !important;
+  }
+  
+  /* Force light text on all selectable options */
+  [role="option"],
+  .SelectItem,
+  .select-item,
+  .dropdown-item,
+  .SelectContent *,
+  .PopoverContent * {
+    color: #333333 !important;
+  }
+  
+  /* Force light background in all dialog/modal content */
+  .dialog-content,
+  .modal-content,
+  .DialogContent,
+  .ModalContent,
+  .Dialog,
+  .Modal,
+  [role="dialog"] {
+    background-color: #FFFFFF !important;
     color: #333333 !important;
   }
 }
