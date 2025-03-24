@@ -176,6 +176,16 @@ export async function getEmulationStatus(req: Request, res: Response) {
       where: eq(users.id, emulatedUserId)
     });
 
+    // Fetch the user's roles
+    const userRoles = await db.select({
+      roleName: roles.name
+    })
+    .from(adminRoles)
+    .innerJoin(roles, eq(adminRoles.roleId, roles.id))
+    .where(eq(adminRoles.userId, emulatedUserId));
+
+    const roleNames = userRoles.map(r => r.roleName);
+
     return res.json({
       emulating: true,
       token: emulationToken,
@@ -183,7 +193,8 @@ export async function getEmulationStatus(req: Request, res: Response) {
         id: emulatedAdmin?.id,
         email: emulatedAdmin?.email,
         firstName: emulatedAdmin?.firstName,
-        lastName: emulatedAdmin?.lastName
+        lastName: emulatedAdmin?.lastName,
+        roles: roleNames
       }
     });
   } catch (error) {

@@ -69,8 +69,30 @@ export default function FloatingEmulationButton() {
         {statusData?.emulating ? (
           <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
             {statusData.emulatedAdmin?.roles && statusData.emulatedAdmin.roles.length > 0 && (
-              <div className="bg-destructive text-white text-xs px-3 py-1 rounded-full shadow-md">
-                Emulating: {statusData.emulatedAdmin.roles.map(r => r.replace('_', ' ')).join(', ')}
+              <div className="bg-black/80 text-white text-xs px-3 py-2 rounded-lg shadow-md flex flex-col gap-1">
+                <div className="font-medium">
+                  Emulating: {statusData.emulatedAdmin.firstName} {statusData.emulatedAdmin.lastName}
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {statusData.emulatedAdmin.roles.map(role => {
+                    let badgeClass = "text-xs px-2 py-0.5 rounded-full capitalize";
+                    
+                    // Apply different colors based on role type
+                    if (role === 'tournament_admin') {
+                      badgeClass += " bg-blue-500 text-white";
+                    } else if (role === 'score_admin') {
+                      badgeClass += " bg-green-500 text-white";
+                    } else if (role === 'finance_admin') {
+                      badgeClass += " bg-amber-500 text-white";
+                    }
+                    
+                    return (
+                      <span key={role} className={badgeClass}>
+                        {role.replace('_', ' ')}
+                      </span>
+                    );
+                  })}
+                </div>
               </div>
             )}
             <Button 
