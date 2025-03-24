@@ -1069,6 +1069,8 @@ export default function EventRegistration() {
                                       const newPlayers = [...players];
                                       newPlayers[index].emergencyContactName = e.target.value;
                                       setPlayers(newPlayers);
+                                      // Update form state with the modified players array
+                                      teamForm.setValue('players', newPlayers);
                                     }}
                                     className="w-full"
                                   />
@@ -1084,6 +1086,8 @@ export default function EventRegistration() {
                                       const newPlayers = [...players];
                                       newPlayers[index].emergencyContactPhone = e.target.value;
                                       setPlayers(newPlayers);
+                                      // Update form state with the modified players array
+                                      teamForm.setValue('players', newPlayers);
                                     }}
                                     className="w-full"
                                   />
