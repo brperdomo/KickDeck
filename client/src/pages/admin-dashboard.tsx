@@ -3,6 +3,7 @@ import { useLocation, Link } from "wouter";
 import { Link2, X, Ticket, Plus, Mail, KeyRound } from "lucide-react";
 import { EventsTable } from "@/components/events/EventsTable";
 import { GeneralSettingsView } from "@/components/admin/GeneralSettingsView";
+import EmulationManager from "@/components/admin/EmulationManager";
 import { useToast } from "@/hooks/use-toast";
 import {
   Collapsible,
@@ -2078,6 +2079,22 @@ function SettingsView({ activeSettingsView }: { activeSettingsView: SettingsView
         </BrandingPreviewProvider>
       );
     case 'general':
+      return (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold">General Settings</h2>
+          <GeneralSettingsView />
+          
+          {/* Add Emulation Manager for user role testing */}
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold mb-4">User Emulation</h2>
+            <Card>
+              <CardContent className="p-6">
+                <EmulationManager />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      );
     case 'styling':
       return <GeneralSettingsView />;
     case 'payments':
