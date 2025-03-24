@@ -70,6 +70,12 @@ export function FloatingEmulationButton() {
 
     setIsLoading(true);
     try {
+      // Show toast first
+      toast({
+        title: 'Emulation Stopped',
+        description: 'You are now viewing the system as yourself',
+      });
+
       const response = await fetch(`/api/admin/emulation/stop/${emulationToken}`, {
         method: 'POST',
         headers: {
@@ -88,20 +94,18 @@ export function FloatingEmulationButton() {
         // Still continue with UI refresh since we want to reset the state regardless
       }
 
-      // Refresh all queries
-      queryClient.invalidateQueries();
-      
-      // Force refresh the user data
-      queryClient.invalidateQueries({ queryKey: ['user'] });
-      queryClient.invalidateQueries({ queryKey: ['user-permissions'] });
+      // Wait a brief moment to ensure the toast is displayed
+      setTimeout(() => {
+        // Refresh all queries
+        queryClient.invalidateQueries();
+        
+        // Force refresh the user data
+        queryClient.invalidateQueries({ queryKey: ['user'] });
+        queryClient.invalidateQueries({ queryKey: ['user-permissions'] });
 
-      // Reload the page to ensure UI updates properly
-      window.location.reload();
-
-      toast({
-        title: 'Emulation Stopped',
-        description: 'You are now viewing the system as yourself',
-      });
+        // Reload the page to ensure UI updates properly
+        window.location.reload();
+      }, 500);
     } catch (error) {
       toast({
         title: 'Emulation Reset',
