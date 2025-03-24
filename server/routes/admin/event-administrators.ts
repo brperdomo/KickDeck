@@ -43,6 +43,7 @@ export async function getEventAdministrators(req: Request, res: Response) {
         eventAdministrators.eventId,
         eventAdministrators.userId,
         eventAdministrators.role,
+        eventAdministrators.permissions,
         eventAdministrators.createdAt,
         users.id
       );
@@ -164,6 +165,7 @@ export async function addEventAdministrator(req: Request, res: Response) {
         eventAdministrators.eventId,
         eventAdministrators.userId,
         eventAdministrators.role,
+        eventAdministrators.permissions,
         eventAdministrators.createdAt,
         users.id
       )
@@ -193,7 +195,8 @@ export async function updateEventAdministrator(req: Request, res: Response) {
     const [updatedAdmin] = await db
       .update(eventAdministrators)
       .set({
-        role: role || undefined
+        role: role || undefined,
+        permissions: req.body.permissions || undefined
       })
       .where(
         and(
@@ -229,6 +232,7 @@ export async function updateEventAdministrator(req: Request, res: Response) {
         eventAdministrators.eventId,
         eventAdministrators.userId,
         eventAdministrators.role,
+        eventAdministrators.permissions,
         eventAdministrators.createdAt,
         users.id
       )
