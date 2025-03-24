@@ -28,7 +28,15 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, UserPlus, Trash2, Edit, ShieldCheck } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Loader2, UserPlus, Trash2, Edit, ShieldCheck, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Admin {
@@ -44,6 +52,7 @@ interface EventAdmin {
   userId: number;
   eventId: string;
   role: string;
+  permissions: Record<string, boolean>;
   user: {
     id: number;
     email: string;
@@ -54,6 +63,25 @@ interface EventAdmin {
 }
 
 type AdminRole = 'owner' | 'admin' | 'moderator';
+
+// Define permission types for event admins
+const EVENT_PERMISSION_GROUPS = {
+  general: ['view_event', 'edit_event', 'view_dashboard'],
+  participants: ['view_teams', 'manage_teams', 'view_players', 'manage_players'],
+  schedule: ['view_schedule', 'manage_schedule', 'manage_fields'],
+  finance: ['view_finances', 'manage_payments', 'issue_refunds'],
+  communication: ['send_emails', 'manage_notifications'],
+};
+
+// Create a flat list of all permissions
+const ALL_EVENT_PERMISSIONS = Object.values(EVENT_PERMISSION_GROUPS).flat();
+
+// Default permissions by role
+const DEFAULT_PERMISSIONS: Record<AdminRole, string[]> = {
+  owner: ALL_EVENT_PERMISSIONS,
+  admin: ['view_event', 'view_dashboard', 'view_teams', 'view_players', 'view_schedule', 'view_finances', 'send_emails'],
+  moderator: ['view_event', 'view_dashboard', 'view_teams', 'view_players', 'view_schedule']
+};
 
 interface EventAdminModalProps {
   eventId: string | number;
@@ -80,6 +108,21 @@ export default function EventAdminModal({
   const queryClient = useQueryClient();
   const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null);
   const [adminRole, setAdminRole] = useState<AdminRole>('admin');
+  const [selectedPermissions, setSelectedPermissions] = useState<Record<string, boolean>>({});
+  const [editingAdminId, setEditingAdminId] = useState<number | null>(null);
+  const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
+  
+  // Set default permissions when role changes
+  useEffect(() => {
+    if (!editingAdminId) {
+      const defaultPerms = DEFAULT_PERMISSIONS[adminRole];
+      const permMap: Record<string, boolean> = {};
+      ALL_EVENT_PERMISSIONS.forEach(perm => {
+        permMap[perm] = defaultPerms.includes(perm);
+      });
+      setSelectedPermissions(permMap);
+    }
+  }, [adminRole, editingAdminId]);
   
   // Fetch event administrators
   const { data: eventAdmins, isLoading: isLoadingAdmins } = useQuery({
