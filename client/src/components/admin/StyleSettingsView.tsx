@@ -12,15 +12,15 @@ import { Moon, Sun } from "lucide-react";
 export function StyleSettingsView() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const { theme, setAppearance } = useTheme();
-  const [currentTheme, setCurrentTheme] = useState(theme);
+  const { currentAppearance, setAppearance } = useTheme();
+  const [currentTheme, setCurrentTheme] = useState(currentAppearance);
 
   useEffect(() => {
-    setCurrentTheme(theme);
-  }, [theme]);
+    setCurrentTheme(currentAppearance);
+  }, [currentAppearance]);
 
   const handleThemeToggle = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    const newTheme = currentAppearance === 'dark' ? 'light' : 'dark';
     setAppearance(newTheme);
   };
 
@@ -175,7 +175,7 @@ export function StyleSettingsView() {
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">UI Colors</h3>
         <Toggle
-          pressed={theme === 'dark'}
+          pressed={currentAppearance === 'dark'}
           onPressedChange={(pressed) => {
             const newTheme = pressed ? 'dark' : 'light';
             setAppearance(newTheme);
@@ -183,7 +183,7 @@ export function StyleSettingsView() {
           aria-label="Toggle dark mode"
           className="p-2"
         >
-          {theme === 'dark' ? (
+          {currentAppearance === 'dark' ? (
             <Moon className="h-5 w-5" />
           ) : (
             <Sun className="h-5 w-5" />

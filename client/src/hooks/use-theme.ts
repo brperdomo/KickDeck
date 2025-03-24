@@ -52,12 +52,18 @@ export interface StyleConfig {
 export function useTheme() {
   const [currentColor, setCurrentColor] = useState<ColorName>('slate');
   const [styleConfig, setStyleConfig] = useState<StyleConfig | null>(null);
-  const [currentAppearance, setCurrentAppearance] = useState<'light' | 'dark'>(
-    typeof window !== 'undefined'
-      ? (localStorage.getItem('theme-appearance') as 'light' | 'dark') || 'light'
-      : 'light'
-  );
+  // Default to light mode, only use localStorage if explicitly set by user
+  const [currentAppearance, setCurrentAppearance] = useState<'light' | 'dark'>('light');
 
+  // Initialize theme from localStorage only once on component mount
+  useEffect(() => {
+    // Only read from localStorage once on initial load
+    const savedAppearance = localStorage.getItem('theme-appearance') as 'light' | 'dark';
+    if (savedAppearance) {
+      setCurrentAppearance(savedAppearance);
+    }
+  }, []);
+  
   useEffect(() => {
     // Set the dark mode class on the document root
     if (currentAppearance === 'dark') {
@@ -65,6 +71,7 @@ export function useTheme() {
     } else {
       document.documentElement.classList.remove('dark');
     }
+    // Save to localStorage when changed by user action
     localStorage.setItem('theme-appearance', currentAppearance);
   }, [currentAppearance]);
 
