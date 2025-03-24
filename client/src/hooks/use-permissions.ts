@@ -47,6 +47,7 @@ export type Permission =
   | 'delete_form_templates'
   | 'view_role_permissions'
   | 'edit_role_permissions'
+  | 'view_members'
   | 'emulate_users'
   | 'manage_system';
 
@@ -64,6 +65,7 @@ export const SECTION_PERMISSIONS: Record<string, Permission[]> = {
   'coupons': ['view_coupons'],
   'formTemplates': ['view_form_templates'],
   'roles': ['view_role_permissions'],
+  'members': ['view_members'],
   // Account can be viewed by any authenticated admin
   'account': []
 };
