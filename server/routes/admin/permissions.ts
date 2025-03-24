@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { db } from '@db/index';
 import { rolePermissions, PERMISSIONS } from '@db/schema/permissions';
-import { adminRoles } from '@db/schema';
-import { eq } from 'drizzle-orm';
+import { adminRoles, roles } from '@db/schema';
+import { eq, and, inArray } from 'drizzle-orm';
 
 /**
  * Get the current authenticated admin's permissions
@@ -16,43 +16,52 @@ export async function getCurrentUserPermissions(req: Request, res: Response) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    // Fetch the user's roles
-    const userRoles = await db.query.adminRoles.findMany({
-      where: eq(adminRoles.userId, userId),
-      columns: {
-        roleType: true
-      }
-    });
+    // Fetch the user's roles with a join to get role names
+    const userRolesResult = await db
+      .select({
+        roleName: roles.name,
+        roleId: roles.id
+      })
+      .from(adminRoles)
+      .innerJoin(roles, eq(adminRoles.roleId, roles.id))
+      .where(eq(adminRoles.userId, userId));
 
-    const roles = userRoles.map(role => role.roleType);
+    // Extract role names for response and role IDs for permission lookup
+    const roleNames = userRolesResult.map(result => result.roleName);
+    const roleIds = userRolesResult.map(result => result.roleId);
     
     // If the user is a super_admin, they have all permissions
-    if (roles.includes('super_admin')) {
+    if (roleNames.includes('super_admin')) {
       return res.json({
-        roles,
+        roles: roleNames,
         permissions: Object.keys(PERMISSIONS)
       });
     }
 
     // Otherwise, fetch the specific permissions for their roles
-    const allPermissions = new Set<string>();
-    
-    // For each role, get the assigned permissions
-    for (const role of roles) {
-      const rolePermissionsList = await db.query.rolePermissions.findMany({
-        where: eq(rolePermissions.roleType, role),
-        columns: {
-          permission: true
-        }
+    if (roleIds.length === 0) {
+      // If user has no roles, they have no permissions
+      return res.json({
+        roles: [],
+        permissions: []
       });
-      
-      // Add each permission to the set
-      rolePermissionsList.forEach(p => allPermissions.add(p.permission));
     }
 
+    // Get all permissions in a single query for better performance
+    const permissions = await db
+      .select({
+        permission: rolePermissions.permission
+      })
+      .from(rolePermissions)
+      .where(inArray(rolePermissions.roleId, roleIds));
+    
+    // Use a Set to eliminate duplicate permissions
+    const uniquePermissions = new Set<string>();
+    permissions.forEach(p => uniquePermissions.add(p.permission));
+
     return res.json({
-      roles,
-      permissions: Array.from(allPermissions)
+      roles: roleNames,
+      permissions: Array.from(uniquePermissions)
     });
   } catch (error) {
     console.error('Error fetching user permissions:', error);
