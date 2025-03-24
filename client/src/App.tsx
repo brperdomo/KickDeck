@@ -25,6 +25,7 @@ import EventRegistration from "./pages/event-registration";
 import { FeeManagement } from "@/components/events/FeeManagement";
 import { AuthProvider } from "@/hooks/use-auth";
 import { LogoutHandler } from "@/components/LogoutHandler";
+import { FloatingEmulationButton } from "@/components/admin/FloatingEmulationButton";
 
 // Placeholder components
 const EventPreviewSelector = () => <div>Event Preview Selector</div>;
@@ -74,7 +75,7 @@ function Router() {
             {user.isAdmin ? <EventApplicationForm /> : <NotFound />}
           </Route>
           <Route path="/admin/events/:eventId/fees">
-            {({ eventId }) => user.isAdmin ? <FeeManagement eventId={eventId} /> : <NotFound />}
+            {(params) => user.isAdmin ? <FeeManagement eventId={params.eventId} /> : <NotFound />}
           </Route>
           <Route path="/admin/events/:id">
             {user.isAdmin ? <EditEvent /> : <NotFound />}
@@ -133,6 +134,7 @@ function App() {
       <AuthProvider>
         <TooltipProvider>
           <Router />
+          <FloatingEmulationButton />
           <Toaster />
         </TooltipProvider>
       </AuthProvider>
