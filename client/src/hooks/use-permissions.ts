@@ -1,5 +1,6 @@
 import { useAuth } from './use-auth';
 import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 // Define the permission types based on our permission schema
 export type Permission = 
@@ -77,17 +78,46 @@ export function usePermissions() {
   const emulationToken = typeof window !== 'undefined' ? localStorage.getItem('emulationToken') : null;
   
   // Fetch user permissions from the API
+  // Force refresh emulation status whenever hook is called
+  useEffect(() => {
+    const refreshEmulationToken = async () => {
+      // Only check if we're logged in and admin
+      if (!user?.isAdmin) return;
+      
+      try {
+        const response = await fetch('/api/admin/emulation/status');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.emulating && data.token) {
+            localStorage.setItem('emulationToken', data.token);
+          } else if (!data.emulating) {
+            localStorage.removeItem('emulationToken');
+          }
+        }
+      } catch (error) {
+        console.error('Error checking emulation status:', error);
+      }
+    };
+    
+    refreshEmulationToken();
+  }, [user]);
+  
   const { data: userPermissions, isLoading, refetch } = useQuery({
     queryKey: ['user-permissions', user?.id, emulationToken],
     queryFn: async () => {
       if (!user || !user.isAdmin) return null;
       
+      const emulToken = localStorage.getItem('emulationToken');
       const headers: HeadersInit = {};
-      if (emulationToken) {
-        headers['x-emulation-token'] = emulationToken;
+      
+      if (emulToken) {
+        console.log('Using emulation token for permissions request:', emulToken);
+        headers['x-emulation-token'] = emulToken;
+        headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+        headers['Pragma'] = 'no-cache';
       }
       
-      console.log('Fetching permissions, emulation token:', emulationToken ? 'present' : 'not present');
+      console.log('Fetching permissions, emulation token:', emulToken ? 'present' : 'not present');
       
       const response = await fetch('/api/admin/permissions/me', {
         headers,
@@ -98,12 +128,44 @@ export function usePermissions() {
         throw new Error('Failed to fetch user permissions');
       }
       
-      const data = await response.json() as { permissions: Permission[], roles: Role[] };
+      const data = await response.json() as { permissions: string[], roles: Role[] };
       console.log('Fetched permissions:', data);
-      return data;
+      
+      // Normalize permissions to our Permission type format  
+      const normalizedPermissions: Permission[] = [];
+      
+      data.permissions.forEach(perm => {
+        // Convert from any format to our standard format
+        let normalizedPerm = perm.toLowerCase();
+        
+        // Convert from events.view to view_events
+        if (normalizedPerm.includes('.')) {
+          const [category, action] = normalizedPerm.split('.');
+          normalizedPerm = `${action}_${category}`;
+        }
+        
+        // Convert from EVENTS_VIEW to view_events
+        if (normalizedPerm.includes('_')) {
+          const parts = normalizedPerm.split('_');
+          if (parts.length === 2) {
+            const [category, action] = parts;
+            normalizedPerm = `${action.toLowerCase()}_${category.toLowerCase()}`;
+          }
+        }
+        
+        // Only add if it matches our Permission type
+        if (normalizedPerm as Permission) {
+          normalizedPermissions.push(normalizedPerm as Permission);
+        }
+      });
+      
+      return {
+        permissions: normalizedPermissions,
+        roles: data.roles
+      };
     },
     enabled: !!user?.isAdmin,
-    staleTime: 10000, // Consider data fresh for 10 seconds
+    staleTime: 5000, // Consider data fresh for 5 seconds
     refetchOnWindowFocus: true, // Refetch when the window regains focus
   });
 
