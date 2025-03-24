@@ -205,7 +205,6 @@ export default function EventAdminModal({
   const resetForm = () => {
     setSelectedAdmin(null);
     setAdminRole('admin');
-    setAdminType('tournament_admin');
   };
 
   // Handle adding an administrator
@@ -221,18 +220,16 @@ export default function EventAdminModal({
 
     addAdminMutation.mutate({
       userId: selectedAdmin.id,
-      role: adminRole,
-      adminType: adminType
+      role: adminRole
     });
   };
 
   // Handle updating an administrator's role
-  const handleUpdateAdmin = (eventAdmin: EventAdmin, role: AdminRole, type: AdminType) => {
+  const handleUpdateAdmin = (eventAdmin: EventAdmin, role: AdminRole) => {
     updateAdminMutation.mutate({
       adminId: eventAdmin.id,
       data: {
-        role,
-        adminType: type
+        role
       }
     });
   };
@@ -287,7 +284,7 @@ export default function EventAdminModal({
         {/* Add Administrator Form */}
         <div className="border rounded-lg p-4 mb-6">
           <h3 className="text-lg font-medium mb-3">Add Administrator</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="admin-select">Select Administrator</Label>
               <Select
@@ -333,24 +330,6 @@ export default function EventAdminModal({
                 </SelectContent>
               </Select>
             </div>
-
-            <div>
-              <Label htmlFor="type-select">Admin Type</Label>
-              <Select
-                onValueChange={(value) => setAdminType(value as AdminType)}
-                value={adminType}
-              >
-                <SelectTrigger id="type-select" className="w-full">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tournament_admin">Tournament Admin</SelectItem>
-                  <SelectItem value="score_admin">Score Admin</SelectItem>
-                  <SelectItem value="finance_admin">Finance Admin</SelectItem>
-                  <SelectItem value="super_admin">Super Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
           <div className="mt-4 flex justify-end">
@@ -389,7 +368,6 @@ export default function EventAdminModal({
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
-                    <TableHead>Admin Type</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -404,7 +382,7 @@ export default function EventAdminModal({
                         <Select
                           defaultValue={admin.role}
                           onValueChange={(value) => 
-                            handleUpdateAdmin(admin, value as AdminRole, admin.adminType as AdminType)
+                            handleUpdateAdmin(admin, value as AdminRole)
                           }
                         >
                           <SelectTrigger className="w-32">
@@ -416,29 +394,6 @@ export default function EventAdminModal({
                             <SelectItem value="owner">Owner</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
                             <SelectItem value="moderator">Moderator</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          defaultValue={admin.adminType}
-                          onValueChange={(value) => 
-                            handleUpdateAdmin(admin, admin.role as AdminRole, value as AdminType)
-                          }
-                        >
-                          <SelectTrigger className="w-48">
-                            <Badge className={`${getAdminTypeBadgeColor(admin.adminType)} text-white`}>
-                              {admin.adminType
-                                .split('_')
-                                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                                .join(' ')}
-                            </Badge>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="tournament_admin">Tournament Admin</SelectItem>
-                            <SelectItem value="score_admin">Score Admin</SelectItem>
-                            <SelectItem value="finance_admin">Finance Admin</SelectItem>
-                            <SelectItem value="super_admin">Super Admin</SelectItem>
                           </SelectContent>
                         </Select>
                       </TableCell>
