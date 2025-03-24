@@ -107,7 +107,7 @@ export async function getAvailableAdministrators(req: Request, res: Response) {
 export async function addEventAdministrator(req: Request, res: Response) {
   try {
     const eventId = req.params.eventId;
-    const { userId, role, adminType } = req.body;
+    const { userId, role } = req.body;
     
     if (!eventId || !userId || !role) {
       return res.status(400).json({ error: "Event ID, user ID, and role are required" });
@@ -180,7 +180,7 @@ export async function updateEventAdministrator(req: Request, res: Response) {
   try {
     const eventId = req.params.eventId;
     const adminId = parseInt(req.params.adminId);
-    const { role, adminType } = req.body;
+    const { role } = req.body;
     
     if (isNaN(adminId) || !eventId) {
       return res.status(400).json({ error: "Valid event ID and admin ID are required" });
