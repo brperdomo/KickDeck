@@ -1,164 +1,154 @@
 import React from 'react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
-import { MascotCharacter, MascotEmotion } from './MascotCharacter';
+import ReactMarkdown from 'react-markdown';
+import { XCircle } from 'lucide-react';
+import MascotCharacter, { MascotEmotion } from './MascotCharacter';
 import './onboarding.css';
 
-export interface SpeechBubbleProps {
+interface SpeechBubbleProps {
   message: string;
   position?: 'top' | 'right' | 'bottom' | 'left';
-  onClose?: () => void;
-  onAction?: () => void;
   actionLabel?: string;
-  mascotEmotion?: MascotEmotion;
+  onAction?: () => void;
+  onClose?: () => void;
+  showClose?: boolean;
   showMascot?: boolean;
-  className?: string;
+  mascotEmotion?: MascotEmotion;
+  width?: string | number;
+  maxHeight?: string | number;
 }
 
 const SpeechBubble: React.FC<SpeechBubbleProps> = ({
   message,
-  position = 'bottom',
-  onClose,
+  position = 'top',
+  actionLabel,
   onAction,
-  actionLabel = 'Got it',
-  mascotEmotion = 'happy',
+  onClose,
+  showClose = true,
   showMascot = true,
-  className,
+  mascotEmotion = 'excited',
+  width = 300,
+  maxHeight = 'none',
 }) => {
-  // Calculate which side to place the speech bubble pointer
-  const getBubblePointerClass = () => {
-    switch (position) {
-      case 'top': return 'bubble-pointer-bottom';
-      case 'right': return 'bubble-pointer-left';
-      case 'bottom': return 'bubble-pointer-top';
-      case 'left': return 'bubble-pointer-right';
-      default: return 'bubble-pointer-top';
-    }
+  // Style for the bubble wrapper
+  const bubbleStyle: React.CSSProperties = {
+    position: 'relative',
+    width: typeof width === 'number' ? `${width}px` : width,
+    maxHeight: maxHeight,
+    overflow: maxHeight !== 'none' ? 'auto' : 'visible',
   };
-
-  // Determine the mascot position based on bubble position
-  const getMascotPosition = () => {
-    switch (position) {
-      case 'top': return 'bottom-0 right-0 translate-y-3/4';
-      case 'right': return 'bottom-0 left-0 -translate-x-3/4 translate-y-1/4';
-      case 'bottom': return 'top-0 right-0 -translate-y-3/4';
-      case 'left': return 'bottom-0 right-0 translate-x-3/4 translate-y-1/4';
-      default: return 'top-0 right-0 -translate-y-3/4';
-    }
+  
+  // Style for the speech bubble with appropriate arrow
+  const speechBubbleStyle: React.CSSProperties = {
+    backgroundColor: 'white',
+    color: '#333',
+    padding: '16px',
+    borderRadius: '12px',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+    position: 'relative',
+    zIndex: 2,
   };
-
+  
+  // Add arrow based on position
+  const arrowStyle: React.CSSProperties = {
+    position: 'absolute',
+    width: '20px',
+    height: '20px',
+    backgroundColor: 'white',
+    transform: 'rotate(45deg)',
+    zIndex: 1,
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+  };
+  
+  // Calculate arrow position based on bubble position
+  switch (position) {
+    case 'top':
+      arrowStyle.bottom = '-10px';
+      arrowStyle.left = '50%';
+      arrowStyle.marginLeft = '-10px';
+      break;
+    case 'right':
+      arrowStyle.left = '-10px';
+      arrowStyle.top = '50%';
+      arrowStyle.marginTop = '-10px';
+      break;
+    case 'bottom':
+      arrowStyle.top = '-10px';
+      arrowStyle.left = '50%';
+      arrowStyle.marginLeft = '-10px';
+      break;
+    case 'left':
+      arrowStyle.right = '-10px';
+      arrowStyle.top = '50%';
+      arrowStyle.marginTop = '-10px';
+      break;
+  }
+  
   return (
-    <div 
-      className={cn(
-        'relative bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg max-w-sm z-50 fade-in',
-        getBubblePointerClass(),
-        className
-      )}
-    >
-      {/* Close button */}
-      {onClose && (
-        <button 
-          onClick={onClose}
-          className="absolute top-2 right-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-          aria-label="Close"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      )}
-      
-      {/* Content */}
-      <div className="mr-6 mb-2">
-        <p className="text-slate-700 dark:text-slate-200 text-sm">{message}</p>
+    <div style={bubbleStyle} className="fade-in">
+      <div style={speechBubbleStyle}>
+        {/* Close button */}
+        {showClose && onClose && (
+          <button 
+            onClick={onClose}
+            className="absolute top-2 right-2 text-gray-400 hover:text-gray-800 transition-colors"
+            aria-label="Close"
+          >
+            <XCircle size={18} />
+          </button>
+        )}
+        
+        {/* Content */}
+        <div className="flex gap-4">
+          {/* Mascot character */}
+          {showMascot && (
+            <div className="flex-shrink-0">
+              <MascotCharacter emotion={mascotEmotion} size="sm" />
+            </div>
+          )}
+          
+          {/* Message content with markdown support */}
+          <div className="flex-grow">
+            <div className="prose prose-sm max-w-none mb-4">
+              <ReactMarkdown>
+                {message}
+              </ReactMarkdown>
+            </div>
+            
+            {/* Action button */}
+            {actionLabel && onAction && (
+              <button
+                onClick={onAction}
+                className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md text-sm font-medium transition-colors"
+                aria-label={actionLabel}
+              >
+                {actionLabel}
+              </button>
+            )}
+          </div>
+        </div>
       </div>
       
-      {/* Action button */}
-      {onAction && (
-        <div className="flex justify-end mt-2">
-          <Button 
-            onClick={onAction}
-            className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 h-auto"
-            size="sm"
-          >
-            {actionLabel}
-          </Button>
-        </div>
-      )}
+      {/* Arrow */}
+      <div style={arrowStyle} />
       
-      {/* Mascot character */}
-      {showMascot && (
-        <div 
-          className={cn(
-            'absolute w-20 h-20 transform',
-            getMascotPosition()
-          )}
-        >
-          <MascotCharacter 
-            emotion={mascotEmotion} 
-            size="sm" 
-            animated={true}
-          />
-        </div>
-      )}
-      
-      {/* Speech bubble pointer - Created with CSS */}
-      <style jsx>{`
-        .bubble-pointer-top:after {
-          content: '';
-          position: absolute;
-          top: -10px;
-          left: 20px;
-          border-width: 0 10px 10px;
-          border-style: solid;
-          border-color: transparent transparent white;
-        }
-        
-        .bubble-pointer-right:after {
-          content: '';
-          position: absolute;
-          right: -10px;
-          top: 20px;
-          border-width: 10px 0 10px 10px;
-          border-style: solid;
-          border-color: transparent transparent transparent white;
-        }
-        
-        .bubble-pointer-bottom:after {
-          content: '';
-          position: absolute;
-          bottom: -10px;
-          left: 20px;
-          border-width: 10px 10px 0;
-          border-style: solid;
-          border-color: white transparent transparent;
-        }
-        
-        .bubble-pointer-left:after {
-          content: '';
-          position: absolute;
-          left: -10px;
-          top: 20px;
-          border-width: 10px 10px 10px 0;
-          border-style: solid;
-          border-color: transparent white transparent transparent;
-        }
-        
-        .dark .bubble-pointer-top:after {
-          border-color: transparent transparent rgb(30, 41, 59);
-        }
-        
-        .dark .bubble-pointer-right:after {
-          border-color: transparent transparent transparent rgb(30, 41, 59);
-        }
-        
-        .dark .bubble-pointer-bottom:after {
-          border-color: rgb(30, 41, 59) transparent transparent;
-        }
-        
-        .dark .bubble-pointer-left:after {
-          border-color: transparent rgb(30, 41, 59) transparent transparent;
-        }
-      `}</style>
+      {/* Optional styled content */}
+      <style>
+        {`
+          .prose h1, .prose h2, .prose h3, .prose h4 {
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+          }
+          .prose p {
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+          }
+          .prose ul, .prose ol {
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+            padding-left: 1.5em;
+          }
+        `}
+      </style>
     </div>
   );
 };

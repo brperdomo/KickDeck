@@ -1,99 +1,124 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { HelpCircle, X } from 'lucide-react';
-import { MascotCharacter } from './MascotCharacter';
-import { useOnboarding } from './OnboardingContext';
+import MascotCharacter, { MascotEmotion } from './MascotCharacter';
 import SpeechBubble from './SpeechBubble';
 import './onboarding.css';
 
 interface FloatingMascotButtonProps {
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
   message?: string;
-  onHelp?: () => void;
+  actionLabel?: string;
+  onAction?: () => void;
+  mascotEmotion?: MascotEmotion;
+  offset?: { x: number; y: number };
+  size?: 'sm' | 'md' | 'lg';
+  pulseEffect?: boolean;
+  showOnLoad?: boolean;
+  openDelay?: number;
+  bubblePosition?: 'top' | 'right' | 'bottom' | 'left';
 }
 
 const FloatingMascotButton: React.FC<FloatingMascotButtonProps> = ({
   position = 'bottom-right',
-  message = "Need help? I'm here to assist you!",
-  onHelp,
+  message = "Need help? Click me for assistance!",
+  actionLabel,
+  onAction,
+  mascotEmotion = 'happy',
+  offset = { x: 20, y: 20 },
+  size = 'md',
+  pulseEffect = false,
+  showOnLoad = false,
+  openDelay = 1000,
+  bubblePosition = 'top',
 }) => {
-  const [showSpeechBubble, setShowSpeechBubble] = useState(false);
-  const { isOnboardingComplete, restartOnboarding } = useOnboarding();
+  const [showBubble, setShowBubble] = useState(showOnLoad);
   
-  // Determine button position classes
-  const getPositionClasses = () => {
-    switch (position) {
-      case 'bottom-right':
-        return 'bottom-4 right-4';
-      case 'bottom-left':
-        return 'bottom-4 left-4';
-      case 'top-right':
-        return 'top-4 right-4';
-      case 'top-left':
-        return 'top-4 left-4';
-      default:
-        return 'bottom-4 right-4';
+  // Calculate position styles
+  const getPositionStyles = () => {
+    const styles: React.CSSProperties = {};
+    
+    if (position.includes('bottom')) {
+      styles.bottom = offset.y;
+    } else {
+      styles.top = offset.y;
     }
+    
+    if (position.includes('right')) {
+      styles.right = offset.x;
+    } else {
+      styles.left = offset.x;
+    }
+    
+    return styles;
   };
   
-  // Determine speech bubble position
-  const getSpeechBubblePosition = () => {
-    if (position.startsWith('bottom')) {
-      return 'top';
-    } else {
-      return 'bottom';
-    }
+  // Toggle the speech bubble
+  const toggleBubble = () => {
+    setShowBubble(!showBubble);
   };
   
-  const handleHelp = () => {
-    if (onHelp) {
-      onHelp();
-    } else if (isOnboardingComplete) {
-      setShowSpeechBubble(!showSpeechBubble);
-    } else {
-      restartOnboarding();
+  // Handle the action button click
+  const handleAction = () => {
+    if (onAction) {
+      onAction();
     }
+    setShowBubble(false);
+  };
+  
+  // Show the speech bubble after a delay if showOnLoad is true
+  React.useEffect(() => {
+    if (showOnLoad) {
+      const timer = setTimeout(() => {
+        setShowBubble(true);
+      }, openDelay);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [showOnLoad, openDelay]);
+  
+  // Determine appropriate emotion for the mascot
+  const getDisplayEmotion = (): MascotEmotion => {
+    if (showBubble) {
+      return mascotEmotion === 'happy' || mascotEmotion === 'neutral' ? 'excited' : mascotEmotion;
+    }
+    return mascotEmotion;
   };
   
   return (
-    <div className={`fixed ${getPositionClasses()} z-40`}>
-      {/* Speech bubble */}
-      {showSpeechBubble && (
-        <div className="mb-3 absolute bottom-16 right-0">
+    <div
+      className={`floating-mascot-button ${pulseEffect ? 'pulse' : ''}`}
+      style={getPositionStyles()}
+    >
+      {/* Speech bubble when shown */}
+      {showBubble && (
+        <div className="absolute" style={{ 
+          [bubblePosition === 'right' ? 'right' : 'left']: bubblePosition === 'right' ? '-320px' : '0',
+          [bubblePosition === 'bottom' ? 'bottom' : 'top']: bubblePosition === 'bottom' ? '100%' : bubblePosition === 'top' ? 'auto' : '50%',
+          transform: bubblePosition === 'bottom' ? 'translateY(10px)' : bubblePosition === 'top' ? 'translateY(-100%)' : 'translateY(-50%)',
+        }}>
           <SpeechBubble
             message={message}
-            position={getSpeechBubblePosition()}
-            onClose={() => setShowSpeechBubble(false)}
-            actionLabel="Get Started"
-            onAction={() => {
-              setShowSpeechBubble(false);
-              restartOnboarding();
-            }}
-            mascotEmotion="happy"
+            position={bubblePosition}
+            actionLabel={actionLabel}
+            onClose={toggleBubble}
+            onAction={handleAction}
+            mascotEmotion={mascotEmotion}
+            showMascot={false}
           />
         </div>
       )}
       
-      {/* Mascot button */}
-      <Button
-        onClick={handleHelp}
-        className="h-14 w-14 rounded-full p-0 relative shadow-lg overflow-hidden bg-white hover:bg-slate-100 border border-slate-200"
-        variant="outline"
+      {/* Mascot character button */}
+      <div 
+        className="cursor-pointer z-50" 
+        onClick={toggleBubble}
+        aria-label="Help mascot"
       >
-        <div className="animate-float">
-          <MascotCharacter
-            emotion={showSpeechBubble ? "happy" : "neutral"}
-            size="md"
-            animated={false}
-          />
-        </div>
-        <span className="sr-only">Get help</span>
-      </Button>
-      
-      {/* Notification dot for new users */}
-      {!isOnboardingComplete && (
-        <div className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 border-white" />
-      )}
+        <MascotCharacter
+          emotion={getDisplayEmotion()}
+          size={size}
+          className={pulseEffect ? 'pulse' : ''}
+        />
+      </div>
     </div>
   );
 };

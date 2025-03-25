@@ -1,80 +1,148 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FeatureSpotlight from './FeatureSpotlight';
 import { MascotEmotion } from './MascotCharacter';
+import './onboarding.css';
 
-export interface TourStep {
-  targetSelector: string;
+interface TourStep {
+  selector: string;
   message: string;
   position?: 'top' | 'right' | 'bottom' | 'left';
   mascotEmotion?: MascotEmotion;
   showMascot?: boolean;
-  nextLabel?: string;
 }
 
 interface FeatureTourProps {
   steps: TourStep[];
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
+  initialStep?: number;
   onComplete?: () => void;
-  currentStep?: number;
+  onSkip?: () => void;
+  nextLabel?: string;
+  prevLabel?: string;
+  skipLabel?: string;
+  showControls?: boolean;
+  autoStart?: boolean;
+  autoScroll?: boolean;
+  openDelay?: number;
 }
 
 const FeatureTour: React.FC<FeatureTourProps> = ({
   steps,
-  open = false,
-  onOpenChange,
+  initialStep = 0,
   onComplete,
-  currentStep: initialStep = 0,
+  onSkip,
+  nextLabel = 'Next',
+  prevLabel = 'Previous',
+  skipLabel = 'Skip Tour',
+  showControls = true,
+  autoStart = true,
+  autoScroll = true,
+  openDelay = 300,
 }) => {
-  const [currentStep, setCurrentStep] = useState(initialStep);
-  const [isOpen, setIsOpen] = useState(open);
-
-  // Update local state when open prop changes
-  React.useEffect(() => {
-    setIsOpen(open);
-  }, [open]);
-
-  const handleStepChange = (next: boolean) => {
-    if (next) {
-      if (currentStep < steps.length - 1) {
-        setCurrentStep(currentStep + 1);
-      } else {
-        handleComplete();
-      }
+  const [currentStep, setCurrentStep] = useState<number | null>(autoStart ? null : -1);
+  const [isOpen, setIsOpen] = useState(false);
+  
+  // Initialize the tour after a small delay
+  useEffect(() => {
+    if (autoStart && steps.length > 0) {
+      const timer = setTimeout(() => {
+        setCurrentStep(initialStep);
+        setIsOpen(true);
+      }, openDelay);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [autoStart, initialStep, openDelay, steps.length]);
+  
+  // Handle next step
+  const handleNext = () => {
+    if (currentStep !== null && currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
     } else {
-      if (currentStep > 0) {
-        setCurrentStep(currentStep - 1);
-      }
+      // Last step - complete the tour
+      handleComplete();
     }
   };
-
+  
+  // Handle previous step
+  const handlePrevious = () => {
+    if (currentStep !== null && currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+  
+  // Handle skip tour
+  const handleSkip = () => {
+    setIsOpen(false);
+    setCurrentStep(null);
+    if (onSkip) onSkip();
+  };
+  
+  // Handle tour completion
   const handleComplete = () => {
     setIsOpen(false);
-    if (onOpenChange) onOpenChange(false);
+    setCurrentStep(null);
     if (onComplete) onComplete();
   };
-
-  if (!isOpen || steps.length === 0 || currentStep >= steps.length) {
+  
+  // Render nothing if tour is not active or no steps are provided
+  if (currentStep === null || currentStep === -1 || steps.length === 0) {
     return null;
   }
-
-  const step = steps[currentStep];
-
+  
+  // Get current step data
+  const currentStepData = steps[currentStep];
+  
   return (
-    <FeatureSpotlight
-      targetSelector={step.targetSelector}
-      message={`${currentStep + 1}/${steps.length}: ${step.message}`}
-      position={step.position || 'bottom'}
-      mascotEmotion={step.mascotEmotion || 'pointing'}
-      showMascot={step.showMascot !== false}
-      open={isOpen}
-      onOpenChange={value => {
-        setIsOpen(value);
-        if (onOpenChange) onOpenChange(value);
-      }}
-      onNext={() => handleStepChange(true)}
-      nextLabel={step.nextLabel || (currentStep === steps.length - 1 ? 'Finish' : 'Next')}
-    />
+    <>
+      <FeatureSpotlight
+        selector={currentStepData.selector}
+        message={currentStepData.message}
+        position={currentStepData.position || 'bottom'}
+        mascotEmotion={currentStepData.mascotEmotion || 'pointing'}
+        showMascot={currentStepData.showMascot !== undefined ? currentStepData.showMascot : true}
+        onClose={handleSkip}
+        onAction={handleNext}
+        actionLabel={currentStep < steps.length - 1 ? nextLabel : 'Finish'}
+        autoFocus={autoScroll}
+      />
+      
+      {/* Tour controls for navigation and skipping */}
+      {showControls && (
+        <div className="tour-controls">
+          <div className="flex justify-between fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white p-2 rounded-lg shadow-md z-50">
+            {/* Step indicators */}
+            <div className="flex items-center space-x-1 px-2">
+              {steps.map((_, index) => (
+                <div 
+                  key={index}
+                  className={`w-2 h-2 rounded-full ${index === currentStep ? 'bg-primary' : 'bg-gray-300'}`}
+                  aria-label={`Step ${index + 1}`}
+                />
+              ))}
+            </div>
+            
+            {/* Navigation buttons */}
+            <div className="flex items-center space-x-2">
+              {currentStep > 0 && (
+                <button 
+                  onClick={handlePrevious} 
+                  className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                >
+                  {prevLabel}
+                </button>
+              )}
+              
+              <button 
+                onClick={handleSkip}
+                className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700"
+              >
+                {skipLabel}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
