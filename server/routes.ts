@@ -3454,8 +3454,8 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         // Fetch players for this team
         const playersList = await db
           .select()
-          .from(players)
-          .where(eq(players.teamId, teamId));
+          .from(playersTable)
+          .where(eq(playersTable.teamId, teamId));
           
         // Parse coach JSON if it exists
         let coachData = {};
