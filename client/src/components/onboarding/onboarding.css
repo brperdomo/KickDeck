@@ -1,4 +1,33 @@
-/* Animation for the mascot floating effect */
+/* Onboarding-specific styles */
+.spotlight-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 40;
+}
+
+.spotlight-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+}
+
+.spotlight-hole {
+  position: absolute;
+  background-color: transparent;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+/* Animation for the floating mascot */
 @keyframes float {
   0% {
     transform: translateY(0px);
@@ -15,108 +44,35 @@
   animation: float 4s ease-in-out infinite;
 }
 
-/* Spotlight effect for the feature tour */
-.spotlight-cutout {
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
-  border-radius: 4px;
-  overflow: visible;
-  z-index: 100;
-}
-
-/* Fade-in animation for speech bubbles and modals */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
-}
-
-/* Pulse highlight animation for targeted elements */
-@keyframes pulseHighlight {
-  0% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
-  }
-}
-
-.animate-pulse-highlight {
-  animation: pulseHighlight 1.5s infinite;
-  position: relative;
-  z-index: 100;
-}
-
-/* Content highlight for text emphasis */
-.highlight-text {
-  background: linear-gradient(180deg, transparent 70%, rgba(34, 197, 94, 0.3) 30%);
-  display: inline;
-}
-
-/* Badge for new features */
-.new-badge {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background-color: #f43f5e;
-  color: white;
-  font-size: 0.6rem;
-  font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* Mascot bounce animation */
-@keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
+/* Animation for the mascot bounce */
+@keyframes bounce-mascot {
+  0%, 100% {
     transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
   }
-  40% {
+  50% {
     transform: translateY(-15px);
-  }
-  60% {
-    transform: translateY(-7px);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
   }
 }
 
 .animate-bounce-mascot {
-  animation: bounce 2s ease infinite;
+  animation: bounce-mascot 1s infinite;
 }
 
-/* Wave animation for the mascot */
+/* Animation for the waving hand */
 @keyframes wave {
   0% {
     transform: rotate(0deg);
   }
-  10% {
-    transform: rotate(16deg);
-  }
-  20% {
-    transform: rotate(-8deg);
-  }
-  30% {
-    transform: rotate(16deg);
-  }
-  40% {
-    transform: rotate(-4deg);
+  25% {
+    transform: rotate(15deg);
   }
   50% {
-    transform: rotate(10deg);
-  }
-  60% {
     transform: rotate(0deg);
+  }
+  75% {
+    transform: rotate(15deg);
   }
   100% {
     transform: rotate(0deg);
@@ -124,30 +80,133 @@
 }
 
 .animate-wave {
-  animation: wave 2.5s ease infinite;
-  transform-origin: 70% 70%;
-  display: inline-block;
+  animation: wave 1.5s ease-in-out infinite;
+  transform-origin: bottom center;
 }
 
-/* Progress indicator for onboarding steps */
-.step-indicator {
+/* Fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Pulse animation for highlighting UI elements */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--primary), 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(var(--primary), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--primary), 0);
+  }
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Tour navigation */
+.tour-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.tour-progress {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.tour-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #ccc;
+}
+
+.tour-dot.active {
+  background-color: var(--primary);
+  transform: scale(1.25);
+}
+
+/* Feature spotlight style */
+.feature-spotlight {
+  position: relative;
+  z-index: 50;
+}
+
+.feature-spotlight-content {
+  position: absolute;
+  z-index: 51;
+  background-color: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 300px;
+}
+
+/* Floating mascot button */
+.floating-mascot-button {
+  position: fixed;
+  z-index: 50;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.floating-mascot-button:hover {
+  transform: scale(1.1);
+}
+
+/* Onboarding modal */
+.onboarding-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
-  gap: 8px;
-  margin: 20px 0;
+  align-items: center;
+  z-index: 100;
 }
 
-.step-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background-color: #e2e8f0;
+.onboarding-modal {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
-.step-dot.active {
-  background-color: #22c55e;
+.onboarding-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
 }
 
-.step-dot.completed {
-  background-color: #22c55e;
+.onboarding-modal-body {
+  margin-bottom: 1.5rem;
+}
+
+.onboarding-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
 }

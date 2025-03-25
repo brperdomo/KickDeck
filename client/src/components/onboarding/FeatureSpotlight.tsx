@@ -1,228 +1,190 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { Button } from '@/components/ui/button';
-import { ChevronRight } from 'lucide-react';
-import { MascotEmotion } from './MascotCharacter';
+import React, { useRef, useEffect, useState } from 'react';
 import SpeechBubble from './SpeechBubble';
+import { createPortal } from 'react-dom';
 import './onboarding.css';
 
-export interface FeatureSpotlightProps {
-  targetSelector: string;
+interface FeatureSpotlightProps {
+  selector: string;
   message: string;
   position?: 'top' | 'right' | 'bottom' | 'left';
-  mascotEmotion?: MascotEmotion;
+  onClose?: () => void;
+  onAction?: () => void;
+  actionLabel?: string;
+  maskClosable?: boolean;
+  disableScroll?: boolean;
+  highlightPadding?: number;
   showMascot?: boolean;
-  nextLabel?: string;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  onNext?: () => void;
-  onPrevious?: () => void;
+  mascotEmotion?: string;
+  autoFocus?: boolean;
 }
 
 const FeatureSpotlight: React.FC<FeatureSpotlightProps> = ({
-  targetSelector,
+  selector,
   message,
   position = 'bottom',
-  mascotEmotion = 'pointing',
+  onClose,
+  onAction,
+  actionLabel,
+  maskClosable = true,
+  disableScroll = true,
+  highlightPadding = 8,
   showMascot = true,
-  nextLabel = 'Next',
-  open = true,
-  onOpenChange,
-  onNext,
-  onPrevious,
+  mascotEmotion = 'pointing',
+  autoFocus = true,
 }) => {
   const [targetElement, setTargetElement] = useState<Element | null>(null);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
-  const [spotlightPosition, setSpotlightPosition] = useState({ top: 0, left: 0 });
   const [bubblePosition, setBubblePosition] = useState({ top: 0, left: 0 });
-  const [isVisible, setIsVisible] = useState(false);
-  
-  // Initialize
+  const spotlightRef = useRef<HTMLDivElement>(null);
+  const holeRef = useRef<HTMLDivElement>(null);
+
+  // Find the target element based on selector and update positioning
   useEffect(() => {
-    if (!open) {
-      setIsVisible(false);
-      return;
-    }
-    
-    const element = document.querySelector(targetSelector);
+    const element = document.querySelector(selector);
     if (element) {
       setTargetElement(element);
+      
+      // Calculate the position and size of the element
       const rect = element.getBoundingClientRect();
       setTargetRect(rect);
       
-      // Calculate spotlight position
-      setSpotlightPosition({
-        top: rect.top + window.scrollY,
-        left: rect.left + window.scrollX,
-      });
+      // Calculate the position for the speech bubble
+      calculateBubblePosition(rect);
       
-      // Calculate speech bubble position based on target and position prop
-      calculateBubblePosition(rect, position);
+      // Scroll to element if needed and autoFocus is enabled
+      if (autoFocus) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       
-      // Add highlight to the target element
-      element.classList.add('animate-pulse-highlight');
-      
-      // Show after brief delay to ensure smooth animation
-      setTimeout(() => {
-        setIsVisible(true);
-      }, 100);
-    } else {
-      console.warn(`Target element not found: ${targetSelector}`);
-      setIsVisible(false);
-      if (onOpenChange) onOpenChange(false);
+      // Make target element focusable if it's not already
+      if (element instanceof HTMLElement && !element.getAttribute('tabindex')) {
+        element.setAttribute('tabindex', '-1');
+        setTimeout(() => element.focus(), 500);
+      }
     }
     
+    // Cleanup function
     return () => {
-      if (element) {
-        element.classList.remove('animate-pulse-highlight');
+      if (targetElement instanceof HTMLElement && !targetElement.getAttribute('data-original-tabindex')) {
+        targetElement.removeAttribute('tabindex');
       }
     };
-  }, [targetSelector, open, position]);
+  }, [selector, autoFocus]);
   
-  // Recalculate positions on window resize
+  // Update spotlight position on window resize
   useEffect(() => {
     const handleResize = () => {
       if (targetElement) {
         const rect = targetElement.getBoundingClientRect();
         setTargetRect(rect);
-        
-        setSpotlightPosition({
-          top: rect.top + window.scrollY,
-          left: rect.left + window.scrollX,
-        });
-        
-        calculateBubblePosition(rect, position);
+        calculateBubblePosition(rect);
       }
     };
     
     window.addEventListener('resize', handleResize);
-    window.addEventListener('scroll', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [targetElement]);
+  
+  // Disable document scrolling if needed
+  useEffect(() => {
+    if (disableScroll) {
+      document.body.style.overflow = 'hidden';
+    }
     
     return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleResize);
+      document.body.style.overflow = '';
     };
-  }, [targetElement, position]);
+  }, [disableScroll]);
   
-  // Handle closing
-  const handleClose = () => {
-    setIsVisible(false);
-    if (onOpenChange) onOpenChange(false);
-    
-    // Remove highlight from the target element
-    if (targetElement) {
-      targetElement.classList.remove('animate-pulse-highlight');
-    }
-  };
-  
-  // Calculate speech bubble position based on target and position prop
-  const calculateBubblePosition = (rect: DOMRect, pos: string) => {
-    const padding = 16; // space between spotlight and bubble
+  // Calculate the position for the speech bubble based on target rect and desired position
+  const calculateBubblePosition = (rect: DOMRect) => {
+    const bubbleWidth = 300; // Speech bubble width
+    const bubbleHeight = 150; // Estimated speech bubble height
+    const spacing = 20; // Space between the bubble and target
     
     let top = 0;
     let left = 0;
     
-    switch (pos) {
+    switch (position) {
       case 'top':
-        top = rect.top + window.scrollY - padding;
-        left = rect.left + window.scrollX + rect.width / 2;
+        top = rect.top - bubbleHeight - spacing;
+        left = rect.left + (rect.width / 2) - (bubbleWidth / 2);
         break;
       case 'right':
-        top = rect.top + window.scrollY + rect.height / 2;
-        left = rect.left + window.scrollX + rect.width + padding;
+        top = rect.top + (rect.height / 2) - (bubbleHeight / 2);
+        left = rect.right + spacing;
         break;
       case 'bottom':
-        top = rect.top + window.scrollY + rect.height + padding;
-        left = rect.left + window.scrollX + rect.width / 2;
+        top = rect.bottom + spacing;
+        left = rect.left + (rect.width / 2) - (bubbleWidth / 2);
         break;
       case 'left':
-        top = rect.top + window.scrollY + rect.height / 2;
-        left = rect.left + window.scrollX - padding;
+        top = rect.top + (rect.height / 2) - (bubbleHeight / 2);
+        left = rect.left - bubbleWidth - spacing;
         break;
     }
+    
+    // Ensure the bubble stays within the viewport
+    top = Math.max(10, top);
+    left = Math.max(10, left);
+    left = Math.min(left, window.innerWidth - bubbleWidth - 10);
     
     setBubblePosition({ top, left });
   };
   
-  if (!isVisible || !targetRect) {
+  // Handle mask click
+  const handleMaskClick = (e: React.MouseEvent) => {
+    if (maskClosable && spotlightRef.current === e.target && onClose) {
+      onClose();
+    }
+  };
+  
+  // If no target element found, don't render anything
+  if (!targetRect) {
     return null;
   }
   
+  // Render the spotlight with hole cutout and speech bubble
   return createPortal(
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      {/* Overlay */}
+    <div 
+      ref={spotlightRef}
+      className="spotlight-container"
+      onClick={handleMaskClick}
+      style={{ pointerEvents: 'auto' }}
+    >
+      <div className="spotlight-overlay" />
+      
+      {/* Cutout hole for the highlighted element */}
       <div 
-        className="absolute inset-0 bg-black/70" 
-        onClick={handleClose}
+        ref={holeRef}
+        className="spotlight-hole"
+        style={{
+          top: targetRect.top - highlightPadding,
+          left: targetRect.left - highlightPadding,
+          width: targetRect.width + (highlightPadding * 2),
+          height: targetRect.height + (highlightPadding * 2),
+        }}
       />
       
-      {/* Spotlight cutout */}
-      <div
-        className="spotlight-cutout absolute"
-        style={{
-          width: `${targetRect.width + 8}px`,
-          height: `${targetRect.height + 8}px`,
-          top: `${spotlightPosition.top - 4}px`,
-          left: `${spotlightPosition.left - 4}px`,
-        }}
-      >
-        {/* Outline for visible element */}
-        <div 
-          className="absolute inset-0 border-2 border-green-400 rounded-md"
-        />
-      </div>
-      
-      {/* Speech bubble */}
-      <div
-        className="absolute"
-        style={{
-          top: bubblePosition.top,
-          left: bubblePosition.left,
-          transform: `translate(${position === 'left' ? '-100%' : position === 'right' ? '0' : '-50%'}, ${position === 'top' ? '-100%' : position === 'bottom' ? '0' : '-50%'})`,
-        }}
-      >
+      {/* Speech bubble with description */}
+      <div style={{ 
+        position: 'absolute', 
+        top: bubblePosition.top, 
+        left: bubblePosition.left,
+        zIndex: 50,
+        width: 'fit-content',
+        maxWidth: '300px',
+      }}>
         <SpeechBubble
           message={message}
           position={position}
-          onClose={handleClose}
-          actionLabel={nextLabel}
-          onAction={onNext}
-          mascotEmotion={mascotEmotion}
+          onClose={onClose}
+          onAction={onAction}
+          actionLabel={actionLabel}
           showMascot={showMascot}
+          mascotEmotion={mascotEmotion}
+          showClose={true}
         />
-      </div>
-      
-      {/* Skip button */}
-      <button 
-        className="fixed top-4 right-4 text-white hover:text-gray-300 text-sm"
-        onClick={handleClose}
-      >
-        Skip
-      </button>
-      
-      {/* Navigation buttons */}
-      <div className="fixed bottom-4 right-4 flex gap-2">
-        {onPrevious && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onPrevious}
-            className="bg-white text-gray-800"
-          >
-            Previous
-          </Button>
-        )}
-        
-        {onNext && (
-          <Button 
-            variant="default" 
-            size="sm" 
-            onClick={onNext}
-            className="bg-green-600 hover:bg-green-700 text-white"
-          >
-            {nextLabel} <ChevronRight className="ml-1 h-4 w-4" />
-          </Button>
-        )}
       </div>
     </div>,
     document.body
