@@ -565,7 +565,7 @@ export default function EventRegistration() {
           players: processedPlayers,
           termsAcknowledged: termsAgreed,
           registrationFee: registrationFee,
-          termsAcknowledgedAt: new Date().toISOString()
+          termsAcknowledgedAt: new Date() // Send as Date object, server will handle proper formatting
         }),
       });
       
