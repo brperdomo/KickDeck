@@ -21,7 +21,7 @@ async function testTeamRegistration() {
     // Now try to register a team with the authenticated session
     const payload = {
       eventId: "1154838784",  // Using the Demo event ID
-      ageGroupId: 1,  // Assuming ID 1 exists
+      ageGroupId: 2509,  // Using valid U16 Boys age group
       name: "Test Team - Snake Case Fix",
       headCoachName: "John Coach",
       headCoachEmail: "coach@example.com",
@@ -36,7 +36,7 @@ async function testTeamRegistration() {
           lastName: "One",
           jerseyNumber: "10",
           position: "Forward",
-          dateOfBirth: "2010-01-01",
+          dateOfBirth: "2010-01-01", // Birth year matching U16 Boys
           emergencyContactName: "Emergency Contact",
           emergencyContactPhone: "555-9999"
         }
