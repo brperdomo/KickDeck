@@ -28,8 +28,8 @@ async function testCreatePaymentIntent() {
       amount: 10000, // $100.00
       currency: 'usd',
       description: 'Test payment intent',
+      teamId: 12, // Using a valid team ID from our database
       metadata: {
-        teamId: '12345',
         eventId: '67890',
         purchaseType: 'team_registration'
       }
@@ -58,8 +58,8 @@ async function testSimulateWebhook(paymentIntentId) {
   try {
     const webhookData = {
       paymentIntentId: paymentIntentId,
+      teamId: 12, // Using a valid team ID from our database
       metadata: {
-        teamId: '12345',
         eventId: '67890',
         purchaseType: 'team_registration'
       }
