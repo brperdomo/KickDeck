@@ -1549,8 +1549,11 @@ export default function EventRegistration() {
                                     </div>
                                   </td>
                                   <td className="px-4 py-3 text-sm">
-                                    <span className="px-2 py-1 bg-amber-100 text-amber-800 rounded-full text-xs">
+                                    <span className="px-2 py-1 bg-amber-100 text-amber-800 rounded-full text-xs flex items-center gap-1">
                                       {fee.feeType || 'Additional'}
+                                      {fee.isRequired && (
+                                        <Badge variant="outline" className="ml-1 text-[10px] py-0 h-4">Required</Badge>
+                                      )}
                                     </span>
                                   </td>
                                   <td className="px-4 py-3 text-right font-medium">
