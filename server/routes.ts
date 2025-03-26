@@ -2401,7 +2401,12 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
     app.post('/api/auth/reset-password', completePasswordReset);
     
     // Get current user's registrations
-    app.get('/api/user/registrations', getCurrentUserRegistrations);
+    app.get('/api/user/registrations', (req, res, next) => {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      next();
+    }, getCurrentUserRegistrations);
 
     // Event creation endpoint
     app.post('/api/admin/events', isAdmin, async (req, res) => {
