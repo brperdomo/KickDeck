@@ -1750,8 +1750,8 @@ function TeamsView() {
     setIsDetailsDialogOpen(true);
   };
 
-  // Handle team approval/rejection
-  const handleApproveReject = (team: any, status: 'approved' | 'rejected') => {
+  // Handle team status update
+  const handleStatusUpdate = (team: any, status: 'registered' | 'approved' | 'rejected' | 'withdrawn' | 'refunded') => {
     setSelectedTeam({ ...team, status });
     setIsApprovalDialogOpen(true);
   };
@@ -2182,18 +2182,28 @@ function TeamsView() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {selectedTeam?.status === 'approved' ? 'Approve Team Registration' : 'Reject Team Registration'}
+              {selectedTeam?.status === 'approved' ? 'Approve Team Registration' : 
+               selectedTeam?.status === 'rejected' ? 'Reject Team Registration' :
+               selectedTeam?.status === 'withdrawn' ? 'Mark Team as Withdrawn' :
+               selectedTeam?.status === 'registered' ? 'Reset to Pending Status' : 'Update Team Status'}
             </DialogTitle>
             <DialogDescription>
               {selectedTeam?.status === 'approved' 
                 ? 'This will approve the team registration and notify the manager.'
-                : 'This will reject the team registration. Please provide a reason for rejection.'}
+                : selectedTeam?.status === 'rejected'
+                ? 'This will reject the team registration. Please provide a reason for rejection.'
+                : selectedTeam?.status === 'withdrawn'
+                ? 'This will mark the team as withdrawn from the event. Please provide a reason if applicable.'
+                : selectedTeam?.status === 'registered'
+                ? 'This will reset the team status to pending review.'
+                : 'This will update the team status and notify the manager.'}
             </DialogDescription>
           </DialogHeader>
           
-          {selectedTeam?.status === 'rejected' && (
+          {/* Show notes field for rejection or withdrawal */}
+          {(selectedTeam?.status === 'rejected' || selectedTeam?.status === 'withdrawn') && (
             <Textarea 
-              placeholder="Reason for rejection (will be shared with the manager)"
+              placeholder={`Reason for ${selectedTeam?.status === 'rejected' ? 'rejection' : 'withdrawal'} (will be shared with the manager)`}
               value={selectedTeam?.notes || ''}
               onChange={(e) => setSelectedTeam({ ...selectedTeam, notes: e.target.value })}
             />
@@ -2206,9 +2216,14 @@ function TeamsView() {
             <Button 
               onClick={() => confirmStatusUpdate(selectedTeam?.notes)}
               disabled={updateTeamStatusMutation.isPending}
+              variant={selectedTeam?.status === 'rejected' || selectedTeam?.status === 'withdrawn' ? 'destructive' : 
+                       selectedTeam?.status === 'approved' ? 'default' : 'outline'}
             >
               {updateTeamStatusMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Confirm {selectedTeam?.status === 'approved' ? 'Approval' : 'Rejection'}
+              {selectedTeam?.status === 'approved' ? 'Confirm Approval' : 
+               selectedTeam?.status === 'rejected' ? 'Confirm Rejection' :
+               selectedTeam?.status === 'withdrawn' ? 'Confirm Withdrawal' :
+               selectedTeam?.status === 'registered' ? 'Reset Status' : 'Update Status'}
             </Button>
           </DialogFooter>
         </DialogContent>
