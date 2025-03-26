@@ -217,7 +217,7 @@ export async function processRefund(req: Request, res: Response) {
     // Send email notification about the refund
     try {
       await sendTemplatedEmail(
-        team.contactEmail,
+        team.managerEmail,
         'payment_refunded',
         {
           teamName: team.name,
