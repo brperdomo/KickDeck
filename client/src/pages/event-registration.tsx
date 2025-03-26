@@ -55,6 +55,8 @@ interface Fee {
   id: number;
   name: string;
   amount: number; // In cents
+  beginDate?: string; // When fee starts being valid
+  endDate?: string; // When fee stops being valid
 }
 
 type RegistrationStep = 'auth' | 'personal' | 'team' | 'payment' | 'review' | 'complete';
@@ -492,6 +494,8 @@ export default function EventRegistration() {
   // State to track terms agreement
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [registrationFee, setRegistrationFee] = useState<number | null>(null);
+  const [availableFees, setAvailableFees] = useState<Fee[]>([]);
+  const [selectedFee, setSelectedFee] = useState<Fee | null>(null);
   
   // Fetch fee information when age group is selected
   useEffect(() => {
@@ -504,11 +508,46 @@ export default function EventRegistration() {
           const response = await fetch(`/api/events/${eventId}/fees?ageGroupId=${ageGroupId}`);
           if (response.ok) {
             const data = await response.json();
-            if (data.fee) {
-              setRegistrationFee(data.fee.amount);
+            console.log('Fetched fees:', data);
+            
+            if (data.fees && data.fees.length > 0) {
+              setAvailableFees(data.fees);
+              
+              // Select the current applicable fee (based on current date)
+              const now = new Date();
+              const applicableFee = data.fees.find((fee: Fee) => {
+                const beginDate = fee.beginDate ? new Date(fee.beginDate) : null;
+                const endDate = fee.endDate ? new Date(fee.endDate) : null;
+                
+                // If no date range is specified, the fee is always applicable
+                if (!beginDate && !endDate) return true;
+                
+                // Check if current date is within the range
+                const afterBegin = !beginDate || now >= beginDate;
+                const beforeEnd = !endDate || now <= endDate;
+                
+                return afterBegin && beforeEnd;
+              }) || data.fees[0]; // Default to first fee if no applicable fee found
+              
+              setSelectedFee(applicableFee);
+              setRegistrationFee(applicableFee.amount);
+              
               // Only update if we don't already have the fee information to avoid infinite loop
               if (!selectedAgeGroup.registrationFee) {
-                setSelectedAgeGroup(prev => prev ? { ...prev, registrationFee: data.fee.amount } : prev);
+                setSelectedAgeGroup(prev => prev ? { 
+                  ...prev, 
+                  registrationFee: applicableFee.amount 
+                } : prev);
+              }
+            } else if (data.fee) {
+              // Backward compatibility with old API response format
+              const fee = data.fee;
+              setAvailableFees([fee]);
+              setSelectedFee(fee);
+              setRegistrationFee(fee.amount);
+              
+              if (!selectedAgeGroup.registrationFee) {
+                setSelectedAgeGroup(prev => prev ? { ...prev, registrationFee: fee.amount } : prev);
               }
             }
           }
@@ -1313,22 +1352,61 @@ export default function EventRegistration() {
                 {/* Fee Display */}
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <h4 className="font-semibold text-blue-800 mb-2">Registration Fee</h4>
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-col">
+                    <div className="mb-2">
                       <p className="text-gray-700">
                         {selectedAgeGroup?.divisionCode || selectedAgeGroup?.ageGroup} Team Registration
                       </p>
-                      {selectedAgeGroup?.registrationFee && (
-                        <p className="text-sm text-gray-500 mt-1">
-                          This fee includes entry for {event.name} tournament
-                        </p>
-                      )}
+                      <p className="text-sm text-gray-500 mt-1">
+                        This fee includes entry for {event.name} tournament
+                      </p>
                     </div>
-                    <div className="text-xl font-bold text-blue-800">
-                      {selectedAgeGroup?.registrationFee 
-                        ? `$${(selectedAgeGroup.registrationFee / 100).toFixed(2)}` 
-                        : "Fee not available"}
-                    </div>
+                    
+                    {availableFees.length > 1 ? (
+                      <div className="space-y-3 mt-2 border-t pt-3">
+                        <h5 className="font-medium text-blue-800">Available Fee Options:</h5>
+                        <div className="grid gap-2">
+                          {availableFees.map((fee) => (
+                            <div 
+                              key={fee.id}
+                              onClick={() => {
+                                setSelectedFee(fee);
+                                setRegistrationFee(fee.amount);
+                              }}
+                              className={`
+                                p-3 border rounded-md flex justify-between items-center cursor-pointer
+                                ${selectedFee?.id === fee.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}
+                              `}
+                            >
+                              <div>
+                                <p className="font-medium">{fee.name}</p>
+                                {(fee.beginDate || fee.endDate) && (
+                                  <p className="text-xs text-gray-500">
+                                    {fee.beginDate && `Available from ${new Date(fee.beginDate).toLocaleDateString()}`}
+                                    {fee.beginDate && fee.endDate && ' to '}
+                                    {fee.endDate && `${new Date(fee.endDate).toLocaleDateString()}`}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="font-bold text-blue-800">
+                                ${(fee.amount / 100).toFixed(2)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between mt-2">
+                        <div>
+                          {selectedFee?.name && <p className="font-medium">{selectedFee.name}</p>}
+                        </div>
+                        <div className="text-xl font-bold text-blue-800">
+                          {registrationFee 
+                            ? `$${(registrationFee / 100).toFixed(2)}` 
+                            : "Fee not available"}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
@@ -1390,14 +1468,14 @@ export default function EventRegistration() {
                 </div>
                 
                 {/* Payment Form */}
-                {termsAgreed && selectedAgeGroup?.registrationFee && (
+                {termsAgreed && registrationFee && (
                   <div className="border rounded-lg p-4 space-y-4">
                     <h4 className="font-semibold text-blue-800">Payment Information</h4>
                     <p className="text-sm text-gray-600 mb-4">Please provide your payment details to complete registration</p>
                     
                     <StripeProvider>
                       <PaymentForm 
-                        amount={selectedAgeGroup.registrationFee} 
+                        amount={registrationFee} 
                         onSuccess={() => {
                           // Make sure to sync the latest players array with form data
                           teamForm.setValue('players', players);
