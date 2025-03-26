@@ -237,7 +237,10 @@ export const teams = pgTable("teams", {
   termsAcknowledged: boolean("terms_acknowledged").default(false),
   termsAcknowledgedAt: timestamp("terms_acknowledged_at"),
   termsAcknowledgementRecord: text("terms_acknowledgement_record"), // Path to PDF or record ID
-  notes: text("notes"), // Admin notes about the team
+  // Payment tracking fields
+  paymentIntentId: text("payment_intent_id"), // Stripe payment intent ID
+  refundDate: text("refund_date"),  // Date when refund was processed
+  notes: text("notes") // General notes field for admin comments
 });
 
 export const games = pgTable("games", {

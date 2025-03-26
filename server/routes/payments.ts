@@ -110,7 +110,7 @@ export async function getPaymentIntentStatus(req: Request, res: Response) {
         log(`Found simulated payment status 'succeeded' for intent: ${id}`, 'payment-test');
         return res.json({
           status: 'succeeded', // Simulated success status for testing
-          amount: team.registrationFee || 2500,
+          amount: team.totalAmount || team.registrationFee || 2500,
           currency: 'usd',
           created: Math.floor(Date.now() / 1000)
         });
@@ -204,7 +204,8 @@ export async function handleStripeWebhook(req: Request, res: Response) {
             .update(teams)
             .set({
               status: 'paid', // Use the status field for payment status
-              registrationFee: paymentIntent.amount, // Use registrationFee for the amount
+              totalAmount: paymentIntent.amount, // Store the total amount paid
+              paymentIntentId: paymentIntent.id, // Store the payment intent ID for refunds
               notes: `Payment completed via webhook. Payment ID: ${paymentIntent.id}`, // Store payment ID in notes
               termsAcknowledgedAt: new Date(), // Record payment confirmation timestamp
               termsAcknowledged: true // Mark as acknowledged
