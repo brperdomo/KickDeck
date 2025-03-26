@@ -6,10 +6,26 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatDate(dateString: string) {
-  // Parse the date string and add 'T00:00:00' to ensure it's treated as start of day in local timezone
-  const date = new Date(`${dateString.split('T')[0]}T00:00:00`);
-  return format(date, 'MMM d, yyyy')
+export function formatDate(dateString: string | null | undefined) {
+  // Handle null, undefined or empty strings
+  if (!dateString) {
+    return 'N/A';
+  }
+  
+  try {
+    // Parse the date string and add 'T00:00:00' to ensure it's treated as start of day in local timezone
+    const date = new Date(dateString);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return 'Invalid date';
+    }
+    
+    return format(date, 'MMM d, yyyy');
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Invalid date';
+  }
 }
 
 export function formatBytes(bytes: number, decimals: number = 2): string {
