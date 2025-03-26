@@ -69,6 +69,7 @@ import { BrandingPreviewProvider, useBrandingPreview } from "@/hooks/use-brandin
 import { BrandingPreview } from "@/components/BrandingPreview";
 import { useExportProcess } from "@/hooks/use-export-process";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatDate } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
