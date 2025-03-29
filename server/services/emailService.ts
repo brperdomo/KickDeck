@@ -209,28 +209,59 @@ export async function sendTemplatedEmail(
   const isDevelopment = process.env.NODE_ENV !== 'production';
   
   try {
-    const template = await getEmailTemplate(templateType);
-    
-    const subject = renderTemplate(template.subject, context);
-    const html = renderTemplate(template.content, context);
-    
-    await sendEmail({
-      to,
-      subject,
-      html,
-      from: `${template.senderName} <${template.senderEmail}>`
-    });
-    
-    console.log(`Templated email (${templateType}) sent to ${to}`);
-  } catch (error) {
-    console.error(`Error sending templated email (${templateType}):`, error);
-    
-    if (isDevelopment) {
-      // Rethrow errors in development mode for easier debugging
-      throw error;
+    // First get the email template with error handling
+    let template;
+    try {
+      template = await getEmailTemplate(templateType);
+    } catch (templateError) {
+      console.error(`Template error (${templateType}):`, templateError);
+      // Use fallback template if the specific template is not found
+      if (isDevelopment) {
+        // In development, use a debug template
+        template = {
+          subject: `[DEV MODE] ${templateType} notification`,
+          content: `<p>This is a development placeholder for the ${templateType} template.</p><pre>${JSON.stringify(context, null, 2)}</pre>`,
+          senderName: 'System',
+          senderEmail: 'system@example.com',
+          isActive: true,
+          type: templateType,
+          providerId: null
+        };
+      } else {
+        // In production, use a generic template instead of failing
+        template = {
+          subject: `${templateType.replace(/_/g, ' ')} notification`,
+          content: `<p>This is a notification regarding your team registration.</p>`,
+          senderName: 'System',
+          senderEmail: 'system@example.com',
+          isActive: true,
+          type: templateType,
+          providerId: null
+        };
+      }
+      console.log(`Using fallback template for ${templateType}`);
     }
     
-    // In production, log error but don't crash the application
+    try {
+      const subject = renderTemplate(template.subject, context);
+      const html = renderTemplate(template.content, context);
+      
+      await sendEmail({
+        to,
+        subject,
+        html,
+        from: `${template.senderName} <${template.senderEmail}>`
+      });
+      
+      console.log(`Templated email (${templateType}) sent to ${to}`);
+    } catch (renderError) {
+      console.error(`Error rendering or sending email (${templateType}):`, renderError);
+      // Don't throw here, even in development, to prevent API failures
+    }
+  } catch (error) {
+    console.error(`Unexpected error in sendTemplatedEmail (${templateType}):`, error);
+    
+    // Always log but never throw to keep API endpoints working
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error(`Failed to send templated email to ${to}: ${errorMessage}`);
   }
