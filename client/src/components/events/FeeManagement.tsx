@@ -63,6 +63,8 @@ const feeFormSchema = z.object({
   beginDate: z.string().optional().nullable(),
   endDate: z.string().optional().nullable(),
   accountingCodeId: z.number().nullable(),
+  feeType: z.string().default("registration"),
+  isRequired: z.boolean().default(true),
 });
 
 type FeeFormValues = z.infer<typeof feeFormSchema>;
@@ -102,6 +104,8 @@ export function FeeManagement() {
       beginDate: "",
       endDate: "",
       accountingCodeId: null,
+      feeType: "registration",
+      isRequired: true,
     },
   });
 
@@ -635,18 +639,25 @@ export function FeeManagement() {
     // Convert amount from string to number in cents
     const amountInCents = Math.round(parseFloat(data.amount) * 100);
 
+    // Log the data being submitted for debugging
+    console.log("Submitting fee data:", {...data, amount: amountInCents});
+
     if (editingFee) {
       // Update existing fee
       updateFeeMutation.mutate({
         id: editingFee.id,
         ...data,
         amount: amountInCents,
+        feeType: data.feeType || "registration",
+        isRequired: typeof data.isRequired === "boolean" ? data.isRequired : true,
       });
     } else {
       // Add new fee
       addFeeMutation.mutate({
         ...data,
         amount: amountInCents,
+        feeType: data.feeType || "registration",
+        isRequired: typeof data.isRequired === "boolean" ? data.isRequired : true,
       });
     }
 
@@ -727,6 +738,8 @@ export function FeeManagement() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Amount</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Required</TableHead>
                     <TableHead>Begin Date</TableHead>
                     <TableHead>End Date</TableHead>
                     <TableHead>Actions</TableHead>
@@ -736,7 +749,7 @@ export function FeeManagement() {
                   {feesQuery.data?.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={5}
+                        colSpan={7}
                         className="text-center py-8 text-gray-500"
                       >
                         No fees have been added yet
@@ -747,6 +760,20 @@ export function FeeManagement() {
                       <TableRow key={fee.id}>
                         <TableCell>{fee.name}</TableCell>
                         <TableCell>{formatCurrency(fee.amount)}</TableCell>
+                        <TableCell>
+                          <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20">
+                            {fee.feeType === "registration" ? "Registration" :
+                             fee.feeType === "uniform" ? "Uniform" :
+                             fee.feeType === "equipment" ? "Equipment" :
+                             fee.feeType === "tournament" ? "Tournament" : "Other"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {fee.isRequired !== false ? 
+                            <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Required</span> :
+                            <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">Optional</span>
+                          }
+                        </TableCell>
                         <TableCell>
                           {fee.beginDate
                             ? format(new Date(fee.beginDate), "MMM d, yyyy")
@@ -769,8 +796,9 @@ export function FeeManagement() {
                                   amount: (fee.amount / 100).toString(),
                                   beginDate: fee.beginDate ? fee.beginDate : "",
                                   endDate: fee.endDate ? fee.endDate : "",
-                                  accountingCodeId:
-                                    fee.accountingCodeId || null,
+                                  accountingCodeId: fee.accountingCodeId || null,
+                                  feeType: fee.feeType || "registration",
+                                  isRequired: typeof fee.isRequired === "boolean" ? fee.isRequired : true,
                                 });
                                 setEditingFee(fee);
                                 setIsDialogOpen(true);
@@ -824,6 +852,19 @@ export function FeeManagement() {
                             <span className="text-xs font-normal">
                               {formatCurrency(fee.amount)}
                             </span>
+                            <div className="mt-1 flex flex-col items-center gap-1">
+                              <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20">
+                                {fee.feeType === "registration" ? "Registration" :
+                                 fee.feeType === "uniform" ? "Uniform" :
+                                 fee.feeType === "equipment" ? "Equipment" :
+                                 fee.feeType === "tournament" ? "Tournament" : "Other"}
+                              </span>
+                              {fee.isRequired !== false && (
+                                <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                                  Required
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </TableHead>
                       ))}
@@ -996,6 +1037,56 @@ export function FeeManagement() {
                   </FormItem>
                 )}
               />
+              
+              <FormField
+                control={form.control}
+                name="feeType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fee Type</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select fee type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="registration">Registration Fee</SelectItem>
+                        <SelectItem value="uniform">Uniform Fee</SelectItem>
+                        <SelectItem value="equipment">Equipment Fee</SelectItem>
+                        <SelectItem value="tournament">Tournament Fee</SelectItem>
+                        <SelectItem value="other">Other Fee</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="isRequired"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Required Fee</FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        If checked, this fee will be automatically added to all registrations
+                        for the assigned age groups
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
 
               <DialogFooter>
                 <Button
@@ -1042,6 +1133,26 @@ export function FeeManagement() {
                     0,
                 )}
               </p>
+              <div className="mt-1 flex space-x-2">
+                {(() => {
+                  const fee = feesQuery.data.find((f) => f.id === selectedFeeId);
+                  return (
+                    <>
+                      <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20">
+                        {fee?.feeType === "registration" ? "Registration" :
+                         fee?.feeType === "uniform" ? "Uniform" :
+                         fee?.feeType === "equipment" ? "Equipment" :
+                         fee?.feeType === "tournament" ? "Tournament" : "Other"}
+                      </span>
+                      {fee?.isRequired !== false && (
+                        <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                          Required
+                        </span>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
             </div>
           )}
 
