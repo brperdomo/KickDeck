@@ -10,6 +10,8 @@ router.get('/', getTeams);
 router.get('/:teamId', getTeamById);
 
 // Update team status (approve/reject)
+router.put('/:teamId/status', updateTeamStatus);
+// Keep backward compatibility with PATCH as well
 router.patch('/:teamId/status', updateTeamStatus);
 
 // Process refund for rejected team

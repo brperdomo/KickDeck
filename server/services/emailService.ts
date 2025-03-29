@@ -116,8 +116,11 @@ async function getEmailTransporter(): Promise<Transporter> {
 
 /**
  * Gets an email template by type
+ * @param type The template type to fetch
+ * @param throwIfNotFound Whether to throw an error if template not found (default: false)
+ * @returns The template or null if not found and throwIfNotFound is false
  */
-async function getEmailTemplate(type: string) {
+async function getEmailTemplate(type: string, throwIfNotFound = false) {
   try {
     const [template] = await db
       .select()
@@ -128,13 +131,20 @@ async function getEmailTemplate(type: string) {
       ));
       
     if (!template) {
-      throw new Error(`No active template found for type: ${type}`);
+      if (throwIfNotFound) {
+        throw new Error(`No active template found for type: ${type}`);
+      }
+      console.warn(`No active template found for type: ${type}, using fallback`);
+      return null;
     }
     
     return template;
   } catch (error) {
     console.error(`Error getting email template for type ${type}:`, error);
-    throw error;
+    if (throwIfNotFound) {
+      throw error;
+    }
+    return null;
   }
 }
 
@@ -209,48 +219,26 @@ export async function sendTemplatedEmail(
   const isDevelopment = process.env.NODE_ENV !== 'production';
   
   try {
-    // First get the email template with error handling
-    let template;
-    try {
-      template = await getEmailTemplate(templateType);
-    } catch (templateError) {
-      console.error(`Template error (${templateType}):`, templateError);
-      // Use fallback template if the specific template is not found
-      if (isDevelopment) {
-        // In development, use a debug template
-        template = {
-          subject: `[DEV MODE] ${templateType} notification`,
-          content: `<p>This is a development placeholder for the ${templateType} template.</p><pre>${JSON.stringify(context, null, 2)}</pre>`,
-          senderName: 'System',
-          senderEmail: 'system@example.com',
-          isActive: true,
-          type: templateType,
-          providerId: null
-        };
-      } else {
-        // In production, use a generic template instead of failing
-        template = {
-          subject: `${templateType.replace(/_/g, ' ')} notification`,
-          content: `<p>This is a notification regarding your team registration.</p>`,
-          senderName: 'System',
-          senderEmail: 'system@example.com',
-          isActive: true,
-          type: templateType,
-          providerId: null
-        };
-      }
-      console.log(`Using fallback template for ${templateType}`);
+    // First get the email template using the updated non-throwing version
+    const template = await getEmailTemplate(templateType, false);
+    
+    // If no template found, use a fallback
+    const emailTemplate = template || createFallbackTemplate(templateType, context, isDevelopment);
+    
+    // At this point emailTemplate is guaranteed to exist because createFallbackTemplate always returns a value
+    if (!emailTemplate || !emailTemplate.subject || !emailTemplate.content) {
+      throw new Error(`Failed to generate a valid email template for ${templateType}`);
     }
     
     try {
-      const subject = renderTemplate(template.subject, context);
-      const html = renderTemplate(template.content, context);
+      const subject = renderTemplate(emailTemplate.subject, context);
+      const html = renderTemplate(emailTemplate.content, context);
       
       await sendEmail({
         to,
         subject,
         html,
-        from: `${template.senderName} <${template.senderEmail}>`
+        from: `${emailTemplate.senderName} <${emailTemplate.senderEmail}>`
       });
       
       console.log(`Templated email (${templateType}) sent to ${to}`);
@@ -264,6 +252,52 @@ export async function sendTemplatedEmail(
     // Always log but never throw to keep API endpoints working
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error(`Failed to send templated email to ${to}: ${errorMessage}`);
+  }
+}
+
+/**
+ * Creates a fallback template when a requested template is not found
+ */
+function createFallbackTemplate(templateType: string, context: TemplateContext, isDevelopment: boolean) {
+  if (isDevelopment) {
+    // In development, use a more detailed debug template
+    console.log(`Using detailed development fallback template for ${templateType}`);
+    return {
+      subject: `[DEV MODE] ${templateType} notification`,
+      content: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+          <h2 style="color: #333;">Development Mode - Template Missing</h2>
+          <p>This is a development placeholder for the <strong>${templateType}</strong> template which was not found in the database.</p>
+          <h3>Context Data:</h3>
+          <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow: auto;">${JSON.stringify(context, null, 2)}</pre>
+          <p style="margin-top: 20px; font-size: 12px; color: #666;">This template was generated automatically as a fallback in development mode.</p>
+        </div>
+      `,
+      senderName: "System (Dev)",
+      senderEmail: "noreply@example.com",
+      isActive: true,
+      type: templateType,
+      providerId: null
+    };
+  } else {
+    // In production, use a generic professional template
+    console.log(`Using generic production fallback template for ${templateType}`);
+    return {
+      subject: `${templateType.replace(/_/g, ' ')} notification`,
+      content: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+          <h2 style="color: #333;">Team Registration Update</h2>
+          <p>This is a notification regarding your team registration status.</p>
+          <p>Please check your dashboard for more details.</p>
+          <p style="margin-top: 20px; font-size: 12px; color: #666;">This is an automated notification.</p>
+        </div>
+      `,
+      senderName: "Team Registration System",
+      senderEmail: "noreply@matchpro.ai",
+      isActive: true,
+      type: templateType,
+      providerId: null
+    };
   }
 }
 

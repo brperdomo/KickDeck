@@ -20,6 +20,7 @@ import EditEvent from "@/pages/edit-event";
 import EventApplicationForm from "@/pages/event-application-form";
 import EmailTemplatesPage from "@/pages/email-templates";
 import EmailTemplateEdit from "@/pages/email-template-edit";
+import TeamStatusTest from "@/pages/team-status-test";
 import { useUser } from "@/hooks/use-user";
 import EventRegistration from "./pages/event-registration";
 import { FeeManagement } from "@/components/events/FeeManagement";
@@ -97,6 +98,9 @@ function Router() {
           </Route>
           <Route path="/admin/email-templates">
             {user.isAdmin ? <EmailTemplatesPage /> : <NotFound />}
+          </Route>
+          <Route path="/admin/team-status-test">
+            {user.isAdmin ? <TeamStatusTest /> : <NotFound />}
           </Route>
           <Route path="/admin/events">
             {user.isAdmin ? <AdminDashboard /> : <NotFound />}
