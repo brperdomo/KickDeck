@@ -159,9 +159,42 @@ export function ComplexEditor({ open, onOpenChange, onSubmit, complex }: Complex
                 <FormItem>
                   <FormLabel>Address</FormLabel>
                   <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="Enter address"
+                    <GoogleMapsAutocomplete
+                      value={field.value}
+                      onChange={(value, placeDetails) => {
+                        // Update the address field
+                        field.onChange(value);
+                        
+                        // If Google Maps returned place details with coordinates
+                        if (placeDetails && placeDetails.geometry && placeDetails.geometry.location) {
+                          // Update latitude and longitude fields
+                          form.setValue('latitude', placeDetails.geometry.location.lat().toString());
+                          form.setValue('longitude', placeDetails.geometry.location.lng().toString());
+                          
+                          // If extractedData is available, update city, state, country fields
+                          if (placeDetails.extractedData) {
+                            if (placeDetails.extractedData.city) {
+                              form.setValue('city', placeDetails.extractedData.city);
+                            }
+                            if (placeDetails.extractedData.state) {
+                              form.setValue('state', placeDetails.extractedData.state);
+                            }
+                            if (placeDetails.extractedData.country) {
+                              form.setValue('country', placeDetails.extractedData.country);
+                            }
+                          }
+                          
+                          console.log("Updated form with Google Maps data:", {
+                            lat: placeDetails.geometry.location.lat(),
+                            lng: placeDetails.geometry.location.lng(),
+                            extractedData: placeDetails.extractedData
+                          });
+                        } else {
+                          console.log("No place details or coordinates available");
+                        }
+                      }}
+                      placeholder="Search for an address"
+                      className="w-full"
                     />
                   </FormControl>
                   <FormMessage />
