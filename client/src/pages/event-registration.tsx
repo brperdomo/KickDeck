@@ -503,9 +503,13 @@ export default function EventRegistration() {
   const [registrationFee, setRegistrationFee] = useState<number | null>(null);
   const [availableFees, setAvailableFees] = useState<Fee[]>([]);
   const [selectedFee, setSelectedFee] = useState<Fee | null>(null);
-  const [requiredFees, setRequiredFees] = useState<Fee[]>([]);
   
-  // Optional fees are filtered via useMemo (for display only)
+  // Separate required and optional fees
+  const requiredFees = useMemo(() => 
+    availableFees.filter((fee: Fee) => fee.feeType !== 'registration' && fee.isRequired),
+    [availableFees]
+  );
+  
   const optionalFees = useMemo(() => 
     availableFees.filter((fee: Fee) => fee.feeType !== 'registration' && !fee.isRequired),
     [availableFees]
@@ -514,38 +518,14 @@ export default function EventRegistration() {
   // Calculate total amount to pay based on selected fees
   const calculateTotalAmount = () => {
     let total = selectedFee ? selectedFee.amount : 0;
-    const feeBreakdown = [];
-    
-    // Log registration fee
-    if (selectedFee) {
-      console.log(`Including registration fee: ${selectedFee.name} - $${selectedFee.amount / 100}`);
-      feeBreakdown.push({
-        type: 'registration',
-        name: selectedFee.name,
-        amount: selectedFee.amount,
-        id: selectedFee.id
-      });
-    }
     
     // Add required fees
     requiredFees.forEach((fee: Fee) => {
-      console.log(`Including required fee: ${fee.name} - $${fee.amount / 100}`);
       total += fee.amount;
-      feeBreakdown.push({
-        type: fee.feeType || 'additional',
-        name: fee.name,
-        amount: fee.amount,
-        id: fee.id,
-        required: fee.isRequired
-      });
     });
     
     // We don't include optional fees anymore - they're not selectable by the user
     // All fees are automatically calculated
-    
-    // Log detailed fee breakdown
-    console.log('Fee breakdown:', JSON.stringify(feeBreakdown));
-    console.log(`Total amount calculated: $${(total / 100).toFixed(2)} (${total} cents)`);
       
     return (total / 100).toFixed(2);
   };
@@ -573,9 +553,6 @@ export default function EventRegistration() {
               // Get required fees (all required fees are automatically included)
               const requiredOtherFees = otherFees.filter((fee: Fee) => fee.isRequired);
               
-              // Update the requiredFees state with these required fees
-              setRequiredFees(requiredOtherFees);
-              
               // Select the current applicable registration fee (based on current date)
               const now = new Date();
               const applicableRegFee = registrationFees.find((fee: Fee) => {
@@ -590,7 +567,7 @@ export default function EventRegistration() {
                 const beforeEnd = !endDate || now <= endDate;
                 
                 return afterBegin && beforeEnd;
-              }) as Fee | undefined || (registrationFees.length > 0 ? registrationFees[0] : null); // Default to first fee if no applicable fee found
+              }) || (registrationFees.length > 0 ? registrationFees[0] : null); // Default to first fee if no applicable fee found
               
               if (applicableRegFee) {
                 setSelectedFee(applicableRegFee);
@@ -602,14 +579,13 @@ export default function EventRegistration() {
                 setRegistrationFee(fallbackFee.amount);
               }
               
-              // Required fees are automatically added to the total
+              // Required fees are automatically added to the total (we don't track them separately anymore)
+              // The selectedAdditionalFees state has been removed as all fees are now handled automatically
+              
+              // Handle any types for required fees (not using setSelectedAdditionalFees anymore)
               if (requiredOtherFees.length > 0) {
+                // We used to track these separately, but now they're automatically included in the total
                 console.log(`Adding ${requiredOtherFees.length} required fees to total automatically`);
-                
-                // Log details of each required fee for debugging
-                requiredOtherFees.forEach((fee: Fee) => {
-                  console.log(`Required fee: ${fee.name} - Type: ${fee.feeType} - Amount: $${fee.amount/100} - ID: ${fee.id}`);
-                });
               }
               
               // Only update if we don't already have the fee information to avoid infinite loop
@@ -1479,7 +1455,41 @@ export default function EventRegistration() {
                     
                     {availableFees.length > 0 ? (
                       <div className="space-y-3">
-                        {/* Registration Fee Selection removed - now automatic based on date */}
+                        {/* Multiple Fee Options Selector */}
+                        {availableFees.length > 1 && (
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-700">Select Registration Fee Option:</label>
+                            <div className="grid gap-2">
+                              {availableFees.filter(fee => fee.feeType === 'registration').map((fee) => (
+                                <div 
+                                  key={fee.id}
+                                  onClick={() => {
+                                    setSelectedFee(fee);
+                                    setRegistrationFee(fee.amount);
+                                  }}
+                                  className={`
+                                    p-3 border rounded-md flex justify-between items-center cursor-pointer
+                                    ${selectedFee?.id === fee.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}
+                                  `}
+                                >
+                                  <div>
+                                    <p className="font-medium">{fee.name}</p>
+                                    {(fee.beginDate || fee.endDate) && (
+                                      <p className="text-xs text-gray-500">
+                                        {fee.beginDate && `Available from ${new Date(fee.beginDate).toLocaleDateString()}`}
+                                        {fee.beginDate && fee.endDate && ' to '}
+                                        {fee.endDate && `${new Date(fee.endDate).toLocaleDateString()}`}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="font-bold text-blue-800">
+                                    ${(fee.amount / 100).toFixed(2)}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                         
                         {/* Cart Items */}
                         <div className="bg-white rounded-md overflow-hidden">
@@ -1515,7 +1525,9 @@ export default function EventRegistration() {
                               )}
                               
                               {/* Additional Fees like Uniform (only required fees are shown) */}
-                              {requiredFees.map(fee => (
+                              {availableFees
+                                .filter(fee => fee.feeType !== 'registration' && fee.isRequired)
+                                .map(fee => (
                                 <tr key={`fee-${fee.id}`}>
                                   <td className="px-4 py-3">
                                     <div>
@@ -1634,16 +1646,11 @@ export default function EventRegistration() {
                             ...requiredFees.map(fee => fee.id)
                           ];
                           
-                          // Calculate total with all required fees included
-                          const totalAmountInCents = parseFloat(calculateTotalAmount()) * 100; // in cents
-                          console.log('Calculated total amount with all fees:', totalAmountInCents / 100);
-                          console.log('Selected fee IDs for submission:', allSelectedFeeIds);
-                          
                           // Then submit the form values along with player data and selected fees
                           registerTeamMutation.mutate({
                             ...teamForm.getValues(),
                             selectedFeeIds: allSelectedFeeIds,
-                            totalAmount: totalAmountInCents // in cents
+                            totalAmount: parseFloat(calculateTotalAmount()) * 100 // in cents
                           });
                         }}
                         isProcessing={registerTeamMutation.isPending}
