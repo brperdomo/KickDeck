@@ -64,11 +64,12 @@ interface Fee {
 type RegistrationStep = 'auth' | 'personal' | 'team' | 'payment' | 'review' | 'complete';
 
 // Payment component for handling Stripe checkout
-function PaymentForm({ amount, onSuccess, isProcessing, setIsProcessing }: { 
+function PaymentForm({ amount, onSuccess, isProcessing, setIsProcessing, isPreview = false }: { 
   amount: number; 
   onSuccess: () => void; 
   isProcessing: boolean;
   setIsProcessing: (value: boolean) => void;
+  isPreview?: boolean;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -76,6 +77,24 @@ function PaymentForm({ amount, onSuccess, isProcessing, setIsProcessing }: {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    
+    // In preview mode, simulate a successful payment without calling Stripe
+    if (isPreview) {
+      console.log('Preview mode: Simulating payment for amount:', amount);
+      setIsProcessing(true);
+      
+      // Simulate a brief delay for the "processing" state
+      setTimeout(() => {
+        toast({
+          title: "Preview: Payment Successful",
+          description: "This is a simulated payment in preview mode",
+        });
+        setIsProcessing(false);
+        onSuccess();
+      }, 1500);
+      
+      return;
+    }
 
     if (!stripe || !elements) {
       // Stripe.js has not loaded yet
@@ -238,14 +257,18 @@ const teamRegistrationSchema = z.object({
 type TeamRegistrationForm = z.infer<typeof teamRegistrationSchema>;
 type PlayerForm = z.infer<typeof playerSchema>;
 
-export default function EventRegistration() {
+interface EventRegistrationProps {
+  isPreview?: boolean;
+}
+
+export default function EventRegistration({ isPreview = false }: EventRegistrationProps) {
   const { eventId } = useParams();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const { user, isLoading: authLoading } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentStep, setCurrentStep] = useState<RegistrationStep>('auth');
+  const [currentStep, setCurrentStep] = useState<RegistrationStep>(isPreview ? 'personal' : 'auth');
   const [players, setPlayers] = useState<PlayerForm[]>([]);
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeGroup | null>(null);
   
@@ -324,6 +347,13 @@ export default function EventRegistration() {
 
   const updatePersonalDetailsMutation = useMutation({
     mutationFn: async (data: PersonalDetailsForm) => {
+      // In preview mode, don't actually call the API
+      if (isPreview) {
+        console.log('Preview mode: Simulating profile update with data:', data);
+        // Simulate a successful response
+        return { success: true, data };
+      }
+      
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: {
@@ -676,6 +706,17 @@ export default function EventRegistration() {
   
   const registerTeamMutation = useMutation({
     mutationFn: async (data: TeamRegistrationForm) => {
+      // In preview mode, don't actually call the API
+      if (isPreview) {
+        console.log('Preview mode: Simulating team registration with data:', data);
+        // Simulate a brief delay to imitate the actual process
+        return new Promise(resolve => {
+          setTimeout(() => {
+            resolve({ success: true, teamId: 'preview-team-123', data });
+          }, 1500);
+        });
+      }
+      
       // Ensure player data is synchronized
       teamForm.setValue('players', players);
       
@@ -719,6 +760,24 @@ export default function EventRegistration() {
       requiredFees.forEach((fee: Fee) => {
         selectedFeeIds.push(fee.id);
       });
+      
+      // In preview mode, don't actually call the API
+      if (isPreview) {
+        console.log('Preview mode: Simulating team registration with data:', {
+          ...data,
+          players: processedPlayers,
+          termsAcknowledged: termsAgreed,
+          registrationFee: registrationFee,
+          selectedFeeIds: selectedFeeIds,
+          termsAcknowledgedAt: new Date()
+        });
+        
+        // Simulate a successful response with a mock team ID
+        return { 
+          teamId: `preview-${crypto.randomUUID().substring(0, 8)}`,
+          success: true 
+        };
+      }
       
       // Transform dates and include terms agreement and fee in submission
       const response = await fetch(`/api/events/${eventId}/register-team`, {
@@ -1704,6 +1763,7 @@ export default function EventRegistration() {
                     <StripeProvider>
                       <PaymentForm 
                         amount={parseFloat(calculateTotalAmount()) * 100} // Convert back to cents for payment processing
+                        isPreview={isPreview}
                         onSuccess={() => {
                           // Make sure to sync the latest players array with form data
                           teamForm.setValue('players', players);

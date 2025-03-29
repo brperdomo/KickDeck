@@ -28,9 +28,8 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { LogoutHandler } from "@/components/LogoutHandler";
 import { FloatingEmulationButton } from "@/components/admin/FloatingEmulationButton";
 
-// Placeholder components
-const EventPreviewSelector = () => <div>Event Preview Selector</div>;
-const RegistrationPreview = () => <div>Registration Preview</div>;
+// Import fully implemented components for preview mode
+import EventPreviewSelector from '@/pages/event-preview-selector';
 
 function Router() {
   const { user, isLoading } = useUser();
