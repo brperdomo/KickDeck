@@ -518,14 +518,38 @@ export default function EventRegistration() {
   // Calculate total amount to pay based on selected fees
   const calculateTotalAmount = () => {
     let total = selectedFee ? selectedFee.amount : 0;
+    const feeBreakdown = [];
+    
+    // Log registration fee
+    if (selectedFee) {
+      console.log(`Including registration fee: ${selectedFee.name} - $${selectedFee.amount / 100}`);
+      feeBreakdown.push({
+        type: 'registration',
+        name: selectedFee.name,
+        amount: selectedFee.amount,
+        id: selectedFee.id
+      });
+    }
     
     // Add required fees
     requiredFees.forEach((fee: Fee) => {
+      console.log(`Including required fee: ${fee.name} - $${fee.amount / 100}`);
       total += fee.amount;
+      feeBreakdown.push({
+        type: fee.feeType || 'additional',
+        name: fee.name,
+        amount: fee.amount,
+        id: fee.id,
+        required: fee.isRequired
+      });
     });
     
     // We don't include optional fees anymore - they're not selectable by the user
     // All fees are automatically calculated
+    
+    // Log detailed fee breakdown
+    console.log('Fee breakdown:', JSON.stringify(feeBreakdown));
+    console.log(`Total amount calculated: $${(total / 100).toFixed(2)} (${total} cents)`);
       
     return (total / 100).toFixed(2);
   };
@@ -567,7 +591,7 @@ export default function EventRegistration() {
                 const beforeEnd = !endDate || now <= endDate;
                 
                 return afterBegin && beforeEnd;
-              }) || (registrationFees.length > 0 ? registrationFees[0] : null); // Default to first fee if no applicable fee found
+              }) as Fee | undefined || (registrationFees.length > 0 ? registrationFees[0] : null); // Default to first fee if no applicable fee found
               
               if (applicableRegFee) {
                 setSelectedFee(applicableRegFee);
@@ -579,13 +603,14 @@ export default function EventRegistration() {
                 setRegistrationFee(fallbackFee.amount);
               }
               
-              // Required fees are automatically added to the total (we don't track them separately anymore)
-              // The selectedAdditionalFees state has been removed as all fees are now handled automatically
-              
-              // Handle any types for required fees (not using setSelectedAdditionalFees anymore)
+              // Required fees are automatically added to the total
               if (requiredOtherFees.length > 0) {
-                // We used to track these separately, but now they're automatically included in the total
                 console.log(`Adding ${requiredOtherFees.length} required fees to total automatically`);
+                
+                // Log details of each required fee for debugging
+                requiredOtherFees.forEach((fee: Fee) => {
+                  console.log(`Required fee: ${fee.name} - Type: ${fee.feeType} - Amount: $${fee.amount/100} - ID: ${fee.id}`);
+                });
               }
               
               // Only update if we don't already have the fee information to avoid infinite loop
@@ -1612,11 +1637,16 @@ export default function EventRegistration() {
                             ...requiredFees.map(fee => fee.id)
                           ];
                           
+                          // Calculate total with all required fees included
+                          const totalAmountInCents = parseFloat(calculateTotalAmount()) * 100; // in cents
+                          console.log('Calculated total amount with all fees:', totalAmountInCents / 100);
+                          console.log('Selected fee IDs for submission:', allSelectedFeeIds);
+                          
                           // Then submit the form values along with player data and selected fees
                           registerTeamMutation.mutate({
                             ...teamForm.getValues(),
                             selectedFeeIds: allSelectedFeeIds,
-                            totalAmount: parseFloat(calculateTotalAmount()) * 100 // in cents
+                            totalAmount: totalAmountInCents // in cents
                           });
                         }}
                         isProcessing={registerTeamMutation.isPending}
