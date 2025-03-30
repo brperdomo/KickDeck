@@ -376,6 +376,8 @@ export function registerRoutes(app: Express): Server {
         const { eventFees, eventAgeGroupFees } = await import("@db/schema");
         
         try {
+          console.log(`Fetching fees for age group ${ageGroupId} in event ${eventId}`);
+          
           // Fetch all fees assigned to this age group
           const feeAssignments = await db
             .select({
@@ -393,40 +395,63 @@ export function registerRoutes(app: Express): Server {
             .innerJoin(eventFees, eq(eventAgeGroupFees.feeId, eventFees.id))
             .where(eq(eventAgeGroupFees.ageGroupId, parseInt(ageGroupId)));
           
+          // Log what we found to help with debugging
+          console.log(`Found ${feeAssignments.length} fee assignments for age group ${ageGroupId}`);
+          
           // Map the fees directly from database results
-          const feesWithTypes = feeAssignments.map(assignment => assignment.fee);
+          const feesWithTypes = feeAssignments.map(assignment => {
+            // Add defensive check for null/undefined fee
+            if (!assignment || !assignment.fee) {
+              console.error('Null or undefined fee in assignment:', assignment);
+              return null;
+            }
+            return assignment.fee;
+          }).filter(Boolean); // Remove any null entries
           
           let allFees = feesWithTypes;
           
           if (allFees.length === 0) {
+            console.log(`No specific fees found for age group ${ageGroupId}, checking for default fees`);
+            
             // Check if there are default fees for this event (use applyToAll instead of isDefault)
-            const defaultFees = await db
-              .select({
-                id: eventFees.id,
-                name: eventFees.name,
-                amount: eventFees.amount,
-                beginDate: eventFees.beginDate,
-                endDate: eventFees.endDate,
-                feeType: eventFees.feeType || "registration", // Provide a default value
-                isRequired: eventFees.isRequired || false // Provide a default value
-              })
-              .from(eventFees)
-              .where(
-                and(
-                  eq(eventFees.eventId, eventId),
-                  eq(eventFees.applyToAll, true)
-                )
-              );
-            
-            // Use the fees as they are returned from the database
-            const defaultFeesWithTypes = defaultFees;
-            
-            if (defaultFeesWithTypes.length > 0) {
-              allFees = defaultFeesWithTypes;
+            try {
+              const defaultFees = await db
+                .select({
+                  id: eventFees.id,
+                  name: eventFees.name,
+                  amount: eventFees.amount,
+                  beginDate: eventFees.beginDate,
+                  endDate: eventFees.endDate,
+                  feeType: eventFees.feeType,
+                  isRequired: eventFees.isRequired
+                })
+                .from(eventFees)
+                .where(
+                  and(
+                    eq(eventFees.eventId, eventId),
+                    eq(eventFees.applyToAll, true)
+                  )
+                );
+              
+              console.log(`Found ${defaultFees.length} default fees for event ${eventId}`);
+              
+              // Make sure all fees have the required properties
+              const defaultFeesWithTypes = defaultFees.map(fee => ({
+                ...fee,
+                feeType: fee.feeType || "registration",
+                isRequired: typeof fee.isRequired === 'boolean' ? fee.isRequired : false
+              }));
+              
+              if (defaultFeesWithTypes.length > 0) {
+                allFees = defaultFeesWithTypes;
+              }
+            } catch (defaultFeeError) {
+              console.error('Error fetching default fees:', defaultFeeError);
             }
           }
           
-          if (allFees.length === 0) {
+          if (!allFees || allFees.length === 0) {
+            console.log('No fees found (either specific or default)');
             return res.json({ fees: [] });
           }
           
