@@ -591,126 +591,150 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
       
       const fetchFees = async () => {
         try {
+          console.log(`Fetching fees for age group ${ageGroupId} in event ${eventId}`);
           const response = await fetch(`/api/events/${eventId}/fees?ageGroupId=${ageGroupId}`);
-          if (response.ok) {
-            const data = await response.json();
-            console.log('Fetched fees:', data);
-            
-            // Normalize the response data to handle both formats:
-            // 1. When server returns {fees: [...], fee: {...}}
-            // 2. When server returns just {fee: {...}}
-            // 3. When server returns {fees: [...]} with no fee property
-            const allFees: Fee[] = [];
-            
-            // Add all fees from the fees array if it exists
-            if (data.fees && Array.isArray(data.fees) && data.fees.length > 0) {
-              allFees.push(...data.fees);
+          if (!response.ok) {
+            console.error(`Error fetching fees: Server responded with status ${response.status}`);
+            return;
+          }
+          
+          const data = await response.json();
+          console.log('Fetched fees:', data);
+          
+          // Handle empty or unexpected response
+          if (!data) {
+            console.warn('Empty response when fetching fees');
+            setAvailableFees([]);
+            return;
+          }
+          
+          // Normalize the response data to handle both formats:
+          // 1. When server returns {fees: [...], fee: {...}}
+          // 2. When server returns just {fee: {...}}
+          // 3. When server returns {fees: [...]} with no fee property
+          const allFees: Fee[] = [];
+          
+          // Add all fees from the fees array if it exists
+          if (data.fees && Array.isArray(data.fees)) {
+            const validFees = data.fees.filter(fee => fee && typeof fee === 'object');
+            if (validFees.length > 0) {
+              console.log(`Adding ${validFees.length} fees from fees array`);
+              allFees.push(...validFees);
             }
-            
-            // If there's a single fee and it's not already in allFees, add it
-            if (data.fee && typeof data.fee === 'object') {
-              // Check if this fee is already in the array
-              const feeExists = allFees.some(f => f.id === data.fee.id);
-              if (!feeExists) {
-                allFees.push(data.fee);
-              }
+          }
+          
+          // If there's a single fee and it's not already in allFees, add it
+          if (data.fee && typeof data.fee === 'object') {
+            // Check if this fee is already in the array
+            const feeExists = allFees.some(f => f.id === data.fee.id);
+            if (!feeExists) {
+              console.log('Adding single fee from fee property:', data.fee);
+              allFees.push(data.fee);
             }
-            
-            console.log('All normalized fees:', allFees);
-            
-            if (allFees.length > 0) {
-              // Update available fees state
-              setAvailableFees(allFees);
-              
-              // Analyze fees to determine the best classification
-              // Fees can have different feeType values (registration, uniform, etc.)
-              
-              // Find registration fees vs other fees
-              const registrationFees = allFees.filter((fee: Fee) => fee.feeType === 'registration');
-              const otherFees = allFees.filter((fee: Fee) => fee.feeType !== 'registration');
-              
-              // Get required fees of all types
-              const requiredFeesByType: { [key: string]: Fee[] } = {};
-              allFees.forEach(fee => {
-                if (fee.isRequired) {
-                  const feeType = fee.feeType || 'other';
-                  if (!requiredFeesByType[feeType]) {
-                    requiredFeesByType[feeType] = [];
-                  }
-                  requiredFeesByType[feeType].push(fee);
-                }
-              });
-              
-              console.log('Required fees by type:', requiredFeesByType);
-              
-              // Determine which fee should be the primary registration fee
-              // 1. If we have specifically marked "registration" fees, use those
-              // 2. Otherwise, select the highest cost fee as the primary
-              
-              let primaryFee = null;
-              const now = new Date();
-              
-              if (registrationFees.length > 0) {
-                // First, try to find a registration fee with current date in range
-                primaryFee = registrationFees.find((fee: Fee) => {
-                  const beginDate = fee.beginDate ? new Date(fee.beginDate) : null;
-                  const endDate = fee.endDate ? new Date(fee.endDate) : null;
-                  
-                  // If no date range is specified, the fee is always applicable
-                  if (!beginDate && !endDate) return true;
-                  
-                  // Check if current date is within the range
-                  const afterBegin = !beginDate || now >= beginDate;
-                  const beforeEnd = !endDate || now <= endDate;
-                  
-                  return afterBegin && beforeEnd;
-                });
-                
-                // If no date-appropriate fee found, default to the first registration fee
-                if (!primaryFee && registrationFees.length > 0) {
-                  primaryFee = registrationFees[0];
-                }
+          }
+          
+          console.log('All normalized fees:', allFees);
+          
+          if (allFees.length === 0) {
+            console.warn(`No fees found for age group ${ageGroupId}`);
+            setAvailableFees([]);
+            return;
+          }
+          
+          // Ensure all fee objects have the required properties with defaults to prevent errors
+          const normalizedFees = allFees.map(fee => ({
+            id: fee.id || 0,
+            name: fee.name || 'Unknown Fee',
+            amount: fee.amount || 0,
+            feeType: fee.feeType || 'registration',
+            isRequired: typeof fee.isRequired === 'boolean' ? fee.isRequired : false,
+            beginDate: fee.beginDate || null,
+            endDate: fee.endDate || null
+          }));
+          
+          // Update available fees state
+          setAvailableFees(normalizedFees);
+          
+          // Find registration fees vs other fees
+          const registrationFees = normalizedFees.filter(fee => fee.feeType === 'registration');
+          const otherFees = normalizedFees.filter(fee => fee.feeType !== 'registration');
+          
+          // Get required fees of all types
+          const requiredFeesByType: Record<string, Fee[]> = {};
+          normalizedFees.forEach(fee => {
+            if (fee.isRequired) {
+              const feeType = fee.feeType || 'other';
+              if (!requiredFeesByType[feeType]) {
+                requiredFeesByType[feeType] = [];
               }
-              
-              // If no registration fee type found, use the highest cost required fee as primary
-              if (!primaryFee) {
-                const allRequiredFees = allFees.filter(fee => fee.isRequired);
-                if (allRequiredFees.length > 0) {
-                  // Sort by amount in descending order and take the highest
-                  primaryFee = [...allRequiredFees].sort((a, b) => b.amount - a.amount)[0];
-                } else if (allFees.length > 0) {
-                  // Last resort - take any fee
-                  primaryFee = allFees[0];
-                }
-              }
-              
-              // Update state with our primary fee
-              if (primaryFee) {
-                console.log('Selected primary fee:', primaryFee);
-                setSelectedFee(primaryFee);
-                setRegistrationFee(primaryFee.amount);
-              }
-              
-              // Required fees are automatically added to the total (we don't track them separately anymore)
-              // The selectedAdditionalFees state has been removed as all fees are now handled automatically
-              
-              // Log all required fees for debugging
-              const requiredFeeCount = allFees.filter(fee => fee.isRequired).length;
-              if (requiredFeeCount > 0) {
-                console.log(`Adding ${requiredFeeCount} required fees to total automatically`);
-              }
-              
-              // Only update if we don't already have the fee information to avoid infinite loop
-              if (!selectedAgeGroup.registrationFee && primaryFee) {
-                setSelectedAgeGroup(prev => prev ? { 
-                  ...prev, 
-                  registrationFee: primaryFee.amount
-                } : prev);
-              }
+              requiredFeesByType[feeType].push(fee);
             }
+          });
+          
+          console.log('Required fees by type:', requiredFeesByType);
+          
+          // Determine which fee should be the primary registration fee
+          let primaryFee: Fee | null = null;
+          const now = new Date();
+          
+          if (registrationFees.length > 0) {
+            // First, try to find a registration fee with current date in range
+            primaryFee = registrationFees.find(fee => {
+              const beginDate = fee.beginDate ? new Date(fee.beginDate) : null;
+              const endDate = fee.endDate ? new Date(fee.endDate) : null;
+              
+              // If no date range is specified, the fee is always applicable
+              if (!beginDate && !endDate) return true;
+              
+              // Check if current date is within the range
+              const afterBegin = !beginDate || now >= beginDate;
+              const beforeEnd = !endDate || now <= endDate;
+              
+              return afterBegin && beforeEnd;
+            }) || null;
+            
+            // If no date-appropriate fee found, default to the first registration fee
+            if (!primaryFee && registrationFees.length > 0) {
+              primaryFee = registrationFees[0];
+            }
+          }
+          
+          // If no registration fee type found, use the highest cost required fee as primary
+          if (!primaryFee) {
+            const allRequiredFees = normalizedFees.filter(fee => fee.isRequired);
+            if (allRequiredFees.length > 0) {
+              // Sort by amount in descending order and take the highest
+              primaryFee = [...allRequiredFees].sort((a, b) => b.amount - a.amount)[0];
+            } else if (normalizedFees.length > 0) {
+              // Last resort - take any fee
+              primaryFee = normalizedFees[0];
+            }
+          }
+          
+          // Update state with our primary fee
+          if (primaryFee) {
+            console.log('Selected primary fee:', primaryFee);
+            setSelectedFee(primaryFee);
+            setRegistrationFee(primaryFee.amount);
+            
+            // Only update if we don't already have the fee information to avoid infinite loop
+            if (!selectedAgeGroup.registrationFee) {
+              setSelectedAgeGroup(prev => prev ? { 
+                ...prev, 
+                registrationFee: primaryFee.amount
+              } : prev);
+            }
+          }
+          
+          // Log all required fees for debugging
+          const requiredFeeCount = normalizedFees.filter(fee => fee.isRequired).length;
+          if (requiredFeeCount > 0) {
+            console.log(`Adding ${requiredFeeCount} required fees to total automatically`);
           }
         } catch (error) {
           console.error('Error fetching fees:', error);
+          // Ensure UI doesn't break with empty fees
+          setAvailableFees([]);
         }
       };
       
