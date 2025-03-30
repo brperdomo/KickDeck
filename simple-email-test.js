@@ -40,6 +40,7 @@ console.log(`Email configuration:
 `);
 
 // Create transporter
+console.log('Creating SMTP transporter...');
 const transporter = nodemailer.createTransport({
   host,
   port: parseInt(port),
@@ -47,7 +48,10 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: username,
     pass: password
-  }
+  },
+  // For troubleshooting - will log SMTP traffic
+  debug: true,
+  logger: true
 });
 
 // Test SMTP connection
