@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, lazy, Suspense, useCallback } from "react";
 import { useLocation, Link } from "wouter";
-import { Link2, X, Ticket, Plus, Mail, KeyRound, Check, RefreshCcw, UserMinus, RotateCcw, Pencil, PlusCircle, Trash, FileText, FileUp, Eye, Loader2 } from "lucide-react";
+import { Link2, X, Ticket, Plus, Mail, KeyRound, Check, RefreshCcw, UserMinus, RotateCcw, Pencil, PlusCircle, Trash, FileText, FileUp, Eye, Loader2, Users, CalendarRange, User, UserRoundPlus } from "lucide-react";
 import { EventsTable } from "@/components/events/EventsTable";
 import { GeneralSettingsView } from "@/components/admin/GeneralSettingsView";
 import EmulationManager from "@/components/admin/EmulationManager";
@@ -1791,13 +1791,29 @@ function TeamsView() {
     }
   });
   
-  // Player management mutations
+  // Players Query - Fetch players for selected team
+  const playersQuery = useQuery({
+    queryKey: ['admin', 'teams', selectedTeam?.id, 'players'],
+    queryFn: async () => {
+      if (!selectedTeam) return [];
+      
+      const response = await fetch(`/api/admin/teams/${selectedTeam.id}/players`);
+      if (!response.ok) throw new Error('Failed to fetch players');
+      
+      return response.json();
+    },
+    enabled: !!selectedTeam?.id && isDetailsDialogOpen
+  });
+  
+  // Add Player Mutation
   const addPlayerMutation = useMutation({
     mutationFn: async (playerData: any) => {
-      const response = await fetch(`/api/admin/teams/${playerData.teamId}/players`, {
+      const response = await fetch(`/api/admin/teams/${selectedTeam!.id}/players`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(playerData)
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(playerData),
       });
       
       if (!response.ok) {
@@ -1809,27 +1825,31 @@ function TeamsView() {
     },
     onSuccess: () => {
       toast({
-        title: "Player added",
-        description: "The player has been added to the team roster.",
+        title: "Success",
+        description: "Player added successfully",
+        variant: "default"
       });
       setIsPlayerDialogOpen(false);
-      teamsQuery.refetch();
+      playersQuery.refetch();
     },
     onError: (error: Error) => {
       toast({
-        title: "Error adding player",
+        title: "Error",
         description: error.message,
         variant: "destructive"
       });
     }
   });
   
+  // Update Player Mutation
   const updatePlayerMutation = useMutation({
-    mutationFn: async (playerData: any) => {
-      const response = await fetch(`/api/admin/teams/${playerData.teamId}/players/${playerData.id}`, {
+    mutationFn: async ({ playerId, playerData }: { playerId: number, playerData: any }) => {
+      const response = await fetch(`/api/admin/teams/${selectedTeam!.id}/players/${playerId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(playerData)
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(playerData),
       });
       
       if (!response.ok) {
@@ -1841,25 +1861,30 @@ function TeamsView() {
     },
     onSuccess: () => {
       toast({
-        title: "Player updated",
-        description: "The player information has been updated.",
+        title: "Success",
+        description: "Player updated successfully",
+        variant: "default"
       });
       setIsPlayerDialogOpen(false);
-      teamsQuery.refetch();
+      playersQuery.refetch();
     },
     onError: (error: Error) => {
       toast({
-        title: "Error updating player",
+        title: "Error",
         description: error.message,
         variant: "destructive"
       });
     }
   });
   
+  // Delete Player Mutation
   const deletePlayerMutation = useMutation({
-    mutationFn: async (player: any) => {
-      const response = await fetch(`/api/admin/teams/${player.teamId}/players/${player.id}`, {
+    mutationFn: async (playerId: number) => {
+      const response = await fetch(`/api/admin/teams/${selectedTeam!.id}/players/${playerId}`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
       
       if (!response.ok) {
@@ -1871,20 +1896,23 @@ function TeamsView() {
     },
     onSuccess: () => {
       toast({
-        title: "Player removed",
-        description: "The player has been removed from the team roster.",
+        title: "Success",
+        description: "Player deleted successfully",
+        variant: "default"
       });
       setIsDeletePlayerDialogOpen(false);
-      teamsQuery.refetch();
+      playersQuery.refetch();
     },
     onError: (error: Error) => {
       toast({
-        title: "Error removing player",
+        title: "Error",
         description: error.message,
         variant: "destructive"
       });
     }
   });
+  
+
 
   // View team details
   const handleViewTeamDetails = (team: any) => {
@@ -2984,6 +3012,230 @@ function TeamsView() {
               </DialogFooter>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add/Edit Player Dialog */}
+      <Dialog open={isPlayerDialogOpen} onOpenChange={setIsPlayerDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{isAddPlayerMode ? 'Add Player' : 'Edit Player'}</DialogTitle>
+            <DialogDescription>
+              {isAddPlayerMode 
+                ? 'Add a new player to the team roster.' 
+                : 'Edit player information.'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedPlayer && (
+            <form 
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (isAddPlayerMode) {
+                  addPlayerMutation.mutate(selectedPlayer);
+                } else {
+                  updatePlayerMutation.mutate({
+                    playerId: selectedPlayer.id,
+                    playerData: selectedPlayer
+                  });
+                }
+              }}
+            >
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input 
+                    id="firstName" 
+                    value={selectedPlayer.firstName || ''}
+                    onChange={(e) => setSelectedPlayer({
+                      ...selectedPlayer,
+                      firstName: e.target.value
+                    })}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input 
+                    id="lastName" 
+                    value={selectedPlayer.lastName || ''}
+                    onChange={(e) => setSelectedPlayer({
+                      ...selectedPlayer,
+                      lastName: e.target.value
+                    })}
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                  <Input 
+                    id="dateOfBirth" 
+                    type="date"
+                    value={selectedPlayer.dateOfBirth ? selectedPlayer.dateOfBirth.substring(0, 10) : ''}
+                    onChange={(e) => setSelectedPlayer({
+                      ...selectedPlayer,
+                      dateOfBirth: e.target.value
+                    })}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="jerseyNumber">Jersey Number</Label>
+                  <Input 
+                    id="jerseyNumber" 
+                    value={selectedPlayer.jerseyNumber || ''}
+                    onChange={(e) => setSelectedPlayer({
+                      ...selectedPlayer,
+                      jerseyNumber: e.target.value
+                    })}
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="position">Position</Label>
+                <Input 
+                  id="position" 
+                  value={selectedPlayer.position || ''}
+                  onChange={(e) => setSelectedPlayer({
+                    ...selectedPlayer,
+                    position: e.target.value
+                  })}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="medicalNotes">Medical Notes</Label>
+                <Textarea 
+                  id="medicalNotes" 
+                  placeholder="Any medical conditions, allergies, or special needs..."
+                  value={selectedPlayer.medicalNotes || ''}
+                  onChange={(e) => setSelectedPlayer({
+                    ...selectedPlayer,
+                    medicalNotes: e.target.value
+                  })}
+                />
+              </div>
+              
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium">Parent/Guardian Information</h3>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="parentGuardianName">Name</Label>
+                  <Input 
+                    id="parentGuardianName" 
+                    value={selectedPlayer.parentGuardianName || ''}
+                    onChange={(e) => setSelectedPlayer({
+                      ...selectedPlayer,
+                      parentGuardianName: e.target.value
+                    })}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="parentGuardianEmail">Email</Label>
+                    <Input 
+                      id="parentGuardianEmail" 
+                      type="email"
+                      value={selectedPlayer.parentGuardianEmail || ''}
+                      onChange={(e) => setSelectedPlayer({
+                        ...selectedPlayer,
+                        parentGuardianEmail: e.target.value
+                      })}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="parentGuardianPhone">Phone</Label>
+                    <Input 
+                      id="parentGuardianPhone" 
+                      value={selectedPlayer.parentGuardianPhone || ''}
+                      onChange={(e) => setSelectedPlayer({
+                        ...selectedPlayer,
+                        parentGuardianPhone: e.target.value
+                      })}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium">Emergency Contact</h3>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="emergencyContactName">Name</Label>
+                  <Input 
+                    id="emergencyContactName" 
+                    value={selectedPlayer.emergencyContactName || ''}
+                    onChange={(e) => setSelectedPlayer({
+                      ...selectedPlayer,
+                      emergencyContactName: e.target.value
+                    })}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="emergencyContactPhone">Phone</Label>
+                  <Input 
+                    id="emergencyContactPhone" 
+                    value={selectedPlayer.emergencyContactPhone || ''}
+                    onChange={(e) => setSelectedPlayer({
+                      ...selectedPlayer,
+                      emergencyContactPhone: e.target.value
+                    })}
+                  />
+                </div>
+              </div>
+              
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsPlayerDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={addPlayerMutation.isPending || updatePlayerMutation.isPending}
+                >
+                  {(addPlayerMutation.isPending || updatePlayerMutation.isPending) && 
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  }
+                  {isAddPlayerMode ? 'Add Player' : 'Save Changes'}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Player Confirmation Dialog */}
+      <Dialog open={isDeletePlayerDialogOpen} onOpenChange={setIsDeletePlayerDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Player</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove {selectedPlayer?.firstName} {selectedPlayer?.lastName} from the team roster?
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeletePlayerDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => deletePlayerMutation.mutate(selectedPlayer.id)}
+              disabled={deletePlayerMutation.isPending}
+            >
+              {deletePlayerMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
