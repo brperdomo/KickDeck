@@ -1,17 +1,23 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Skeleton } from '@/components/ui/skeleton';
-import axios from 'axios';
-
-// Helper function to format currency
-const formatCurrency = (amount: number | null | undefined): string => {
-  if (amount === null || amount === undefined) return 'N/A';
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-  }).format(amount / 100); // Convert cents to dollars
-};
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
 
 interface Fee {
   id: number;
@@ -23,72 +29,168 @@ interface Fee {
 
 interface DetailedFeeBreakdownProps {
   teamId: number;
-  selectedFeeIds: string;
+  selectedFeeIds?: string | null;
 }
 
 export function DetailedFeeBreakdown({ teamId, selectedFeeIds }: DetailedFeeBreakdownProps) {
-  // Don't attempt to fetch if there are no fee IDs
-  const shouldFetch = selectedFeeIds && selectedFeeIds.length > 0;
-  
-  const { data: fees, isLoading, error } = useQuery<Fee[]>({
-    queryKey: ['teamFees', teamId, selectedFeeIds],
+  // Fetch detailed fee information for the selected team
+  const feesQuery = useQuery({
+    queryKey: ['/api/admin/teams', teamId, 'fees', selectedFeeIds],
     queryFn: async () => {
-      const response = await axios.get(`/api/admin/teams/${teamId}/fees?selectedFeeIds=${selectedFeeIds}`);
-      return response.data;
+      // Don't make the API call if we don't have the necessary data
+      if (!teamId || !selectedFeeIds) {
+        return [];
+      }
+      
+      const response = await fetch(`/api/admin/teams/${teamId}/fees?selectedFeeIds=${selectedFeeIds}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch fee details');
+      }
+      return response.json() as Promise<Fee[]>;
     },
-    enabled: shouldFetch,
+    enabled: !!teamId && !!selectedFeeIds && selectedFeeIds !== ''
   });
-  
-  if (!shouldFetch) {
-    return <p className="text-sm text-slate-500">No fees selected</p>;
-  }
-  
-  if (isLoading) {
+
+  // Group fees by type for better organization
+  const groupedFees = useMemo(() => {
+    if (!feesQuery.data || feesQuery.data.length === 0) {
+      return {};
+    }
+
+    const groups: Record<string, Fee[]> = {};
+    
+    feesQuery.data.forEach((fee) => {
+      const type = fee.feeType || 'Other';
+      if (!groups[type]) {
+        groups[type] = [];
+      }
+      groups[type].push(fee);
+    });
+    
+    return groups;
+  }, [feesQuery.data]);
+
+  // Calculate the total amount of all fees
+  const totalAmount = useMemo(() => {
+    if (!feesQuery.data || feesQuery.data.length === 0) {
+      return 0;
+    }
+    
+    return feesQuery.data.reduce((sum, fee) => sum + fee.amount, 0);
+  }, [feesQuery.data]);
+
+  // Get formatted fee types for better display
+  const formatFeeType = (type: string): string => {
+    switch (type.toLowerCase()) {
+      case 'registration':
+        return 'Registration Fees';
+      case 'uniform':
+        return 'Uniform Fees';
+      case 'equipment':
+        return 'Equipment Fees';
+      case 'tournament':
+        return 'Tournament Fees';
+      case 'other':
+      default:
+        return 'Other Fees';
+    }
+  };
+
+  // Show a loading state while fetching data
+  if (feesQuery.isLoading) {
     return (
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-full" />
-      </div>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="text-lg">Fee Breakdown</CardTitle>
+          <CardDescription>Loading fee details...</CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center py-6">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
     );
   }
-  
-  if (error) {
-    return <p className="text-sm text-red-500">Error loading fees: {error instanceof Error ? error.message : 'Unknown error'}</p>;
+
+  // Show an error state if the query failed
+  if (feesQuery.isError) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="text-lg">Fee Breakdown</CardTitle>
+          <CardDescription className="text-red-500">
+            Error loading fee details: {feesQuery.error instanceof Error ? feesQuery.error.message : 'Unknown error'}
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
   }
-  
-  if (!fees || fees.length === 0) {
-    return <p className="text-sm text-slate-500">No fee details available</p>;
+
+  // Show an empty state if no fees were found
+  if (!feesQuery.data || feesQuery.data.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="text-lg">Fee Breakdown</CardTitle>
+          <CardDescription>No fee details available</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">No fees were found for this team.</p>
+        </CardContent>
+      </Card>
+    );
   }
-  
-  // Group fees by type
-  const feesByType: Record<string, Fee[]> = {};
-  fees.forEach(fee => {
-    const type = fee.feeType || 'Other';
-    if (!feesByType[type]) {
-      feesByType[type] = [];
-    }
-    feesByType[type].push(fee);
-  });
-  
+
+  // Main component when data is available
   return (
-    <div className="space-y-3">
-      {Object.entries(feesByType).map(([type, typeFees]) => (
-        <div key={type} className="border-b border-slate-100 pb-2 last:border-0">
-          <h5 className="text-sm font-medium text-slate-700 mb-1 capitalize">{type} Fees</h5>
-          {typeFees.map(fee => (
-            <div key={fee.id} className="flex justify-between text-sm py-1">
-              <span className="text-slate-600">
-                {fee.name}
-                {fee.isRequired && <span className="text-xs text-red-500 ml-1">(Required)</span>}
-              </span>
-              <span className="font-medium">{formatCurrency(fee.amount)}</span>
-            </div>
-          ))}
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="text-lg">Fee Breakdown</CardTitle>
+        <CardDescription>Detailed breakdown of fees for this team</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {Object.entries(groupedFees).map(([feeType, fees]) => (
+          <div key={feeType} className="mb-4">
+            <h3 className="text-md font-medium mb-2">{formatFeeType(feeType)}</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fee Description</TableHead>
+                  <TableHead className="w-24 text-right">Amount</TableHead>
+                  <TableHead className="w-28 text-center">Required</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {fees.map((fee) => (
+                  <TableRow key={fee.id}>
+                    <TableCell>{fee.name}</TableCell>
+                    <TableCell className="text-right font-medium">
+                      {formatCurrency(fee.amount)}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {fee.isRequired ? (
+                        <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200">
+                          Required
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-blue-50 text-blue-800 hover:bg-blue-100">
+                          Optional
+                        </Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ))}
+        
+        <div className="mt-6 pt-4 border-t">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-bold">Total Amount</h3>
+            <span className="text-lg font-bold">{formatCurrency(totalAmount)}</span>
+          </div>
         </div>
-      ))}
-    </div>
+      </CardContent>
+    </Card>
   );
 }
-
-export default DetailedFeeBreakdown;
