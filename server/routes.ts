@@ -643,10 +643,11 @@ export function registerRoutes(app: Express): Server {
               managerName: managerName,
               managerEmail: managerEmail,
               managerPhone: managerPhone,
-              // Track the submitter's email separately from the manager
-              // If the user is logged in, use their email as the submitter
-              // Otherwise, fall back to the manager email
+              // Track the submitter's information separately from the manager
+              // If the user is logged in, use their information as the submitter
+              // Otherwise, fall back to the manager information
               submitterEmail: req.user?.email || managerEmail,
+              submitterName: req.user ? `${req.user.firstName} ${req.user.lastName}` : managerName,
               // Add new registration fields
               status: "registered", // Initial status - 'registered', 'approved', 'rejected', etc.
               registrationFee: registrationFee || null,  // Use camelCase as defined in the schema

@@ -26,6 +26,8 @@ export interface TermsAcknowledgmentData {
   eventName: string;
   managerName: string;
   managerEmail: string;
+  submitterName: string;   // Added field for the submitter's name
+  submitterEmail: string;  // Added field for the submitter's email
   timestamp: Date;
   agreementText: string;
   refundPolicyText: string;
@@ -88,8 +90,10 @@ export async function generateTermsAcknowledgmentPDF(data: TermsAcknowledgmentDa
       doc.fontSize(12)
          .text(`Event: ${data.eventName}`, { continued: false })
          .text(`Team: ${data.teamName}`, { continued: false })
-         .text(`Manager: ${data.managerName}`, { continued: false })
-         .text(`Email: ${data.managerEmail}`, { continued: false })
+         .text(`Team Manager: ${data.managerName}`, { continued: false })
+         .text(`Team Manager Email: ${data.managerEmail}`, { continued: false })
+         .text(`Submitted By: ${data.submitterName}`, { continued: false })
+         .text(`Submitter Email: ${data.submitterEmail}`, { continued: false })
          .text(`Date: ${data.timestamp.toLocaleDateString()}`, { continued: false })
          .text(`Time: ${data.timestamp.toLocaleTimeString()}`, { continued: false })
          .moveDown(1);
@@ -125,9 +129,9 @@ export async function generateTermsAcknowledgmentPDF(data: TermsAcknowledgmentDa
       
       // Add signature line
       doc.fontSize(10)
-         .text(`Electronic acknowledgment by: ${data.managerName}`, { continued: false })
+         .text(`Electronic acknowledgment by: ${data.submitterName}`, { continued: false })
          .text(`Date and time: ${data.timestamp.toLocaleDateString()} at ${data.timestamp.toLocaleTimeString()}`, { continued: false })
-         .text(`Email: ${data.managerEmail}`, { continued: false })
+         .text(`Email: ${data.submitterEmail}`, { continued: false })
          .moveDown(0.5);
       
       // Add legal notice at bottom
