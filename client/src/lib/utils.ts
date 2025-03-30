@@ -41,9 +41,13 @@ export function formatBytes(bytes: number, decimals: number = 2): string {
 }
 
 export function formatCurrency(amount: number): string {
+  // Convert the amount to a fixed 2 decimal places to ensure proper formatting
+  // This fixes the issue where amounts like 945 are displayed as $94,500.00
+  const fixedAmount = Number(amount.toFixed(2));
+  
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 2
-  }).format(amount);
+  }).format(fixedAmount);
 }
