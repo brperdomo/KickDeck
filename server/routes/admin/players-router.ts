@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@db";
-import { playersTable, teams, insertPlayerSchema, selectPlayerSchema } from "@db/schema";
+import { players, teams, insertPlayerSchema, selectPlayerSchema } from "@db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
@@ -37,11 +37,11 @@ router.get('/:teamId/players', async (req, res) => {
     }
     
     // Get players for the team
-    const players = await db.query.playersTable.findMany({
-      where: eq(playersTable.teamId, teamId)
+    const playersList = await db.query.players.findMany({
+      where: eq(players.teamId, teamId)
     });
     
-    return res.json(players);
+    return res.json(playersList);
   } catch (error) {
     console.error('Error fetching players:', error);
     return res.status(500).json({ error: 'Failed to fetch players' });
@@ -71,7 +71,7 @@ router.post('/:teamId/players', async (req, res) => {
     }
     
     // Insert the player
-    const newPlayer = await db.insert(playersTable).values({
+    const newPlayer = await db.insert(players).values({
       ...playerData,
       teamId,
       createdAt: new Date().toISOString(),
@@ -93,8 +93,8 @@ router.put('/:teamId/players/:playerId', async (req, res) => {
     const playerData = req.body;
     
     // Verify team exists and player belongs to team
-    const player = await db.query.playersTable.findFirst({
-      where: eq(playersTable.id, playerId)
+    const player = await db.query.players.findFirst({
+      where: eq(players.id, playerId)
     });
     
     if (!player) {
@@ -113,12 +113,12 @@ router.put('/:teamId/players/:playerId', async (req, res) => {
     }
     
     // Update the player
-    const updatedPlayer = await db.update(playersTable)
+    const updatedPlayer = await db.update(players)
       .set({
         ...playerData,
         updatedAt: new Date().toISOString()
       })
-      .where(eq(playersTable.id, playerId))
+      .where(eq(players.id, playerId))
       .returning();
     
     return res.json(updatedPlayer[0]);
@@ -135,8 +135,8 @@ router.delete('/:teamId/players/:playerId', async (req, res) => {
     const playerId = parseInt(req.params.playerId);
     
     // Verify player exists and belongs to team
-    const player = await db.query.playersTable.findFirst({
-      where: eq(playersTable.id, playerId)
+    const player = await db.query.players.findFirst({
+      where: eq(players.id, playerId)
     });
     
     if (!player) {
@@ -148,7 +148,7 @@ router.delete('/:teamId/players/:playerId', async (req, res) => {
     }
     
     // Delete the player
-    await db.delete(playersTable).where(eq(playersTable.id, playerId));
+    await db.delete(players).where(eq(players.id, playerId));
     
     return res.json({ message: 'Player deleted successfully' });
   } catch (error) {
