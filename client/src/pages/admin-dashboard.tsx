@@ -72,7 +72,6 @@ import {
   Moon,
   Sun,
   Trash2,
-  FileText,
   FileUp
 } from "lucide-react";
 import { useOrganizationSettings } from "@/hooks/use-organization-settings";
