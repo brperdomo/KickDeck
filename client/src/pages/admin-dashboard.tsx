@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, lazy, Suspense, useCallback } from "react";
 import { useLocation, Link } from "wouter";
-import { Link2, X, Ticket, Plus, Mail, KeyRound, Check, RefreshCcw, UserMinus, RotateCcw, Pencil, PlusCircle, Trash, FileText, FileUp, Eye, Loader2, Users, CalendarRange, User, UserRoundPlus } from "lucide-react";
+import { Link2, X, Ticket, Plus, Mail, KeyRound, Check, RefreshCcw, UserMinus, RotateCcw, Pencil, PlusCircle, CalendarRange, UserRoundPlus } from "lucide-react";
 import { EventsTable } from "@/components/events/EventsTable";
 import { GeneralSettingsView } from "@/components/admin/GeneralSettingsView";
 import EmulationManager from "@/components/admin/EmulationManager";
