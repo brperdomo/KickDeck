@@ -47,6 +47,8 @@ router.get('/:teamId/fees', async (req, res) => {
       return res.json([]);
     }
     
+    // Convert the amount to a fixed precision to prevent displaying issues
+    // This ensures that amounts are properly formatted for the client
     const fees = await db.select({
       id: eventFees.id,
       name: eventFees.name,
@@ -55,9 +57,15 @@ router.get('/:teamId/fees', async (req, res) => {
       isRequired: eventFees.isRequired
     })
     .from(eventFees)
-    .where(inArray(eventFees.id, feeIdsArray));
+    .where(inArray(eventFees.id, feeIdsArray))
     
-    res.json(fees);
+    // Process fees to ensure correct amount format
+    const processedFees = fees.map(fee => ({
+      ...fee,
+      amount: Number(fee.amount.toFixed(2))
+    }));
+    
+    res.json(processedFees);
   } catch (error) {
     console.error("Error fetching team fee details:", error);
     res.status(500).json({ 
