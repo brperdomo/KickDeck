@@ -256,7 +256,11 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
       const submitData = {
         ...data,
         seasonalScopeId: scopeIdToSubmit,
-        ageGroups,
+        // Ensure each age group includes the isEligible property
+        ageGroups: ageGroups.map(group => ({
+          ...group,
+          isEligible: group.isEligible !== false // defaults to true if not explicitly set to false
+        })),
         scoringRules,
         settings,
         complexFieldSizes,
@@ -430,6 +434,10 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                   <TableHead>Division Code</TableHead>
                   <TableHead>Assigned Fees</TableHead>
                   <TableHead>Total Fee</TableHead>
+                  <TableHead className="text-center">
+                    <div>Eligible for Registration</div>
+                    <div className="text-xs font-normal text-muted-foreground mt-1">Toggle to enable/disable registration for this age group</div>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -470,12 +478,26 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                           ? formatCurrency(totalFee) 
                           : <span className="text-muted-foreground">$0.00</span>}
                       </TableCell>
+                      <TableCell className="text-center">
+                        <Switch
+                          checked={group.isEligible !== false}
+                          onCheckedChange={(checked) => {
+                            const updatedAgeGroups = ageGroups.map(ag => 
+                              ag.id === group.id 
+                                ? { ...ag, isEligible: checked } 
+                                : ag
+                            );
+                            setAgeGroups(updatedAgeGroups);
+                          }}
+                          aria-label={`Age group ${group.ageGroup} eligibility toggle`}
+                        />
+                      </TableCell>
                     </TableRow>
                   );
                 })}
                 {ageGroups.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
                       No age groups found
                     </TableCell>
                   </TableRow>
