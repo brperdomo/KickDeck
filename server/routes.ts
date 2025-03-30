@@ -72,7 +72,7 @@ import {
   formFieldOptions,
   formResponses,
   teams,
-  players as playersTable,
+  players,
   games,
   gameTimeSlots,
   eventSettings,
@@ -728,7 +728,7 @@ export function registerRoutes(app: Express): Server {
                 
                 // IMPORTANT: Use camelCase with Drizzle ORM - it maps to snake_case columns automatically
                 const insertResult = await tx
-                  .insert(playersTable)
+                  .insert(players)
                   .values({
                     teamId: team.id, 
                     firstName: player.firstName,
@@ -4014,8 +4014,8 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         // Fetch players for this team
         const playersList = await db
           .select()
-          .from(playersTable)
-          .where(eq(playersTable.teamId, teamId));
+          .from(players)
+          .where(eq(players.teamId, teamId));
           
         // Parse coach JSON if it exists
         let coachData = {};
@@ -4068,7 +4068,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         }
         
         // Insert the new player
-        const newPlayer = await db.insert(playersTable).values({
+        const newPlayer = await db.insert(players).values({
           teamId,
           firstName: req.body.firstName,
           lastName: req.body.lastName,
@@ -4103,7 +4103,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         }
         
         // Check if player exists
-        const player = await db.select().from(playersTable).where(eq(playersTable.id, playerId));
+        const player = await db.select().from(players).where(eq(players.id, playerId));
         
         if (!player || player.length === 0) {
           return res.status(404).json({ error: "Player not found" });
@@ -4130,9 +4130,9 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         updateData.updatedAt = new Date().toISOString();
         
         // Update the player
-        const [updatedPlayer] = await db.update(playersTable)
+        const [updatedPlayer] = await db.update(players)
           .set(updateData)
-          .where(eq(playersTable.id, playerId))
+          .where(eq(players.id, playerId))
           .returning();
         
         res.json(updatedPlayer);
@@ -4152,7 +4152,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         }
         
         // Delete the player
-        await db.delete(playersTable).where(eq(playersTable.id, playerId));
+        await db.delete(players).where(eq(players.id, playerId));
         
         res.json({ success: true, message: "Player deleted successfully" });
       } catch (error) {
