@@ -3756,7 +3756,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         // try to load the full set from the seasonal scope
         if (ageGroups.length < 30) {
           // Try to find the seasonal scope ID from event settings
-          const eventSettings = await db.query.eventSettings.findMany({
+          const eventSettingsRecords = await db.query.eventSettings.findMany({
             where: and(
               eq(eventSettings.eventId, eventId),
               eq(eventSettings.settingKey, 'seasonalScopeId')
@@ -3764,8 +3764,8 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           });
 
           // If we found a seasonal scope ID setting, use it to get all age groups
-          if (eventSettings.length > 0) {
-            const seasonalScopeId = parseInt(eventSettings[0].settingValue);
+          if (eventSettingsRecords.length > 0) {
+            const seasonalScopeId = parseInt(eventSettingsRecords[0].settingValue);
             console.log(`Found seasonal scope ID ${seasonalScopeId} for event ${eventId}, fetching all age groups`);
             
             // Get the complete set of age groups from the seasonal scope
