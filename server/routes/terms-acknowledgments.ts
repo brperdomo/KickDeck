@@ -50,6 +50,9 @@ export async function generateTermsAcknowledgmentDocument(req: Request, res: Res
       eventName: event.name,
       managerName: team.managerName || 'Team Manager',
       managerEmail: team.managerEmail || 'manager@example.com',
+      // Use the submitter's information (defaults to Bryan Perdomo if not found) for accountability
+      submitterName: team.submitterName || 'Bryan Perdomo',
+      submitterEmail: team.submitterEmail || 'bperdomo@zoho.com',
       timestamp: team.termsAcknowledgedAt ? new Date(team.termsAcknowledgedAt) : new Date(),
       agreementText: event.agreement || 'No terms and conditions provided',
       refundPolicyText: event.refundPolicy || 'No refund policy provided'
