@@ -163,6 +163,7 @@ export const eventAgeGroups = pgTable("event_age_groups", {
   createdAt: text("created_at").notNull().default(new Date().toISOString()),
   birth_date_start: text("birth_date_start"),
   divisionCode: text("division_code"),
+  isEligible: boolean("is_eligible").notNull().default(true),
 });
 
 export const insertEventAgeGroupSchema = createInsertSchema(eventAgeGroups, {
@@ -175,6 +176,7 @@ export const insertEventAgeGroupSchema = createInsertSchema(eventAgeGroups, {
   amountDue: z.number().int().min(0, "Amount due must be 0 or greater").optional(),
   scoringRule: z.string().optional(),
   birth_date_start: z.string().optional(),
+  isEligible: z.boolean().default(true),
 });
 
 export type InsertEventAgeGroup = typeof eventAgeGroups.$inferInsert;
