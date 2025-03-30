@@ -3222,29 +3222,67 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           .groupBy(eventAgeGroups.id);
 
         // Get all complexes with their fields and full metadata
-        const complexData = await db
-          .select({
-            complex: complexes,
-            fields: sql<any>`json_agg(
-              CASE WHEN ${fields.id} IS NOT NULL THEN
-                json_build_object(
-                  'id', ${fields.id},
-                  'name', ${fields.name},
-                  'hasLights', ${fields.hasLights},
-                  'hasParking', ${fields.hasParking},
-                  'isOpen', ${fields.isOpen},
-                  'specialInstructions', ${fields.specialInstructions}
-                )
-              ELSE NULL
-              END
-            ) FILTER (WHERE ${fields.id} IS NOT NULL)`.mapWith((f) => f || []),
-            openFields: sql<number>`count(case when ${fields.isOpen} = true then 1 end)`.mapWith(Number),
-            closedFields: sql<number>`count(case when ${fields.isOpen} = false then 1 end)`.mapWith(Number),
-          })
-          .from(complexes)
-          .leftJoin(fields, eq(complexes.id, fields.complexId))
-          .groupBy(complexes.id)
-          .orderBy(complexes.name);
+        // Using a try-catch to handle potential column mismatches
+        let complexData = [];
+        try {
+          complexData = await db
+            .select({
+              complex: complexes,
+              fields: sql<any>`json_agg(
+                CASE WHEN ${fields.id} IS NOT NULL THEN
+                  json_build_object(
+                    'id', ${fields.id},
+                    'name', ${fields.name},
+                    'hasLights', ${fields.hasLights},
+                    'hasParking', ${fields.hasParking},
+                    'isOpen', ${fields.isOpen},
+                    'specialInstructions', ${fields.specialInstructions}
+                  )
+                ELSE NULL
+                END
+              ) FILTER (WHERE ${fields.id} IS NOT NULL)`.mapWith((f) => f || []),
+              openFields: sql<number>`count(case when ${fields.isOpen} = true then 1 end)`.mapWith(Number),
+              closedFields: sql<number>`count(case when ${fields.isOpen} = false then 1 end)`.mapWith(Number),
+            })
+            .from(complexes)
+            .leftJoin(fields, eq(complexes.id, fields.complexId))
+            .groupBy(complexes.id)
+            .orderBy(complexes.name);
+        } catch (error) {
+          console.error("Error fetching complexes:", error);
+          // Get complexes with a simplified query that won't fail due to missing columns
+          const basicComplexes = await db
+            .select()
+            .from(complexes);
+            
+          // Create a compatible complex data structure
+          complexData = await Promise.all(basicComplexes.map(async (complex) => {
+            // Get fields for this complex
+            const fieldsList = await db
+              .select()
+              .from(fields)
+              .where(eq(fields.complexId, complex.id));
+              
+            return {
+              complex: { 
+                ...complex,
+                // Add missing fields with default values if needed
+                latitude: complex.latitude || null,
+                longitude: complex.longitude || null
+              },
+              fields: fieldsList.map(field => ({
+                id: field.id,
+                name: field.name,
+                hasLights: field.hasLights,
+                hasParking: field.hasParking,
+                isOpen: field.isOpen,
+                specialInstructions: field.specialInstructions
+              })),
+              openFields: fieldsList.filter(f => f.isOpen).length,
+              closedFields: fieldsList.filter(f => !f.isOpen).length
+            };
+          }));
+        }
 
         // Get scoring rules
         const scoringRules = await db
