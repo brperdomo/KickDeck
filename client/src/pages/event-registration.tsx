@@ -29,6 +29,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PaymentElement, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import StripeProvider from "@/components/StripeProvider";
+import { Footer } from "@/components/ui/Footer";
 
 interface AgeGroup {
   id: number;
@@ -1858,6 +1859,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
           </CardContent>
         </Card>
       </div>
+      <Footer />
     </div>
   );
 }
