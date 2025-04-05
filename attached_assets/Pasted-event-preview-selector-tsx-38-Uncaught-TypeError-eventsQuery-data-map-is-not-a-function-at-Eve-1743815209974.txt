@@ -1,0 +1,22 @@
+event-preview-selector.tsx:38 Uncaught TypeError: eventsQuery.data.map is not a function
+    at EventPreviewSelector (event-preview-selector.tsx:38:51)
+
+event-preview-selector.tsx:38 Uncaught TypeError: eventsQuery.data.map is not a function
+    at EventPreviewSelector (event-preview-selector.tsx:38:51)
+chunk-RPCDYKBN.js?v=4b23030d:14032 The above error occurred in the <EventPreviewSelector> component:
+
+    at EventPreviewSelector (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.repl.co/src/pages/event-preview-selector.tsx:24:28)
+    at Route (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.repl.co/…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4b23030d:323:16)
+    at Switch (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.repl.co/…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4b23030d:379:17)
+    at Router (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.repl.co/src/App.tsx:51:31)
+    at Provider (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.repl.co/…unner/workspace/node_modules/.vite/deps/chunk-GE6KQUNF.js?v=4b23030d:38:15)
+    at TooltipProvider (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.repl.co/…rkspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=4b23030d:64:5)
+    at AuthProvider (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.repl.co/src/hooks/use-auth.tsx:26:32)
+    at QueryClientProvider (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.repl.co/…rkspace/node_modules/.vite/deps/@tanstack_react-query.js?v=4b23030d:2829:3)
+    at App
+    at QueryClientProvider (https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.repl.co/…rkspace/node_modules/.vite/deps/@tanstack_react-query.js?v=4b23030d:2829:3)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+chunk-RPCDYKBN.js?v=4b23030d:9129 Uncaught TypeError: eventsQuery.data.map is not a function
+    at EventPreviewSelector (event-preview-selector.tsx:38:51)
