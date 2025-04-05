@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect, lazy, Suspense, useCallback } from "react";
 import { useLocation, Link } from "wouter";
+import { motion } from "framer-motion";
+import { AnimatedContainer, AnimatedList, AnimatedItem } from "@/components/ui/animated-container";
 import { 
   Link2, X, Ticket, Plus, Mail, KeyRound, Check, RefreshCcw, UserMinus, RotateCcw, 
   Pencil, PlusCircle, CalendarRange, UserRoundPlus, ClipboardX
@@ -103,7 +105,7 @@ import ScheduleVisualization from "@/components/ScheduleVisualization";
 import { useExportProcess } from "@/hooks/use-export-process";
 import { formatDate } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { MotionCard } from "@/components/ui/motion-card";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -219,20 +221,33 @@ function EventsView() {
   const navigate = useLocation()[1];
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Events</h2>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate("/admin/events/preview")}>
-            <Eye className="mr-2 h-4 w-4" />
-            Preview Registration
-          </Button>
-          <Button onClick={() => navigate("/admin/events/create")}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Event
-          </Button>
+      <AnimatedContainer animation="slideUp" delay={0.1}>
+        <div className="flex justify-between items-center">
+          <motion.h2 
+            className="text-2xl font-bold"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >Events</motion.h2>
+          <div className="flex gap-2">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button variant="outline" onClick={() => navigate("/admin/events/preview")}>
+                <Eye className="mr-2 h-4 w-4" />
+                Preview Registration
+              </Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button onClick={() => navigate("/admin/events/create")}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Event
+              </Button>
+            </motion.div>
+          </div>
         </div>
-      </div>
-      <EventsTable />
+      </AnimatedContainer>
+      <AnimatedContainer animation="fadeIn" delay={0.3}>
+        <EventsTable />
+      </AnimatedContainer>
     </div>
   );
 }
@@ -2624,310 +2639,173 @@ function TeamsView() {
 
   return (
     <>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Team Registrations</h2>
-      </div>
-      <Card>
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            <div className="flex flex-wrap gap-4 items-center">
-              <Input
-                placeholder="Search teams..."
-                className="w-[300px]"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              
-              <Select 
-                value={selectedEvent} 
-                onValueChange={setSelectedEvent}
+      <AnimatedContainer animation="slideUp" delay={0.1}>
+        <div className="flex justify-between items-center mb-6">
+          <motion.h2 
+            className="text-2xl font-bold"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            Team Registrations
+          </motion.h2>
+        </div>
+      </AnimatedContainer>
+      
+      <AnimatedContainer animation="fadeIn" delay={0.2}>
+        <Card>
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <motion.div 
+                className="flex flex-wrap gap-4 items-center"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
               >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Select Event" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Events</SelectItem>
-                  {eventsQuery.data?.map((event: any) => (
-                    <SelectItem key={event.id} value={event.id.toString()}>
-                      {event.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              <Select 
-                value={selectedStatus} 
-                onValueChange={setSelectedStatus}
-              >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Registration Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="registered">Registered (Pending)</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                  <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="refunded">Refunded</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <motion.div whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 400 }}>
+                  <Input
+                    placeholder="Search teams..."
+                    className="w-[300px]"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </motion.div>
+                
+                <motion.div whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 400 }}>
+                  <Select 
+                    value={selectedEvent} 
+                    onValueChange={setSelectedEvent}
+                  >
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="Select Event" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Events</SelectItem>
+                      {eventsQuery.data?.map((event: any) => (
+                        <SelectItem key={event.id} value={event.id.toString()}>
+                          {event.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </motion.div>
+                
+                <motion.div whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 400 }}>
+                  <Select 
+                    value={selectedStatus} 
+                    onValueChange={setSelectedStatus}
+                  >
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="Registration Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="registered">Registered (Pending)</SelectItem>
+                      <SelectItem value="approved">Approved</SelectItem>
+                      <SelectItem value="rejected">Rejected</SelectItem>
+                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="refunded">Refunded</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </motion.div>
+              </motion.div>
 
-            <Tabs defaultValue="registered">
-              <TabsList className="mb-4">
-                <TabsTrigger value="registered">Pending Review</TabsTrigger>
-                <TabsTrigger value="approved">Approved</TabsTrigger>
-                <TabsTrigger value="rejected">Rejected</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="registered">
-                <div className="border rounded-md">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Team Name</TableHead>
-                        <TableHead>Event</TableHead>
-                        <TableHead>Age Group</TableHead>
-                        <TableHead>Submitter</TableHead>
-                        <TableHead>Manager</TableHead>
-                        <TableHead>Coach</TableHead>
-                        <TableHead>Registration Fee</TableHead>
-                        <TableHead>Payment Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {teamsQuery.isLoading ? (
+              <Tabs defaultValue="registered">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="registered">Pending Review</TabsTrigger>
+                  <TabsTrigger value="approved">Approved</TabsTrigger>
+                  <TabsTrigger value="rejected">Rejected</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="registered">
+                  <div className="border rounded-md">
+                    <Table>
+                      <TableHeader>
                         <TableRow>
-                          <TableCell colSpan={8} className="text-center py-4">
-                            <div className="flex justify-center">
-                              <Loader2 className="h-6 w-6 animate-spin" />
-                            </div>
-                          </TableCell>
+                          <TableHead>Team Name</TableHead>
+                          <TableHead>Event</TableHead>
+                          <TableHead>Age Group</TableHead>
+                          <TableHead>Submitter</TableHead>
+                          <TableHead>Manager</TableHead>
+                          <TableHead>Coach</TableHead>
+                          <TableHead>Registration Fee</TableHead>
+                          <TableHead>Payment Status</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
-                      ) : filteredTeams.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={8} className="text-center py-4">
-                            No teams found
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredTeams
-                          .filter((team: any) => team && team.status === 'registered')
-                          .map((team: any) => (
-                            <TableRow key={team.id}>
-                              <TableCell className="font-medium">{team.name}</TableCell>
-                              <TableCell>{team.event?.name || "N/A"}</TableCell>
-                              <TableCell>{team.ageGroup?.ageGroup || "N/A"}</TableCell>
-                              <TableCell>{team.submitterEmail || team.managerEmail}</TableCell>
-                              <TableCell>{team.managerEmail}</TableCell>
-                              <TableCell>{getCoachName(team.coach)}</TableCell>
-                              <TableCell>{formatCurrency(team.registrationFee || 0)}</TableCell>
-                              <TableCell>
-                                <Badge variant={team.paymentStatus === 'paid' ? 'default' : 'outline'}>
-                                  {team.paymentStatus || 'Unpaid'}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => handleViewTeamDetails(team)}
-                                  >
-                                    <Eye className="h-4 w-4 mr-1" />
-                                    Details
-                                  </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => handleStatusUpdate(team, 'approved')}
-                                  >
-                                    <Check className="h-4 w-4 mr-1" />
-                                    Approve
-                                  </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="text-destructive"
-                                    onClick={() => handleStatusUpdate(team, 'rejected')}
-                                  >
-                                    <X className="h-4 w-4 mr-1" />
-                                    Reject
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="approved">
-                <div className="border rounded-md">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Team Name</TableHead>
-                        <TableHead>Event</TableHead>
-                        <TableHead>Age Group</TableHead>
-                        <TableHead>Submitter</TableHead>
-                        <TableHead>Manager</TableHead>
-                        <TableHead>Registration Fee</TableHead>
-                        <TableHead>Payment Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {teamsQuery.isLoading ? (
-                        <TableRow>
-                          <TableCell colSpan={7} className="text-center py-4">
-                            <div className="flex justify-center">
-                              <Loader2 className="h-6 w-6 animate-spin" />
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ) : filteredTeams.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={7} className="text-center py-4">
-                            No approved teams found
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredTeams
-                          .filter((team: any) => team && (team.status === 'approved' || team.status === 'paid'))
-                          .map((team: any) => (
-                            <TableRow key={team.id}>
-                              <TableCell className="font-medium">{team.name}</TableCell>
-                              <TableCell>{team.event?.name || "N/A"}</TableCell>
-                              <TableCell>{team.ageGroup?.ageGroup || "N/A"}</TableCell>
-                              <TableCell>{team.submitterEmail || team.managerEmail}</TableCell>
-                              <TableCell>{team.managerEmail}</TableCell>
-                              <TableCell>{formatCurrency(team.registrationFee || 0)}</TableCell>
-                              <TableCell>
-                                <Badge variant={team.paymentStatus === 'paid' ? 'default' : 'outline'}>
-                                  {team.paymentStatus || 'Unpaid'}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => handleViewTeamDetails(team)}
-                                  >
-                                    <Eye className="h-4 w-4 mr-1" />
-                                    Details
-                                  </Button>
-                                  {team.paymentStatus === 'paid' && (
+                      </TableHeader>
+                      <TableBody>
+                        {teamsQuery.isLoading ? (
+                          <TableRow>
+                            <TableCell colSpan={8} className="text-center py-4">
+                              <div className="flex justify-center">
+                                <Loader2 className="h-6 w-6 animate-spin" />
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ) : filteredTeams.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={8} className="text-center py-4">
+                              No teams found
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          filteredTeams
+                            .filter((team: any) => team && team.status === 'registered')
+                            .map((team: any) => (
+                              <TableRow key={team.id}>
+                                <TableCell className="font-medium">{team.name}</TableCell>
+                                <TableCell>{team.event?.name || "N/A"}</TableCell>
+                                <TableCell>{team.ageGroup?.ageGroup || "N/A"}</TableCell>
+                                <TableCell>{team.submitterEmail || team.managerEmail}</TableCell>
+                                <TableCell>{team.managerEmail}</TableCell>
+                                <TableCell>{getCoachName(team.coach)}</TableCell>
+                                <TableCell>{formatCurrency(team.registrationFee || 0)}</TableCell>
+                                <TableCell>
+                                  <Badge variant={team.paymentStatus === 'paid' ? 'default' : 'outline'}>
+                                    {team.paymentStatus || 'Unpaid'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end gap-2">
                                     <Button 
                                       variant="outline" 
                                       size="sm"
-                                      onClick={() => handleRefundRequest(team)}
+                                      onClick={() => handleViewTeamDetails(team)}
                                     >
-                                      <RefreshCcw className="h-4 w-4 mr-1" />
-                                      Refund
+                                      <Eye className="h-4 w-4 mr-1" />
+                                      Details
                                     </Button>
-                                  )}
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="rejected">
-                <div className="border rounded-md">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Team Name</TableHead>
-                        <TableHead>Event</TableHead>
-                        <TableHead>Age Group</TableHead>
-                        <TableHead>Submitter</TableHead>
-                        <TableHead>Manager</TableHead>
-                        <TableHead>Rejection Reason</TableHead>
-                        <TableHead>Payment Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {teamsQuery.isLoading ? (
-                        <TableRow>
-                          <TableCell colSpan={7} className="text-center py-4">
-                            <div className="flex justify-center">
-                              <Loader2 className="h-6 w-6 animate-spin" />
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ) : filteredTeams.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={7} className="text-center py-4">
-                            No rejected teams found
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredTeams
-                          .filter((team: any) => team && team.status === 'rejected')
-                          .map((team: any) => (
-                            <TableRow key={team.id}>
-                              <TableCell className="font-medium">{team.name}</TableCell>
-                              <TableCell>{team.event?.name || "N/A"}</TableCell>
-                              <TableCell>{team.ageGroup?.ageGroup || "N/A"}</TableCell>
-                              <TableCell>{team.submitterEmail || team.managerEmail}</TableCell>
-                              <TableCell>{team.managerEmail}</TableCell>
-                              <TableCell>{team.notes || "No reason provided"}</TableCell>
-                              <TableCell>
-                                <Badge variant={team.paymentStatus === 'refunded' ? 'default' : 'outline'}>
-                                  {team.paymentStatus || 'Unpaid'}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => handleViewTeamDetails(team)}
-                                  >
-                                    <Eye className="h-4 w-4 mr-1" />
-                                    Details
-                                  </Button>
-                                  {team.paymentStatus === 'paid' && (
                                     <Button 
                                       variant="outline" 
                                       size="sm"
-                                      onClick={() => handleRefundRequest(team)}
+                                      onClick={() => handleStatusUpdate(team, 'approved')}
                                     >
-                                      <RefreshCcw className="h-4 w-4 mr-1" />
-                                      Refund
+                                      <Check className="h-4 w-4 mr-1" />
+                                      Approve
                                     </Button>
-                                  )}
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => handleStatusUpdate(team, 'approved')}
-                                  >
-                                    <Check className="h-4 w-4 mr-1" />
-                                    Approve
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-        </CardContent>
-      </Card>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="text-destructive"
+                                      onClick={() => handleStatusUpdate(team, 'rejected')}
+                                    >
+                                      <X className="h-4 w-4 mr-1" />
+                                      Reject
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </CardContent>
+        </Card>
+      </AnimatedContainer>
 
       {/* Team Status Dialog */}
       <Dialog open={isApprovalDialogOpen} onOpenChange={setIsApprovalDialogOpen}>
@@ -3999,37 +3877,39 @@ function AdminDashboard() {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
-      <div className="w-64 bg-card border-r flex flex-col h-full">
-        <div className="p-4 flex flex-col h-full">
-          <div className="space-y-1">
-            <NavigationButton
+      <AnimatedSidebar>
+        <div className="space-y-1">
+            <AnimatedNavigationButton
               view="formTemplates"
               activeView={activeView}
               onClick={() => setActiveView('formTemplates')}
               icon={<FormInput className="mr-2 h-4 w-4" />}
               label="Form Templates"
               permission="view_form_templates"
+              index={0}
             />
             
-            <NavigationButton
+            <AnimatedNavigationButton
               view="events"
               activeView={activeView}
               onClick={() => setActiveView('events')}
               icon={<Calendar className="mr-2 h-4 w-4" />}
               label="Events"
               permission="view_events"
+              index={1}
             />
             
-            <NavigationButton
+            <AnimatedNavigationButton
               view="teams"
               activeView={activeView}
               onClick={() => setActiveView('teams')}
               icon={<Users className="mr-2 h-4 w-4" />}
               label="Teams"
               permission="view_teams"
+              index={2}
             />
             
-            <NavigationButton
+            <AnimatedNavigationButton
               view="complexes"
               activeView={activeView}
               onClick={() => setActiveView('complexes')}
@@ -4038,7 +3918,7 @@ function AdminDashboard() {
               permission="view_complexes"
             />
             
-            <NavigationButton
+            <AnimatedNavigationButton
               view="households"
               activeView={activeView}
               onClick={() => setActiveView('households')}
@@ -4047,7 +3927,7 @@ function AdminDashboard() {
               permission="view_households"
             />
             
-            <NavigationButton
+            <AnimatedNavigationButton
               view="scheduling"
               activeView={activeView}
               onClick={() => setActiveView('scheduling')}
@@ -4056,7 +3936,7 @@ function AdminDashboard() {
               permission="view_scheduling"
             />
             
-            <NavigationButton
+            <AnimatedNavigationButton
               view="reports"
               activeView={activeView}
               onClick={() => setActiveView('reports')}
@@ -4065,7 +3945,7 @@ function AdminDashboard() {
               permission="view_reports"
             />
             
-            <NavigationButton
+            <AnimatedNavigationButton
               view="files"
               activeView={activeView}
               onClick={() => setActiveView('files')}
@@ -4074,7 +3954,7 @@ function AdminDashboard() {
               permission="view_files"
             />
             
-            <NavigationButton
+            <AnimatedNavigationButton
               view="members"
               activeView={activeView}
               onClick={() => setActiveView('members')}
@@ -4085,7 +3965,7 @@ function AdminDashboard() {
             
             {/* Coupons are managed within events, so no standalone navigation is needed */}
             
-            <NavigationButton
+            <AnimatedNavigationButton
               view="roles"
               activeView={activeView}
               onClick={() => setActiveView('roles')}
@@ -4206,55 +4086,57 @@ function AdminDashboard() {
               {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
             </Button>
           </div>
-        </div>
-      </div>
+      </AnimatedSidebar>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
+      <AnimatedContent>
         {/* Use the imported AdminBanner component that includes the ViewToggle */}
         <AdminBanner />
         <div className="p-8">
-          {/* Animation Dashboard Link */}
-          <div className="mb-6 flex">
-            <a 
-              href="/admin/animated" 
-              className="ml-auto inline-flex items-center rounded-md border border-primary/50 bg-primary/5 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
-            >
-              <motion.span
-                initial={{ x: 0 }}
-                animate={{ x: [0, 3, 0] }}
-                transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                className="mr-2"
-              >
-                ✨
-              </motion.span>
-              Try Animated Dashboard
-            </a>
-          </div>
+          {/* This dashboard now includes animations directly */}
 
-          {/* Welcome Card */}
+          {/* Welcome Card with Animation */}
           {showWelcome && (
-            <Card className="mb-6 relative">
-              <button 
-                onClick={() => setShowWelcome(false)}
-                className="absolute top-2 right-2 p-2 hover:bg-muted rounded-full"
-              >
-                <X className="h-4 w-4" />
-              </button>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <UserCircle className="h-6 w-6 text-primary" />
+            <AnimatedContainer animation="scale" delay={0.1}>
+              <Card className="mb-6 relative">
+                <button 
+                  onClick={() => setShowWelcome(false)}
+                  className="absolute top-2 right-2 p-2 hover:bg-muted rounded-full"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <motion.div 
+                      className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center"
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.2, duration: 0.5, type: "spring" }}
+                    >
+                      <UserCircle className="h-6 w-6 text-primary" />
+                    </motion.div>
+                    <div>
+                      <motion.h2 
+                        className="text-2xl font-bold"
+                        initial={{ x: -10, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.3, duration: 0.5 }}
+                      >
+                        Welcome back, {user?.firstName}!
+                      </motion.h2>
+                      <motion.p 
+                        className="text-muted-foreground"
+                        initial={{ x: -10, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.4, duration: 0.5 }}
+                      >
+                        Manage your organization's activities and settings from this dashboard.
+                      </motion.p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-2xl font-bold">Welcome back, {user?.firstName}!</h2>
-                    <p className="text-muted-foreground">
-                      Manage your organization's activities and settings from this dashboard.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </AnimatedContainer>
           )}
 
           {renderView()}
@@ -4270,7 +4152,7 @@ function AdminDashboard() {
             }}
           />
         )}
-      </div>
+      </AnimatedContent>
       {showLogoutOverlay && (
         <LogoutOverlay onFinished={() => {
           // Initiate logout call but don't await it, in case it's stuck or taking too long
