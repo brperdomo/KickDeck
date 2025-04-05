@@ -10,7 +10,6 @@ import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import AdminDashboard from "@/pages/admin-dashboard";
-import { AdminDashboard as AnimatedAdminDashboard } from "@/pages/fixed-admin-dashboard";
 import CreateEvent from "@/pages/create-event";
 import CouponManagement from "@/pages/coupon-management";
 import AccountingCodeManagement from "@/pages/accounting-code-management";
@@ -115,9 +114,7 @@ function Router() {
           <Route path="/admin/events">
             {user.isAdmin ? <AdminDashboard /> : <NotFound />}
           </Route>
-          <Route path="/admin/animated">
-            {user.isAdmin ? <AnimatedAdminDashboard /> : <NotFound />}
-          </Route>
+          {/* We'll enhance the main dashboard with animations directly */}
           <Route path="/admin">
             {user.isAdmin ? <AdminDashboard /> : <NotFound />}
           </Route>
