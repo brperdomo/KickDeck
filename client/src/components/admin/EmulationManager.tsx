@@ -116,7 +116,9 @@ export default function EmulationManager() {
           console.log('Emulation token stored in localStorage:', localStorage.getItem('emulationToken'));
           
           // Reload the page to ensure all components update properly
-          window.location.href = window.location.origin + '/admin';
+          // Ensure no duplicate slashes by using URL constructor
+          const adminUrl = new URL('/admin', window.location.origin);
+          window.location.href = adminUrl.toString();
         }, 1000);
       } catch (error) {
         console.error('Error in emulation success handler:', error);

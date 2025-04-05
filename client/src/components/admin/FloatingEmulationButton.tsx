@@ -152,7 +152,9 @@ export function FloatingEmulationButton() {
         queryClient.invalidateQueries({ queryKey: ['emulation-status'] });
         
         // Reload the page to ensure UI updates properly
-        window.location.href = window.location.origin + '/admin';
+        // Ensure no duplicate slashes by using URL constructor
+        const adminUrl = new URL('/admin', window.location.origin);
+        window.location.href = adminUrl.toString();
       }, 1000);
     } catch (error) {
       toast({

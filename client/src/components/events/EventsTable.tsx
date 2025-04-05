@@ -119,7 +119,7 @@ export function EventsTable() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/events"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/events", currentPage, pageSize, showArchived] });
       toast({
         title: "Success",
         description: "Event deleted successfully",
@@ -172,7 +172,12 @@ export function EventsTable() {
     },
     onSuccess: (data) => {
       const action = data.event.isArchived ? "archived" : "unarchived";
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/events"] });
+      
+      // Force refetch all events data with the current filters
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/admin/events", currentPage, pageSize, showArchived]
+      });
+      
       toast({
         title: "Success",
         description: `Event ${action} successfully`,
@@ -208,9 +213,10 @@ export function EventsTable() {
     return eventsWithStatus.filter((event: Event & { status: string }) => {
       const matchesSearch = event.name.toLowerCase().includes(lowercaseQuery);
       const matchesStatus = statusFilter === "all" || event.status === statusFilter;
+      // The server already filters archived events, so no need to filter them here again
       return matchesSearch && matchesStatus;
     });
-  }, [eventsWithStatus, searchQuery, statusFilter]);
+  }, [eventsWithStatus, searchQuery, statusFilter, showArchived]);
 
   // Memoize sorted events based on the filtered events and sort settings
   const sortedEvents = useMemo(() => {
@@ -251,8 +257,9 @@ export function EventsTable() {
 
   const handleGenerateRegistrationLink = async (eventId: number | bigint) => {
     try {
-      const registrationUrl = `${window.location.origin}/register/event/${eventId.toString()}`;
-      await navigator.clipboard.writeText(registrationUrl);
+      // Use URL constructor to ensure proper URL formation
+      const registrationUrl = new URL(`/register/event/${eventId.toString()}`, window.location.origin);
+      await navigator.clipboard.writeText(registrationUrl.toString());
       toast({
         title: "Success",
         description: "Registration link copied to clipboard",
@@ -293,7 +300,7 @@ export function EventsTable() {
         description: "The event was successfully deleted"
       });
 
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/events"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/events", currentPage, pageSize, showArchived] });
       setDeleteDialogOpen(false);
       setDeleteConfirmText("");
       setEventToDelete(null);
