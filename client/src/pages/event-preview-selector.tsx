@@ -13,9 +13,14 @@ interface Event {
   endDate: string;
 }
 
+// Define the API response interface
+interface EventsResponse {
+  events: Event[];
+}
+
 export default function EventPreviewSelector() {
   const [_, setLocation] = useLocation();
-  const eventsQuery = useQuery<Event[]>({
+  const eventsQuery = useQuery<EventsResponse>({
     queryKey: ['/api/admin/events'],
   });
 
@@ -27,6 +32,9 @@ export default function EventPreviewSelector() {
     return <div>Loading events...</div>;
   }
 
+  // Get the events array from the response
+  const events = eventsQuery.data?.events || [];
+  
   return (
     <div className="container mx-auto p-6">
       <Card>
@@ -35,19 +43,25 @@ export default function EventPreviewSelector() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
-            {eventsQuery.data && eventsQuery.data.map((event) => (
-              <div key={event.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-medium">{event.name}</h3>
-                  <p className="text-sm text-gray-500">
-                    {new Date(event.startDate).toLocaleDateString()} - {new Date(event.endDate).toLocaleDateString()}
-                  </p>
+            {events.length > 0 ? (
+              events.map((event) => (
+                <div key={event.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <h3 className="font-medium">{event.name}</h3>
+                    <p className="text-sm text-gray-500">
+                      {new Date(event.startDate).toLocaleDateString()} - {new Date(event.endDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <Button onClick={() => handleNavigate(event.id)}>
+                    Preview Registration
+                  </Button>
                 </div>
-                <Button onClick={() => handleNavigate(event.id)}>
-                  Preview Registration
-                </Button>
+              ))
+            ) : (
+              <div className="text-center p-4">
+                <p className="text-gray-500">No events available to preview</p>
               </div>
-            ))}
+            )}
           </div>
         </CardContent>
       </Card>

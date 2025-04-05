@@ -75,6 +75,9 @@ import {
   ArrowLeftIcon,
   SearchIcon,
   CheckIcon,
+  ExternalLinkIcon,
+  ClipboardCopyIcon,
+  MaximizeIcon
 } from 'lucide-react';
 import { formatBytes, formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -398,6 +401,19 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
       toggleSelection(file.id);
     }
   };
+  
+  // Function to copy file path to clipboard
+  const copyPathToClipboard = (path: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(path)
+      .then(() => {
+        toast.success('Path copied to clipboard');
+      })
+      .catch((error) => {
+        console.error('Error copying to clipboard:', error);
+        toast.error('Failed to copy path');
+      });
+  };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -670,28 +686,52 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
                         {formatBytes(file.size)}
                       </div>
                       <div className="flex justify-between mt-2">
-                        <a 
-                          href={file.url} 
-                          download
-                          onClick={(e) => e.stopPropagation()}
-                          title="Download"
-                        >
-                          <Button variant="ghost" size="icon" className="h-7 w-7">
-                            <DownloadIcon className="h-3.5 w-3.5" />
+                        <div className="flex space-x-1">
+                          <a 
+                            href={file.url} 
+                            download
+                            onClick={(e) => e.stopPropagation()}
+                            title="Download"
+                          >
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                              <DownloadIcon className="h-3.5 w-3.5" />
+                            </Button>
+                          </a>
+                          <a 
+                            href={file.url} 
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Preview in new tab"
+                          >
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                              <ExternalLinkIcon className="h-3.5 w-3.5" />
+                            </Button>
+                          </a>
+                        </div>
+                        <div className="flex space-x-1">
+                          <Button
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7"
+                            onClick={(e) => copyPathToClipboard(file.url, e)}
+                            title="Copy path"
+                          >
+                            <ClipboardCopyIcon className="h-3.5 w-3.5" />
                           </Button>
-                        </a>
-                        <Button
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-7 w-7"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteFile(file.id);
-                          }}
-                          title="Delete"
-                        >
-                          <Trash2Icon className="h-3.5 w-3.5" />
-                        </Button>
+                          <Button
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteFile(file.id);
+                            }}
+                            title="Delete"
+                          >
+                            <Trash2Icon className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -750,11 +790,31 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
                             href={file.url} 
                             download
                             onClick={(e) => e.stopPropagation()}
+                            title="Download"
                           >
                             <Button variant="ghost" size="icon">
                               <DownloadIcon className="h-4 w-4" />
                             </Button>
                           </a>
+                          <a 
+                            href={file.url} 
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Preview in new tab"
+                          >
+                            <Button variant="ghost" size="icon">
+                              <ExternalLinkIcon className="h-4 w-4" />
+                            </Button>
+                          </a>
+                          <Button
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={(e) => copyPathToClipboard(file.url, e)}
+                            title="Copy path"
+                          >
+                            <ClipboardCopyIcon className="h-4 w-4" />
+                          </Button>
                           <Button
                             variant="ghost" 
                             size="icon" 
@@ -762,6 +822,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
                               e.stopPropagation();
                               handleDeleteFile(file.id);
                             }}
+                            title="Delete"
                           >
                             <Trash2Icon className="h-4 w-4" />
                           </Button>
