@@ -1710,7 +1710,22 @@ function SchedulingView() {
     queryFn: async () => {
       const response = await fetch('/api/admin/events');
       if (!response.ok) throw new Error('Failed to fetch events');
-      return response.json();
+      const data = await response.json();
+      
+      // Ensure we handle different response formats and always return an array
+      if (Array.isArray(data)) {
+        return data;
+      } else if (data && typeof data === 'object') {
+        if (Array.isArray(data.events)) {
+          return data.events;
+        } else {
+          console.warn('Events data is not in expected format:', data);
+          return [];
+        }
+      } else {
+        console.warn('Unexpected events data format:', data);
+        return [];
+      }
     }
   });
   
@@ -1930,23 +1945,16 @@ function SchedulingView() {
                   <SelectItem value="loading" disabled>Loading events...</SelectItem>
                 ) : eventsQuery.isError ? (
                   <SelectItem value="error" disabled>Error loading events</SelectItem>
+                ) : eventsQuery.data && Array.isArray(eventsQuery.data) && eventsQuery.data.length > 0 ? (
+                  // If data is available and is an array, map over it
+                  eventsQuery.data.map((event: any) => (
+                    <SelectItem key={event.id} value={event.id.toString()}>
+                      {event.name}
+                    </SelectItem>
+                  ))
                 ) : (
-                  eventsQuery.data ? (
-                    // Handle different possible response formats
-                    Array.isArray(eventsQuery.data) 
-                      ? eventsQuery.data.map((event: any) => (
-                        <SelectItem key={event.id} value={event.id.toString()}>
-                          {event.name}
-                        </SelectItem>
-                      ))
-                      : eventsQuery.data && typeof eventsQuery.data === 'object' && eventsQuery.data.events && Array.isArray(eventsQuery.data.events)
-                        ? eventsQuery.data.events.map((event: any) => (
-                          <SelectItem key={event.id} value={event.id.toString()}>
-                            {event.name}
-                          </SelectItem>
-                        ))
-                        : (<SelectItem value="none" disabled>No events available</SelectItem>)
-                  ) : (<SelectItem value="none" disabled>No events available</SelectItem>)
+                  // Default fallback
+                  <SelectItem value="none" disabled>No events available</SelectItem>
                 )}
               </SelectContent>
             </Select>
