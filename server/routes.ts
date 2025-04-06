@@ -2846,6 +2846,51 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             })
             .where(eq(events.id, eventId))
             .returning();
+            
+          // Handle branding settings
+          if (eventData.branding) {
+            // Process each branding property and save in event_settings
+            const brandingProps = [
+              { key: 'branding.logoUrl', value: eventData.branding.logoUrl },
+              { key: 'branding.primaryColor', value: eventData.branding.primaryColor },
+              { key: 'branding.secondaryColor', value: eventData.branding.secondaryColor }
+            ];
+            
+            for (const { key, value } of brandingProps) {
+              if (value !== undefined) {
+                // Check if setting already exists
+                const existingSetting = await tx
+                  .select()
+                  .from(eventSettings)
+                  .where(and(
+                    eq(eventSettings.eventId, eventId),
+                    eq(eventSettings.settingKey, key)
+                  ));
+                
+                if (existingSetting.length > 0) {
+                  // Update existing setting
+                  await tx
+                    .update(eventSettings)
+                    .set({
+                      settingValue: value || '',
+                      updatedAt: new Date().toISOString()
+                    })
+                    .where(eq(eventSettings.id, existingSetting[0].id));
+                } else if (value) {
+                  // Insert new setting (only if value exists)
+                  await tx
+                    .insert(eventSettings)
+                    .values({
+                      eventId,
+                      settingKey: key,
+                      settingValue: value,
+                      createdAt: new Date().toISOString(),
+                      updatedAt: new Date().toISOString()
+                    });
+                }
+              }
+            }
+          }
 
           if (!updatedEvent) {
             throw new Error("Event not found");

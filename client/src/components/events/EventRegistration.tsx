@@ -1,8 +1,8 @@
 <div className="max-w-4xl mx-auto w-full p-6 bg-white rounded-lg shadow-md">
-        {event.logo && (
+        {event.branding?.logoUrl && (
           <div className="flex justify-center mb-4">
             <img 
-              src={event.logo} 
+              src={event.branding.logoUrl} 
               alt={`${event.name} Logo`} 
               className="max-h-32 object-contain"
               onError={(e) => {
