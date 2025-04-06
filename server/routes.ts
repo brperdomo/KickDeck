@@ -920,7 +920,11 @@ export function registerRoutes(app: Express): Server {
         }
         
         // Generate a new ID for the cloned event
-        const newEventId = Date.now() + Math.floor(Math.random() * 1000);
+        // Use a value within PostgreSQL integer range to avoid integer overflow
+        // PostgreSQL integer max is 2,147,483,647
+        const currentTimestamp = Math.floor(Date.now() / 1000); // Unix timestamp (seconds)
+        const randomSuffix = Math.floor(Math.random() * 10000);
+        const newEventId = currentTimestamp * 100 + randomSuffix; // Still unique but smaller number
         
         // Create a clone of the event with a new ID and adding "Copy of" to the name
         const [newEvent] = await db
