@@ -364,7 +364,7 @@ export function EventsTable() {
         </div>
 
         <div className="rounded-md border">
-          <Table>
+          <Table className="event-list">
             <TableHeader>
               <TableRow>
                 <TableHead className="font-semibold cursor-pointer" onClick={() => handleSort("name")}>

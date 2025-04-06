@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   CheckIcon, XIcon, RefreshCcw, Info, Shield, 
@@ -128,12 +128,90 @@ const actionIcons: Record<string, React.ReactNode> = {
   'export': <FileText size={16} />
 };
 
+// Create mapping between permissions and UI component selectors
+const permissionComponentMap: Record<string, string> = {
+  'users.view': '.user-list, .admin-user-section',
+  'users.create': '.user-create-button, .add-user-form',
+  'users.edit': '.user-edit-button, .user-profile-edit',
+  'users.delete': '.user-delete-button',
+  
+  'events.view': '.event-list, .event-details',
+  'events.create': '.event-create-button, .add-event-form',
+  'events.edit': '.event-edit-button, .edit-event-modal',
+  'events.delete': '.event-delete-button',
+  
+  'teams.view': '.team-list, .team-details, .team-roster',
+  'teams.create': '.team-create-button, .add-team-form',
+  'teams.edit': '.team-edit-button, .edit-team-modal',
+  'teams.delete': '.team-delete-button',
+  
+  'games.view': '.game-list, .schedule-view',
+  'games.create': '.game-create-button, .schedule-create',
+  'games.edit': '.game-edit-button, .edit-game-modal',
+  'games.delete': '.game-delete-button',
+  
+  'scores.view': '.scores-section, .score-details',
+  'scores.create': '.score-create-button, .add-score-form',
+  'scores.edit': '.score-edit-button, .edit-score-modal',
+  'scores.delete': '.score-delete-button',
+  
+  'finances.view': '.finances-section, .payment-history',
+  'finances.create': '.payment-create-button, .add-payment-form',
+  'finances.edit': '.finance-edit-button, .edit-payment-modal',
+  'finances.delete': '.finance-delete-button',
+  'finances.approve': '.payment-approve-button, .refund-approve-button',
+  
+  'settings.view': '.settings-section, .app-settings',
+  'settings.edit': '.settings-edit-button, .edit-settings-form',
+  
+  'reports.view': '.reports-section, .analytics-dashboard',
+  'reports.export': '.export-button, .download-report-button',
+  
+  'administrators.view': '.admin-list, .admin-details',
+  'administrators.create': '.admin-create-button, .add-admin-form',
+  'administrators.edit': '.admin-edit-button, .edit-admin-modal',
+  'administrators.delete': '.admin-delete-button',
+  
+  'coupons.view': '.coupon-list, .coupon-details',
+  'coupons.create': '.coupon-create-button, .add-coupon-form',
+  'coupons.edit': '.coupon-edit-button, .edit-coupon-modal',
+  'coupons.delete': '.coupon-delete-button',
+  
+  'members.view': '.members-section, .membership-details'
+};
+
+// Custom CSS class for highlighted elements
+const highlightClass = 'permission-highlight';
+
+// Add CSS for highlighting
+useEffect(() => {
+  document.head.insertAdjacentHTML('beforeend', `
+    <style>
+      .permission-highlight {
+        box-shadow: 0 0 0 2px #3b82f6, 0 0 20px rgba(59, 130, 246, 0.5) !important;
+        position: relative;
+        z-index: 10;
+        transition: all 0.3s ease;
+      }
+    </style>
+  `);
+  
+  return () => {
+    // Cleanup function to remove style when component unmounts
+    const styleElement = document.head.querySelector('style:last-child');
+    if (styleElement && styleElement.textContent?.includes('permission-highlight')) {
+      styleElement.remove();
+    }
+  };
+}, []);
+
 const RolePermissionsManager = () => {
   const [activeRole, setActiveRole] = useState<number | null>(null);
   const [selectedPermissions, setSelectedPermissions] = useState<{[key: number]: string[]}>({});
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'detailed' | 'simplified'>('detailed');
+  const [hoveredPermission, setHoveredPermission] = useState<string | null>(null);
   
   const queryClient = useQueryClient();
   
@@ -175,6 +253,8 @@ const RolePermissionsManager = () => {
   // Mutation to update a role's permissions
   const updatePermissionsMutation = useMutation({
     mutationFn: async ({ roleId, permissions }: { roleId: number, permissions: string[] }) => {
+      console.log('Sending update request:', { roleId, permissions });
+      
       const response = await fetch(`/api/admin/roles/${roleId}/permissions`, {
         method: 'PATCH',
         headers: {
@@ -186,10 +266,13 @@ const RolePermissionsManager = () => {
       
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Server responded with error:', errorData);
         throw new Error(errorData.error || 'Failed to update permissions');
       }
       
-      return await response.json();
+      const result = await response.json();
+      console.log('Server responded with success:', result);
+      return result;
     },
     onSuccess: (data) => {
       // Force a full refetch of all related data
@@ -209,8 +292,14 @@ const RolePermissionsManager = () => {
         title: "Permissions Updated",
         description: "Role permissions have been updated successfully.",
       });
+      
+      // Force reload the page to ensure all data is refreshed
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     },
     onError: (error: Error) => {
+      console.error('Mutation error:', error);
       toast({
         title: "Update Failed",
         description: error.message,
@@ -388,6 +477,34 @@ const RolePermissionsManager = () => {
     return permissionDescriptions[permission] || `Permission to ${permission.split('.')[1]} ${permission.split('.')[0]}`;
   };
   
+  // Handle highlighting UI elements when hovering on a permission
+  const handlePermissionMouseEnter = (permission: string) => {
+    setHoveredPermission(permission);
+    
+    // Find the UI elements that match this permission and add the highlight class
+    const selector = permissionComponentMap[permission];
+    if (selector) {
+      console.log(`Highlighting permission ${permission} with selector: ${selector}`);
+      const elements = document.querySelectorAll(selector);
+      console.log(`Found ${elements.length} elements to highlight`);
+      elements.forEach(element => {
+        element.classList.add(highlightClass);
+      });
+    }
+  };
+  
+  // Remove highlighting when mouse leaves
+  const handlePermissionMouseLeave = () => {
+    setHoveredPermission(null);
+    
+    // Clear all highlighted elements
+    const highlightedElements = document.querySelectorAll(`.${highlightClass}`);
+    console.log(`Removing highlight from ${highlightedElements.length} elements`);
+    highlightedElements.forEach(element => {
+      element.classList.remove(highlightClass);
+    });
+  };
+  
   // Check if loading or error
   if (isRolesLoading) {
     return (
@@ -471,7 +588,7 @@ const RolePermissionsManager = () => {
                   <div className="flex flex-col items-center text-center">
                     <span>{role.name.replace('_', ' ')}</span>
                     <Badge variant="outline" className="mt-1 text-xs px-2">
-                      {role.permissions.length} permissions
+                      {selectedPermissions[role.id]?.length || role.permissions.length} permissions
                     </Badge>
                   </div>
                 </TabsTrigger>
@@ -545,7 +662,11 @@ const RolePermissionsManager = () => {
                             {(permissions as string[]).map((permission) => (
                               <Tooltip key={permission}>
                                 <TooltipTrigger asChild>
-                                  <div className="flex items-center p-2 hover:bg-muted/40 rounded-md group">
+                                  <div 
+                                  className="flex items-center p-2 hover:bg-muted/40 rounded-md group"
+                                  onMouseEnter={() => handlePermissionMouseEnter(permission)}
+                                  onMouseLeave={handlePermissionMouseLeave}
+                                >
                                     <Checkbox 
                                       id={permission}
                                       checked={selectedPermissions[activeRole!]?.includes(permission) || false}
@@ -594,7 +715,11 @@ const RolePermissionsManager = () => {
                           {(permissions as string[]).map((permission) => (
                             <Tooltip key={permission}>
                               <TooltipTrigger asChild>
-                                <div className="flex items-center space-x-2 p-2 border rounded-md hover:bg-muted/20 group">
+                                <div 
+                                  className="flex items-center space-x-2 p-2 border rounded-md hover:bg-muted/20 group"
+                                  onMouseEnter={() => handlePermissionMouseEnter(permission)}
+                                  onMouseLeave={handlePermissionMouseLeave}
+                                >
                                   <Checkbox 
                                     id={`simplified-${permission}`}
                                     checked={selectedPermissions[activeRole!]?.includes(permission) || false}
