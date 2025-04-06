@@ -237,7 +237,7 @@ function EventsView() {
               </Button>
             </motion.div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button onClick={() => navigate("/admin/events/create")}>
+              <Button onClick={() => navigate("/admin/events/create")} className="event-create-button">
                 <Plus className="mr-2 h-4 w-4" />
                 Create Event
               </Button>
@@ -622,8 +622,8 @@ function AdministratorsView() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="overflow-hidden border rounded-md">
-                      <Table className="border-collapse">
+                    <div className="overflow-hidden border rounded-md admin-list">
+                      <Table className="border-collapse admin-list">
                         <TableHeader className="bg-muted/50">
                           <TableRow className="border-b">
                             <TableHead className="py-3 px-4">Name</TableHead>

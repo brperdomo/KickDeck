@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Permission highlight class for visualizing permissions */
+.permission-highlight {
+  animation: pulse-highlight 1.5s infinite;
+  outline: 2px solid #2563eb !important;
+  outline-offset: 2px;
+  position: relative;
+  z-index: 10;
+}
+
+@keyframes pulse-highlight {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(37, 99, 235, 0.1);
+  }
+}
+
 @layer base {
   @font-face {
     font-family: 'Roboto';
