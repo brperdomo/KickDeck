@@ -8,6 +8,8 @@ import multer from 'multer';
 import { parse } from 'csv-parse';
 import * as z from 'zod';
 import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
+import fs from 'fs';
 
 // Set up multer for file uploads
 const storage = multer.memoryStorage();
@@ -46,6 +48,24 @@ const playerSchema = z.object({
 });
 
 type PlayerData = z.infer<typeof playerSchema>;
+
+// Route for downloading player roster template
+router.get('/template', (req: Request, res: Response) => {
+  try {
+    const templatePath = path.join(process.cwd(), 'public', 'player-roster-template.csv');
+    const fileContent = fs.readFileSync(templatePath, 'utf8');
+    
+    // Set proper headers for CSV download
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="player-roster-template.csv"');
+    
+    // Send the file content
+    res.send(fileContent);
+  } catch (error) {
+    console.error('Error serving CSV template:', error);
+    res.status(500).send('Failed to generate CSV template');
+  }
+});
 
 // Route for uploading player roster CSV
 router.post('/players', upload.single('file'), async (req: Request, res: Response) => {

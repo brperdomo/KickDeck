@@ -1612,8 +1612,8 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                                 Download our CSV template with all the required fields:
                               </p>
                               <a
-                                href="/player-roster-template.csv"
-                                download
+                                href="/api/upload/template"
+                                download="player-roster-template.csv"
                                 className="flex items-center text-[#2C5282] hover:underline"
                               >
                                 <Download className="w-4 h-4 mr-2" />
