@@ -78,6 +78,7 @@ import {
   gameTimeSlots,
   eventSettings,
   ageGroupSettings,
+  eventAdministrators,
 } from "@db/schema";
 import fs from "fs/promises";
 import path from "path";
@@ -919,18 +920,17 @@ export function registerRoutes(app: Express): Server {
           return res.status(404).json({ error: "Source event not found" });
         }
         
-        // Generate a new ID for the cloned event
-        // Use a value within PostgreSQL integer range to avoid integer overflow
-        // PostgreSQL integer max is 2,147,483,647
-        const currentTimestamp = Math.floor(Date.now() / 1000); // Unix timestamp (seconds)
-        const randomSuffix = Math.floor(Math.random() * 10000);
-        const newEventId = currentTimestamp * 100 + randomSuffix; // Still unique but smaller number
+        // Let the database auto-generate the event ID using the sequence
+        // The events table has an auto-incrementing integer ID
+        // We'll just omit the ID to let PostgreSQL handle it automatically
         
-        // Create a clone of the event with a new ID and adding "Copy of" to the name
+        console.log(`Creating cloned event with auto-generated ID`);
+        
+        // Create a clone of the event with an auto-generated ID and adding "Copy of" to the name
         const [newEvent] = await db
           .insert(events)
           .values({
-            id: newEventId,
+            // id is omitted to let PostgreSQL auto-generate it using the sequence
             name: `Copy of ${sourceEvent.name}`,
             startDate: sourceEvent.startDate,
             endDate: sourceEvent.endDate,
@@ -957,7 +957,7 @@ export function registerRoutes(app: Express): Server {
             .values({
               ...ageGroup,
               id: undefined, // Let the database generate a new ID
-              eventId: String(newEventId),
+              eventId: String(newEvent.id), // Use the ID from the newly created event
               createdAt: new Date().toISOString()
             });
         }
@@ -974,7 +974,7 @@ export function registerRoutes(app: Express): Server {
             .values({
               ...rule,
               id: undefined, // Let the database generate a new ID
-              eventId: String(newEventId),
+              eventId: String(newEvent.id), // Use the ID from the newly created event
               createdAt: new Date().toISOString()
             });
         }
@@ -991,7 +991,7 @@ export function registerRoutes(app: Express): Server {
             .values({
               ...complex,
               id: undefined, // Let the database generate a new ID
-              eventId: String(newEventId),
+              eventId: String(newEvent.id), // Use the ID from the newly created event
               createdAt: new Date().toISOString()
             });
         }
@@ -1008,7 +1008,7 @@ export function registerRoutes(app: Express): Server {
             .values({
               ...fieldSize,
               id: undefined, // Let the database generate a new ID
-              eventId: String(newEventId),
+              eventId: String(newEvent.id), // Use the ID from the newly created event
               createdAt: new Date().toISOString()
             });
         }
@@ -1025,7 +1025,7 @@ export function registerRoutes(app: Express): Server {
             .values({
               ...setting,
               id: undefined, // Let the database generate a new ID
-              eventId: String(newEventId),
+              eventId: String(newEvent.id), // Use the ID from the newly created event
               createdAt: new Date().toISOString()
             });
         }
@@ -1042,7 +1042,7 @@ export function registerRoutes(app: Express): Server {
             .values({
               ...admin,
               id: undefined, // Let the database generate a new ID
-              eventId: String(newEventId),
+              eventId: String(newEvent.id), // Use the ID from the newly created event
               createdAt: new Date().toISOString()
             });
         }
@@ -1050,7 +1050,7 @@ export function registerRoutes(app: Express): Server {
         res.status(201).json({ 
           message: "Event cloned successfully", 
           event: newEvent,
-          id: newEventId
+          id: newEvent.id // Use the ID from the newly created event
         });
         
       } catch (error) {
