@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect, lazy, Suspense, useCallback } from "react";
 import { useLocation, Link } from "wouter";
 import { motion } from "framer-motion";
-import { AnimatedContainer, AnimatedList, AnimatedItem } from "@/components/ui/animated-container";
 import { 
   Link2, X, Ticket, Plus, Mail, KeyRound, Check, RefreshCcw, UserMinus, RotateCcw, 
   Pencil, PlusCircle, CalendarRange, UserRoundPlus, ClipboardX, ArrowLeft
@@ -13,8 +12,9 @@ import { FloatingEmulationButton } from "@/components/admin/FloatingEmulationBut
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { AnimatedSidebar, AnimatedContent } from "@/components/admin/AnimatedSidebar";
+import { AnimatedSidebar } from "@/components/admin/AnimatedSidebar";
 import { AnimatedNavigationButton } from "@/components/admin/AnimatedNavigationButton";
+import { AnimatedContainer, AnimatedList, AnimatedItem, AnimatedContent } from "@/components/ui/animation";
 import {
   Collapsible,
   CollapsibleContent,

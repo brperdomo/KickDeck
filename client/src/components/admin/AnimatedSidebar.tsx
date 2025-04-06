@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import React, { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { AnimatedContent, AnimatedItem, ANIMATION_CONFIG } from "@/components/ui/animation";
 
 interface AnimatedSidebarProps {
   children: React.ReactNode;
@@ -82,23 +83,5 @@ export function AnimatedSidebar({
   );
 }
 
-interface AnimatedContentProps {
-  children: ReactNode;
-  className?: string;
-}
-
-export function AnimatedContent({ 
-  children, 
-  className 
-}: AnimatedContentProps) {
-  return (
-    <motion.div
-      className={cn("flex-1 overflow-auto", className)}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, delay: 0.3 }}
-    >
-      {children}
-    </motion.div>
-  );
-}
+// AnimatedContent is now imported from @/components/ui/animation
+// This component has been removed to avoid duplication
