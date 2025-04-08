@@ -249,14 +249,26 @@ router.get('/:id/age-groups', async (req, res) => {
       }
     }
 
-    // Ensure all age groups are marked as selected
-    const ageGroupsWithSelected = ageGroups.map(group => ({
-      ...group,
-      selected: true
-    }));
+    // Deduplicate based on division code before returning
+    const uniqueGroups = [];
+    const uniqueMap = new Map();
+    
+    for (const group of ageGroups) {
+      // Use division code or create a key from gender and age group
+      const divisionCode = group.divisionCode || `${group.gender.charAt(0)}${group.ageGroup.replace(/\D/g, '')}`;
+      const key = divisionCode;
+      
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, true);
+        uniqueGroups.push({
+          ...group,
+          selected: true
+        });
+      }
+    }
 
-    console.log(`Returning ${ageGroupsWithSelected.length} age groups for event ${eventId}`);
-    res.json(ageGroupsWithSelected);
+    console.log(`Deduplicated to ${uniqueGroups.length} unique age groups (from ${ageGroups.length}) for event ${eventId}`);
+    res.json(uniqueGroups);
   } catch (error) {
     console.error('Error fetching age groups:', error);
     res.status(500).json({ error: 'Failed to fetch age groups' });
