@@ -1,22 +1,32 @@
 /**
- * Represents a field complex (sports facility)
+ * Represents a field complex with its full information
  */
 export interface Complex {
   id: number;
   name: string;
+  description?: string | null;
   address: string;
   city: string;
   state: string;
   country: string;
-  latitude: string;
-  longitude: string;
-  openTime: string;
-  closeTime: string;
-  isOpen: boolean;
-  isShared: boolean;
-  shared_id?: string | null;
-  directions?: string | null;
-  rules?: string | null;
+  zipCode: string;
+  phoneNumber?: string | null;
+  email?: string | null;
+  website?: string | null;
+  
+  // Location data (latitude and longitude are required for sharing/geolocation)
+  latitude: number;
+  longitude: number;
+  
+  // Operating hours
+  openTime?: string | null;
+  closeTime?: string | null;
+  
+  // Sharing fields
+  shared: boolean;  // Is this complex shared with other instances?
+  sharedId?: string | null;  // Unique ID used for cross-instance identification
+  
+  // Metadata
   createdAt: string;
   updatedAt: string;
 }

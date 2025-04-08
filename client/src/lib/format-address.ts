@@ -1,105 +1,83 @@
-/**
- * Utility functions for formatting and handling address and location data
- */
+import { Complex } from "@/types/complex";
 
 /**
- * Interface for address components
+ * Formats the complex address in a consistent way
  */
-interface AddressComponents {
-  address: string;
-  city: string;
-  state: string;
-  country: string;
+export function formatAddress(complex: Complex): string {
+  const addressParts = [
+    complex.address,
+    complex.city,
+    complex.state,
+    complex.zipCode,
+    complex.country !== "USA" && complex.country !== "United States" ? complex.country : ""
+  ].filter(Boolean);
+  
+  return addressParts.join(", ");
 }
 
 /**
- * Interface for coordinate components
+ * Generates a Google Maps URL for the given complex
  */
-interface CoordinateComponents {
-  latitude: string;
-  longitude: string;
+export function getGoogleMapsUrl(complex: Complex): string {
+  // If we have coordinates, use them for precise location
+  if (complex.latitude && complex.longitude) {
+    return `https://www.google.com/maps/search/?api=1&query=${complex.latitude},${complex.longitude}`;
+  }
+  
+  // Otherwise fall back to address search
+  const addressQuery = encodeURIComponent(formatAddress(complex));
+  return `https://www.google.com/maps/search/?api=1&query=${addressQuery}`;
 }
 
 /**
- * Formats address components into an array of lines for display
- * @param components Address components
- * @returns Array of formatted address lines
+ * Generates a Google Maps directions URL for the given complex
  */
-export function formatAddress(components: AddressComponents): string[] {
-  const { address, city, state, country } = components;
-  const lines: string[] = [];
-  
-  // Add street address
-  if (address) {
-    lines.push(address);
+export function getDirectionsUrl(complex: Complex): string {
+  // If we have coordinates, use them for precise location
+  if (complex.latitude && complex.longitude) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${complex.latitude},${complex.longitude}`;
   }
   
-  // Format city, state, and country
-  let cityState = '';
-  if (city) {
-    cityState += city;
-  }
-  
-  if (state) {
-    cityState += cityState ? `, ${state}` : state;
-  }
-  
-  if (cityState) {
-    lines.push(cityState);
-  }
-  
-  // Add country on a separate line if provided
-  if (country) {
-    lines.push(country);
-  }
-  
-  return lines;
+  // Otherwise fall back to address search
+  const addressQuery = encodeURIComponent(formatAddress(complex));
+  return `https://www.google.com/maps/dir/?api=1&destination=${addressQuery}`;
 }
 
 /**
- * Formats time range for display
- * @param openTime Opening time
- * @param closeTime Closing time
- * @returns Formatted time range
+ * Formats operating hours in a consistent way
  */
-export function formatTimeRange(openTime: string, closeTime: string): string {
-  if (!openTime || !closeTime) {
-    return 'N/A';
+export function formatHours(complex: Complex): string {
+  if (complex.openTime && complex.closeTime) {
+    return `${formatTime(complex.openTime)} - ${formatTime(complex.closeTime)}`;
+  } else if (complex.openTime) {
+    return `Opens at ${formatTime(complex.openTime)}`;
+  } else if (complex.closeTime) {
+    return `Closes at ${formatTime(complex.closeTime)}`;
   }
   
+  return "Hours not specified";
+}
+
+/**
+ * Helper function to format time strings
+ */
+function formatTime(timeString: string): string {
   try {
-    // Format times for display
-    const formatTime = (timeStr: string) => {
-      // Parse the time string (expected format: "HH:MM")
-      const [hours, minutes] = timeStr.split(':').map(Number);
-      const isPM = hours >= 12;
-      const displayHours = hours % 12 || 12; // Convert 0 to 12 for 12 AM
-      return `${displayHours}${minutes > 0 ? `:${minutes.toString().padStart(2, '0')}` : ''} ${isPM ? 'PM' : 'AM'}`;
-    };
+    // Check if timeString is already in 12-hour format
+    if (timeString.includes("AM") || timeString.includes("PM")) {
+      return timeString;
+    }
     
-    return `${formatTime(openTime)} - ${formatTime(closeTime)}`;
+    // Parse time string (expected format: "HH:MM:SS" or "HH:MM")
+    const [hours, minutes] = timeString.split(":").map(Number);
+    
+    // Convert to 12-hour format
+    const period = hours >= 12 ? "PM" : "AM";
+    const hours12 = hours % 12 || 12; // Convert 0 to 12 for 12 AM
+    
+    return `${hours12}:${minutes.toString().padStart(2, "0")} ${period}`;
   } catch (error) {
-    console.error('Error formatting time range:', error);
-    return `${openTime} - ${closeTime}`;
+    // In case of parsing errors, return the original string
+    return timeString;
   }
-}
-
-/**
- * Generates a Google Maps URL from coordinates
- * @param components Coordinate components
- * @returns Google Maps URL
- */
-export function getGoogleMapsUrl(components: CoordinateComponents): string {
-  const { latitude, longitude } = components;
-  return `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
-}
-
-/**
- * Generates a directions URL to a location
- * @param components Coordinate components
- * @returns Google Maps directions URL
- */
-export function getDirectionsUrl(components: CoordinateComponents): string {
-  const { latitude, longitude } = components;
-  return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
 }
