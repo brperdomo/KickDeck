@@ -311,10 +311,28 @@ export function registerRoutes(app: Express): Server {
         // We'll get branding settings along with other settings below
 
         // Also get the age groups for this event
-        const ageGroups = await db
+        const rawAgeGroups = await db
           .select()
           .from(eventAgeGroups)
           .where(eq(eventAgeGroups.eventId, String(parsedEventId)));
+          
+        // Deduplicate age groups based on division code
+        // This prevents duplicate age groups from appearing in the registration dropdown
+        const uniqueMap = new Map();
+        const uniqueAgeGroups = [];
+        
+        for (const group of rawAgeGroups) {
+          // Use division code or create one from gender and age group if not available
+          const divisionCode = group.divisionCode || `${group.gender.charAt(0)}${group.ageGroup.replace(/\D/g, '')}`;
+          const key = divisionCode;
+          
+          if (!uniqueMap.has(key)) {
+            uniqueMap.set(key, {...group});
+            uniqueAgeGroups.push(group);
+          }
+        }
+        
+        console.log(`Deduplicated age groups: ${uniqueAgeGroups.length} unique groups from ${rawAgeGroups.length} total`);
           
         // Get event settings
         const settings = await db
@@ -338,7 +356,7 @@ export function registerRoutes(app: Express): Server {
         // Send event details, age groups, and branding
         res.json({
           ...event,
-          ageGroups,
+          ageGroups: uniqueAgeGroups,
           branding: Object.keys(brandingData).length > 0 
             ? brandingData 
             : { logoUrl: null, primaryColor: null, secondaryColor: null }
