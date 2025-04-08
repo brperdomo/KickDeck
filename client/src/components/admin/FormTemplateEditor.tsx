@@ -27,12 +27,25 @@ export function FormTemplateEditor({ editMode = false, existingTemplate = null }
     console.log("First field:", existingTemplate.fields[0]);
   }
   
+  // The issue seems to be with how fields are handled in the form template
+  // For input fields, we need to ensure we're mapping the API field type "input" to "text"
+  // which is what the form editor expects
+  const mappedFields = existingTemplate?.fields ? existingTemplate.fields.map(field => ({
+    ...field,
+    // Map API field types to editor field types
+    type: field.type === "input" ? "text" : field.type,
+    // Ensure options is an array even if it comes as null from the API
+    options: field.options || []
+  })) : [];
+  
+  console.log("Mapped fields for template:", mappedFields);
+  
   const [template, setTemplate] = useState({
     id: existingTemplate?.id || null,
     name: existingTemplate?.name || "",
     description: existingTemplate?.description || "",
     isPublished: existingTemplate?.isPublished || false,
-    fields: existingTemplate?.fields || []
+    fields: mappedFields
   });
   
   console.log("Template state initialized with fields:", template.fields);
