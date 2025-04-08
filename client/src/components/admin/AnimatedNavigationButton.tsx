@@ -96,36 +96,37 @@ export function AnimatedNavigationButton({
   index = 0
 }: AnimatedNavigationButtonProps) {
   const { hasPermission } = usePermissions();
-  const shineControls = useAnimation();
-  const [hasShined, setHasShined] = useState(false);
   
-  // If user doesn't have permission, don't render the button
+  // Check permission first - before using any other hooks
   if (permission && !hasPermission(permission as any)) {
     return null;
   }
-
+  
+  // Only declare additional hooks after the early return above
+  const shineControls = useAnimation();
+  const [hasShined, setHasShined] = useState(false);
   const isActive = activeView === view;
   
   // Start the shine effect when button becomes active
   useEffect(() => {
-    if (isActive) {
-      // Immediately shine for the first time
-      shineControls.start("animate").then(() => {
+    if (!isActive) return;
+    
+    // Immediately shine for the first time
+    shineControls.start("animate").then(() => {
+      shineControls.set("initial");
+      setHasShined(true);
+    });
+    
+    // Periodically shine the button every 8 seconds
+    let interval: ReturnType<typeof setInterval>;
+    if (hasShined) {
+      interval = setInterval(() => {
         shineControls.set("initial");
-        setHasShined(true);
-      });
-      
-      // Periodically shine the button every 8 seconds
-      let interval: ReturnType<typeof setInterval>;
-      if (hasShined) {
-        interval = setInterval(() => {
-          shineControls.set("initial");
-          shineControls.start("animate");
-        }, 8000);
-      }
-      
-      return () => interval && clearInterval(interval);
+        shineControls.start("animate");
+      }, 8000);
     }
+    
+    return () => interval && clearInterval(interval);
   }, [isActive, shineControls, hasShined]);
 
   return (
