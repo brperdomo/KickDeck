@@ -2,12 +2,12 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EventForm } from "@/components/forms/EventForm";
 import { type EventTab } from "@/components/forms/event-form-types";
-import { ProgressIndicator } from "@/components/ui/progress-indicator";
+import { EventFormLayout } from "@/components/layouts/EventFormLayout";
 
 export default function EditEvent() {
   const { id } = useParams();
@@ -174,50 +174,36 @@ export default function EditEvent() {
 
   console.log('Prepared event data:', eventData);
 
+  const tabs: EventTab[] = ['information', 'age-groups', 'scoring', 'complexes', 'settings', 'administrators'];
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4 mb-6">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/admin")}
-                className="rounded-full"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <h1 className="text-2xl font-bold">Edit Event</h1>
-            </div>
-
-            <ProgressIndicator
-              steps={['information', 'age-groups', 'scoring', 'complexes', 'settings', 'administrators']}
-              currentStep={activeTab}
-              completedSteps={completedTabs}
-            />
-
-            <EventForm
-              mode="edit"
-              defaultValues={eventData}
-              onSubmit={handleSubmit}
-              isSubmitting={updateEventMutation.isPending}
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-              completedTabs={completedTabs}
-              onCompletedTabsChange={setCompletedTabs}
-              navigateTab={(direction) => {
-                const steps = ['information', 'age-groups', 'scoring', 'complexes', 'settings', 'administrators'];
-                const currentIndex = steps.indexOf(activeTab);
-                const newIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
-                if (newIndex >= 0 && newIndex < steps.length) {
-                  setActiveTab(steps[newIndex] as EventTab);
-                }
-              }}
-            />
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+    <EventFormLayout 
+      title="Edit Event" 
+      activeTab={activeTab} 
+      onTabChange={setActiveTab}
+      tabs={tabs}
+    >
+      <Card className="bg-white shadow-lg border border-gray-100">
+        <CardContent className="p-6">
+          <EventForm
+            mode="edit"
+            defaultValues={eventData}
+            onSubmit={handleSubmit}
+            isSubmitting={updateEventMutation.isPending}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            completedTabs={completedTabs}
+            onCompletedTabsChange={setCompletedTabs}
+            navigateTab={(direction) => {
+              const currentIndex = tabs.indexOf(activeTab);
+              const newIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
+              if (newIndex >= 0 && newIndex < tabs.length) {
+                setActiveTab(tabs[newIndex] as EventTab);
+              }
+            }}
+          />
+        </CardContent>
+      </Card>
+    </EventFormLayout>
   );
 }
