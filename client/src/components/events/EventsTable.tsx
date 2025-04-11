@@ -213,26 +213,34 @@ export function EventsTable() {
         queryKey: ["/api/admin/events", currentPage, pageSize, showArchived]
       });
       
-      toast({
-        title: "Success",
-        description: "Event cloned successfully",
-      });
-      
       // Log the data to help with debugging
       console.log("Clone success data:", data);
       
-      // Navigate to the edit form for the new event
+      // Extract the ID for navigation and properly redirect
+      let newEventId;
+      
       if (data && data.id) {
-        console.log(`Navigating to edit page for event ID: ${data.id}`);
-        navigate(`/admin/events/${data.id}/edit`);
+        newEventId = data.id;
       } else if (data && data.event && data.event.id) {
-        console.log(`Navigating to edit page for event ID: ${data.event.id}`);
-        navigate(`/admin/events/${data.event.id}/edit`);
+        newEventId = data.event.id;
+      }
+      
+      if (newEventId) {
+        console.log(`Navigating to edit page for event ID: ${newEventId}`);
+        
+        // Show success message
+        toast({
+          title: "Success",
+          description: "Event cloned successfully. Redirecting to edit page...",
+        });
+        
+        // Use window.location for a forced navigation that will work even if React Router is having issues
+        window.location.href = `/admin/events/${newEventId}/edit`;
       } else {
         console.error("Failed to navigate: Missing event ID in response", data);
         toast({
           title: "Warning",
-          description: "Event cloned but couldn't navigate to edit page",
+          description: "Event cloned but couldn't navigate to edit page. Please find the new event in the list.",
           variant: "destructive",
         });
       }
