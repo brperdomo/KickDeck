@@ -2126,7 +2126,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                     </div>
                     
                     {/* Payment Method Selection */}
-                    {isPayLaterEnabled() ? (
+                    {isPayLaterShown ? (
                       <div className="space-y-4">
                         <div className="flex flex-col space-y-3">
                           <label className="flex items-center space-x-3 p-3 border rounded-md cursor-pointer hover:bg-blue-50 transition-colors">
