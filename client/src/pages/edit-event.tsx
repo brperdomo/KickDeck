@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +17,11 @@ export default function EditEvent() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<EventTab>('information');
   const [completedTabs, setCompletedTabs] = useState<EventTab[]>([]);
+  
+  // Create form instance early to avoid conditional hook calls
+  const form = useForm({
+    defaultValues: {}
+  });
 
   // Query for event data including settings
   const eventQuery = useQuery({
@@ -176,10 +181,12 @@ export default function EditEvent() {
 
   console.log('Prepared event data:', eventData);
 
-  // Create a form context outside of the EventFormLayout
-  const form = useForm({
-    defaultValues: eventData
-  });
+  // Update the form's default values when event data is loaded
+  useEffect(() => {
+    if (eventData) {
+      form.reset(eventData);
+    }
+  }, [eventData, form]);
   
   // Function to handle navigation between tabs
   const navigateTab = (direction: 'next' | 'prev') => {
