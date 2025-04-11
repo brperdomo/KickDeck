@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { db } from '../index';
+import { db } from '@db';
 
 /**
  * Migration to add clubName column to teams table
