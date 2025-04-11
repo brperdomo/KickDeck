@@ -15,7 +15,7 @@ interface Registration {
   eventId: string;
   ageGroup: string;
   registeredAt: string;
-  status: 'registered' | 'paid' | 'approved' | 'rejected';
+  status: 'registered' | 'paid' | 'approved' | 'rejected' | 'pending_payment';
   amount: number;
   paymentId?: string;
 }
@@ -43,6 +43,8 @@ export default function UserRegistrationsView() {
         return <Badge className="bg-blue-500"><CheckCircle className="w-3 h-3 mr-1" /> Approved</Badge>;
       case 'rejected':
         return <Badge className="bg-red-500"><XCircle className="w-3 h-3 mr-1" /> Rejected</Badge>;
+      case 'pending_payment':
+        return <Badge className="bg-amber-500"><Clock className="w-3 h-3 mr-1" /> Payment Pending</Badge>;
       case 'registered':
       default:
         return <Badge className="bg-yellow-500"><Clock className="w-3 h-3 mr-1" /> Pending</Badge>;
@@ -126,7 +128,7 @@ export default function UserRegistrationsView() {
                 <Link href={`/events/${registration.eventId}`}>View Event</Link>
               </Button>
               
-              {registration.status === 'registered' && (
+              {(registration.status === 'registered' || registration.status === 'pending_payment') && (
                 <Button variant="default" asChild>
                   <Link href={`/events/${registration.eventId}/pay/${registration.id}`}>Complete Payment</Link>
                 </Button>
