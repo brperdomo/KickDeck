@@ -248,6 +248,12 @@ interface Event {
   agreement?: string; // Terms and conditions text
   refundPolicy?: string; // Refund policy text
   ageGroups: AgeGroup[];
+  settings?: EventSetting[]; // Event settings including allowPayLater
+}
+
+interface EventSetting {
+  key: string;
+  value: string;
 }
 
 interface Fee {
@@ -594,6 +600,15 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
     },
   });
 
+  // Function to check if "Pay Later" option is enabled for this event
+  const isPayLaterEnabled = () => {
+    if (!event?.settings) return false;
+    const payLaterSetting = event.settings.find(s => s.key === 'allowPayLater');
+    return payLaterSetting ? payLaterSetting.value === 'true' : false;
+  };
+  
+  const [payLaterOption, setPayLaterOption] = useState<boolean>(false);
+  
   useEffect(() => {
     const fetchEvent = async () => {
       try {
@@ -604,6 +619,12 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
         }
         const data = await response.json();
         console.log('Received event data:', data);
+        
+        // Make sure we have a settings array, even if empty
+        if (!data.settings) {
+          data.settings = [];
+        }
+        
         setEvent(data);
       } catch (error) {
         console.error('Error fetching event:', error);
@@ -2075,38 +2096,169 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                   </div>
                 </div>
                 
-                {/* Payment Form */}
+                {/* Payment Options */}
                 {termsAgreed && registrationFee && (
-                  <div className="border rounded-lg p-4 space-y-4">
-                    <h4 className="font-semibold text-blue-800">Payment Information</h4>
-                    <p className="text-sm text-gray-600 mb-4">Please provide your payment details to complete registration</p>
+                  <div className="border rounded-lg p-4 space-y-6">
+                    <div>
+                      <h4 className="font-semibold text-blue-800">Payment Options</h4>
+                      <p className="text-sm text-gray-600">Select how you would like to proceed with payment</p>
+                    </div>
                     
-                    <StripeProvider>
-                      <PaymentForm 
-                        amount={parseFloat(calculateTotalAmount()) * 100} // Convert back to cents for payment processing
-                        isPreview={isPreview}
-                        onSuccess={() => {
-                          // Make sure to sync the latest players array with form data
-                          teamForm.setValue('players', players);
+                    {/* Payment Method Selection */}
+                    {isPayLaterEnabled() ? (
+                      <div className="space-y-4">
+                        <div className="flex flex-col space-y-3">
+                          <label className="flex items-center space-x-3 p-3 border rounded-md cursor-pointer hover:bg-blue-50 transition-colors">
+                            <input
+                              type="radio"
+                              name="paymentMethod"
+                              value="card"
+                              checked={!payLaterOption}
+                              onChange={() => setPayLaterOption(false)}
+                              className="h-4 w-4 text-blue-600"
+                            />
+                            <div>
+                              <h4 className="font-medium">Pay now with card</h4>
+                              <p className="text-sm text-gray-500">Complete payment immediately with credit/debit card</p>
+                            </div>
+                          </label>
                           
-                          // Include all applicable fee IDs in the submission (registration fee + required fees only)
-                          // No optional fees are allowed
-                          const allSelectedFeeIds = [
-                            ...(selectedFee ? [selectedFee.id] : []),
-                            ...requiredFees.map(fee => fee.id)
-                          ];
-                          
-                          // Then submit the form values along with player data and selected fees
-                          registerTeamMutation.mutate({
-                            ...teamForm.getValues(),
-                            selectedFeeIds: allSelectedFeeIds,
-                            totalAmount: parseFloat(calculateTotalAmount()) * 100 // in cents
-                          });
-                        }}
-                        isProcessing={registerTeamMutation.isPending}
-                        setIsProcessing={() => {}} // This is a mock function since we can't directly control mutation state
-                      />
-                    </StripeProvider>
+                          <label className="flex items-center space-x-3 p-3 border rounded-md cursor-pointer hover:bg-blue-50 transition-colors">
+                            <input
+                              type="radio"
+                              name="paymentMethod"
+                              value="later"
+                              checked={payLaterOption}
+                              onChange={() => setPayLaterOption(true)}
+                              className="h-4 w-4 text-blue-600"
+                            />
+                            <div>
+                              <h4 className="font-medium">Pay later</h4>
+                              <p className="text-sm text-gray-500">Register now and pay before the event date</p>
+                            </div>
+                          </label>
+                        </div>
+                        
+                        {/* Pay Now option - Show credit card form */}
+                        {!payLaterOption && (
+                          <div className="mt-4">
+                            <h4 className="font-semibold text-blue-800">Payment Information</h4>
+                            <p className="text-sm text-gray-600 mb-4">Please provide your payment details to complete registration</p>
+                            
+                            <StripeProvider>
+                              <PaymentForm 
+                                amount={parseFloat(calculateTotalAmount()) * 100} // Convert back to cents for payment processing
+                                isPreview={isPreview}
+                                onSuccess={() => {
+                                  // Make sure to sync the latest players array with form data
+                                  teamForm.setValue('players', players);
+                                  
+                                  // Include all applicable fee IDs in the submission
+                                  const allSelectedFeeIds = [
+                                    ...(selectedFee ? [selectedFee.id] : []),
+                                    ...requiredFees.map(fee => fee.id)
+                                  ];
+                                  
+                                  // Then submit the form values along with player data and selected fees
+                                  registerTeamMutation.mutate({
+                                    ...teamForm.getValues(),
+                                    selectedFeeIds: allSelectedFeeIds,
+                                    totalAmount: parseFloat(calculateTotalAmount()) * 100, // in cents
+                                    paymentMethod: 'card'
+                                  });
+                                }}
+                                isProcessing={registerTeamMutation.isPending}
+                                setIsProcessing={() => {}} // This is a mock function
+                              />
+                            </StripeProvider>
+                          </div>
+                        )}
+                        
+                        {/* Pay Later option - Show confirmation button */}
+                        {payLaterOption && (
+                          <div className="mt-4">
+                            <div className="bg-amber-50 p-3 rounded border border-amber-200 mb-4">
+                              <h4 className="font-medium text-amber-800 flex items-center">
+                                <AlertCircle className="h-4 w-4 mr-2" />
+                                Payment Reminder
+                              </h4>
+                              <p className="text-sm text-amber-700 mt-1">
+                                By choosing to pay later, you agree to complete payment before the event. 
+                                Your team registration will be marked as "pending payment" until the full amount is received.
+                              </p>
+                            </div>
+                            
+                            <Button 
+                              type="button" 
+                              className="w-full"
+                              onClick={() => {
+                                // Make sure to sync the latest players array with form data
+                                teamForm.setValue('players', players);
+                                
+                                // Include all applicable fee IDs in the submission
+                                const allSelectedFeeIds = [
+                                  ...(selectedFee ? [selectedFee.id] : []),
+                                  ...requiredFees.map(fee => fee.id)
+                                ];
+                                
+                                // Submit with "pay_later" method
+                                registerTeamMutation.mutate({
+                                  ...teamForm.getValues(),
+                                  selectedFeeIds: allSelectedFeeIds,
+                                  totalAmount: parseFloat(calculateTotalAmount()) * 100, // in cents
+                                  paymentMethod: 'pay_later'
+                                });
+                              }}
+                              disabled={registerTeamMutation.isPending}
+                            >
+                              {registerTeamMutation.isPending ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Processing...
+                                </>
+                              ) : (
+                                <>
+                                  Register Now (Pay Later)
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      // Regular Payment Flow (Pay Later not enabled)
+                      <div>
+                        <h4 className="font-semibold text-blue-800">Payment Information</h4>
+                        <p className="text-sm text-gray-600 mb-4">Please provide your payment details to complete registration</p>
+                        
+                        <StripeProvider>
+                          <PaymentForm 
+                            amount={parseFloat(calculateTotalAmount()) * 100} // Convert back to cents for payment processing
+                            isPreview={isPreview}
+                            onSuccess={() => {
+                              // Make sure to sync the latest players array with form data
+                              teamForm.setValue('players', players);
+                              
+                              // Include all applicable fee IDs in the submission
+                              const allSelectedFeeIds = [
+                                ...(selectedFee ? [selectedFee.id] : []),
+                                ...requiredFees.map(fee => fee.id)
+                              ];
+                              
+                              // Then submit the form values along with player data and selected fees
+                              registerTeamMutation.mutate({
+                                ...teamForm.getValues(),
+                                selectedFeeIds: allSelectedFeeIds,
+                                totalAmount: parseFloat(calculateTotalAmount()) * 100, // in cents
+                                paymentMethod: 'card'
+                              });
+                            }}
+                            isProcessing={registerTeamMutation.isPending}
+                            setIsProcessing={() => {}} // This is a mock function since we can't directly control mutation state
+                          />
+                        </StripeProvider>
+                      </div>
+                    )}
                   </div>
                 )}
                 
