@@ -1065,11 +1065,14 @@ export function registerRoutes(app: Express): Server {
             });
         }
         
-        res.status(201).json({ 
+        const responseData = { 
           message: "Event cloned successfully", 
           event: newEvent,
           id: newEvent.id // Use the ID from the newly created event
-        });
+        };
+        
+        console.log("Clone response data:", JSON.stringify(responseData, null, 2));
+        res.status(201).json(responseData);
         
       } catch (error) {
         console.error('Error cloning event:', error);
