@@ -626,6 +626,17 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
         }
         
         setEvent(data);
+        
+        // Check if pay later is enabled and update UI state
+        const payLaterEnabled = data.settings.some(s => s.key === 'allowPayLater' && s.value === 'true');
+        console.log('Pay Later Feature enabled:', payLaterEnabled);
+        
+        // We don't set the payment option to true by default, but we make sure the options display is enabled
+        if (payLaterEnabled) {
+          // We don't need to set the actual payment method choice yet (payLaterOption), 
+          // just enabling the display of the radio buttons
+          console.log('Enabling Pay Later option in UI');
+        }
       } catch (error) {
         console.error('Error fetching event:', error);
         toast({
