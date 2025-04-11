@@ -26,6 +26,7 @@ import FormTemplateCreatePage from "@/pages/form-template-create";
 import FormTemplateEditPage from "@/pages/form-template-edit";
 import { useUser } from "@/hooks/use-user";
 import EventRegistration from "./pages/event-registration";
+import MainLayout from "@/components/layouts/MainLayout";
 import { FeeManagement } from "@/components/events/FeeManagement";
 import { AuthProvider } from "@/hooks/use-auth";
 import { LogoutHandler } from "@/components/LogoutHandler";
@@ -159,9 +160,11 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
-          <Router />
-          <FloatingEmulationButton />
-          <Toaster />
+          <MainLayout>
+            <Router />
+            <FloatingEmulationButton />
+            <Toaster />
+          </MainLayout>
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>
