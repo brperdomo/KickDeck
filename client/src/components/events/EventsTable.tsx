@@ -195,6 +195,7 @@ export function EventsTable() {
   // Clone event mutation
   const cloneEventMutation = useMutation({
     mutationFn: async (eventId: number | bigint) => {
+      console.log(`Cloning event ID: ${eventId}`);
       const response = await fetch(`/api/admin/events/${eventId.toString()}/clone`, {
         method: 'POST',
       });
@@ -202,7 +203,9 @@ export function EventsTable() {
         const error = await response.json();
         throw new Error(error.message || error.error || 'Failed to clone event');
       }
-      return response.json();
+      const data = await response.json();
+      console.log("Clone response data:", data);
+      return data;
     },
     onSuccess: (data) => {
       // Force refetch all events data with the current filters
@@ -215,10 +218,27 @@ export function EventsTable() {
         description: "Event cloned successfully",
       });
       
+      // Log the data to help with debugging
+      console.log("Clone success data:", data);
+      
       // Navigate to the edit form for the new event
-      navigate(`/admin/events/${data.id}/edit`);
+      if (data && data.id) {
+        console.log(`Navigating to edit page for event ID: ${data.id}`);
+        navigate(`/admin/events/${data.id}/edit`);
+      } else if (data && data.event && data.event.id) {
+        console.log(`Navigating to edit page for event ID: ${data.event.id}`);
+        navigate(`/admin/events/${data.event.id}/edit`);
+      } else {
+        console.error("Failed to navigate: Missing event ID in response", data);
+        toast({
+          title: "Warning",
+          description: "Event cloned but couldn't navigate to edit page",
+          variant: "destructive",
+        });
+      }
     },
     onError: (error) => {
+      console.error("Clone event error:", error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to clone event",
