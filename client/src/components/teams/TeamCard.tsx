@@ -24,6 +24,7 @@ interface Team {
   managerPhone?: string;
   managerEmail?: string;
   ageGroup: string;
+  clubName?: string;
 }
 
 interface TeamCardProps {
@@ -35,6 +36,24 @@ export function TeamCard({ team }: TeamCardProps) {
   const [showEditModal, setShowEditModal] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Parse coach data if it's a string
+  const parseCoachData = () => {
+    if (!team.coach) return null;
+    
+    try {
+      if (typeof team.coach === 'string') {
+        return JSON.parse(team.coach);
+      }
+      return team.coach;
+    } catch (e) {
+      console.error("Error parsing coach data:", e);
+      return null;
+    }
+  };
+  
+  const coachData = parseCoachData();
+  const headCoachName = coachData?.headCoachName;
 
   const deleteTeamMutation = useMutation({
     mutationFn: async () => {
@@ -73,7 +92,8 @@ export function TeamCard({ team }: TeamCardProps) {
           <div className="space-y-2">
             <h3 className="font-semibold">{team.name}</h3>
             <p className="text-sm text-muted-foreground">Age Group: {team.ageGroup}</p>
-            {team.coach && <p className="text-sm text-muted-foreground">Coach: {team.coach}</p>}
+            {headCoachName && <p className="text-sm text-muted-foreground">Coach: {headCoachName}</p>}
+            {team.clubName && <p className="text-sm text-muted-foreground">Club: {team.clubName}</p>}
             {team.managerName && (
               <p className="text-sm text-muted-foreground">Manager: {team.managerName}</p>
             )}

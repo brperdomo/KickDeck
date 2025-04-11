@@ -2425,7 +2425,25 @@ function TeamsView() {
 
   // View team details
   const handleViewTeamDetails = (team: any) => {
-    setSelectedTeam(team);
+    // Parse coach data if it exists
+    let coachData = team.coachData;
+    
+    // If coach data is a string, try to parse it as JSON
+    if (!coachData && team.coach && typeof team.coach === 'string') {
+      try {
+        coachData = JSON.parse(team.coach);
+      } catch (e) {
+        console.error("Error parsing coach data:", e);
+        coachData = {}; // Initialize to empty object if parsing fails
+      }
+    }
+    
+    // Set the selected team with parsed coach data
+    setSelectedTeam({
+      ...team,
+      coachData
+    });
+    
     setIsDetailsDialogOpen(true);
   };
 
@@ -2580,7 +2598,9 @@ function TeamsView() {
       const coach = JSON.parse(coachData);
       return coach.headCoachName || "N/A";
     } catch (e) {
-      return "N/A";
+      console.error("Error parsing coach data:", e);
+      // If it's not valid JSON, return the raw value for debugging
+      return typeof coachData === 'string' ? coachData.substring(0, 20) + '...' : "N/A";
     }
   };
 
