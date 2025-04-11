@@ -644,7 +644,9 @@ export function registerRoutes(app: Express): Server {
           // Fee-related fields
           registrationFee,
           selectedFeeIds,
-          totalAmount
+          totalAmount,
+          // Payment method ('card' or 'pay_later')
+          paymentMethod
         } = req.body;
         
         // Validate required fields
@@ -720,7 +722,8 @@ export function registerRoutes(app: Express): Server {
               submitterEmail: req.user?.email || managerEmail,
               submitterName: req.user ? `${req.user.firstName} ${req.user.lastName}` : managerName,
               // Add new registration fields
-              status: "registered", // Initial status - 'registered', 'approved', 'rejected', etc.
+              // Set team status based on payment method
+              status: paymentMethod === "pay_later" ? "pending_payment" : "registered", // Possible values: 'registered', 'approved', 'rejected', 'pending_payment'
               registrationFee: registrationFee || null,  // Use camelCase as defined in the schema
               // Add the new multiple fee tracking fields
               selectedFeeIds: selectedFeeIds || null, // Store as comma-separated list
