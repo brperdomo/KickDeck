@@ -33,7 +33,6 @@ import FormEditorPage from "@/pages/form-editor";
 import CouponManagerPage from "@/pages/coupon-manager";
 import { AuthProvider } from "@/hooks/use-auth";
 import { LogoutHandler } from "@/components/LogoutHandler";
-import { FloatingEmulationButton } from "@/components/admin/FloatingEmulationButton";
 
 // Import fully implemented components for preview mode
 import EventPreviewSelector from '@/pages/event-preview-selector';
@@ -165,7 +164,6 @@ function App() {
         <TooltipProvider>
           <MainLayout>
             <Router />
-            <FloatingEmulationButton />
             <Toaster />
           </MainLayout>
         </TooltipProvider>
