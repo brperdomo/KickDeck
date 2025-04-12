@@ -128,207 +128,282 @@ export default function HouseholdPage() {
   };
 
   return (
-    <div className="flex-1 space-y-6 p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">My Household</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Users className="mr-2 h-4 w-4" />
-              Invite Member
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Invite Household Member</DialogTitle>
-              <DialogDescription>
-                Send an invitation to add someone to your household.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleInvite}>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setEmailError("");
-                    }}
-                    placeholder="Enter their email address"
-                    required
-                    className={emailError ? "border-red-500" : ""}
-                  />
-                  {emailError && (
-                    <p className="text-sm text-red-500">
-                      {emailError}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit" disabled={isChecking}>
-                  <Send className="mr-2 h-4 w-4" />
-                  Send Invitation
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      transition={{ duration: 0.5 }}
+      className="flex-1 space-y-8 max-w-6xl mx-auto p-6"
+    >
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center space-x-4">
+          <div className="p-3 rounded-full bg-primary/10">
+            <HomeIcon className="h-8 w-8 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">My Household</h1>
+            <p className="text-muted-foreground">Manage your household members and address</p>
+          </div>
+        </div>
         
-        <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline">
-              <Home className="mr-2 h-4 w-4" />
-              Update Address
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Update Household Address</DialogTitle>
-              <DialogDescription>
-                Update your household address information.
-              </DialogDescription>
-            </DialogHeader>
-            <Form {...addressForm}>
-              <form 
-                id="address-form" 
-                onSubmit={addressForm.handleSubmit((data) => {
-                  updateHouseholdAddress.mutate(data);
-                  setIsAddressModalOpen(false);
-                })}
-                className="space-y-4"
-              >
-                <FormField
-                  control={addressForm.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Address</FormLabel>
-                      <FormControl>
-                        <Input placeholder="123 Main St" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-wrap gap-3 justify-end">
+          <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="shadow-sm">
+                <MapPin className="mr-2 h-4 w-4" />
+                Update Address
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Update Household Address</DialogTitle>
+                <DialogDescription>
+                  Keep your household address information up to date.
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...addressForm}>
+                <form 
+                  id="address-form" 
+                  onSubmit={addressForm.handleSubmit((data) => {
+                    updateHouseholdAddress.mutate(data);
+                    setIsAddressModalOpen(false);
+                  })}
+                  className="space-y-4 py-2"
+                >
                   <FormField
                     control={addressForm.control}
-                    name="city"
+                    name="address"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>City</FormLabel>
+                        <FormLabel className="font-medium">Street Address</FormLabel>
                         <FormControl>
-                          <Input placeholder="City" {...field} />
+                          <div className="relative">
+                            <Input placeholder="123 Main St" className="pl-10" {...field} />
+                            <div className="absolute left-3 top-2.5 text-muted-foreground">
+                              <MapPin className="h-4 w-4" />
+                            </div>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={addressForm.control}
+                      name="city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-medium">City</FormLabel>
+                          <FormControl>
+                            <Input placeholder="City" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={addressForm.control}
+                      name="state"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-medium">State</FormLabel>
+                          <FormControl>
+                            <Input placeholder="State" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   <FormField
                     control={addressForm.control}
-                    name="state"
+                    name="zipCode"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>State</FormLabel>
+                        <FormLabel className="font-medium">Zip Code</FormLabel>
                         <FormControl>
-                          <Input placeholder="State" {...field} />
+                          <Input placeholder="12345" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                  <DialogFooter className="pt-4">
+                    <Button type="submit" className="px-6">
+                      <Save className="mr-2 h-4 w-4" />
+                      Save Address
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+          
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="shadow-sm">
+                <Users className="mr-2 h-4 w-4" />
+                Invite Member
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Invite Household Member</DialogTitle>
+                <DialogDescription>
+                  Send an invitation to add someone to your household.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleInvite} className="py-2">
+                <div className="grid gap-4 py-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="email" className="font-medium">Email Address</Label>
+                    <div className="relative">
+                      <Input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          setEmailError("");
+                        }}
+                        placeholder="Enter their email address"
+                        required
+                        className={`pl-10 ${emailError ? "border-destructive" : ""}`}
+                      />
+                      <div className="absolute left-3 top-2.5 text-muted-foreground">
+                        <Mail className="h-4 w-4" />
+                      </div>
+                    </div>
+                    {emailError && (
+                      <p className="text-sm text-destructive font-medium">
+                        {emailError}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <FormField
-                  control={addressForm.control}
-                  name="zipCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Zip Code</FormLabel>
-                      <FormControl>
-                        <Input placeholder="12345" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <DialogFooter>
-                  <Button type="submit">Save Address</Button>
+                <DialogFooter className="pt-4">
+                  <Button type="submit" disabled={isChecking} className="px-6">
+                    {isChecking ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Checking...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Send Invitation
+                      </>
+                    )}
+                  </Button>
                 </DialogFooter>
               </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Members</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+        className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+      >
+        <Card className="shadow-md overflow-hidden">
+          <CardHeader className="bg-primary/5 border-b pb-3">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-background rounded-full">
+                <Users className="h-5 w-5 text-primary" />
+              </div>
+              <CardTitle className="text-base">Total Members</CardTitle>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1</div>
-            <p className="text-xs text-muted-foreground">
+          <CardContent className="pt-6">
+            <div className="text-3xl font-bold">1</div>
+            <p className="text-sm text-muted-foreground mt-1">
               Active household members
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Invites</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+        
+        <Card className="shadow-md overflow-hidden">
+          <CardHeader className="bg-primary/5 border-b pb-3">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-background rounded-full">
+                <Clock className="h-5 w-5 text-primary" />
+              </div>
+              <CardTitle className="text-base">Pending Invites</CardTitle>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="pt-6">
+            <div className="text-3xl font-bold">
               {invitations?.filter((inv) => inv.invitation.status === "pending")
                 .length || 0}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground mt-1">
               Awaiting response from invitees
             </p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Household Address</CardTitle>
-            <Home className="h-4 w-4 text-muted-foreground" />
+        
+        <Card className="shadow-md overflow-hidden">
+          <CardHeader className="bg-primary/5 border-b pb-3">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-background rounded-full">
+                <MapPin className="h-5 w-5 text-primary" />
+              </div>
+              <CardTitle className="text-base">Household Address</CardTitle>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-md font-medium">
+          <CardContent className="pt-6">
+            <div className="text-sm">
               {household?.address ? (
                 <div className="space-y-1">
-                  <p>{household.address}</p>
-                  <p>{household.city}, {household.state} {household.zipCode}</p>
+                  <p className="font-medium">{household.address}</p>
+                  <p className="text-muted-foreground">{household.city}, {household.state} {household.zipCode}</p>
                 </div>
               ) : (
-                <p className="text-muted-foreground">No address on file</p>
+                <div className="flex flex-col items-center py-2 text-center">
+                  <p className="text-muted-foreground mb-2">No address on file</p>
+                  <Button variant="outline" size="sm" onClick={() => setIsAddressModalOpen(true)}>
+                    <MapPin className="mr-2 h-4 w-4" />
+                    Add Address
+                  </Button>
+                </div>
               )}
             </div>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Household Members</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+      >
+        <Card className="shadow-md overflow-hidden">
+          <CardHeader className="bg-primary/5 border-b">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-background rounded-full">
+                <Users className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle>Household Members</CardTitle>
+                <CardDescription>People currently in your household</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Status</TableHead>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="w-[40%]">Name</TableHead>
+                  <TableHead className="w-[40%]">Email</TableHead>
+                  <TableHead className="w-[20%]">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 <TableRow>
-                  <TableCell>
+                  <TableCell className="font-medium">
                     {user?.firstName} {user?.lastName}
                   </TableCell>
                   <TableCell>{user?.email}</TableCell>
@@ -340,20 +415,32 @@ export default function HouseholdPage() {
                 </TableRow>
               </TableBody>
             </Table>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {invitations && invitations.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Pending Invitations</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-md border">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
+        >
+          <Card className="shadow-md overflow-hidden">
+            <CardHeader className="bg-primary/5 border-b">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-background rounded-full">
+                  <Send className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Pending Invitations</CardTitle>
+                  <CardDescription>Sent invitations waiting for response</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="hover:bg-transparent">
                     <TableHead>Email</TableHead>
                     <TableHead>Invited By</TableHead>
                     <TableHead>Date</TableHead>
@@ -363,14 +450,14 @@ export default function HouseholdPage() {
                 <TableBody>
                   {invitations.map(({ invitation, createdByUser }) => (
                     <TableRow key={invitation.id}>
-                      <TableCell>{invitation.email}</TableCell>
+                      <TableCell className="font-medium">{invitation.email}</TableCell>
                       <TableCell>
                         {createdByUser.firstName} {createdByUser.lastName}
                       </TableCell>
                       <TableCell>
                         {format(
                           new Date(invitation.createdAt),
-                          "MMM d, yyyy HH:mm"
+                          "MMM d, yyyy"
                         )}
                       </TableCell>
                       <TableCell>
@@ -391,10 +478,10 @@ export default function HouseholdPage() {
                   ))}
                 </TableBody>
               </Table>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }
