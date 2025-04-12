@@ -2343,6 +2343,7 @@ function TeamsView() {
   const [refundReason, setRefundReason] = useState("");
   const [isPlayerDialogOpen, setIsPlayerDialogOpen] = useState(false);
   const [isDeletePlayerDialogOpen, setIsDeletePlayerDialogOpen] = useState(false);
+  const [isCsvUploadDialogOpen, setIsCsvUploadDialogOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<any>(null);
   const [isAddPlayerMode, setIsAddPlayerMode] = useState(false);
   const { toast } = useToast();
@@ -3349,35 +3350,46 @@ function TeamsView() {
                   <CardTitle>
                     Team Roster ({selectedTeam.players ? selectedTeam.players.length : 0} players)
                   </CardTitle>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="team-edit-button"
-                    onClick={() => {
-                      // Initialize a new blank player
-                      setSelectedPlayer({
-                        id: 0,
-                        teamId: selectedTeam.id,
-                        firstName: '',
-                        lastName: '',
-                        dateOfBirth: '',
-                        jerseyNumber: '',
-                        position: '',
-                        medicalNotes: '',
-                        parentGuardianName: '',
-                        parentGuardianEmail: '',
-                        parentGuardianPhone: '',
-                        emergencyContactName: '',
-                        emergencyContactPhone: '',
-                        isActive: true
-                      });
-                      setIsAddPlayerMode(true);
-                      setIsPlayerDialogOpen(true);
-                    }}
-                  >
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Player
-                  </Button>
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="csv-upload-button"
+                      onClick={() => setIsCsvUploadDialogOpen(true)}
+                    >
+                      <FileUp className="mr-2 h-4 w-4" />
+                      Import CSV
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="team-edit-button"
+                      onClick={() => {
+                        // Initialize a new blank player
+                        setSelectedPlayer({
+                          id: 0,
+                          teamId: selectedTeam.id,
+                          firstName: '',
+                          lastName: '',
+                          dateOfBirth: '',
+                          jerseyNumber: '',
+                          position: '',
+                          medicalNotes: '',
+                          parentGuardianName: '',
+                          parentGuardianEmail: '',
+                          parentGuardianPhone: '',
+                          emergencyContactName: '',
+                          emergencyContactPhone: '',
+                          isActive: true
+                        });
+                        setIsAddPlayerMode(true);
+                        setIsPlayerDialogOpen(true);
+                      }}
+                    >
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Add Player
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {selectedTeam.players && selectedTeam.players.length > 0 ? (
@@ -4008,6 +4020,32 @@ function TeamsView() {
               Delete
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* CSV Upload Dialog */}
+      <Dialog open={isCsvUploadDialogOpen} onOpenChange={setIsCsvUploadDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Upload Player Roster CSV</DialogTitle>
+            <DialogDescription>
+              Upload a CSV file containing player information to add multiple players at once.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedTeam && (
+            <CsvUploader 
+              teamId={selectedTeam.id} 
+              onUploadSuccess={(players) => {
+                toast({
+                  title: "Upload Successful",
+                  description: `Added ${players.length} players to the team.`,
+                });
+                setIsCsvUploadDialogOpen(false);
+                playersQuery.refetch();
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </>
