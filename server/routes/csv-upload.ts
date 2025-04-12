@@ -206,7 +206,11 @@ router.post('/csv-admin', upload.single('file'), async (req: Request, res: Respo
     });
 
     // Delete any existing players for this team first to avoid duplicates
-    await db.delete(players).where(({ teamId: dbTeamId }) => dbTeamId.eq(parseInt(teamId)));
+    const teamIdInt = parseInt(teamId);
+    await db.execute(
+      `DELETE FROM players WHERE team_id = $1`,
+      [teamIdInt]
+    );
     
     console.log(`Deleted existing players for team ${teamId}`);
     
