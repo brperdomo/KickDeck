@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -28,18 +28,53 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, Send, Clock, HomeIcon, MapPin, Loader2, Save } from "lucide-react";
+import { Users, Send, Clock, Home, HomeIcon, MapPin, Loader2, Save } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { UserBanner } from "@/components/user/UserBanner";
 
+// Schema for the address form
+const addressSchema = z.object({
+  address: z.string().min(1, "Address is required"),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  zipCode: z.string().min(5, "Zip code must be at least 5 characters"),
+});
+
+type AddressValues = z.infer<typeof addressSchema>;
+
 export default function HouseholdPage() {
   const { user } = useUser();
-  const { invitations, isLoading, sendInvitation } = useHouseholdInvitations();
+  const { invitations, isLoading: invitationsLoading, sendInvitation } = useHouseholdInvitations();
+  const { household, isLoading: householdLoading, updateHouseholdAddress } = useHouseholdDetails();
   const [email, setEmail] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [emailError, setEmailError] = useState("");
+  
+  // Form for household address updates
+  const addressForm = useForm<AddressValues>({
+    resolver: zodResolver(addressSchema),
+    defaultValues: {
+      address: household?.address || "",
+      city: household?.city || "",
+      state: household?.state || "",
+      zipCode: household?.zipCode || "",
+    },
+  });
+
+  // Update form when household data changes
+  useEffect(() => {
+    if (household) {
+      addressForm.reset({
+        address: household.address,
+        city: household.city,
+        state: household.state,
+        zipCode: household.zipCode,
+      });
+    }
+  }, [household, addressForm]);
 
   const checkEmailAvailability = async (email: string) => {
     try {
@@ -142,6 +177,91 @@ export default function HouseholdPage() {
             </form>
           </DialogContent>
         </Dialog>
+        
+        <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline">
+              <Home className="mr-2 h-4 w-4" />
+              Update Address
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Update Household Address</DialogTitle>
+              <DialogDescription>
+                Update your household address information.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...addressForm}>
+              <form 
+                id="address-form" 
+                onSubmit={addressForm.handleSubmit((data) => {
+                  updateHouseholdAddress.mutate(data);
+                  setIsAddressModalOpen(false);
+                })}
+                className="space-y-4"
+              >
+                <FormField
+                  control={addressForm.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder="123 Main St" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={addressForm.control}
+                    name="city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>City</FormLabel>
+                        <FormControl>
+                          <Input placeholder="City" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={addressForm.control}
+                    name="state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>State</FormLabel>
+                        <FormControl>
+                          <Input placeholder="State" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField
+                  control={addressForm.control}
+                  name="zipCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Zip Code</FormLabel>
+                      <FormControl>
+                        <Input placeholder="12345" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter>
+                  <Button type="submit">Save Address</Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -170,6 +290,24 @@ export default function HouseholdPage() {
             <p className="text-xs text-muted-foreground">
               Awaiting response from invitees
             </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Household Address</CardTitle>
+            <Home className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-md font-medium">
+              {household?.address ? (
+                <div className="space-y-1">
+                  <p>{household.address}</p>
+                  <p>{household.city}, {household.state} {household.zipCode}</p>
+                </div>
+              ) : (
+                <p className="text-muted-foreground">No address on file</p>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
