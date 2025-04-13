@@ -1067,6 +1067,14 @@ export function registerRoutes(app: Express): Server {
       }).catch(err => {
         log(`Error loading test payment routes: ${err}`, 'express');
       });
+      
+      // Test endpoint for event filtering
+      import('./routes/test-event-filtering.js').then(({ testFinanceAdminEventFiltering }) => {
+        app.get('/api/test/event-filtering/finance-admin', testFinanceAdminEventFiltering);
+        log('Test event filtering endpoint registered (development only)', 'express');
+      }).catch(err => {
+        log(`Error loading test event filtering routes: ${err}`, 'express');
+      });
     }
 
     // Use events router for all admin event operations
