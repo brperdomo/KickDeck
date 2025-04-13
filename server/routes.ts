@@ -182,15 +182,15 @@ export function registerRoutes(app: Express): Server {
     app.get('/api/admin/permissions/me', isAdmin, getCurrentUserPermissions);
     
     // Event administrator management endpoints
-    app.get('/api/admin/events/:eventId/administrators', isAdmin, getEventAdministrators);
-    app.post('/api/admin/events/:eventId/administrators', isAdmin, addEventAdministrator);
-    app.patch('/api/admin/events/:eventId/administrators/:adminId', isAdmin, updateEventAdministrator);
-    app.delete('/api/admin/events/:eventId/administrators/:adminId', isAdmin, removeEventAdministrator);
+    app.get('/api/admin/events/:eventId/administrators', isAdmin, hasEventAccess, getEventAdministrators);
+    app.post('/api/admin/events/:eventId/administrators', isAdmin, hasEventAccess, addEventAdministrator);
+    app.patch('/api/admin/events/:eventId/administrators/:adminId', isAdmin, hasEventAccess, updateEventAdministrator);
+    app.delete('/api/admin/events/:eventId/administrators/:adminId', isAdmin, hasEventAccess, removeEventAdministrator);
     app.get('/api/admin/available-admins', isAdmin, getAvailableAdministrators);
 
     // Register fee assignment routes for admin
-    app.get('/api/admin/events/:eventId/fee-assignments', isAdmin, getFeeAssignments);
-    app.post('/api/admin/events/:eventId/fee-assignments', isAdmin, updateFeeAssignments);
+    app.get('/api/admin/events/:eventId/fee-assignments', isAdmin, hasEventAccess, getFeeAssignments);
+    app.post('/api/admin/events/:eventId/fee-assignments', isAdmin, hasEventAccess, updateFeeAssignments);
 
     // Register coupon routes
     app.post('/api/admin/coupons', isAdmin, createCoupon);
