@@ -1738,6 +1738,20 @@ export function registerRoutes(app: Express): Server {
 
         // Start a transaction to delete admin roles and user
         await db.transaction(async (tx) => {
+          // First, check and delete any event administrator records
+          const eventAdmins = await tx
+            .select()
+            .from(eventAdministrators)
+            .where(eq(eventAdministrators.userId, adminId));
+          
+          // If there are event administrators, delete them first
+          if (eventAdmins.length > 0) {
+            console.log(`Deleting ${eventAdmins.length} event administrator records for user ${adminId}`);
+            await tx
+              .delete(eventAdministrators)
+              .where(eq(eventAdministrators.userId, adminId));
+          }
+
           // Delete admin roles
           await tx
             .delete(adminRoles)
