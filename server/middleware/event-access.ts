@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { db } from '@db';
 import { eventAdministrators } from '@db/schema';
+import { roles } from '@db/schema';
 import { eq, and } from 'drizzle-orm';
 
 /**
@@ -23,9 +24,6 @@ export const hasEventAccess = async (req: Request, res: Response, next: NextFunc
     }
 
     // Check if user is a super_admin by querying the roles table
-    const { db } = await import('@db');
-    const { rolePermissions } = await import('@db/schema');
-    const { eq, and } = await import('drizzle-orm');
     
     // Check if user has super_admin role
     const userRoles = await db
