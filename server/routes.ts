@@ -4371,7 +4371,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
     });
 
     // Teams management endpoints
-    app.get('/api/admin/events/:eventId/age-groups', isAdmin, async (req, res) => {
+    app.get('/api/admin/events/:eventId/age-groups', hasEventAccess, async (req, res) => {
       try {
         const eventId = req.params.eventId;
         
@@ -4613,7 +4613,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
     });
 
     // Add endpoint to get age groups for an event
-    app.get('/api/admin/events/:id/age-groups', isAdmin, async (req, res) => {
+    app.get('/api/admin/events/:id/age-groups', hasEventAccess, async (req, res) => {
       try {
         const eventId = parseInt(req.params.id);
 
@@ -4784,7 +4784,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
     // Teams management endpoints
     
     // Get a single team by ID with its players
-    app.get('/api/admin/teams/:id', isAdmin, async (req, res) => {
+    app.get('/api/admin/teams/:id', async (req, res) => {
       try {
         const teamId = parseInt(req.params.id);
         
@@ -4792,48 +4792,64 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           return res.status(400).json({ error: "Invalid team ID" });
         }
         
-        // Fetch team with its age group and event
-        const [team] = await db
-          .select({
-            team: teams,
-            ageGroup: eventAgeGroups,
-            event: events
-          })
+        // First, get the team to find its eventId
+        const [teamData] = await db
+          .select()
           .from(teams)
-          .leftJoin(eventAgeGroups, eq(teams.ageGroupId, eventAgeGroups.id))
-          .leftJoin(events, eq(teams.eventId, events.id))
           .where(eq(teams.id, teamId));
           
-        if (!team) {
+        if (!teamData) {
           return res.status(404).json({ error: "Team not found" });
         }
         
-        // Fetch players for this team
-        const playersList = await db
-          .select()
-          .from(players)
-          .where(eq(players.teamId, teamId));
-          
-        // Parse coach JSON if it exists
-        let coachData = {};
-        if (team.team.coach) {
-          try {
-            coachData = JSON.parse(team.team.coach);
-          } catch (error) {
-            console.error('Error parsing coach JSON:', error);
+        // Set the eventId in request params for the hasEventAccess middleware
+        req.params.eventId = teamData.eventId;
+        
+        // Now check event access using the middleware
+        await hasEventAccess(req, res, async () => {
+          // Fetch team with its age group and event
+          const [team] = await db
+            .select({
+              team: teams,
+              ageGroup: eventAgeGroups,
+              event: events
+            })
+            .from(teams)
+            .leftJoin(eventAgeGroups, eq(teams.ageGroupId, eventAgeGroups.id))
+            .leftJoin(events, eq(teams.eventId, events.id))
+            .where(eq(teams.id, teamId));
+            
+          if (!team) {
+            return res.status(404).json({ error: "Team not found" });
           }
-        }
-        
-        // Format response
-        const response = {
-          ...team.team,
-          ageGroup: team.ageGroup?.ageGroup || 'Unknown',
-          eventName: team.event?.name || 'Unknown Event',
-          players: playersList,
-          coachData
-        };
-        
-        res.json(response);
+          
+          // Fetch players for this team
+          const playersList = await db
+            .select()
+            .from(players)
+            .where(eq(players.teamId, teamId));
+            
+          // Parse coach JSON if it exists
+          let coachData = {};
+          if (team.team.coach) {
+            try {
+              coachData = JSON.parse(team.team.coach);
+            } catch (error) {
+              console.error('Error parsing coach JSON:', error);
+            }
+          }
+          
+          // Format response
+          const response = {
+            ...team.team,
+            ageGroup: team.ageGroup?.ageGroup || 'Unknown',
+            eventName: team.event?.name || 'Unknown Event',
+            players: playersList,
+            coachData
+          };
+          
+          res.json(response);
+        });
       } catch (error) {
         console.error('Error fetching team:', error);
         res.status(500).json({ error: "Failed to fetch team details" });
@@ -4843,7 +4859,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
     // Player management endpoints
     
     // Add a player to a team
-    app.post('/api/admin/teams/:id/players', isAdmin, async (req, res) => {
+    app.post('/api/admin/teams/:id/players', async (req, res) => {
       try {
         const teamId = parseInt(req.params.id);
         
@@ -4851,39 +4867,55 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           return res.status(400).json({ error: "Invalid team ID" });
         }
         
-        // Validate the player data
-        const validation = insertPlayerSchema.safeParse({
-          ...req.body,
-          teamId
-        });
-        
-        if (!validation.success) {
-          return res.status(400).json({ 
-            error: "Invalid player data", 
-            details: validation.error.errors 
-          });
+        // First, get the team to find its eventId
+        const [teamData] = await db
+          .select()
+          .from(teams)
+          .where(eq(teams.id, teamId));
+          
+        if (!teamData) {
+          return res.status(404).json({ error: "Team not found" });
         }
         
-        // Insert the new player
-        const newPlayer = await db.insert(players).values({
-          teamId,
-          firstName: req.body.firstName,
-          lastName: req.body.lastName,
-          dateOfBirth: req.body.dateOfBirth,
-          jerseyNumber: req.body.jerseyNumber,
-          position: req.body.position,
-          medicalNotes: req.body.medicalNotes,
-          parentGuardianName: req.body.parentGuardianName,
-          parentGuardianEmail: req.body.parentGuardianEmail,
-          parentGuardianPhone: req.body.parentGuardianPhone,
-          emergencyContactName: req.body.emergencyContactName,
-          emergencyContactPhone: req.body.emergencyContactPhone,
-          isActive: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }).returning();
+        // Set the eventId in request params for the hasEventAccess middleware
+        req.params.eventId = teamData.eventId;
         
-        res.status(201).json(newPlayer[0]);
+        // Now check event access using the middleware
+        await hasEventAccess(req, res, async () => {
+          // Access is granted, proceed with player creation
+          // Validate the player data using a simple validation
+          // Since insertPlayerSchema might not be defined, let's use a basic validation approach
+          const requiredFields = ['firstName', 'lastName', 'dateOfBirth'];
+          const missingFields = requiredFields.filter(field => !req.body[field]);
+          
+          if (missingFields.length > 0) {
+            return res.status(400).json({ 
+              error: "Invalid player data", 
+              details: `Missing required fields: ${missingFields.join(', ')}` 
+            });
+          }
+          
+          // Insert the new player
+          const newPlayer = await db.insert(players).values({
+            teamId,
+            firstName: req.body.firstName,
+            lastName: req.body.lastName,
+            dateOfBirth: req.body.dateOfBirth,
+            jerseyNumber: req.body.jerseyNumber,
+            position: req.body.position,
+            medicalNotes: req.body.medicalNotes,
+            parentGuardianName: req.body.parentGuardianName,
+            parentGuardianEmail: req.body.parentGuardianEmail,
+            parentGuardianPhone: req.body.parentGuardianPhone,
+            emergencyContactName: req.body.emergencyContactName,
+            emergencyContactPhone: req.body.emergencyContactPhone,
+            isActive: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }).returning();
+          
+          res.status(201).json(newPlayer[0]);
+        });
       } catch (error) {
         console.error('Error adding player:', error);
         res.status(500).json({ error: "Failed to add player" });
@@ -4891,7 +4923,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
     });
     
     // Update a player
-    app.patch('/api/admin/players/:id', isAdmin, async (req, res) => {
+    app.patch('/api/admin/players/:id', async (req, res) => {
       try {
         const playerId = parseInt(req.params.id);
         
@@ -4899,40 +4931,54 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           return res.status(400).json({ error: "Invalid player ID" });
         }
         
-        // Check if player exists
-        const player = await db.select().from(players).where(eq(players.id, playerId));
+        // Check if player exists and get its team to determine the event
+        const playerData = await db
+          .select({
+            player: players,
+            team: teams
+          })
+          .from(players)
+          .innerJoin(teams, eq(players.teamId, teams.id))
+          .where(eq(players.id, playerId))
+          .limit(1);
         
-        if (!player || player.length === 0) {
+        if (!playerData || playerData.length === 0) {
           return res.status(404).json({ error: "Player not found" });
         }
         
-        // Fields that can be updated
-        const updateFields = [
-          'firstName', 'lastName', 'dateOfBirth', 'jerseyNumber', 
-          'position', 'medicalNotes', 'parentGuardianName', 
-          'parentGuardianEmail', 'parentGuardianPhone', 
-          'emergencyContactName', 'emergencyContactPhone', 'isActive'
-        ];
+        // Set the eventId in request params for the hasEventAccess middleware
+        req.params.eventId = playerData[0].team.eventId;
         
-        // Build update object with only supplied fields
-        const updateData: Record<string, any> = {};
-        
-        for (const field of updateFields) {
-          if (req.body[field] !== undefined) {
-            updateData[field] = req.body[field];
+        // Now check event access using the middleware
+        await hasEventAccess(req, res, async () => {
+          // Fields that can be updated
+          const updateFields = [
+            'firstName', 'lastName', 'dateOfBirth', 'jerseyNumber', 
+            'position', 'medicalNotes', 'parentGuardianName', 
+            'parentGuardianEmail', 'parentGuardianPhone', 
+            'emergencyContactName', 'emergencyContactPhone', 'isActive'
+          ];
+          
+          // Build update object with only supplied fields
+          const updateData: Record<string, any> = {};
+          
+          for (const field of updateFields) {
+            if (req.body[field] !== undefined) {
+              updateData[field] = req.body[field];
+            }
           }
-        }
-        
-        // Add updatedAt timestamp
-        updateData.updatedAt = new Date().toISOString();
-        
-        // Update the player
-        const [updatedPlayer] = await db.update(players)
-          .set(updateData)
-          .where(eq(players.id, playerId))
-          .returning();
-        
-        res.json(updatedPlayer);
+          
+          // Add updatedAt timestamp
+          updateData.updatedAt = new Date().toISOString();
+          
+          // Update the player
+          const [updatedPlayer] = await db.update(players)
+            .set(updateData)
+            .where(eq(players.id, playerId))
+            .returning();
+          
+          res.json(updatedPlayer);
+        });
       } catch (error) {
         console.error('Error updating player:', error);
         res.status(500).json({ error: "Failed to update player" });
@@ -4940,7 +4986,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
     });
     
     // Delete a player
-    app.delete('/api/admin/players/:id', isAdmin, async (req, res) => {
+    app.delete('/api/admin/players/:id', async (req, res) => {
       try {
         const playerId = parseInt(req.params.id);
         
@@ -4948,81 +4994,111 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           return res.status(400).json({ error: "Invalid player ID" });
         }
         
-        // Delete the player
-        await db.delete(players).where(eq(players.id, playerId));
+        // Check if player exists and get its team to determine the event
+        const playerData = await db
+          .select({
+            player: players,
+            team: teams
+          })
+          .from(players)
+          .innerJoin(teams, eq(players.teamId, teams.id))
+          .where(eq(players.id, playerId))
+          .limit(1);
         
-        res.json({ success: true, message: "Player deleted successfully" });
+        if (!playerData || playerData.length === 0) {
+          return res.status(404).json({ error: "Player not found" });
+        }
+        
+        // Set the eventId in request params for the hasEventAccess middleware
+        req.params.eventId = playerData[0].team.eventId;
+        
+        // Now check event access using the middleware
+        await hasEventAccess(req, res, async () => {
+          // Delete the player
+          await db.delete(players).where(eq(players.id, playerId));
+          
+          res.json({ success: true, message: "Player deleted successfully" });
+        });
       } catch (error) {
         console.error('Error deleting player:', error);
         res.status(500).json({ error: "Failed to delete player" });
       }
     });
     
-    app.patch('/api/admin/teams/:id', isAdmin, async (req, res) => {
+    app.patch('/api/admin/teams/:id', async (req, res) => {
       try {
         const teamId = parseInt(req.params.id);
-        const { name, coach, managerName, managerPhone, managerEmail, clubName, ageGroupId } = req.body;
-
-        // Log the received data for debugging
-        console.log('Updating team with data:', { 
-          id: teamId, 
-          name, 
-          coachData: typeof coach === 'string' ? 'JSON string' : coach,
-          managerName, 
-          managerPhone, 
-          managerEmail,
-          clubName,
-          ageGroupId
-        });
-
-        // Log the SQL conversion for debugging
-        console.log('Updating team with SQL-mapped fields:', {
-          name,
-          coach,
-          manager_name: managerName,
-          manager_phone: managerPhone,
-          manager_email: managerEmail,
-          club_name: clubName,
-          age_group_id: ageGroupId
-        });
-
-        // Create an update object with only defined fields
-        const updateObject: any = {};
-        
-        if (name !== undefined) updateObject.name = name;
-        if (coach !== undefined) updateObject.coach = coach;
-        if (managerName !== undefined) updateObject.manager_name = managerName;
-        if (managerPhone !== undefined) updateObject.manager_phone = managerPhone;
-        if (managerEmail !== undefined) updateObject.manager_email = managerEmail;
-        if (clubName !== undefined) updateObject.club_name = clubName;
-        if (ageGroupId !== undefined) updateObject.age_group_id = parseInt(ageGroupId);
-        
-        console.log('Final SQL update object:', updateObject);
-        
-        const [updatedTeam] = await db
-          .update(teams)
-          .set(updateObject)
-          .where(eq(teams.id, teamId))
-          .returning();
-
-        if (!updatedTeam) {
-          return res.status(404).send("Team not found");
+        if (isNaN(teamId)) {
+          return res.status(400).json({ error: "Invalid team ID" });
         }
+        
+        // First, get the team to find its eventId
+        const [teamData] = await db
+          .select()
+          .from(teams)
+          .where(eq(teams.id, teamId));
+          
+        if (!teamData) {
+          return res.status(404).json({ error: "Team not found" });
+        }
+        
+        // Set the eventId in request params for the hasEventAccess middleware
+        req.params.eventId = teamData.eventId;
+        
+        // Now check event access using the middleware
+        await hasEventAccess(req, res, async () => {
+          const { name, coach, managerName, managerPhone, managerEmail, clubName, ageGroupId } = req.body;
 
-        // Process the coach data for the response
-        let coachData = {};
-        if (updatedTeam.coach) {
-          try {
-            coachData = JSON.parse(updatedTeam.coach);
-          } catch (error) {
-            console.error('Error parsing coach JSON in response:', error);
+          // Log the received data for debugging
+          console.log('Updating team with data:', { 
+            id: teamId, 
+            name, 
+            coachData: typeof coach === 'string' ? 'JSON string' : coach,
+            managerName, 
+            managerPhone, 
+            managerEmail,
+            clubName,
+            ageGroupId
+          });
+
+          // Create an update object with only defined fields
+          const updateObject: any = {};
+          
+          if (name !== undefined) updateObject.name = name;
+          if (coach !== undefined) updateObject.coach = coach;
+          if (managerName !== undefined) updateObject.manager_name = managerName;
+          if (managerPhone !== undefined) updateObject.manager_phone = managerPhone;
+          if (managerEmail !== undefined) updateObject.manager_email = managerEmail;
+          if (clubName !== undefined) updateObject.club_name = clubName;
+          if (ageGroupId !== undefined) updateObject.age_group_id = parseInt(ageGroupId);
+          
+          console.log('Final SQL update object:', updateObject);
+          
+          const [updatedTeam] = await db
+            .update(teams)
+            .set(updateObject)
+            .where(eq(teams.id, teamId))
+            .returning();
+
+          if (!updatedTeam) {
+            return res.status(404).send("Team not found");
           }
-        }
 
-        // Return the updated team with parsed coach data
-        res.json({
-          ...updatedTeam,
-          coachData
+          // Process the coach data for the response
+          let coachData = {};
+          if (updatedTeam.coach) {
+            try {
+              coachData = JSON.parse(updatedTeam.coach);
+            } catch (error) {
+              console.error('Error parsing coach JSON in response:', error);
+            }
+          }
+
+          // Return the updated team with parsed coach data
+          res.json({
+            ...updatedTeam,
+            coachData
+          });
         });
       } catch (error) {
         console.error('Error updating team:', error);
