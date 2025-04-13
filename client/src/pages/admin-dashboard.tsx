@@ -507,7 +507,7 @@ function AdministratorsView() {
     }
   });
 
-  // Categorize administrators by role (but keep unique users)
+  // Store unique administrators and manage by roles
   const administrators = useMemo(() => {
     if (!administratorsQuery.data) {
       return {
@@ -515,53 +515,69 @@ function AdministratorsView() {
         tournament_admin: [],
         score_admin: [],
         finance_admin: [],
-        all: [] // Added an "all" category to store unique users
+        uniqueAdmins: {} // Object to store unique admins by ID
       };
     }
 
     // Log the full administrator data to console for debugging
     console.log("Full administrator data:", administratorsQuery.data);
 
-    // Initialize with empty arrays for each role type
-    const groupedAdmins: RoleGroup & { all: any[] } = {
+    // First create a map of unique administrators by ID
+    const uniqueAdminsMap: Record<number, any> = {};
+    
+    // Process each administrator into our map
+    administratorsQuery.data.forEach((admin: any) => {
+      // If we've already stored this admin, don't overwrite, just merge their roles
+      if (uniqueAdminsMap[admin.id]) {
+        // Make sure we have a roles array
+        let existingRoles = uniqueAdminsMap[admin.id].roles || [];
+        let newRoles = (admin.roles && Array.isArray(admin.roles)) 
+          ? admin.roles.filter((role: any) => role !== null) 
+          : [];
+        
+        // Merge roles arrays and remove duplicates
+        uniqueAdminsMap[admin.id].roles = Array.from(new Set([...existingRoles, ...newRoles]));
+      } else {
+        // If this is a new admin, add them to our map
+        const roles = (admin.roles && Array.isArray(admin.roles)) 
+          ? admin.roles.filter((role: any) => role !== null) 
+          : [];
+        
+        uniqueAdminsMap[admin.id] = {
+          ...admin,
+          roles: roles
+        };
+      }
+    });
+    
+    // Now create the role-specific arrays using our map of unique admins
+    const groupedAdmins: RoleGroup & { uniqueAdmins: Record<number, any> } = {
       super_admin: [],
       tournament_admin: [],
       score_admin: [],
       finance_admin: [],
-      all: [] // Add all users here
+      uniqueAdmins: uniqueAdminsMap
     };
-
-    // Process each administrator
-    administratorsQuery.data.forEach((admin: any) => {
-      console.log(`Processing admin ${admin.email}:`, admin);
-      
-      // Ensure admin has a roles array
-      const roles = (admin.roles && Array.isArray(admin.roles)) 
-        ? admin.roles.filter((role: any) => role !== null) 
-        : [];
-
-      // Always add to "all" category first
-      if (!groupedAdmins.all.some(a => a.id === admin.id)) {
-        groupedAdmins.all.push(admin);
-      }
-      
-      // If admin has roles, add to the appropriate role categories
-      if (roles.length > 0) {
-        roles.forEach((role: string) => {
-          if (role in groupedAdmins && role !== 'all') {
-            if (!groupedAdmins[role].some((a) => a.id === admin.id)) {
-              console.log(`Adding ${admin.email} to ${role} group based on roles array`);
-              groupedAdmins[role].push(admin);
+    
+    // Sort admins into role-specific arrays
+    Object.values(uniqueAdminsMap).forEach((admin: any) => {
+      if (!admin.roles || admin.roles.length === 0) {
+        // If admin has no roles but is marked as admin, add as super_admin
+        if (admin.isAdmin) {
+          admin.roles = ['super_admin'];
+          if (!groupedAdmins.super_admin.includes(admin.id)) {
+            groupedAdmins.super_admin.push(admin.id);
+          }
+        }
+      } else {
+        // Add to each role-specific array based on their roles
+        admin.roles.forEach((role: string) => {
+          if (role in groupedAdmins && role !== 'uniqueAdmins') {
+            if (!groupedAdmins[role].includes(admin.id)) {
+              groupedAdmins[role].push(admin.id);
             }
           }
         });
-      } 
-      // Default fallback if admin has no roles but is marked as admin
-      else if (admin.isAdmin) {
-        if (!groupedAdmins.super_admin.some(a => a.id === admin.id)) {
-          console.log(`Admin ${admin.email} has isAdmin flag but no roles, assigning to super_admin`);
-          groupedAdmins.super_admin.push({ ...admin, roles: ['super_admin'] });
-        }
       }
     });
 
@@ -760,8 +776,8 @@ function AdministratorsView() {
           </TabsList>
 
           {Object.entries(administrators)
-            .filter(([type]) => type !== "all") // Filter out the "all" category from tabs
-            .map(([type, admins]) => (
+            .filter(([type]) => type !== "uniqueAdmins") 
+            .map(([type, adminIds]) => (
             <TabsContent key={type} value={type} className="space-y-4">
               <AnimatedContainer animation="fadeIn" delay={0.2}>
                 <Card>
@@ -769,7 +785,7 @@ function AdministratorsView() {
                     <CardTitle className="flex items-center">
                       {getTypeLabel(type)}
                       <Badge className={`ml-2 ${getBadgeColor(type)}`}>
-                        {admins?.length || 0} Members
+                        {Array.isArray(adminIds) ? adminIds.length : 0} Members
                       </Badge>
                     </CardTitle>
                   </CardHeader>
@@ -786,55 +802,57 @@ function AdministratorsView() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {/* Use the all category for admins who have the current role */}
-                          {administrators.all
-                            .filter((admin: any) => admin.roles && admin.roles.includes(type))
-                            .map((admin: any, index: number) => (
-                            <TableRow key={admin.id} className="border-b hover:bg-muted/50 transition-colors">
-                              <TableCell className="font-medium p-4">
-                                {admin.firstName} {admin.lastName}
-                              </TableCell>
-                              <TableCell className="p-4">{admin.email}</TableCell>
-                              <TableCell className="p-4">
-                                {admin.roles?.map((role: string) => (
-                                  <Badge key={role} variant="outline" className="mr-1">
-                                    {role}
+                          {Array.isArray(adminIds) && adminIds.map((adminId: number) => {
+                            const admin = administrators.uniqueAdmins[adminId];
+                            if (!admin) return null;
+                            
+                            return (
+                              <TableRow key={admin.id} className="border-b hover:bg-muted/50 transition-colors">
+                                <TableCell className="font-medium p-4">
+                                  {admin.firstName} {admin.lastName}
+                                </TableCell>
+                                <TableCell className="p-4">{admin.email}</TableCell>
+                                <TableCell className="p-4">
+                                  {admin.roles?.map((role: string) => (
+                                    <Badge key={role} variant="outline" className="mr-1">
+                                      {role}
+                                    </Badge>
+                                  ))}
+                                </TableCell>
+                                <TableCell className="p-4">
+                                  <Badge variant="secondary" className="bg-green-50 text-green-700">
+                                    Active
                                   </Badge>
-                                ))}
-                              </TableCell>
-                              <TableCell className="p-4">
-                                <Badge variant="secondary" className="bg-green-50 text-green-700">
-                                  Active
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="p-4 text-right">
-                                <div className="flex justify-end gap-2">
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" className="h-8 w-8 p-0">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuItem onClick={() => handleEditAdmin(admin)} className="admin-edit-button">
-                                        <Edit className="mr-2 h-4 w-4" />
-                                        Edit
-                                      </DropdownMenuItem>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem
-                                        onClick={() => deleteAdminMutation.mutate(admin.id)}
-                                        disabled={deleteAdminMutation.isPending}
-                                        className="text-red-600 admin-delete-button"
-                                      >
-                                        <Trash className="mr-2 h-4 w-4" />
-                                        Remove
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
+                                </TableCell>
+                                <TableCell className="p-4 text-right">
+                                  <div className="flex justify-end gap-2">
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                          <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => handleEditAdmin(admin)} className="admin-edit-button">
+                                          <Edit className="mr-2 h-4 w-4" />
+                                          Edit
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                          onClick={() => deleteAdminMutation.mutate(admin.id)}
+                                          disabled={deleteAdminMutation.isPending}
+                                          className="text-red-600 admin-delete-button"
+                                        >
+                                          <Trash className="mr-2 h-4 w-4" />
+                                          Remove
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
                         </TableBody>
                       </Table>
                     </div>
