@@ -3,6 +3,7 @@ import { db } from '../../../db';
 import { events, eventAgeGroups, eventScoringRules, eventComplexes, eventFieldSizes, eventFees, coupons, eventAgeGroupFees, teams } from '@db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
+import { hasEventAccess } from '../../middleware/event-access';
 
 const router = Router();
 
@@ -80,7 +81,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get event details endpoint
-router.get('/:id', async (req, res) => {
+router.get('/:id', hasEventAccess, async (req, res) => {
   try {
     const eventId = req.params.id;
 
@@ -165,7 +166,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Delete event endpoint
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', hasEventAccess, async (req, res) => {
   try {
     const eventId = BigInt(req.params.id);
     console.log('Starting event deletion for ID:', eventId);
@@ -245,7 +246,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Toggle event archive status endpoint
-router.patch('/:id/toggle-archive', async (req, res) => {
+router.patch('/:id/toggle-archive', hasEventAccess, async (req, res) => {
   try {
     const eventId = BigInt(req.params.id);
     
