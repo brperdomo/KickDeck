@@ -1,6 +1,7 @@
 import React, { useState, forwardRef, useEffect } from 'react';
 import { File, DragItem } from './types';
 import { useFileManager } from './FileManagerContext';
+import { cn } from '@/lib/utils';
 import { 
   ContextMenu, 
   ContextMenuContent, 
@@ -21,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { 
   FileIcon, MoreVertical, Edit, Trash2, Download, Share2, Star, Info,
   Music, Video, Image, FileText, File as FileIconGeneric, FileCode, ArrowUpDown, 
-  Star as StarIcon
+  Star as StarIcon, MoveRight
 } from 'lucide-react';
 import { useDrag } from 'react-dnd';
 
@@ -93,31 +94,31 @@ const FileItem = forwardRef<HTMLDivElement, FileItemProps>(
       
       if (file.type?.startsWith('image/')) {
         return file.thumbnailUrl ? (
-          <div className="h-16 w-16 bg-cover bg-center rounded" style={{ backgroundImage: `url(${file.thumbnailUrl})` }} />
-        ) : <Image className="h-16 w-16 text-blue-500" />;
+          <div className="h-16 w-16 bg-cover bg-center rounded transition-transform" style={{ backgroundImage: `url(${file.thumbnailUrl})` }} />
+        ) : <Image className="h-16 w-16 text-blue-500 transition-transform" />;
       }
       
       if (file.type?.startsWith('audio/')) {
-        return <Music className="h-16 w-16 text-purple-500" />;
+        return <Music className="h-16 w-16 text-purple-500 transition-transform" />;
       }
       
       if (file.type?.startsWith('video/')) {
-        return <Video className="h-16 w-16 text-red-500" />;
+        return <Video className="h-16 w-16 text-red-500 transition-transform" />;
       }
       
       if (extension === 'pdf') {
-        return <FileText className="h-16 w-16 text-red-700" />;
+        return <FileText className="h-16 w-16 text-red-700 transition-transform" />;
       }
       
       if (['html', 'css', 'js', 'ts', 'jsx', 'tsx', 'json', 'xml'].includes(extension || '')) {
-        return <FileCode className="h-16 w-16 text-green-600" />;
+        return <FileCode className="h-16 w-16 text-green-600 transition-transform" />;
       }
       
       if (['doc', 'docx', 'txt', 'rtf'].includes(extension || '')) {
-        return <FileText className="h-16 w-16 text-blue-700" />;
+        return <FileText className="h-16 w-16 text-blue-700 transition-transform" />;
       }
       
-      return <FileIconGeneric className="h-16 w-16 text-gray-500" />;
+      return <FileIconGeneric className="h-16 w-16 text-gray-500 transition-transform" />;
     };
     
     const formatFileSize = (bytes: number) => {
@@ -180,16 +181,26 @@ const FileItem = forwardRef<HTMLDivElement, FileItemProps>(
           <ContextMenuTrigger>
             <div 
               ref={combinedRef}
-              className={`
-                relative flex flex-col items-center p-3 rounded-md cursor-pointer
-                transition-all duration-200 group
-                ${isSelected ? 'bg-primary/10 ring-2 ring-primary' : 'hover:bg-muted'}
-                ${isDragging || externalIsDragging ? 'opacity-50 scale-95' : 'opacity-100'}
-              `}
+              className={cn(
+                "relative flex flex-col items-center p-3 rounded-md cursor-pointer border",
+                "transition-all duration-200 group",
+                isSelected ? 'bg-primary/10 ring-2 ring-primary border-transparent' : 'hover:bg-muted border-transparent',
+                isDragging || externalIsDragging ? 'opacity-50 scale-95 border-dashed border-primary/50' : 'opacity-100',
+              )}
               onClick={handleClick}
               onDoubleClick={handleDoubleClick}
               aria-label={`File: ${file.name}`}
             >
+              {isDragging && (
+                <div className="absolute inset-0 bg-primary/5 backdrop-blur-[1px] rounded-md z-10 pointer-events-none 
+                              flex items-center justify-center">
+                  <div className="bg-card/90 p-1 px-2 rounded text-xs font-medium flex items-center gap-1">
+                    <MoveRight className="h-3 w-3" />
+                    <span>Moving File</span>
+                  </div>
+                </div>
+              )}
+              
               <div className="relative">
                 {getFileIcon()}
                 {file.isFavorite && (
@@ -249,8 +260,10 @@ const FileItem = forwardRef<HTMLDivElement, FileItemProps>(
         {/* Drag Preview - Hidden by default, used for custom drag preview */}
         <div ref={dragPreview} className="hidden">
           <div className="flex items-center bg-background border rounded-md shadow-md p-2">
-            {getFileIcon()}
-            <span className="ml-2 text-sm font-medium">{file.name}</span>
+            <div className="h-5 w-5 shrink-0 mr-2">
+              {getFileIcon()}
+            </div>
+            <span className="text-sm font-medium">{file.name}</span>
           </div>
         </div>
         
