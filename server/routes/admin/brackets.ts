@@ -1,0 +1,267 @@
+import { Router } from 'express';
+import { db } from '../../../db';
+import { and, eq } from 'drizzle-orm';
+import { eventBrackets, eventAgeGroups, teams } from '../../../db/schema';
+import { hasEventAccess } from '../../middleware/event-access';
+
+const router = Router();
+
+// Get all brackets for an event
+router.get('/events/:eventId/brackets', hasEventAccess, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    
+    // Get all brackets for the event
+    const brackets = await db
+      .select()
+      .from(eventBrackets)
+      .where(eq(eventBrackets.eventId, eventId))
+      .orderBy(eventBrackets.sortOrder);
+    
+    res.json(brackets);
+  } catch (error) {
+    console.error('Error fetching brackets:', error);
+    res.status(500).json({ error: 'Failed to fetch brackets' });
+  }
+});
+
+// Get brackets for a specific age group in an event
+router.get('/events/:eventId/age-groups/:ageGroupId/brackets', hasEventAccess, async (req, res) => {
+  try {
+    const { eventId, ageGroupId } = req.params;
+    
+    // Get all brackets for the specific age group
+    const brackets = await db
+      .select()
+      .from(eventBrackets)
+      .where(
+        and(
+          eq(eventBrackets.eventId, eventId),
+          eq(eventBrackets.ageGroupId, parseInt(ageGroupId))
+        )
+      )
+      .orderBy(eventBrackets.sortOrder);
+    
+    res.json(brackets);
+  } catch (error) {
+    console.error('Error fetching age group brackets:', error);
+    res.status(500).json({ error: 'Failed to fetch age group brackets' });
+  }
+});
+
+// Create a new bracket for an age group
+router.post('/events/:eventId/brackets', hasEventAccess, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const { ageGroupId, name, description, sortOrder = 0 } = req.body;
+    
+    // Validate required fields
+    if (!ageGroupId || !name) {
+      return res.status(400).json({ error: 'Age group ID and name are required' });
+    }
+    
+    // Verify the age group exists and belongs to the event
+    const ageGroup = await db
+      .select()
+      .from(eventAgeGroups)
+      .where(
+        and(
+          eq(eventAgeGroups.id, ageGroupId),
+          eq(eventAgeGroups.eventId, eventId)
+        )
+      )
+      .limit(1);
+    
+    if (ageGroup.length === 0) {
+      return res.status(404).json({ error: 'Age group not found for this event' });
+    }
+    
+    // Create the new bracket
+    const [newBracket] = await db
+      .insert(eventBrackets)
+      .values({
+        eventId,
+        ageGroupId,
+        name,
+        description,
+        sortOrder,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+      .returning();
+    
+    res.status(201).json(newBracket);
+  } catch (error) {
+    console.error('Error creating bracket:', error);
+    res.status(500).json({ error: 'Failed to create bracket' });
+  }
+});
+
+// Update an existing bracket
+router.put('/events/:eventId/brackets/:bracketId', hasEventAccess, async (req, res) => {
+  try {
+    const { eventId, bracketId } = req.params;
+    const { name, description, sortOrder } = req.body;
+    
+    // Validate required fields
+    if (!name) {
+      return res.status(400).json({ error: 'Bracket name is required' });
+    }
+    
+    // Verify the bracket exists and belongs to the event
+    const existingBracket = await db
+      .select()
+      .from(eventBrackets)
+      .where(
+        and(
+          eq(eventBrackets.id, parseInt(bracketId)),
+          eq(eventBrackets.eventId, eventId)
+        )
+      )
+      .limit(1);
+    
+    if (existingBracket.length === 0) {
+      return res.status(404).json({ error: 'Bracket not found for this event' });
+    }
+    
+    // Update the bracket
+    const [updatedBracket] = await db
+      .update(eventBrackets)
+      .set({
+        name,
+        description,
+        sortOrder: sortOrder !== undefined ? sortOrder : existingBracket[0].sortOrder,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(
+        and(
+          eq(eventBrackets.id, parseInt(bracketId)),
+          eq(eventBrackets.eventId, eventId)
+        )
+      )
+      .returning();
+    
+    res.json(updatedBracket);
+  } catch (error) {
+    console.error('Error updating bracket:', error);
+    res.status(500).json({ error: 'Failed to update bracket' });
+  }
+});
+
+// Delete a bracket
+router.delete('/events/:eventId/brackets/:bracketId', hasEventAccess, async (req, res) => {
+  try {
+    const { eventId, bracketId } = req.params;
+    
+    // Check if there are teams using this bracket
+    const teamsUsingBracket = await db
+      .select({ id: teams.id })
+      .from(teams)
+      .where(
+        and(
+          eq(teams.eventId, eventId),
+          eq(teams.bracketId, parseInt(bracketId))
+        )
+      )
+      .limit(1);
+    
+    if (teamsUsingBracket.length > 0) {
+      return res.status(400).json({ 
+        error: 'Cannot delete bracket because there are teams assigned to it' 
+      });
+    }
+    
+    // Delete the bracket
+    const deletedBrackets = await db
+      .delete(eventBrackets)
+      .where(
+        and(
+          eq(eventBrackets.id, parseInt(bracketId)),
+          eq(eventBrackets.eventId, eventId)
+        )
+      )
+      .returning();
+    
+    if (deletedBrackets.length === 0) {
+      return res.status(404).json({ error: 'Bracket not found for this event' });
+    }
+    
+    res.json({ success: true, message: 'Bracket deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting bracket:', error);
+    res.status(500).json({ error: 'Failed to delete bracket' });
+  }
+});
+
+// Assign a bracket to a team
+router.put('/events/:eventId/teams/:teamId/bracket', hasEventAccess, async (req, res) => {
+  try {
+    const { eventId, teamId } = req.params;
+    const { bracketId } = req.body;
+    
+    // Validate required fields
+    if (!bracketId) {
+      return res.status(400).json({ error: 'Bracket ID is required' });
+    }
+    
+    // Verify the team exists and belongs to the event
+    const team = await db
+      .select()
+      .from(teams)
+      .where(
+        and(
+          eq(teams.id, parseInt(teamId)),
+          eq(teams.eventId, eventId)
+        )
+      )
+      .limit(1);
+    
+    if (team.length === 0) {
+      return res.status(404).json({ error: 'Team not found for this event' });
+    }
+    
+    // Verify the bracket exists and belongs to the event
+    const bracket = await db
+      .select()
+      .from(eventBrackets)
+      .where(
+        and(
+          eq(eventBrackets.id, bracketId),
+          eq(eventBrackets.eventId, eventId)
+        )
+      )
+      .limit(1);
+    
+    if (bracket.length === 0) {
+      return res.status(404).json({ error: 'Bracket not found for this event' });
+    }
+    
+    // Verify the bracket belongs to the team's age group
+    if (bracket[0].ageGroupId !== team[0].ageGroupId) {
+      return res.status(400).json({ 
+        error: 'Bracket does not belong to the team\'s age group' 
+      });
+    }
+    
+    // Update the team with the new bracket
+    const [updatedTeam] = await db
+      .update(teams)
+      .set({
+        bracketId,
+      })
+      .where(
+        and(
+          eq(teams.id, parseInt(teamId)),
+          eq(teams.eventId, eventId)
+        )
+      )
+      .returning();
+    
+    res.json(updatedTeam);
+  } catch (error) {
+    console.error('Error assigning bracket to team:', error);
+    res.status(500).json({ error: 'Failed to assign bracket to team' });
+  }
+});
+
+export default router;

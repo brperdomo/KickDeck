@@ -170,7 +170,7 @@ export const eventAgeGroups = pgTable("event_age_groups", {
 export const insertEventAgeGroupSchema = createInsertSchema(eventAgeGroups, {
   ageGroup: z.string().min(1, "Age group is required"),
   birthYear: z.number().int("Birth year must be a valid year"),
-  gender: z.enum(["Boys", "Girls"], "Gender must be either Boys or Girls"),
+  gender: z.enum(["Boys", "Girls"]).describe("Gender must be either Boys or Girls"),
   divisionCode: z.string().min(1, "Division code is required"),
   projectedTeams: z.number().int().min(0, "Projected teams must be 0 or greater").optional(),
   fieldSize: z.string().min(1, "Field size is required"),
@@ -220,6 +220,17 @@ export const eventBrackets = pgTable("event_brackets", {
   createdAt: text("created_at").notNull().default(new Date().toISOString()),
   updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
 });
+
+export const insertEventBracketSchema = createInsertSchema(eventBrackets, {
+  name: z.string().min(1, "Bracket name is required"),
+  description: z.string().optional(),
+  sortOrder: z.number().int().optional(),
+});
+
+export const selectEventBracketSchema = createSelectSchema(eventBrackets);
+
+export type InsertEventBracket = typeof eventBrackets.$inferInsert;
+export type SelectEventBracket = typeof eventBrackets.$inferSelect;
 
 export const tournamentGroups = pgTable("tournament_groups", {
   id: serial("id").primaryKey(),
