@@ -35,10 +35,11 @@ const DroppableArea = ({ children }: { children: React.ReactNode }) => {
   // Configure drop functionality for the main content area
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: ['file', 'folder'],
-    drop: (item: DragItem, monitor) => {
+    drop: async (item: DragItem, monitor) => {
       // Only handle the drop if it wasn't dropped on a folder
       if (!monitor.didDrop()) {
         console.log('Dropping in main area', { item, selectedItems });
+        
         try {
           // Use the selected items for multi-drag operations
           const itemIds = selectedItems.length > 0 
@@ -48,38 +49,39 @@ const DroppableArea = ({ children }: { children: React.ReactNode }) => {
           console.log('Moving items to', currentFolder?.id || 'root folder', ':', itemIds);
           
           // Use the improved moveItems function with enhanced return type
-          try {
-            const moveResult = await moveItems(itemIds, currentFolder?.id || null);
-            console.log('Move result:', moveResult);
+          const moveResult = await moveItems(itemIds, currentFolder?.id || null);
+          console.log('Move result:', moveResult);
+          
+          // Check if the move was successful using the enhanced result type
+          if (moveResult && moveResult.moved) {
+            console.log('Items moved successfully:', moveResult.itemsMoved?.length || 0, 'items');
+            // Show success feedback
+            setDidJustDrop(true);
+            setDropCount(prev => prev + 1);
             
-            // Check if the move was successful using the enhanced result type
-            if (moveResult && moveResult.moved) {
-              console.log('Items moved successfully:', moveResult.itemsMoved?.length || 0, 'items');
-              // Show success feedback
-              setDidJustDrop(true);
-              setDropCount(prev => prev + 1);
-              
-              // Clear any existing timer
-              if (timerRef.current) {
-                clearTimeout(timerRef.current);
-              }
-              
-              // Set a new timer
-              timerRef.current = setTimeout(() => {
-                setDidJustDrop(false);
-                timerRef.current = null;
-              }, 2000);
-              
-              return moveResult; // Return the result for the component to check
-            } else {
-              console.error('Move failed:', moveResult.errorMessage || 'Unknown error');
-              return { moved: false, error: true, errorMessage: moveResult.errorMessage || 'Unknown error' };
+            // Clear any existing timer
+            if (timerRef.current) {
+              clearTimeout(timerRef.current);
             }
-          } catch (error) {
-            console.error('Error during move operation:', error);
-            return { moved: false, error: true, errorMessage: 'Exception occurred during move operation' };
+            
+            // Set a new timer
+            timerRef.current = setTimeout(() => {
+              setDidJustDrop(false);
+              timerRef.current = null;
+            }, 2000);
+            
+            return moveResult; // Return the result for the component to check
+          } else {
+            console.error('Move failed:', moveResult.errorMessage || 'Unknown error');
+            return { moved: false, error: true, errorMessage: moveResult.errorMessage || 'Unknown error' };
           }
+        } catch (error) {
+          console.error('Error during move operation:', error);
+          return { moved: false, error: true, errorMessage: 'Exception occurred during move operation' };
+        }
       }
+      
+      return { moved: false, handled: false };
     },
     collect: (monitor) => ({
       isOver: !!monitor.isOver({ shallow: true }),
