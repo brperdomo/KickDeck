@@ -316,8 +316,15 @@ const FolderItem = forwardRef<HTMLDivElement, FolderItemProps>(
           
           // Add user-select property to prevent text selection during drag
           element.style.userSelect = 'none';
-          element.style.WebkitUserSelect = 'none';
-          element.style.MozUserSelect = 'none';
+          element.style.webkitUserSelect = 'none';
+          element.style.msUserSelect = 'none';
+          
+          // Add pointerEvents style to ensure the event propagation works correctly
+          if (isDragging) {
+            element.style.pointerEvents = 'none';
+          } else {
+            element.style.pointerEvents = 'auto';
+          }
         } else {
           console.warn(`Failed to apply drag/drop refs to folder element - element is null for folder ${folder.name}`);
         }
