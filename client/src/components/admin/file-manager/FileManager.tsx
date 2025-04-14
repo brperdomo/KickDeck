@@ -12,11 +12,12 @@ import { useDropzone } from 'react-dropzone';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { cn } from '@/lib/utils';
+import { Upload, FolderPlus } from 'lucide-react';
 
 // Internal component that has access to context
 const FileManagerWithDnd: React.FC = () => {
   const [activeTab, setActiveTab] = useState('browse');
-  const { uploadFiles, currentFolder } = useFileManager();
+  const { uploadFiles, currentFolder, isDraggingOver } = useFileManager();
   
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles?.length) {
@@ -36,22 +37,41 @@ const FileManagerWithDnd: React.FC = () => {
     <div
       {...getRootProps()}
       className={cn(
-        "relative rounded-md",
+        "relative rounded-md transition-all duration-200",
         isDragActive && "outline-dashed outline-2 outline-primary bg-primary/5"
       )}
     >
       <input {...getInputProps()} />
       
+      {/* Full-screen upload drop target overlay */}
       {isDragActive && (
-        <div className="absolute inset-0 flex items-center justify-center z-10 bg-primary/10 backdrop-blur-sm rounded-md">
-          <div className="bg-card p-6 rounded-lg shadow-lg text-center">
-            <h3 className="text-lg font-semibold mb-2">Drop files here</h3>
-            <p className="text-muted-foreground">Release to upload files to current folder</p>
+        <div className="absolute inset-0 flex items-center justify-center z-20 bg-primary/10 backdrop-blur-sm rounded-md">
+          <div className="bg-card p-8 rounded-lg shadow-lg text-center">
+            <div className="bg-primary/10 rounded-full p-4 mx-auto mb-4">
+              <Upload className="h-10 w-10 text-primary" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Drop files here</h3>
+            <p className="text-muted-foreground">
+              Release to upload files to {currentFolder ? `"${currentFolder.name}"` : 'root folder'}
+            </p>
           </div>
         </div>
       )}
       
-      <Card className={cn("shadow-sm w-full", isDragActive && "opacity-50")}>
+      {/* Internal drag indicator - when moving files between folders */}
+      {isDraggingOver && !isDragActive && (
+        <div className="absolute inset-0 z-10 pointer-events-none">
+          <div className="absolute top-4 right-4 bg-card p-3 rounded-lg shadow-lg text-center flex items-center space-x-2">
+            <FolderPlus className="h-5 w-5 text-primary" />
+            <span className="text-sm font-medium">Drop to move selected items</span>
+          </div>
+        </div>
+      )}
+      
+      <Card className={cn(
+        "shadow-sm w-full transition-opacity duration-200", 
+        (isDragActive || isDraggingOver) && "opacity-85"
+      )}>
         <CardHeader className="pb-2">
           <CardTitle>File Manager</CardTitle>
         </CardHeader>

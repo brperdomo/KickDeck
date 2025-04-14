@@ -2,7 +2,7 @@ import React, { useEffect, forwardRef } from 'react';
 import { Folder, DragItem } from './types';
 import { useFileManager } from './FileManagerContext';
 import { cn } from '@/lib/utils';
-import { Folder as FolderIcon, MoreHorizontal, ArrowUpDown } from 'lucide-react';
+import { Folder as FolderIcon, MoreHorizontal, ArrowUpDown, FolderPlus } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -78,18 +78,36 @@ const FolderItem = forwardRef<HTMLDivElement, FolderItemProps>(
       }
     });
     
-    // Set up drop target for folders
-    const [{ isOver }, dropRef] = useDrop({
+    // Set up drop target for folders - allow dropping files/folders into this folder
+    const [{ isOver, canDrop }, dropRef] = useDrop({
       accept: ['file', 'folder'],
-      drop: (item: DragItem) => {
-        // When items are dropped on this folder, move them into it
-        const itemIds = selectedItems.map(item => item.id);
-        if (itemIds.length > 0) {
-          moveItems(itemIds, folder.id);
+      canDrop: (item: DragItem) => {
+        // Prevent dropping a folder into itself
+        if (item.type === 'folder' && item.id === folder.id) {
+          return false;
+        }
+        
+        // Prevent dropping a parent folder into its own child
+        // This would require knowledge of folder hierarchy, which we
+        // might need to add to the context if this becomes important.
+        return true;
+      },
+      drop: (item: DragItem, monitor) => {
+        // Only handle if this is the drop target (not a child component)
+        if (!monitor.didDrop()) {
+          // When items are dropped on this folder, move them into it
+          if (selectedItems.length > 0) {
+            const itemIds = selectedItems.map(item => item.id);
+            moveItems(itemIds, folder.id);
+          } else {
+            // Fallback for single item if somehow no selection
+            moveItems([item.id], folder.id);
+          }
         }
       },
       collect: monitor => ({
-        isOver: monitor.isOver()
+        isOver: monitor.isOver({ shallow: true }),
+        canDrop: monitor.canDrop()
       })
     });
     
@@ -146,6 +164,9 @@ const FolderItem = forwardRef<HTMLDivElement, FolderItemProps>(
       }
     };
     
+    const showDropIndicator = isOver && canDrop;
+    const showInvalidDropIndicator = isOver && !canDrop;
+    
     return (
       <>
         <div 
@@ -154,11 +175,33 @@ const FolderItem = forwardRef<HTMLDivElement, FolderItemProps>(
             'relative p-3 rounded-md cursor-pointer select-none border transition-all duration-200 group',
             isSelected ? 'border-primary bg-primary/10' : 'border-transparent hover:bg-muted',
             isDragging || externalIsDragging ? 'opacity-50 scale-95' : 'opacity-100',
-            isOver ? 'ring-2 ring-primary/70 bg-primary/10' : '',
+            showDropIndicator ? 'ring-2 ring-primary/70 bg-primary/10' : '',
+            showInvalidDropIndicator ? 'ring-2 ring-destructive/70 bg-destructive/10' : '',
           )}
           onClick={handleClick}
           onContextMenu={handleRightClick}
         >
+          {/* Drop indicator overlay - only shown when actively dropping */}
+          {showDropIndicator && (
+            <div className="absolute inset-0 bg-primary/5 backdrop-blur-[1px] rounded-md z-10 pointer-events-none 
+                          flex items-center justify-center">
+              <div className="bg-card/90 p-1 px-2 rounded text-xs font-medium flex items-center gap-1">
+                <FolderPlus className="h-3 w-3" />
+                <span>Drop to Move</span>
+              </div>
+            </div>
+          )}
+          
+          {/* Invalid drop indicator */}
+          {showInvalidDropIndicator && (
+            <div className="absolute inset-0 bg-destructive/5 backdrop-blur-[1px] rounded-md z-10 pointer-events-none 
+                          flex items-center justify-center">
+              <div className="bg-card/90 p-1 px-2 rounded text-xs font-medium text-destructive">
+                Cannot move here
+              </div>
+            </div>
+          )}
+          
           <div className="flex flex-col items-center text-center gap-2">
             <div className="relative w-12 h-12 flex items-center justify-center text-primary">
               <FolderIcon className="w-10 h-10" />

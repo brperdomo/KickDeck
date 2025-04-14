@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useFileManager } from './FileManagerContext';
 import FileItem from './FileItem';
 import FolderItem from './FolderItem';
@@ -6,22 +6,24 @@ import { useDrag, useDrop, DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { File, Folder, DragItem } from './types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Upload, FolderOpen } from 'lucide-react';
+import { Upload, FolderOpen, Check, ArrowDown, MoveHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
-// We don't need the DraggableFileItem anymore since we've moved drag functionality to FileItem component
+// Wrapper components for file and folder items
 const FileItemWrapper = ({ file }: { file: File }) => {
   return <FileItem file={file} />;
 };
 
-// We don't need the DraggableFolderItem anymore since we've moved drag functionality to FolderItem component
 const FolderItemWrapper = ({ folder }: { folder: Folder }) => {
   return <FolderItem folder={folder} />;
 };
 
 const DroppableArea = ({ children }: { children: React.ReactNode }) => {
   const { currentFolder, moveItems, selectedItems, isDraggingOver, setIsDraggingOver } = useFileManager();
+  const [didJustDrop, setDidJustDrop] = useState(false);
   
+  // Configure drop functionality for the main content area
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: ['file', 'folder'],
     drop: (item: DragItem, monitor) => {
@@ -31,9 +33,17 @@ const DroppableArea = ({ children }: { children: React.ReactNode }) => {
         if (selectedItems.length > 0) {
           const itemIds = selectedItems.map(item => item.id);
           moveItems(itemIds, currentFolder?.id || null);
+          
+          // Show success feedback
+          setDidJustDrop(true);
+          setTimeout(() => setDidJustDrop(false), 1500);
         } else {
           // Fallback to single item if somehow no selection
           moveItems([item.id], currentFolder?.id || null);
+          
+          // Show success feedback
+          setDidJustDrop(true);
+          setTimeout(() => setDidJustDrop(false), 1500);
         }
       }
     },
@@ -50,47 +60,116 @@ const DroppableArea = ({ children }: { children: React.ReactNode }) => {
     }
   }, [isOver, canDrop, setIsDraggingOver]);
   
+  const showDropOverlay = isOver && canDrop;
+  const folderName = currentFolder?.name || 'root';
+  
   return (
     <div 
       ref={drop} 
       className={cn(
         "h-full min-h-[300px] w-full transition-all duration-200 relative rounded-md",
-        (isOver && canDrop) && "bg-primary/5 ring-2 ring-primary ring-inset"
+        showDropOverlay && "bg-primary/5 ring-2 ring-primary ring-inset",
+        "overflow-hidden" // Ensure the animation stays within bounds
       )}
     >
       {/* Drop indicator overlay that appears when items are being dragged over the area */}
-      {(isOver && canDrop) && (
-        <div className="absolute inset-0 bg-primary/5 backdrop-blur-[1px] flex items-center justify-center rounded-md z-10 pointer-events-none">
-          <div className="bg-card p-4 rounded-lg shadow-lg text-center">
-            <FolderOpen className="h-10 w-10 mx-auto mb-2 text-primary" />
-            <h3 className="text-lg font-semibold">Drop here</h3>
-            <p className="text-muted-foreground text-sm">Release to move items to this folder</p>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {showDropOverlay && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 bg-primary/5 backdrop-blur-[1px] flex items-center justify-center rounded-md z-10 pointer-events-none"
+          >
+            <motion.div 
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className="bg-card p-5 rounded-lg shadow-lg text-center max-w-md"
+            >
+              <FolderOpen className="h-12 w-12 mx-auto mb-3 text-primary" />
+              <h3 className="text-lg font-semibold mb-1">Drop to Move</h3>
+              <p className="text-muted-foreground text-sm">
+                Release to move {selectedItems.length > 1 ? `${selectedItems.length} items` : 'item'} to {folderName === 'root' ? 'root folder' : `"${folderName}"`}
+              </p>
+              <div className="flex items-center justify-center mt-3 text-xs text-primary gap-1">
+                <MoveHorizontal className="h-3 w-3" />
+                <span>Moving {selectedItems.length} {selectedItems.length === 1 ? 'item' : 'items'}</span>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+        
+        {/* Success animation after dropping */}
+        {didJustDrop && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.7 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.7 }}
+            transition={{ duration: 0.2 }}
+            className="absolute top-4 right-4 bg-green-500/90 text-white rounded-md py-2 px-3 shadow-lg flex items-center gap-2 z-20"
+          >
+            <Check className="h-5 w-5" />
+            <span>Items moved successfully</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {children}
     </div>
   );
 };
 
-// Enhanced empty state component
-const EmptyState = () => (
-  <div className="flex flex-col items-center justify-center h-64 text-center p-4 border-2 border-dashed border-muted-foreground/20 rounded-md">
-    <Upload className="h-12 w-12 text-muted-foreground/50 mb-2" />
-    <h3 className="text-lg font-medium mt-2">This folder is empty</h3>
-    <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-      Drag and drop files here or use the Upload button in the toolbar to add content
-    </p>
-  </div>
-);
+// Enhanced empty state component with animation and better visual cues
+const EmptyState = () => {
+  const { currentFolder } = useFileManager();
+  const folderName = currentFolder?.name || 'root folder';
+  
+  return (
+    <motion.div 
+      initial={{ opacity: 0.5, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="flex flex-col items-center justify-center h-72 text-center p-6 border-2 border-dashed border-muted-foreground/20 rounded-md"
+    >
+      <Upload className="h-14 w-14 text-muted-foreground/50 mb-3" />
+      <motion.h3 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="text-xl font-medium mt-2"
+      >
+        This folder is empty
+      </motion.h3>
+      <motion.p 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="text-sm text-muted-foreground mt-2 max-w-xs"
+      >
+        Drag and drop files here or use the Upload button in the toolbar to add content to <span className="font-medium">{folderName}</span>
+      </motion.p>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+        className="mt-4 text-xs text-muted-foreground flex items-center gap-1"
+      >
+        <ArrowDown className="h-3 w-3" />
+        <span>Drop files anywhere in this area</span>
+      </motion.div>
+    </motion.div>
+  );
+};
 
 const FileManagerContent: React.FC = () => {
   const { files, folders, isLoading, viewMode, isDraggingOver } = useFileManager();
 
+  // Loading skeleton state
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="flex flex-col items-center p-3 space-y-2">
             <Skeleton className="h-16 w-16 rounded" />
@@ -102,6 +181,7 @@ const FileManagerContent: React.FC = () => {
     );
   }
 
+  // Grid view
   if (viewMode === 'grid') {
     return (
       <DndProvider backend={HTML5Backend}>
@@ -109,10 +189,15 @@ const FileManagerContent: React.FC = () => {
           {folders.length === 0 && files.length === 0 ? (
             <EmptyState />
           ) : (
-            <div className={cn(
-              "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-2 transition-opacity duration-200",
-              isDraggingOver && "opacity-70"
-            )}>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className={cn(
+                "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4 transition-all duration-200",
+                isDraggingOver && "opacity-70"
+              )}
+            >
               {folders.map((folder) => (
                 <FolderItemWrapper key={folder.id} folder={folder} />
               ))}
@@ -120,7 +205,7 @@ const FileManagerContent: React.FC = () => {
               {files.map((file) => (
                 <FileItemWrapper key={file.id} file={file} />
               ))}
-            </div>
+            </motion.div>
           )}
         </DroppableArea>
       </DndProvider>
@@ -134,11 +219,16 @@ const FileManagerContent: React.FC = () => {
         {folders.length === 0 && files.length === 0 ? (
           <EmptyState />
         ) : (
-          <div className={cn(
-            "space-y-1 transition-opacity duration-200",
-            isDraggingOver && "opacity-70"
-          )}>
-            <div className="grid grid-cols-12 gap-4 p-2 text-sm font-medium text-muted-foreground border-b">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className={cn(
+              "space-y-1 transition-all duration-200",
+              isDraggingOver && "opacity-70"
+            )}
+          >
+            <div className="grid grid-cols-12 gap-4 p-2 text-sm font-medium text-muted-foreground border-b sticky top-0 bg-background z-10">
               <div className="col-span-6">Name</div>
               <div className="col-span-2">Size</div>
               <div className="col-span-2">Type</div>
@@ -146,7 +236,7 @@ const FileManagerContent: React.FC = () => {
             </div>
             
             {folders.map((folder) => (
-              <div key={folder.id} className="grid grid-cols-12 items-center rounded-md">
+              <div key={folder.id} className="grid grid-cols-12 items-center rounded-md hover:bg-muted/50 transition-colors">
                 <div className="col-span-6">
                   <FolderItemWrapper folder={folder} />
                 </div>
@@ -159,7 +249,7 @@ const FileManagerContent: React.FC = () => {
             ))}
             
             {files.map((file) => (
-              <div key={file.id} className="grid grid-cols-12 items-center rounded-md">
+              <div key={file.id} className="grid grid-cols-12 items-center rounded-md hover:bg-muted/50 transition-colors">
                 <div className="col-span-6">
                   <FileItemWrapper file={file} />
                 </div>
@@ -174,7 +264,7 @@ const FileManagerContent: React.FC = () => {
                 </div>
               </div>
             ))}
-          </div>
+          </motion.div>
         )}
       </DroppableArea>
     </DndProvider>
