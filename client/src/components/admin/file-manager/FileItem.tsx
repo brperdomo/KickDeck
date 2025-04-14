@@ -78,11 +78,7 @@ const FileItem = forwardRef<HTMLDivElement, FileItemProps>(
           isSelected: isSelected // Pass the selection state
         };
       },
-      options: {
-        // This makes it easier to start dragging the file
-        // by reducing the distance needed to move before dragging starts
-        dropEffect: 'move',
-      },
+      // No options needed here
       collect: (monitor) => ({
         isDragging: monitor.isDragging(),
       }),
