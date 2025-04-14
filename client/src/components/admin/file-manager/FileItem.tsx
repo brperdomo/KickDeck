@@ -22,9 +22,10 @@ import { Button } from '@/components/ui/button';
 import { 
   FileIcon, MoreVertical, Edit, Trash2, Download, Share2, Star, Info,
   Music, Video, Image, FileText, File as FileIconGeneric, FileCode, ArrowUpDown, 
-  Star as StarIcon, MoveRight
+  Star as StarIcon, MoveRight, CheckCircle
 } from 'lucide-react';
 import { useDrag } from 'react-dnd';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface FileItemProps {
   file: File;
@@ -46,6 +47,7 @@ const FileItem = forwardRef<HTMLDivElement, FileItemProps>(
     const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
     const [newName, setNewName] = useState(file.name);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [didJustMove, setDidJustMove] = useState(false);
     
     const isSelected = selectedItems.some(item => 'url' in item && item.id === file.id);
     
@@ -53,6 +55,7 @@ const FileItem = forwardRef<HTMLDivElement, FileItemProps>(
     const [{ isDragging }, dragRef, dragPreview] = useDrag({
       type: 'file',
       item: (): DragItem => {
+        console.log('Starting drag for file:', file.name);
         // If this file is not in the selected items and it's being dragged,
         // select it first
         if (!isSelected) {
@@ -78,6 +81,13 @@ const FileItem = forwardRef<HTMLDivElement, FileItemProps>(
       end: (item, monitor) => {
         if (setIsDraggingOver) {
           setIsDraggingOver(false);
+        }
+        
+        // Show a success indicator if the drop was successful
+        if (monitor.didDrop()) {
+          console.log('File dropped successfully:', file.name);
+          setDidJustMove(true);
+          setTimeout(() => setDidJustMove(false), 2000);
         }
       }
     });
@@ -186,20 +196,46 @@ const FileItem = forwardRef<HTMLDivElement, FileItemProps>(
                 "transition-all duration-200 group",
                 isSelected ? 'bg-primary/10 ring-2 ring-primary border-transparent' : 'hover:bg-muted border-transparent',
                 isDragging || externalIsDragging ? 'opacity-50 scale-95 border-dashed border-primary/50' : 'opacity-100',
+                didJustMove ? 'ring-2 ring-green-500 bg-green-50 dark:bg-green-950/20' : '',
               )}
               onClick={handleClick}
               onDoubleClick={handleDoubleClick}
               aria-label={`File: ${file.name}`}
             >
-              {isDragging && (
-                <div className="absolute inset-0 bg-primary/5 backdrop-blur-[1px] rounded-md z-10 pointer-events-none 
-                              flex items-center justify-center">
-                  <div className="bg-card/90 p-1 px-2 rounded text-xs font-medium flex items-center gap-1">
-                    <MoveRight className="h-3 w-3" />
-                    <span>Moving File</span>
-                  </div>
-                </div>
-              )}
+              <AnimatePresence>
+                {isDragging && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 bg-primary/5 backdrop-blur-[1px] rounded-md z-10 pointer-events-none 
+                              flex items-center justify-center"
+                  >
+                    <motion.div 
+                      initial={{ y: 5 }}
+                      animate={{ y: 0 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                      className="bg-card/90 p-2 px-3 rounded shadow-sm text-sm font-medium flex items-center gap-2"
+                    >
+                      <MoveRight className="h-4 w-4 text-primary" />
+                      <span>Moving {selectedItems.length > 1 ? `(${selectedItems.length} items)` : 'File'}</span>
+                    </motion.div>
+                  </motion.div>
+                )}
+                
+                {/* Success indicator after successful drop/move */}
+                {didJustMove && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-1 right-1 bg-green-500/90 text-white rounded-full p-1 z-20 shadow-sm"
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
               
               <div className="relative">
                 {getFileIcon()}
@@ -214,9 +250,15 @@ const FileItem = forwardRef<HTMLDivElement, FileItemProps>(
                   <ArrowUpDown className="h-3.5 w-3.5" />
                 </div>
               </div>
-              <span className="mt-2 text-sm font-medium text-center truncate w-full">
+              
+              <motion.span 
+                className="mt-2 text-sm font-medium text-center truncate w-full"
+                animate={{ color: didJustMove ? 'var(--green-600)' : 'currentColor' }}
+                transition={{ duration: 0.2 }}
+              >
                 {file.name}
-              </span>
+              </motion.span>
+              
               <span className="text-xs text-muted-foreground">
                 {formatFileSize(file.size)}
               </span>
@@ -264,6 +306,11 @@ const FileItem = forwardRef<HTMLDivElement, FileItemProps>(
               {getFileIcon()}
             </div>
             <span className="text-sm font-medium">{file.name}</span>
+            {selectedItems.length > 1 && (
+              <span className="ml-2 bg-primary/20 text-primary text-xs px-1.5 py-0.5 rounded-full">
+                +{selectedItems.length - 1}
+              </span>
+            )}
           </div>
         </div>
         
