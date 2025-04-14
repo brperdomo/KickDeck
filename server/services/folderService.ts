@@ -1,138 +1,200 @@
 import { db } from '@db';
 import { folders } from '@db/schema';
+import { eq, isNull, and, sql } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
-import { eq, and, isNull } from 'drizzle-orm';
 
-// Define standard folder categories for the system
-export const STANDARD_FOLDERS = {
-  EVENTS: 'Events',
-  TEAMS: 'Teams',
-  PLAYERS: 'Players',
-  LOGOS: 'Logos',
-  DOCUMENTS: 'Documents',
-  RECEIPTS: 'Receipts',
-  TEMPLATES: 'Templates',
-  FORMS: 'Forms',
-  IMAGES: 'Images',
-  EXPORTS: 'Reports & Exports'
-};
-
-// Function to ensure all standard folders exist
-export async function ensureStandardFolders() {
-  try {
-    console.log('Ensuring standard folders exist...');
-    // Get existing root folders
-    const existingFolders = await db
-      .select()
-      .from(folders);
-    
-    const existingFolderNames = existingFolders
-      .filter(folder => folder.parentId === null)
-      .map(folder => folder.name);
-    
-    const foldersToCreate = Object.values(STANDARD_FOLDERS)
-      .filter(folderName => !existingFolderNames.includes(folderName));
-    
-    // Create any missing standard folders
-    for (const folderName of foldersToCreate) {
-      await db.insert(folders).values({
-        id: uuidv4(),
-        name: folderName,
-        parentId: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-      console.log(`Created standard folder: ${folderName}`);
-    }
-    
-    // Create standard sub-folders
-    await createSubFolders();
-    
-    console.log('Standard folders check completed');
-    return true;
-  } catch (error) {
-    console.error('Error ensuring standard folders:', error);
-    return false;
+/**
+ * Check if a standard folder exists and create it if it doesn't
+ * @param name The name of the folder to create
+ * @param parentId The parent folder ID (null for root)
+ * @returns The folder object
+ */
+async function ensureFolder(name: string, parentId: string | null = null): Promise<any> {
+  // Check if folder already exists
+  let query;
+  if (parentId === null) {
+    query = db.select().from(folders)
+      .where(and(
+        eq(folders.name, name),
+        isNull(folders.parentId)
+      ));
+  } else {
+    query = db.select().from(folders)
+      .where(and(
+        eq(folders.name, name),
+        eq(folders.parentId, parentId)
+      ));
   }
+  
+  const [existingFolder] = await query;
+  
+  if (existingFolder) {
+    return existingFolder;
+  }
+  
+  // Create the folder if it doesn't exist
+  const [newFolder] = await db.insert(folders)
+    .values({
+      id: uuidv4(),
+      name,
+      parentId,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    })
+    .returning();
+    
+  return newFolder;
 }
 
-// Create standard sub-folders within the main categories
-async function createSubFolders() {
-  try {
-    // Find the Documents parent folder
-    const [documentsFolder] = await db
-      .select()
-      .from(folders)
-      .where(and(
-        eq(folders.name, STANDARD_FOLDERS.DOCUMENTS),
-        isNull(folders.parentId)
-      ));
+/**
+ * Ensures all standard folders exist in the system
+ */
+export async function ensureStandardFolders(): Promise<void> {
+  console.log('Initializing standard folders...');
+  
+  // Create top-level folders
+  const teamsFolder = await ensureFolder('Teams');
+  const playersFolder = await ensureFolder('Players');
+  const logosFolder = await ensureFolder('Logos');
+  const documentsFolder = await ensureFolder('Documents');
+  const receiptsFolder = await ensureFolder('Receipts');
+  const templatesFolder = await ensureFolder('Templates');
+  const formsFolder = await ensureFolder('Forms');
+  const imagesFolder = await ensureFolder('Images');
+  const reportsFolder = await ensureFolder('Reports & Exports');
+  
+  // Create second-level folders
+  await ensureFolder('Legal', documentsFolder.id);
+  await ensureFolder('Waivers', documentsFolder.id);
+  await ensureFolder('Email Templates', templatesFolder.id);
+  
+  console.log('Standard folders initialized successfully');
+}
+
+/**
+ * Get folder tree structure
+ * @returns Nested folder structure
+ */
+export async function getFolderTree(): Promise<any[]> {
+  // Fetch all folders
+  const allFolders = await db.select().from(folders);
+  
+  // Create a map for quick access
+  const folderMap = new Map();
+  allFolders.forEach(folder => {
+    folderMap.set(folder.id, {
+      ...folder,
+      children: []
+    });
+  });
+  
+  // Build the tree
+  const rootFolders = [];
+  
+  allFolders.forEach(folder => {
+    const folderWithChildren = folderMap.get(folder.id);
     
-    if (documentsFolder) {
-      // Check if Legal sub-folder exists
-      const existingSubFolders = await db
-        .select()
-        .from(folders)
-        .where(eq(folders.parentId, documentsFolder.id));
-      
-      const existingSubFolderNames = existingSubFolders.map(f => f.name);
-      
-      // Create Legal sub-folder if it doesn't exist
-      if (!existingSubFolderNames.includes('Legal')) {
-        await db.insert(folders).values({
-          id: uuidv4(),
-          name: 'Legal',
-          parentId: documentsFolder.id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-        console.log('Created Legal sub-folder under Documents');
-      }
-      
-      // Create Waivers sub-folder if it doesn't exist
-      if (!existingSubFolderNames.includes('Waivers')) {
-        await db.insert(folders).values({
-          id: uuidv4(),
-          name: 'Waivers',
-          parentId: documentsFolder.id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-        console.log('Created Waivers sub-folder under Documents');
-      }
-    }
-    
-    // Find the Templates parent folder
-    const [templatesFolder] = await db
-      .select()
-      .from(folders)
-      .where(and(
-        eq(folders.name, STANDARD_FOLDERS.TEMPLATES),
-        isNull(folders.parentId)
-      ));
-    
-    if (templatesFolder) {
-      // Check if Email Templates sub-folder exists
-      const existingSubFolders = await db
-        .select()
-        .from(folders)
-        .where(eq(folders.parentId, templatesFolder.id));
-      
-      const existingSubFolderNames = existingSubFolders.map(f => f.name);
-      
-      // Create Email Templates sub-folder if it doesn't exist
-      if (!existingSubFolderNames.includes('Email Templates')) {
-        await db.insert(folders).values({
-          id: uuidv4(),
-          name: 'Email Templates',
-          parentId: templatesFolder.id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-        console.log('Created Email Templates sub-folder under Templates');
+    if (folder.parentId === null) {
+      // This is a root folder
+      rootFolders.push(folderWithChildren);
+    } else {
+      // This is a child folder
+      const parent = folderMap.get(folder.parentId);
+      if (parent) {
+        parent.children.push(folderWithChildren);
       }
     }
-  } catch (error) {
-    console.error('Error creating sub-folders:', error);
+  });
+  
+  return rootFolders;
+}
+
+/**
+ * Get folder by ID
+ * @param folderId The folder ID
+ * @returns The folder object or null if not found
+ */
+export async function getFolder(folderId: string): Promise<any | null> {
+  if (!folderId) {
+    return null;
   }
+  
+  const [folder] = await db
+    .select()
+    .from(folders)
+    .where(eq(folders.id, folderId));
+  
+  return folder || null;
+}
+
+/**
+ * Create a new folder
+ * @param name The name of the folder
+ * @param parentId The parent folder ID (null for root)
+ * @returns The created folder
+ */
+export async function createFolder(name: string, parentId: string | null = null): Promise<any> {
+  const [newFolder] = await db
+    .insert(folders)
+    .values({
+      id: uuidv4(),
+      name,
+      parentId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .returning();
+  
+  return newFolder;
+}
+
+/**
+ * Delete a folder by ID
+ * @param folderId The folder ID to delete
+ * @returns True if deleted, false if not found
+ */
+export async function deleteFolder(folderId: string): Promise<boolean> {
+  const [folder] = await db
+    .select()
+    .from(folders)
+    .where(eq(folders.id, folderId));
+  
+  if (!folder) {
+    return false;
+  }
+  
+  await db
+    .delete(folders)
+    .where(eq(folders.id, folderId));
+  
+  return true;
+}
+
+/**
+ * Update a folder
+ * @param folderId The folder ID
+ * @param data The data to update
+ * @returns The updated folder or null if not found
+ */
+export async function updateFolder(folderId: string, data: { name?: string, parentId?: string | null }): Promise<any | null> {
+  const [folder] = await db
+    .select()
+    .from(folders)
+    .where(eq(folders.id, folderId));
+  
+  if (!folder) {
+    return null;
+  }
+  
+  const [updatedFolder] = await db
+    .update(folders)
+    .set({
+      name: data.name || folder.name,
+      parentId: data.parentId !== undefined ? data.parentId : folder.parentId,
+      updatedAt: new Date(),
+    })
+    .where(eq(folders.id, folderId))
+    .returning();
+  
+  return updatedFolder;
 }
