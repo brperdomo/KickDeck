@@ -21,6 +21,7 @@ import emailTemplateRoutingsRouter from "./routes/admin/email-template-routings"
 import membersRouter from "./routes/admin/members-router";
 import teamsRouter from "./routes/admin/teams-router";
 import playersRouter from "./routes/admin/players-router";
+import bracketsRouter from "./routes/admin/brackets";
 import { createCoupon, getCoupons, updateCoupon, deleteCoupon } from "./routes/coupons";
 import { getFeeAssignments, updateFeeAssignments } from "./routes/fee-assignments";
 import { createStripePaymentIntent, getPaymentIntentStatus, handleStripeWebhook, getStripeConfig } from "./routes/payments";
@@ -167,6 +168,7 @@ export function registerRoutes(app: Express): Server {
     app.use('/api/admin/files', isAdmin, filesRouter); // File management router
     app.use('/api/admin/folders', isAdmin, foldersRouter); // Folder management router
     app.use('/api/admin/teams', isAdmin, playersRouter); // Player management router
+    app.use('/api/admin', isAdmin, bracketsRouter); // Bracket management router
     
     // Role permissions management endpoints
     app.get('/api/admin/roles', isAdmin, getRolesWithPermissions);
