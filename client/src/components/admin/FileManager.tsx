@@ -781,7 +781,7 @@ export function FileManager({ className, onFileSelect, allowMultiple = false }: 
                           <span className="truncate max-w-[200px]">{file.name}</span>
                         </div>
                       </TableCell>
-                      <TableCell>{file.type.split('/')[1].toUpperCase()}</TableCell>
+                      <TableCell>{file.type && file.type.includes('/') ? file.type.split('/')[1].toUpperCase() : (file.type || 'UNKNOWN')}</TableCell>
                       <TableCell>{formatBytes(file.size)}</TableCell>
                       <TableCell>{formatDate(file.createdAt)}</TableCell>
                       <TableCell>
