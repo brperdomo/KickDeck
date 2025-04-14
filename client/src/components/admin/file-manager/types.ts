@@ -40,6 +40,8 @@ export interface DragItem {
   size?: number; // Optional file size (for files)
   path?: string; // Optional path info
   isSelected?: boolean; // Whether this item was selected before drag
+  isDragging?: boolean; // Whether this item is being dragged
+  preventTextSelection?: boolean; // Flag to prevent text selection during drag
 }
 
 export interface FileBreadcrumb {
