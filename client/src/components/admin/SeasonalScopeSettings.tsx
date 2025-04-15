@@ -32,6 +32,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 
 interface AgeGroupSettings {
   id: number;
@@ -52,6 +53,7 @@ interface SeasonalScope {
   startYear: number;
   endYear: number;
   isActive: boolean;
+  createCoedGroups?: boolean;
   ageGroups: AgeGroupSettings[];
 }
 
@@ -61,6 +63,7 @@ export function SeasonalScopeSettings() {
   const [selectedStartYear, setSelectedStartYear] = useState<string>("");
   const [selectedEndYear, setSelectedEndYear] = useState<string>("");
   const [scopeName, setScopeName] = useState<string>("");
+  const [createCoedGroups, setCreateCoedGroups] = useState<boolean>(false);
   const [ageGroupMappings, setAgeGroupMappings] = useState<AgeGroupSettings[]>([]);
   const [scopeToDelete, setScopeToDelete] = useState<SeasonalScope | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

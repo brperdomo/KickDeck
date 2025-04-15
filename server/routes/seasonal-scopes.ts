@@ -20,6 +20,7 @@ const seasonalScopeSchema = z.object({
   startYear: z.number().min(2000).max(2100),
   endYear: z.number().min(2000).max(2100),
   isActive: z.boolean(),
+  createCoedGroups: z.boolean().default(false),
   ageGroups: z.array(ageGroupSettingsSchema),
 });
 
@@ -98,6 +99,7 @@ router.post('/', async (req, res) => {
         startYear: validatedData.startYear,
         endYear: validatedData.endYear,
         isActive: validatedData.isActive,
+        createCoedGroups: validatedData.createCoedGroups,
       }).returning();
 
       const ageGroupsWithScopeId = validatedData.ageGroups.map(group => ({
@@ -134,6 +136,7 @@ router.patch('/:id', async (req, res) => {
           startYear: validatedData.startYear,
           endYear: validatedData.endYear,
           isActive: validatedData.isActive,
+          createCoedGroups: validatedData.createCoedGroups,
         })
         .where(eq(seasonalScopes.id, parseInt(id)));
 
