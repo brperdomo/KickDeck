@@ -44,16 +44,9 @@ export function BracketsContent() {
     }
   }, [ageGroups, selectedAgeGroupId]);
 
-  // Get the display name for the age group
+  // Get the display name for the age group - use original gender values
   const getAgeGroupDisplayName = (ageGroup: AgeGroup) => {
-    // Properly handle gender display based on actual gender value
-    let genderDisplay = "Mixed";
-    if (ageGroup.gender === 'M' || ageGroup.gender === 'Male') {
-      genderDisplay = 'Boys';
-    } else if (ageGroup.gender === 'F' || ageGroup.gender === 'Female') {
-      genderDisplay = 'Girls';
-    }
-    return `${genderDisplay} ${ageGroup.ageGroup}`;
+    return `${ageGroup.gender} ${ageGroup.ageGroup}`;
   };
 
   // Handle loading state
