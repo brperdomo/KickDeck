@@ -7,8 +7,13 @@
  * Usage: node update-birth-years.js
  */
 
-require('dotenv').config();
-const { Pool } = require('pg');
+import { config } from 'dotenv';
+import pg from 'pg';
+
+// Load environment variables
+config();
+
+const { Pool } = pg;
 
 // Create database connection
 const pool = new Pool({
