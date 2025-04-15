@@ -677,6 +677,7 @@ export const insertSeasonalScopeSchema = createInsertSchema(seasonalScopes, {
   startYear: z.number().int().min(2000).max(2100),
   endYear: z.number().int().min(2000).max(2100),
   isActive: z.boolean(),
+  createCoedGroups: z.boolean().default(false),
 });
 
 export const insertAgeGroupSettingSchema = createInsertSchema(ageGroupSettings, {
