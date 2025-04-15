@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BracketSelector } from "@/components/registration/BracketSelector";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Loader2, 
@@ -36,7 +37,6 @@ import { PaymentElement, CardElement, useStripe, useElements } from "@stripe/rea
 import StripeProvider from "@/components/StripeProvider";
 import { Footer } from "@/components/ui/Footer";
 import { motion, AnimatePresence } from "framer-motion";
-import { BracketSelector } from "@/components/registration/BracketSelector";
 import { 
   Dialog,
   DialogContent,
@@ -491,6 +491,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
   const [players, setPlayers] = useState<PlayerForm[]>([]);
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeGroup | null>(null);
   const [selectedBracket, setSelectedBracket] = useState<number | null>(null);
+  const [availableBrackets, setAvailableBrackets] = useState<any[]>([]);
   
   // Handle redirection to auth pages with proper return URL
   const handleAuthRedirect = () => {
@@ -1102,7 +1103,41 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
   const onSelectAgeGroup = (ageGroup: AgeGroup) => {
     setSelectedAgeGroup(ageGroup);
     teamForm.setValue('ageGroupId', ageGroup.id);
+    
+    // Reset bracket selection when age group changes
+    setSelectedBracket(null);
+    teamForm.setValue('bracketId', null);
   };
+  
+  // Fetch brackets when age group is selected
+  useEffect(() => {
+    if (selectedAgeGroup && eventId) {
+      const fetchBrackets = async () => {
+        try {
+          const response = await fetch(`/api/events/${eventId}/age-groups/${selectedAgeGroup.id}/brackets`);
+          if (!response.ok) {
+            console.error(`Error fetching brackets: Server responded with status ${response.status}`);
+            setAvailableBrackets([]);
+            return;
+          }
+          
+          const data = await response.json();
+          console.log('Fetched brackets:', data);
+          
+          if (Array.isArray(data) && data.length > 0) {
+            setAvailableBrackets(data);
+          } else {
+            setAvailableBrackets([]);
+          }
+        } catch (error) {
+          console.error('Error fetching brackets:', error);
+          setAvailableBrackets([]);
+        }
+      };
+      
+      fetchBrackets();
+    }
+  }, [selectedAgeGroup, eventId]);
   
   const onSubmitTeamRegistration = (data: TeamRegistrationForm) => {
     console.log("Team form submission attempted with data:", data);
