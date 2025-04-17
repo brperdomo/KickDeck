@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { type InsertUser } from "@db/schema";
 import { useUser } from "@/hooks/use-user";
 import { useToast } from "@/hooks/use-toast";
-import { YouTubeBackground } from "@/components/ui/YouTubeBackground";
+import { AnimatedBackground } from "@/components/ui/AnimatedBackground";
 import { PasswordStrength } from "@/components/ui/password-strength";
 import {
   Form,
@@ -197,7 +197,7 @@ export default function Register() {
 
   return (
     <div className="min-h-screen">
-      <YouTubeBackground videoId="OdObDXBzNYk" />
+      <AnimatedBackground type="gradients" primaryColor="#3d3a98" secondaryColor="#2d2a88" speed="medium" />
       
       <div className="relative z-10 flex items-center justify-center min-h-screen">
         <div className="w-full max-w-[min(400px,100%-2rem)] mx-auto">

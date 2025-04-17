@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import { YouTubeBackground } from "@/components/ui/YouTubeBackground";
+import { AnimatedBackground } from "@/components/ui/AnimatedBackground";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -69,7 +69,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen">
-      <YouTubeBackground videoId="OdObDXBzNYk" />
+      <AnimatedBackground type="gradients" primaryColor="#3d3a98" secondaryColor="#2d2a88" speed="medium" />
 
       <div className="relative z-10 flex items-center justify-center min-h-screen">
         <div className="w-full max-w-[min(400px,100%-2rem)] mx-auto">

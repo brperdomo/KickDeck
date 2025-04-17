@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { type InsertUser } from "@db/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { YouTubeBackground } from "@/components/ui/YouTubeBackground";
+import { AnimatedBackground } from "@/components/ui/AnimatedBackground";
 import {
   Form,
   FormControl,
@@ -138,7 +138,7 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen w-full relative">
-      <YouTubeBackground videoId="OdObDXBzNYk" />
+      <AnimatedBackground type="gradients" primaryColor="#3d3a98" secondaryColor="#2d2a88" speed="medium" />
 
       <div className="relative z-10 flex items-center justify-center min-h-screen">
         <div className="w-full max-w-[min(400px,100%-2rem)] mx-auto">
