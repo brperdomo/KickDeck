@@ -7,6 +7,7 @@ import { FileManager } from "@/components/admin/FileManager.tsx";
 import UserRegistrationsView from "@/components/UserRegistrationsView";
 import { MemberLayout } from "@/components/layouts/MemberLayout";
 import { motion } from "framer-motion";
+import { RecentProductUpdates } from "@/components/RecentProductUpdates";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +39,11 @@ export default function UserDashboard() {
             </CardDescription>
           </CardHeader>
         </Card>
+        
+        {/* Product Updates */}
+        <div className="mb-8">
+          <RecentProductUpdates limit={3} />
+        </div>
         
         {/* User Registrations Section */}
         <div className="mt-8">
