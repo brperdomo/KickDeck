@@ -27,6 +27,7 @@ import TeamStatusTest from "@/pages/team-status-test";
 import FormTemplatesPage from "@/pages/form-templates";
 import FormTemplateCreatePage from "@/pages/form-template-create";
 import FormTemplateEditPage from "@/pages/form-template-edit";
+import ProductUpdatesPage from "@/pages/product-updates";
 import { useUser } from "@/hooks/use-user";
 import EventRegistration from "./pages/event-registration";
 import MainLayout from "@/components/layouts/MainLayout";
@@ -183,6 +184,7 @@ function Router() {
           <Route path="/register/event/:eventId">
             {(params) => <EventRegistration eventIdOverride={params.eventId} />}
           </Route>
+          <Route path="/product-updates" component={ProductUpdatesPage} />
           <Route path="/dashboard" component={UserDashboard} />
 
           {/* Preview routes */}
