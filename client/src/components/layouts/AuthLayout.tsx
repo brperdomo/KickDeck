@@ -28,17 +28,16 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       
       setScrollProgress(scrollPercentage);
       
-      // Show footer with more dramatic threshold (30px)
-      if (scrollTop > 30) {
+      // Show footer with smoother animation
+      if (scrollTop > 10) {
         setShowFooter(true);
         footerControls.start({
           opacity: 1,
           y: 0,
           scale: 1,
           transition: { 
-            type: "spring", 
-            stiffness: 260, 
-            damping: 20,
+            type: "tween", 
+            ease: "easeOut",
             duration: 0.5
           }
         });
@@ -46,9 +45,13 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         setShowFooter(false);
         footerControls.start({
           opacity: 0,
-          y: 50,
-          scale: 0.9,
-          transition: { duration: 0.3 }
+          y: 20, // Reduced from 50 to make it less jumpy
+          scale: 0.95, // Less dramatic scale change
+          transition: { 
+            type: "tween",
+            ease: "easeIn",
+            duration: 0.4
+          }
         });
       }
     };
@@ -85,36 +88,11 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         {children}
       </div>
       
-      {/* Scroll indicator that appears at the bottom of the viewport */}
-      {!showFooter && (
-        <motion.div 
-          ref={scrollIndicatorRef}
-          className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-30 flex flex-col items-center"
-          initial="initial"
-          animate="show"
-          variants={indicatorVariants}
-        >
-          <div className="text-[#3d3a98] text-sm font-semibold mb-1">Scroll Down</div>
-          <svg 
-            width="24" 
-            height="24" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            className="text-[#3d3a98]"
-          >
-            <path d="M7 13l5 5 5-5"/>
-            <path d="M7 7l5 5 5-5"/>
-          </svg>
-        </motion.div>
-      )}
+      {/* Scroll indicator removed */}
       
-      {/* Animated footer with more dramatic effects */}
+      {/* Animated footer with smoother transition */}
       <motion.div
-        initial={{ opacity: 0, y: 50, scale: 0.9 }}
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={footerControls}
         className="relative"
       >
