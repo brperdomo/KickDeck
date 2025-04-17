@@ -4,6 +4,7 @@ import { type InsertUser } from "@db/schema";
 import { useUser } from "@/hooks/use-user";
 import { useToast } from "@/hooks/use-toast";
 import { AnimatedBackground } from "@/components/ui/AnimatedBackground";
+import MainLayout from "@/components/layouts/MainLayout";
 import { PasswordStrength } from "@/components/ui/password-strength";
 import {
   Form,
@@ -196,166 +197,168 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen">
-      <AnimatedBackground type="particles" primaryColor="#3d3a98" secondaryColor="#2d2a88" speed="medium" />
-      
-      <div className="relative z-10 flex items-center justify-center min-h-screen">
-        <div className="w-full max-w-[min(400px,100%-2rem)] mx-auto">
-          <Card className="w-full bg-[#3d3a98]/85 backdrop-blur-md shadow-xl border-0">
-            <CardHeader className="space-y-3 pb-6">
-              <div className="flex justify-center">
-                <div className="w-100 h-100">
-                  <img
-                    src="/uploads/MatchProAI_Linear_BlackNOBUFFER.png"
-                    alt="MatchPro Logo"
-                    className="w-full h-full object-contain"
-                  />
+    <MainLayout>
+      <div className="relative">
+        <AnimatedBackground type="particles" primaryColor="#3d3a98" secondaryColor="#2d2a88" speed="medium" />
+        
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="w-full max-w-[min(400px,100%-2rem)] mx-auto">
+            <Card className="w-full bg-[#3d3a98]/85 backdrop-blur-md shadow-xl border-0">
+              <CardHeader className="space-y-3 pb-6">
+                <div className="flex justify-center">
+                  <div className="w-100 h-100">
+                    <img
+                      src="/uploads/MatchProAI_Linear_BlackNOBUFFER.png"
+                      alt="MatchPro Logo"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
                 </div>
-              </div>
-              <CardTitle className="text-2xl sm:text-3xl font-bold text-center text-white">
-                Create Your Account
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-5"
-                  id="register-form"
-                  name="register"
-                  autoComplete="off"
-                >
-                  <FormField
-                    control={form.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base text-white">First Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            autoComplete="given-name"
-                            className="h-11 text-base px-4 bg-white/90 border-white/50 focus:border-white focus:ring-white/50"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="text-yellow-200" />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base text-white">Last Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            autoComplete="family-name"
-                            className="h-11 text-base px-4 bg-white/90 border-white/50 focus:border-white focus:ring-white/50"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="text-yellow-200" />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base text-white">Email</FormLabel>
-                        <FormControl>
-                          <div className="relative">
+                <CardTitle className="text-2xl sm:text-3xl font-bold text-center text-white">
+                  Create Your Account
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-5"
+                    id="register-form"
+                    name="register"
+                    autoComplete="off"
+                  >
+                    <FormField
+                      control={form.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base text-white">First Name</FormLabel>
+                          <FormControl>
                             <Input
-                              type="email"
-                              autoComplete="email"
-                              className={`h-11 text-base px-4 bg-white/90 border-white/50 focus:border-white focus:ring-white/50 ${
-                                emailAvailability?.available === false
-                                  ? "border-red-500 focus:ring-red-500"
-                                  : emailAvailability?.available
-                                  ? "border-green-500 focus:ring-green-500"
-                                  : ""
-                              }`}
+                              autoComplete="given-name"
+                              className="h-11 text-base px-4 bg-white/90 border-white/50 focus:border-white focus:ring-white/50"
                               {...field}
                             />
-                            {isCheckingEmail && (
-                              <div className="absolute right-3 top-3">
-                                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                              </div>
-                            )}
-                          </div>
-                        </FormControl>
-                        <FormMessage className="text-yellow-200" />
-                        {emailAvailability?.available === false && (
-                          <p className="text-sm text-red-300 mt-1">
-                            {emailAvailability.message}
-                          </p>
-                        )}
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base text-white">Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="password"
-                            autoComplete="new-password"
-                            className="h-11 text-base px-4 bg-white/90 border-white/50 focus:border-white focus:ring-white/50"
-                            {...field}
-                          />
-                        </FormControl>
-                        <PasswordStrength password={field.value} />
-                        <FormDescription className="text-white/80 text-sm">
-                          Must be at least 8 characters with a number and special character
-                        </FormDescription>
-                        <FormMessage className="text-yellow-200" />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base text-white">Confirm Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="password"
-                            autoComplete="new-password"
-                            className="h-11 text-base px-4 bg-white/90 border-white/50 focus:border-white focus:ring-white/50"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="text-yellow-200" />
-                      </FormItem>
-                    )}
-                  />
-                  <Button
-                    type="submit"
-                    className="w-full h-11 text-base bg-white hover:bg-white/90 text-[#3d3a98] font-medium transition-colors"
-                    disabled={isCheckingEmail || emailAvailability?.available === false}
-                  >
-                    Create Account
-                  </Button>
-                  <div className="text-center">
-                    <Link href="/auth">
-                      <Button variant="link" className="w-full text-sm text-yellow-200 p-0 h-auto font-semibold hover:text-yellow-100" type="button">
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Back to Login
-                      </Button>
-                    </Link>
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
+                          </FormControl>
+                          <FormMessage className="text-yellow-200" />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base text-white">Last Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              autoComplete="family-name"
+                              className="h-11 text-base px-4 bg-white/90 border-white/50 focus:border-white focus:ring-white/50"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-yellow-200" />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base text-white">Email</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input
+                                type="email"
+                                autoComplete="email"
+                                className={`h-11 text-base px-4 bg-white/90 border-white/50 focus:border-white focus:ring-white/50 ${
+                                  emailAvailability?.available === false
+                                    ? "border-red-500 focus:ring-red-500"
+                                    : emailAvailability?.available
+                                    ? "border-green-500 focus:ring-green-500"
+                                    : ""
+                                }`}
+                                {...field}
+                              />
+                              {isCheckingEmail && (
+                                <div className="absolute right-3 top-3">
+                                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                          </FormControl>
+                          <FormMessage className="text-yellow-200" />
+                          {emailAvailability?.available === false && (
+                            <p className="text-sm text-red-300 mt-1">
+                              {emailAvailability.message}
+                            </p>
+                          )}
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base text-white">Password</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="password"
+                              autoComplete="new-password"
+                              className="h-11 text-base px-4 bg-white/90 border-white/50 focus:border-white focus:ring-white/50"
+                              {...field}
+                            />
+                          </FormControl>
+                          <PasswordStrength password={field.value} />
+                          <FormDescription className="text-white/80 text-sm">
+                            Must be at least 8 characters with a number and special character
+                          </FormDescription>
+                          <FormMessage className="text-yellow-200" />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base text-white">Confirm Password</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="password"
+                              autoComplete="new-password"
+                              className="h-11 text-base px-4 bg-white/90 border-white/50 focus:border-white focus:ring-white/50"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-yellow-200" />
+                        </FormItem>
+                      )}
+                    />
+                    <Button
+                      type="submit"
+                      className="w-full h-11 text-base bg-white hover:bg-white/90 text-[#3d3a98] font-medium transition-colors"
+                      disabled={isCheckingEmail || emailAvailability?.available === false}
+                    >
+                      Create Account
+                    </Button>
+                    <div className="text-center">
+                      <Link href="/auth">
+                        <Button variant="link" className="w-full text-sm text-yellow-200 p-0 h-auto font-semibold hover:text-yellow-100" type="button">
+                          <ArrowLeft className="h-4 w-4 mr-2" />
+                          Back to Login
+                        </Button>
+                      </Link>
+                    </div>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 }

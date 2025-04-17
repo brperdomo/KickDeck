@@ -11,12 +11,14 @@ export function Footer() {
   }
   
   return (
-    <footer className="py-4 px-6 text-center text-sm text-gray-600 border-t mt-auto">
+    <footer className="py-4 px-6 text-center text-sm border-t mt-auto relative z-10">
       <div className="container mx-auto flex flex-col items-center justify-center gap-2">
-        <p>
-          Powered by <Link href="https://matchpro.ai" className="font-semibold text-primary hover:underline">MatchPro</Link>
+        <p className={location.includes('/auth') || location.includes('/register') || location.includes('/forgot-password') ? 'text-yellow-200' : 'text-gray-600'}>
+          Powered by <Link href="https://matchpro.ai" className={`font-semibold ${location.includes('/auth') || location.includes('/register') || location.includes('/forgot-password') ? 'text-yellow-300 hover:text-yellow-100' : 'text-primary hover:underline'}`}>MatchPro</Link>
         </p>
-        <p>&copy; {currentYear} MatchPro. All rights reserved.</p>
+        <p className={location.includes('/auth') || location.includes('/register') || location.includes('/forgot-password') ? 'text-yellow-200' : 'text-gray-600'}>
+          &copy; {currentYear} MatchPro. All rights reserved.
+        </p>
       </div>
     </footer>
   );
