@@ -156,11 +156,41 @@ function Router() {
             {user.isAdmin ? React.createElement(lazy(() => import('./pages/file-manager'))) : <NotFound />}
           </Route>
           <Route path="/admin/events">
-            {user.isAdmin ? <AdminDashboard /> : <NotFound />}
+            {user.isAdmin ? <AdminDashboard initialView="events" /> : <NotFound />}
+          </Route>
+          <Route path="/admin/teams">
+            {user.isAdmin ? <AdminDashboard initialView="teams" /> : <NotFound />}
+          </Route>
+          <Route path="/admin/administrators">
+            {user.isAdmin ? <AdminDashboard initialView="administrators" /> : <NotFound />}
+          </Route>
+          <Route path="/admin/complexes">
+            {user.isAdmin ? <AdminDashboard initialView="complexes" /> : <NotFound />}
+          </Route>
+          <Route path="/admin/households">
+            {user.isAdmin ? <AdminDashboard initialView="households" /> : <NotFound />}
+          </Route>
+          <Route path="/admin/scheduling">
+            {user.isAdmin ? <AdminDashboard initialView="scheduling" /> : <NotFound />}
+          </Route>
+          <Route path="/admin/reports">
+            {user.isAdmin ? <AdminDashboard initialView="reports" /> : <NotFound />}
+          </Route>
+          <Route path="/admin/members">
+            {user.isAdmin ? <AdminDashboard initialView="members" /> : <NotFound />}
+          </Route>
+          <Route path="/admin/roles">
+            {user.isAdmin ? <AdminDashboard initialView="roles" /> : <NotFound />}
+          </Route>
+          <Route path="/admin/account">
+            {user.isAdmin ? <AdminDashboard initialView="account" /> : <NotFound />}
+          </Route>
+          <Route path="/admin/settings">
+            {user.isAdmin ? <AdminDashboard initialView="settings" /> : <NotFound />}
           </Route>
           {/* We'll enhance the main dashboard with animations directly */}
           <Route path="/admin">
-            {user.isAdmin ? <AdminDashboard /> : <NotFound />}
+            {user.isAdmin ? <AdminDashboard initialView="events" /> : <NotFound />}
           </Route>
 
           {/* User routes */}
@@ -191,7 +221,7 @@ function Router() {
 
           {/* Home route */}
           <Route path="/">
-            {user.isAdmin ? <AdminDashboard /> : <UserDashboard />}
+            {user.isAdmin ? <AdminDashboard initialView="events" /> : <UserDashboard />}
           </Route>
 
           {/* 404 route */}

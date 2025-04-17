@@ -4092,11 +4092,15 @@ function NavigationButton({ view, activeView, onClick, icon, label, permission }
   );
 }
 
-function AdminDashboard() {
+interface AdminDashboardProps {
+  initialView?: View;
+}
+
+function AdminDashboard({ initialView = 'events' }: AdminDashboardProps) {
   const { user, logout, isLoading: isUserLoading } = useUser();
   const { hasPermission } = usePermissions();
-  const [, setLocation] = useLocation();
-  const [activeView, setActiveView] = useState<View>('events');
+  const [location, setLocation] = useLocation();
+  const [activeView, setActiveView] = useState<View>(initialView);
   const [showWelcome, setShowWelcome] = useState(true);
   const [activeSettingsView, setActiveSettingsView] = useState<SettingsView>('general');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
