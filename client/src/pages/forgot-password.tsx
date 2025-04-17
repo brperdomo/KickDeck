@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
+import MainLayout from "@/components/layouts/MainLayout";
 import {
   Form,
   FormControl,
@@ -68,81 +69,83 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen">
-      <AnimatedBackground type="particles" primaryColor="#3d3a98" secondaryColor="#2d2a88" speed="medium" />
+    <MainLayout>
+      <div className="relative">
+        <AnimatedBackground type="particles" primaryColor="#3d3a98" secondaryColor="#2d2a88" speed="medium" />
 
-      <div className="relative z-10 flex items-center justify-center min-h-screen">
-        <div className="w-full max-w-[min(400px,100%-2rem)] mx-auto">
-          <Card className="w-full bg-[#3d3a98]/85 backdrop-blur-md shadow-xl border-0">
-            <CardHeader className="space-y-3 pb-6">
-              <div className="flex justify-center">
-                <div className="w-100 h-100">
-                  <img
-                    src="/uploads/MatchProAI_Linear_BlackNOBUFFER.png"
-                    alt="MatchPro Logo"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-              </div>
-              <CardTitle className="text-2xl sm:text-3xl font-bold text-center text-white">
-                Reset Password
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-5"
-                  id="reset-form"
-                >
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base text-white">Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="email"
-                            autoComplete="email"
-                            className="h-11 text-base px-4 bg-white/90 border-white/50 focus:border-white focus:ring-white/50"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="text-yellow-200" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button
-                    type="submit"
-                    className="w-full h-11 text-base bg-white hover:bg-white/90 text-[#3d3a98] font-medium transition-colors"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Sending...
-                      </>
-                    ) : (
-                      'Send Reset Instructions'
-                    )}
-                  </Button>
-
-                  <div className="text-center">
-                    <Link href="/auth">
-                      <Button variant="link" className="w-full text-sm text-yellow-200 p-0 h-auto font-semibold hover:text-yellow-100" type="button">
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Back to Login
-                      </Button>
-                    </Link>
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="w-full max-w-[min(400px,100%-2rem)] mx-auto">
+            <Card className="w-full bg-[#3d3a98]/85 backdrop-blur-md shadow-xl border-0">
+              <CardHeader className="space-y-3 pb-6">
+                <div className="flex justify-center">
+                  <div className="w-100 h-100">
+                    <img
+                      src="/uploads/MatchProAI_Linear_BlackNOBUFFER.png"
+                      alt="MatchPro Logo"
+                      className="w-full h-full object-contain"
+                    />
                   </div>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
+                </div>
+                <CardTitle className="text-2xl sm:text-3xl font-bold text-center text-white">
+                  Reset Password
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-5"
+                    id="reset-form"
+                  >
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base text-white">Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              autoComplete="email"
+                              className="h-11 text-base px-4 bg-white/90 border-white/50 focus:border-white focus:ring-white/50"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-yellow-200" />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button
+                      type="submit"
+                      className="w-full h-11 text-base bg-white hover:bg-white/90 text-[#3d3a98] font-medium transition-colors"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        'Send Reset Instructions'
+                      )}
+                    </Button>
+
+                    <div className="text-center">
+                      <Link href="/auth">
+                        <Button variant="link" className="w-full text-sm text-yellow-200 p-0 h-auto font-semibold hover:text-yellow-100" type="button">
+                          <ArrowLeft className="h-4 w-4 mr-2" />
+                          Back to Login
+                        </Button>
+                      </Link>
+                    </div>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 }
