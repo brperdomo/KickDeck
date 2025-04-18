@@ -35,6 +35,7 @@ import { FeeManagement } from "@/components/events/FeeManagement";
 import FeeManagementPage from "@/pages/fee-management";
 import FormEditorPage from "@/pages/form-editor";
 import CouponManagerPage from "@/pages/coupon-manager";
+import RegistrationOrdersReport from "@/pages/registration-orders-report";
 import { AuthProvider } from "@/hooks/use-auth";
 // Account page import
 import AccountPage from "./pages/account";
@@ -215,6 +216,9 @@ function Router() {
             {(params) => <EventRegistration eventIdOverride={params.eventId} />}
           </Route>
           <Route path="/product-updates" component={ProductUpdatesPage} />
+          <Route path="/registration-orders-report">
+            {user.isAdmin ? <RegistrationOrdersReport /> : <NotFound />}
+          </Route>
           <Route path="/dashboard" component={UserDashboard} />
 
           {/* Preview routes */}
