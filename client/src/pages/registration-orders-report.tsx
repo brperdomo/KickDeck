@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { AdminLayout } from "@/components/layouts/AdminLayout";
+import { AdminLayout } from "@/components/layouts/AdminLayout.tsx";
 import { usePermissions } from "@/hooks/use-permissions";
 
 const PaymentStatusBadge = ({ status }) => {
