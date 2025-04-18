@@ -877,6 +877,7 @@ function ReportsView() {
   const [selectedReport, setSelectedReport] = useState<ReportType>('financial');
   const [selectedFinancialReport, setSelectedFinancialReport] = useState<string>('accounting-codes');
   const { isExporting, startExport } = useExportProcess();
+  const navigate = useLocation()[1];
   const [isAccountingCodeModalOpen, setIsAccountingCodeModalOpen] = useState(false);
   const [selectedAccountingCode, setSelectedAccountingCode] = useState<{
     id: number;
@@ -945,6 +946,7 @@ function ReportsView() {
                   onChange={(e) => setSelectedFinancialReport(e.target.value)}
                 >
                   <option value="accounting-codes">Accounting Codes</option>
+                  <option value="registration-orders">Registration Orders</option>
                   <option value="fees-by-event">Fees by Event</option>
                   <option value="fees-by-age-group">Fees by Age Group</option>
                 </select>
@@ -1056,6 +1058,24 @@ function ReportsView() {
                   </div>
                 </CardContent>
               </Card>
+            )}
+            {selectedFinancialReport === 'registration-orders' && (
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle>Registration Orders Report</CardTitle>
+                    <CardDescription>View and manage all payment transactions for team registrations</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex justify-center items-center py-4">
+                      <Button onClick={() => navigate('/registration-orders-report')} className="space-x-2">
+                        <FileText className="w-4 h-4" />
+                        <span>Open Registration Orders Report</span>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             )}
           </div>
         );
