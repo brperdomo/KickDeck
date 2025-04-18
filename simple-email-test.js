@@ -13,7 +13,8 @@ const password = process.env.SMTP_PASSWORD;
 const secure = process.env.SMTP_SECURE === 'true';
 
 // Test email recipient - will send to self by default
-const TEST_RECIPIENT = process.argv[2] || process.env.SMTP_USER;
+// Replace this with your actual email for testing
+const TEST_RECIPIENT = process.argv[2] || "your-email@example.com";
 
 console.log(`
 ==============================================
