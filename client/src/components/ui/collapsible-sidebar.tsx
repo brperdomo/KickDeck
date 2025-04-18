@@ -94,6 +94,7 @@ export function CollapsibleSidebar({
       <div className="relative">
         <AnimatePresence initial={false}>
           {!isCollapsed ? (
+            // Expanded sidebar
             <motion.div
               className={cn(
                 "flex flex-col h-screen border-r transition-all",
@@ -135,17 +136,17 @@ export function CollapsibleSidebar({
                 {children}
               </div>
               
-              {/* Toggle button */}
+              {/* Toggle button for expanded state */}
               {showToggle && !shouldAutoCollapse && (
                 <div className={toggleClasses}>
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6 p-0"
-                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    onClick={() => setIsCollapsed(true)}
                   >
                     {togglePosition === "left" || togglePosition === "right" ? (
-                      isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />
+                      <ChevronLeft className="h-4 w-4" />
                     ) : (
                       <Menu className="h-4 w-4" />
                     )}
@@ -154,7 +155,7 @@ export function CollapsibleSidebar({
               )}
             </motion.div>
           ) : (
-            /* Collapsed state */
+            // Collapsed sidebar - just a thin line
             <motion.div
               className={cn(
                 "flex flex-col h-screen border-r transition-all",
@@ -166,27 +167,23 @@ export function CollapsibleSidebar({
               initial={{ width: shouldAutoCollapse ? 0 : 40 }}
               animate={{ width: shouldAutoCollapse ? 0 : 10 }}
               transition={{ duration: 0.25, ease: "easeInOut" }}
-            >
-              {/* Toggle button in collapsed state */}
-              {showToggle && !shouldAutoCollapse && (
-                <div className={toggleClasses}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 p-0"
-                    onClick={() => setIsCollapsed(!isCollapsed)}
-                  >
-                    {togglePosition === "left" || togglePosition === "right" ? (
-                      isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />
-                    ) : (
-                      <Menu className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              )}
-            </motion.div>
+            />
           )}
         </AnimatePresence>
+        
+        {/* Dedicated Toggle button for collapsed state - always visible when collapsed */}
+        {isCollapsed && showToggle && !shouldAutoCollapse && (
+          <div className={toggleClasses}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 p-0"
+              onClick={() => setIsCollapsed(false)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
         
         {/* Mobile toggle button */}
         {shouldAutoCollapse && isCollapsed && (
