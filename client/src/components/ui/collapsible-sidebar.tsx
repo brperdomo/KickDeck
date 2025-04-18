@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useMobileContext } from '@/hooks/use-mobile';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface CollapsibleSidebarProps {
   children: React.ReactNode;
@@ -55,7 +56,7 @@ export function CollapsibleSidebar({
   
   // Handle width that might be passed as "w-64" format
   let actualExpandedWidth = width || expandedWidth;
-  if (actualExpandedWidth && actualExpandedWidth.startsWith('w-')) {
+  if (actualExpandedWidth && typeof actualExpandedWidth === 'string' && actualExpandedWidth.startsWith('w-')) {
     actualExpandedWidth = actualExpandedWidth.replace('w-', '');
   }
   
@@ -83,10 +84,10 @@ export function CollapsibleSidebar({
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
   
+  // Mobile view with slide-out menu
   if (isMobileView) {
     return (
       <>
-        {/* Mobile menu button */}
         <Button
           variant="ghost"
           size="sm"
@@ -96,44 +97,40 @@ export function CollapsibleSidebar({
           <Menu className="h-5 w-5" />
         </Button>
         
-        {/* Mobile sidebar (sheet from the side) */}
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetContent
             side={position}
-            className={cn(
-              "p-0 w-80",
-              className
-            )}
+            className={cn("p-0 w-80", className)}
           >
             <div className="h-full overflow-y-auto flex flex-col">
-            {headerContent && (
-              <div className="p-4 border-b">
-                {headerContent}
+              {headerContent && (
+                <div className="p-4 border-b">
+                  {headerContent}
+                </div>
+              )}
+              <div className="flex-1 overflow-auto">
+                {children}
               </div>
-            )}
-            <div className="flex-1 overflow-auto">
-              {children}
             </div>
-          </div>
           </SheetContent>
         </Sheet>
       </>
     );
   }
   
+  // Desktop view with collapsible sidebar
   return (
-    <div
-      className={cn(
-        "relative h-full transition-all duration-300 ease-in-out border-r bg-card",
-        isCollapsed ? `w-[${collapsedWidth}]` : `w-[${actualExpandedWidth}]`,
-        className
-      )}
-      style={{ 
-        width: isCollapsed ? collapsedWidth : actualExpandedWidth,
-        ...sidebarStyles
+    <motion.div
+      className={cn("relative h-full border-r bg-card overflow-hidden", className)}
+      initial={false}
+      animate={{ width: isCollapsed ? collapsedWidth : actualExpandedWidth }}
+      transition={{ 
+        type: "spring",
+        stiffness: 350,
+        damping: 30
       }}
+      style={sidebarStyles}
     >
-      {/* Desktop sidebar content */}
       <div className="h-full overflow-hidden flex flex-col">
         {headerContent && (
           <div className="p-4 border-b">
@@ -145,25 +142,35 @@ export function CollapsibleSidebar({
         </div>
       </div>
       
-      {/* Toggle button */}
       {actualShowToggle && (
         <Button
           variant="ghost"
           size="sm"
           className={cn(
-            "absolute -right-3 top-16 rounded-full w-6 h-6 p-0 bg-background border shadow-sm",
+            "absolute z-10 -right-3 top-16 rounded-full w-6 h-6 p-0 bg-background border shadow-sm",
             position === "right" && "-left-3 right-auto",
             togglePosition === "bottom" && "top-auto bottom-16"
           )}
           onClick={toggleCollapse}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {isCollapsed ? (
-            position === "left" ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />
-          ) : (
-            position === "left" ? <ChevronLeft className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />
-          )}
+          <AnimatePresence initial={false} mode="wait">
+            <motion.div
+              key={isCollapsed ? "collapsed" : "expanded"}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              {isCollapsed ? (
+                position === "left" ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />
+              ) : (
+                position === "left" ? <ChevronLeft className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />
+              )}
+            </motion.div>
+          </AnimatePresence>
         </Button>
       )}
-    </div>
+    </motion.div>
   );
 }
