@@ -1,0 +1,33 @@
+event-registration.tsx:1147 
+            
+            
+           POST https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.repl.co/api/events/1251362271/register-team 500 (Internal Server Error)
+mutationFn @ event-registration.tsx:1147
+fn @ @tanstack_react-query.js?v=b6082e80:1188
+run @ @tanstack_react-query.js?v=b6082e80:493
+start @ @tanstack_react-query.js?v=b6082e80:535
+execute @ @tanstack_react-query.js?v=b6082e80:1224
+await in execute
+mutate @ @tanstack_react-query.js?v=b6082e80:2649
+(anonymous) @ @tanstack_react-query.js?v=b6082e80:3320
+onSuccess @ event-registration.tsx:2511
+handleSubmit @ event-registration.tsx:369
+await in handleSubmit
+callCallback2 @ chunk-RPCDYKBN.js?v=b6082e80:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=b6082e80:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=b6082e80:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=b6082e80:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=b6082e80:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=b6082e80:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=b6082e80:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=b6082e80:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=b6082e80:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=b6082e80:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=b6082e80:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=b6082e80:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=b6082e80:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=b6082e80:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=b6082e80:5449Understand this error
+AnimatedEventBackground.tsx:36 AnimatedEventBackground CONSTRUCTOR - Received colors: {primaryColor: '#ede8e8', secondaryColor: '#f9002a', type: 'particles', opacity: 0.6}
+AnimatedEventBackground.tsx:36 AnimatedEventBackground CONSTRUCTOR - Received colors: {primaryColor: '#ede8e8', secondaryColor: '#f9002a', type: 'particles', opacity: 0.6}
+304AnimatedEventBackground.tsx:162 Animation frame running, particles: 263 Canvas size: 1435 x 919
