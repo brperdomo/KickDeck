@@ -714,30 +714,45 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
 
     return (
       <div className="flex items-center justify-center mb-8">
-        {steps.map((step, index) => (
-          <div key={step.key} className="flex items-center">
-            <div className={`flex flex-col items-center ${currentStep === step.key ? '' : 'text-gray-400'}`}
-                 style={{ color: currentStep === step.key ? (event?.branding?.primaryColor || '#2C5282') : undefined }}>
-              <div 
-                className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 text-white
-                ${index < steps.findIndex(s => s.key === currentStep) ? 'bg-[#48BB78]' : 'bg-gray-200'}`}
-                style={{ 
-                  backgroundColor: currentStep === step.key ? (event?.branding?.primaryColor || '#2C5282') : undefined
-                }}>
-                {index < steps.findIndex(s => s.key === currentStep) ? (
-                  <CheckCircle2 className="w-5 h-5" />
-                ) : (
-                  index + 1
-                )}
+        {steps.map((step, index) => {
+          const isActive = currentStep === step.key;
+          const isCompleted = index < steps.findIndex(s => s.key === currentStep);
+          const stepColor = isActive ? 
+            (event?.branding?.primaryColor || '#2C5282') : 
+            (isCompleted ? '#48BB78' : '#718096'); // Darker gray for better visibility
+          
+          return (
+            <div key={step.key} className="flex items-center">
+              <div className="flex flex-col items-center">
+                <div 
+                  className="w-8 h-8 rounded-full flex items-center justify-center mb-2 text-white shadow"
+                  style={{ 
+                    backgroundColor: stepColor,
+                    boxShadow: isActive ? '0 2px 4px rgba(0,0,0,0.2)' : 'none'
+                  }}>
+                  {isCompleted ? (
+                    <CheckCircle2 className="w-5 h-5" />
+                  ) : (
+                    <span className="font-semibold">{index + 1}</span>
+                  )}
+                </div>
+                <span 
+                  className={`text-sm font-medium ${isActive ? 'font-semibold' : ''}`}
+                  style={{ 
+                    color: isActive ? '#111827' : (isCompleted ? '#1F2937' : '#4B5563')
+                  }}>
+                  {step.label}
+                </span>
               </div>
-              <span className="text-sm">{step.label}</span>
+              {index < steps.length - 1 && (
+                <div className="w-20 h-[3px] mx-1.5" style={{ 
+                  backgroundColor: isCompleted ? '#48BB78' : '#D1D5DB',
+                  boxShadow: isCompleted ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'
+                }} />
+              )}
             </div>
-            {index < steps.length - 1 && (
-              <div className={`w-24 h-[2px] mx-2 
-                ${index < steps.findIndex(s => s.key === currentStep) ? 'bg-[#48BB78]' : 'bg-gray-200'}`} />
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -1284,38 +1299,39 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
     );
   }
 
-  // Enhanced logging for debugging branding issues
-  console.log('Rendering event registration with event data:', { 
-    eventId, 
-    hasBranding: !!event?.branding,
-    primaryColor: event?.branding?.primaryColor,
-    secondaryColor: event?.branding?.secondaryColor,
-    brandingObject: event?.branding
-  });
-
-  // Force the colors to display for testing (regardless of event branding)
+  // Use event branding colors if they exist
   const primaryColor = event?.branding?.primaryColor || '#3498db';
   const secondaryColor = event?.branding?.secondaryColor || '#e74c3c';
-  const shouldShowBranding = true; // Force to true for testing
+  const hasBranding = !!event?.branding?.primaryColor && !!event?.branding?.secondaryColor;
+  
+  // Get contrast color for text (either white or black based on background color)
+  const getContrastColor = (hexColor: string) => {
+    // Remove # if present
+    const hex = hexColor.replace(/^#/, '');
+    // Convert to RGB
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    // Calculate luminance - a measure of brightness
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    // Return white for dark colors, dark gray for light colors
+    return luminance > 0.55 ? '#111827' : '#ffffff';
+  };
+  
+  // Calculate contrast color for primary color (used for buttons)
+  const primaryContrastColor = getContrastColor(primaryColor);
   
   return (
     <div className="min-h-screen relative register-event-page">
       {/* Display themed background using event branding colors */}
-      {shouldShowBranding ? (
-        <>
-          {/* Debug element to verify positioning */}
-          <div className="fixed top-2 right-2 bg-black text-white p-2 z-50 text-xs rounded">
-            Background active: Primary: {primaryColor}, Secondary: {secondaryColor}
-          </div>
-          
-          <AnimatedEventBackground 
-            primaryColor={primaryColor}
-            secondaryColor={secondaryColor}
-            type="particles" 
-            opacity={0.6}
-            className="opacity-90"
-          />
-        </>
+      {hasBranding ? (
+        <AnimatedEventBackground 
+          primaryColor={primaryColor}
+          secondaryColor={secondaryColor}
+          type="particles" 
+          opacity={0.6}
+          className="opacity-90"
+        />
       ) : (
         <SoccerFieldBackground className="opacity-50" />
       )}
@@ -1360,9 +1376,11 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                   </p>
                   <Button 
                     size="lg"
-                    className="text-white font-semibold px-8"
+                    className="font-semibold px-8"
                     style={{ 
                       backgroundColor: event?.branding?.primaryColor || '#2C5282',
+                      color: primaryContrastColor,
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                     }}
                     onClick={handleAuthRedirect}
                   >
@@ -1500,8 +1518,12 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                     </Button>
                     <Button 
                       type="submit"
-                      className="text-white"
-                      style={{ backgroundColor: event?.branding?.primaryColor || '#2C5282' }}
+                      className="font-medium"
+                      style={{ 
+                        backgroundColor: event?.branding?.primaryColor || '#2C5282',
+                        color: primaryContrastColor,
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)' 
+                      }}
                       disabled={updatePersonalDetailsMutation.isPending}
                     >
                       {updatePersonalDetailsMutation.isPending ? (
