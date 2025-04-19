@@ -499,22 +499,37 @@ export function registerRoutes(app: Express): Server {
         const brandingSettings = settings.filter(setting => 
           setting.settingKey.startsWith('branding.'));
           
-        let brandingData = {};
+        // Initialize with default colors to ensure we always have values
+        let brandingData = {
+          logoUrl: '',
+          primaryColor: '#007AFF',   // Default blue
+          secondaryColor: '#34C759'  // Default green
+        };
         
         if (brandingSettings.length > 0) {
           brandingSettings.forEach(setting => {
             const key = setting.settingKey.replace('branding.', '');
-            brandingData[key] = setting.settingValue;
+            // Only override default values if the setting exists and has a value
+            if (setting.settingValue) {
+              // Use a type-safe approach for setting values
+              if (key === 'logoUrl') {
+                brandingData.logoUrl = setting.settingValue;
+              } else if (key === 'primaryColor') {
+                brandingData.primaryColor = setting.settingValue;
+              } else if (key === 'secondaryColor') {
+                brandingData.secondaryColor = setting.settingValue;
+              }
+            }
           });
         }
+        
+        console.log('Processed event branding data:', brandingData);
 
         // Send event details, age groups, and branding
         res.json({
           ...event,
           ageGroups: uniqueAgeGroups,
-          branding: Object.keys(brandingData).length > 0 
-            ? brandingData 
-            : { logoUrl: null, primaryColor: null, secondaryColor: null }
+          branding: brandingData
         });
       } catch (error) {
         console.error('Error fetching event:', error);
