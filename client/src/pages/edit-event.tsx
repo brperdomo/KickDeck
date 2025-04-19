@@ -174,16 +174,24 @@ export default function EditEvent() {
     complexFieldSizes: eventQuery.data.complexFieldSizes || {},
     scoringRules: eventQuery.data.scoringRules || [],
     settings: eventQuery.data.settings || [],
-    branding: hasBranding ? {
-      logoUrl: eventQuery.data.branding.logoUrl || "",
-      primaryColor: eventQuery.data.branding.primaryColor || "#007AFF",
-      secondaryColor: eventQuery.data.branding.secondaryColor || "#34C759"
-    } : {
-      logoUrl: "",
-      primaryColor: "#007AFF",
-      secondaryColor: "#34C759"
+    // Process branding data - prefer data from the API directly first, then fallback to settings
+    branding: {
+      logoUrl: eventQuery.data.branding?.logoUrl || 
+               eventQuery.data.settings?.find((s: any) => s.key === 'branding.logoUrl')?.value || 
+               "",
+               
+      primaryColor: eventQuery.data.branding?.primaryColor || 
+                    eventQuery.data.settings?.find((s: any) => s.key === 'branding.primaryColor')?.value || 
+                    "#007AFF",
+                    
+      secondaryColor: eventQuery.data.branding?.secondaryColor || 
+                     eventQuery.data.settings?.find((s: any) => s.key === 'branding.secondaryColor')?.value || 
+                     "#34C759"
     }
   };
+  
+  // Log the final branding data for debugging
+  console.log('Final branding data for EventForm:', eventData.branding);
 
   console.log('Prepared event data:', eventData);
 
