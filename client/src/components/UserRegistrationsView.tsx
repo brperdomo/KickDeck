@@ -3,8 +3,9 @@ import { Link } from 'wouter';
 import { formatDate } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { PaymentStatusBadge, TeamStatusBadge } from '@/components/ui/payment-status-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -40,35 +41,7 @@ export default function UserRegistrationsView() {
   // Extract registrations array from the response
   const registrations = data?.registrations || [];
 
-  // Get badge for team status
-  const getTeamStatusBadge = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return <Badge className="bg-blue-500"><CheckCircle className="w-3 h-3 mr-1" /> Approved</Badge>;
-      case 'rejected':
-        return <Badge className="bg-red-500"><XCircle className="w-3 h-3 mr-1" /> Rejected</Badge>;
-      case 'withdrawn':
-        return <Badge className="bg-slate-500"><XCircle className="w-3 h-3 mr-1" /> Withdrawn</Badge>;
-      case 'registered':
-      default:
-        return <Badge className="bg-yellow-500"><Clock className="w-3 h-3 mr-1" /> Pending Approval</Badge>;
-    }
-  };
-  
-  // Get badge for payment status
-  const getPaymentStatusBadge = (paymentStatus: string | undefined) => {
-    switch (paymentStatus) {
-      case 'paid':
-        return <Badge className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" /> Paid</Badge>;
-      case 'refunded':
-        return <Badge className="bg-purple-500"><CheckCircle className="w-3 h-3 mr-1" /> Refunded</Badge>;
-      case 'failed':
-        return <Badge className="bg-red-500"><XCircle className="w-3 h-3 mr-1" /> Payment Failed</Badge>;
-      case 'pending':
-      default:
-        return <Badge className="bg-amber-500"><Clock className="w-3 h-3 mr-1" /> Payment Pending</Badge>;
-    }
-  };
+  // Using the centralized status badge components instead of local implementations
 
   if (isLoading) {
     return (
@@ -119,9 +92,9 @@ export default function UserRegistrationsView() {
                 </CardDescription>
               </div>
               <div className="flex flex-col gap-2">
-                {/* Show both team status and payment status badges */}
-                {getTeamStatusBadge(registration.status)}
-                {getPaymentStatusBadge(registration.paymentStatus)}
+                {/* Show both team status and payment status badges using the standardized components */}
+                <TeamStatusBadge status={registration.status} />
+                <PaymentStatusBadge status={registration.paymentStatus} />
               </div>
             </div>
           </CardHeader>

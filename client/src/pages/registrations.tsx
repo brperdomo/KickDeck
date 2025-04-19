@@ -26,14 +26,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  CheckCircle,
-  XCircle,
-  Clock,
-  CreditCard,
   AlertCircle,
   Calendar,
   FileText,
 } from "lucide-react";
+import { PaymentStatusBadge, TeamStatusBadge } from "@/components/ui/payment-status-badge";
 import { formatDistanceToNow } from "date-fns";
 import { MemberLayout } from "@/components/layouts/MemberLayout";
 import { motion } from "framer-motion";
