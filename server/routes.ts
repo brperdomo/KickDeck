@@ -3575,15 +3575,32 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             
           // Handle branding settings
           if (eventData.branding) {
+            // Log branding data for debugging
+            console.log('Processing branding data in update:', eventData.branding);
+            
             // Process each branding property and save in event_settings
+            // Use default values if not provided to ensure we always have colors set
             const brandingProps = [
-              { key: 'branding.logoUrl', value: eventData.branding.logoUrl },
-              { key: 'branding.primaryColor', value: eventData.branding.primaryColor },
-              { key: 'branding.secondaryColor', value: eventData.branding.secondaryColor }
+              { 
+                key: 'branding.logoUrl', 
+                value: eventData.branding.logoUrl 
+              },
+              { 
+                key: 'branding.primaryColor', 
+                value: eventData.branding.primaryColor || '#007AFF'  // Default blue if not provided
+              },
+              { 
+                key: 'branding.secondaryColor', 
+                value: eventData.branding.secondaryColor || '#34C759'  // Default green if not provided 
+              }
             ];
             
             for (const { key, value } of brandingProps) {
-              if (value !== undefined) {
+              // For colors, always ensure we have a value (the default if nothing provided)
+              // For logoUrl, only process if actually provided
+              if ((key.includes('Color') || value !== undefined)) {
+                console.log(`Saving branding setting: ${key} = ${value}`);
+                
                 // Check if setting already exists
                 const existingSetting = await tx
                   .select()
@@ -3602,17 +3619,21 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
                       updatedAt: new Date().toISOString()
                     })
                     .where(eq(eventSettings.id, existingSetting[0].id));
-                } else if (value) {
-                  // Insert new setting (only if value exists)
+                  
+                  console.log(`Updated existing branding setting: ${key}`);
+                } else {
+                  // Insert new setting
                   await tx
                     .insert(eventSettings)
                     .values({
                       eventId,
                       settingKey: key,
-                      settingValue: value,
+                      settingValue: value || '',
                       createdAt: new Date().toISOString(),
                       updatedAt: new Date().toISOString()
                     });
+                  
+                  console.log(`Inserted new branding setting: ${key}`);
                 }
               }
             }
