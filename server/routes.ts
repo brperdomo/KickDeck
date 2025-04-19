@@ -495,12 +495,15 @@ export function registerRoutes(app: Express): Server {
           { ageGroup: 'U6', birthYear: 2019, gender: 'Girls', divisionCode: 'G2019' }
         ];
         
-        // Add any standard age groups that are missing
+        // Check for missing standard age groups but don't try to insert them directly in this endpoint
         for (const standardGroup of STANDARD_AGE_GROUPS) {
           if (!uniqueMap.has(standardGroup.divisionCode)) {
-            // Add the missing standard age group
-            const newGroup = {
-              id: null, // Will be assigned by database when inserted
+            console.log(`Adding missing standard age group: ${standardGroup.divisionCode} to the response`);
+            
+            // Instead of trying to insert with null ID, just add it to the response
+            // We won't persist this to the database here - it will be properly created later if needed
+            const dummyAgeGroup = {
+              id: 0, // Use a dummy ID for the response; this won't be persisted
               eventId: parsedEventId.toString(),
               ageGroup: standardGroup.ageGroup,
               gender: standardGroup.gender,
@@ -516,11 +519,8 @@ export function registerRoutes(app: Express): Server {
               birthDateEnd: new Date(standardGroup.birthYear, 11, 31).toISOString().split('T')[0]
             };
             
-            // Insert it into the database for future use
-            await db.insert(eventAgeGroups).values(newGroup).onConflictDoNothing();
-            
-            // Include in the response
-            uniqueAgeGroups.push(newGroup);
+            // Include in the response without writing to database directly
+            uniqueAgeGroups.push(dummyAgeGroup);
             uniqueMap.set(standardGroup.divisionCode, true);
           }
         }
