@@ -3677,6 +3677,8 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             
             for (const setting of eventData.settings) {
               if (setting.key && setting.value !== undefined) {
+                console.log(`Processing event setting: ${setting.key} = ${setting.value}`);
+                
                 // Check if this setting already exists
                 const existingSetting = await tx
                   .select()
@@ -3687,16 +3689,27 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
                   ));
                 
                 if (existingSetting.length > 0) {
-                  // Update existing setting
-                  await tx
-                    .update(eventSettings)
-                    .set({
-                      settingValue: setting.value,
-                      updatedAt: new Date().toISOString()
-                    })
+                  // Update existing setting with direct SQL for reliability
+                  console.log(`Updating existing setting: ${setting.key} from ${existingSetting[0].settingValue} to ${setting.value}`);
+                  
+                  await tx.execute(
+                    sql`UPDATE event_settings 
+                        SET setting_value = ${setting.value}, 
+                            updated_at = ${new Date().toISOString()} 
+                        WHERE id = ${existingSetting[0].id}`
+                  );
+                  
+                  // Verify the update worked
+                  const verifyUpdate = await tx
+                    .select()
+                    .from(eventSettings)
                     .where(eq(eventSettings.id, existingSetting[0].id));
+                    
+                  console.log(`Verified setting update: ${setting.key} = ${verifyUpdate[0].settingValue}`);
                 } else {
                   // Insert new setting
+                  console.log(`Inserting new setting: ${setting.key} = ${setting.value}`);
+                  
                   await tx
                     .insert(eventSettings)
                     .values({
