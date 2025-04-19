@@ -13,9 +13,9 @@ const sgMail = new MailService();
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Test email recipient - replace with your email to receive the test message
-const TEST_RECIPIENT = process.argv[2] || "your-email@example.com";
-// Sender email - must be verified in your SendGrid account
-const SENDER_EMAIL = process.argv[3] || "your-verified-email@example.com";
+const TEST_RECIPIENT = process.argv[2] || process.env.SENDER_EMAIL || "your-email@example.com";
+// Sender email - must be verified in your SendGrid account (the same as recipient for testing)
+const SENDER_EMAIL = process.argv[3] || process.env.SENDER_EMAIL || "your-verified-email@example.com";
 
 console.log(`
 ==============================================
@@ -75,7 +75,7 @@ async function sendTestPaymentEmail() {
 async function sendTestWelcomeEmail() {
   const msg = {
     to: TEST_RECIPIENT,
-    from: 'noreply@matchpro.ai', // Use the verified sender from your SendGrid account
+    from: SENDER_EMAIL, // Must be your verified sender email in SendGrid
     subject: 'Welcome to MatchPro - Test Account Created',
     text: 'This is a test welcome email to verify that account creation notifications are working correctly.',
     html: `
