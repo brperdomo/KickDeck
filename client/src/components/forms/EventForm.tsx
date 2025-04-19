@@ -111,6 +111,26 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
   const [previewUrl, setPreviewUrl] = useState<string | null>(defaultValues?.branding?.logoUrl || null);
   const [primaryColor, setPrimaryColor] = useState(defaultValues?.branding?.primaryColor || '#007AFF');
   const [secondaryColor, setSecondaryColor] = useState(defaultValues?.branding?.secondaryColor || '#34C759');
+  
+  // Add effect to update branding values when defaultValues change
+  useEffect(() => {
+    console.log('defaultValues changed, updating branding colors:', {
+      primaryColor: defaultValues?.branding?.primaryColor,
+      secondaryColor: defaultValues?.branding?.secondaryColor
+    });
+    
+    if (defaultValues?.branding?.primaryColor) {
+      setPrimaryColor(defaultValues.branding.primaryColor);
+    }
+    
+    if (defaultValues?.branding?.secondaryColor) {
+      setSecondaryColor(defaultValues.branding.secondaryColor);
+    }
+    
+    if (defaultValues?.branding?.logoUrl) {
+      setPreviewUrl(defaultValues.branding.logoUrl);
+    }
+  }, [defaultValues?.branding]);
   const [isExtracting, setIsExtracting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [selectedComplexIds, setSelectedComplexIds] = useState<number[]>(defaultValues?.selectedComplexIds || []);
