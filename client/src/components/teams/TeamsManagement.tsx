@@ -17,8 +17,9 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Edit, Trash2 } from "lucide-react";
+import { Loader2, Edit, Trash2, Upload, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { TeamCsvUploader } from "./TeamCsvUploader";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -63,6 +64,7 @@ export function TeamsManagement({ eventId }: TeamsManagementProps) {
   const [selectedAgeGroupId, setSelectedAgeGroupId] = useState<string>("all");
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
   const [teamToEdit, setTeamToEdit] = useState<Team | null>(null);
+  const [showCsvUploadDialog, setShowCsvUploadDialog] = useState(false);
   const { toast } = useToast();
 
   const ageGroupsQuery = useQuery<AgeGroup[]>({
@@ -120,23 +122,36 @@ export function TeamsManagement({ eventId }: TeamsManagementProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Select
-          value={selectedAgeGroupId}
-          onValueChange={setSelectedAgeGroupId}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select Age Group" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Age Groups</SelectItem>
-            {ageGroupsQuery.data?.map((group) => (
-              <SelectItem key={group.id} value={group.id.toString()}>
-                {group.divisionCode ? `${group.divisionCode} - ${group.gender} ${group.ageGroup}` : `${group.gender} ${group.ageGroup}`}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Select
+            value={selectedAgeGroupId}
+            onValueChange={setSelectedAgeGroupId}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select Age Group" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Age Groups</SelectItem>
+              {ageGroupsQuery.data?.map((group) => (
+                <SelectItem key={group.id} value={group.id.toString()}>
+                  {group.divisionCode ? `${group.divisionCode} - ${group.gender} ${group.ageGroup}` : `${group.gender} ${group.ageGroup}`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowCsvUploadDialog(true)}
+            className="flex items-center"
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            Import Teams
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-md border">
@@ -231,6 +246,31 @@ export function TeamsManagement({ eventId }: TeamsManagementProps) {
           </DialogContent>
         </Dialog>
       )}
+      
+      {/* CSV Import Dialog */}
+      <Dialog open={showCsvUploadDialog} onOpenChange={setShowCsvUploadDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Import Teams via CSV</DialogTitle>
+            <DialogDescription>
+              Upload a CSV file with team information to bulk import teams into this event.
+              All required fields must be included and age groups must match existing groups.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <TeamCsvUploader 
+            eventId={eventId} 
+            onUploadSuccess={(teams) => {
+              toast({
+                title: "Upload Successful",
+                description: `Added ${teams.length} teams to the event.`,
+              });
+              setShowCsvUploadDialog(false);
+              teamsQuery.refetch();
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

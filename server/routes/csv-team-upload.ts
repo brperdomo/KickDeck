@@ -93,7 +93,7 @@ router.post('/teams', upload.single('file'), async (req: Request, res: Response)
     }
 
     // Create a mapping of age group names to IDs
-    const ageGroupMapping = {};
+    const ageGroupMapping: { [key: string]: number } = {};
     eventAgeGroupsData.forEach(group => {
       ageGroupMapping[group.ageGroup] = group.id;
     });

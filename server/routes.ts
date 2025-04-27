@@ -3196,6 +3196,9 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
     // CSV upload helper for team registrations
     app.use('/api/upload', csvUploadRouter);
     
+    // CSV upload helper for team imports (admin)
+    app.use('/api/admin/import', isAdmin, csvTeamUploadRouter);
+    
     // Age groups public routes (for team registration)
     app.use('/api/age-groups', publicAgeGroupsRouter);
     
