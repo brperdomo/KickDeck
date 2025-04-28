@@ -4899,6 +4899,10 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
 
     app.post('/api/admin/events/:id/generate-schedule', hasEventAccess, async (req, res) => {
       try {
+        console.log(`Schedule generation endpoint called for event ID: ${req.params.id}`);
+        console.log('Request body:', JSON.stringify(req.body));
+        console.log('Request query:', JSON.stringify(req.query));
+        
         const eventId = req.params.id;
         const { 
           gamesPerDay, 
@@ -4907,11 +4911,15 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           minRestPeriod,
           resolveCoachConflicts,
           optimizeFieldUsage,
-          tournamentFormat
+          tournamentFormat,
+          useAI: useAIFromBody
         } = req.body;
 
         // Check if we should use AI to generate the schedule
-        const useAI = req.query.useAI === 'true' || req.body.useAI === true;
+        const useAI = req.query.useAI === 'true' || useAIFromBody === true;
+        console.log(`Using AI for schedule generation: ${useAI}`);
+        console.log(`Request parameters: gamesPerDay=${gamesPerDay}, minutesPerGame=${minutesPerGame}, breakBetweenGames=${breakBetweenGames}, minRestPeriod=${minRestPeriod}`);
+        console.log(`Request parameters: resolveCoachConflicts=${resolveCoachConflicts}, optimizeFieldUsage=${optimizeFieldUsage}, tournamentFormat=${tournamentFormat}`);
 
         if (useAI) {
           // Import the OpenAI service
@@ -5019,9 +5027,40 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         res.json({ message: "Schedule framework generated successfully" });
       } catch (error) {
         console.error('Error generating schedule:', error);
-        // Added basic error logging for white screen debugging.
+        // Added detailed error logging for white screen debugging
         console.error("Error details:", error);
-        res.status(500).send("Failed to generate schedule");
+        
+        // Check for specific OpenAI errors
+        if (error.message && error.message.includes('OpenAI API')) {
+          console.error('OpenAI API Error:', error.message);
+          return res.status(500).json({
+            error: 'OpenAI API Error',
+            message: error.message,
+            detail: 'There was an issue with the AI service. Check API key and quotas.'
+          });
+        }
+        
+        // Check for database-related errors
+        if (error.message && (
+            error.message.includes('database') || 
+            error.message.includes('SQL') || 
+            error.message.includes('relation') ||
+            error.message.includes('column') ||
+            error.message.includes('type'))) {
+          console.error('Database Error:', error.message);
+          return res.status(500).json({
+            error: 'Database Error',
+            message: error.message,
+            detail: 'There was an issue with the database. Check schema compatibility.'
+          });
+        }
+        
+        // Return a more informative error
+        res.status(500).json({
+          error: 'Schedule Generation Failed',
+          message: error.message || 'An unknown error occurred',
+          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
       }
     });
     
@@ -5055,9 +5094,39 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         });
       } catch (error) {
         console.error('Error optimizing schedule:', error);
-        // Added basic error logging for white screen debugging.
         console.error("Error details:", error);
-        res.status(500).send("Failed to optimize schedule");
+        
+        // Check for specific OpenAI errors
+        if (error.message && error.message.includes('OpenAI API')) {
+          console.error('OpenAI API Error:', error.message);
+          return res.status(500).json({
+            error: 'OpenAI API Error',
+            message: error.message,
+            detail: 'There was an issue with the AI service. Check API key and quotas.'
+          });
+        }
+        
+        // Check for database-related errors
+        if (error.message && (
+            error.message.includes('database') || 
+            error.message.includes('SQL') || 
+            error.message.includes('relation') ||
+            error.message.includes('column') ||
+            error.message.includes('type'))) {
+          console.error('Database Error:', error.message);
+          return res.status(500).json({
+            error: 'Database Error',
+            message: error.message,
+            detail: 'There was an issue with the database. Check schema compatibility.'
+          });
+        }
+        
+        // Return a more informative error
+        res.status(500).json({
+          error: 'Schedule Optimization Failed',
+          message: error.message || 'An unknown error occurred',
+          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
       }
     });
     
@@ -5081,9 +5150,37 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
       } catch (error) {
         console.error('Error suggesting bracket assignments:', error);
         console.error("Error details:", error);
+        
+        // Check for specific OpenAI errors
+        if (error.message && error.message.includes('OpenAI API')) {
+          console.error('OpenAI API Error:', error.message);
+          return res.status(500).json({
+            error: 'OpenAI API Error',
+            message: error.message,
+            detail: 'There was an issue with the AI service. Check API key and quotas.'
+          });
+        }
+        
+        // Check for database-related errors
+        if (error.message && (
+            error.message.includes('database') || 
+            error.message.includes('SQL') || 
+            error.message.includes('relation') ||
+            error.message.includes('column') ||
+            error.message.includes('type'))) {
+          console.error('Database Error:', error.message);
+          return res.status(500).json({
+            error: 'Database Error',
+            message: error.message,
+            detail: 'There was an issue with the database. Check schema compatibility.'
+          });
+        }
+        
+        // Return a more informative error
         res.status(500).json({
-          error: "Failed to suggest bracket assignments",
-          message: error.message
+          error: 'Bracket Assignment Failed',
+          message: error.message || 'An unknown error occurred',
+          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
       }
     });
