@@ -4957,16 +4957,13 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             .from(eventAgeGroups)
             .where(eq(eventAgeGroups.eventId, eventId));
 
-          // 3. Fetch all available fields
+          // 3. Fetch all available fields - using simplified query to avoid complexes join
           const eventFields = await tx
             .select({
-              field: fields,
-              complex: complexes,
+              field: fields
             })
-            .from(eventComplexes)
-            .innerJoin(fields, eq(eventComplexes.complexId, fields.complexId))
-            .innerJoin(complexes, eq(eventComplexes.complexId, complexes.id))
-            .where(eq(eventComplexes.eventId, eventId));
+            .from(fields)
+            .where(eq(fields.eventId, eventId.toString()));
 
           // 4. Generate time slots for each day
           const startDate = new Date(event.startDate);
@@ -4977,9 +4974,13 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             const currentDate = new Date(startDate);
             currentDate.setDate(currentDate.getDate() + dayIndex);
 
-            for (const { field, complex } of eventFields) {
-              const complexOpenTime = new Date(`${currentDate.toISOString().split('T')[0]}T${complex.openTime}`);
-              const complexCloseTime = new Date(`${currentDate.toISOString().split('T')[0]}T${complex.closeTime}`);
+            // Set default times - assume fields are open 9am to 6pm if not specified
+            const defaultOpenTime = '09:00:00';
+            const defaultCloseTime = '18:00:00';
+
+            for (const { field } of eventFields) {
+              const complexOpenTime = new Date(`${currentDate.toISOString().split('T')[0]}T${defaultOpenTime}`);
+              const complexCloseTime = new Date(`${currentDate.toISOString().split('T')[0]}T${defaultCloseTime}`);
 
               let currentTime = complexOpenTime;
               while (currentTime.getTime() + (minutesPerGame * 60 * 1000) <= complexCloseTime.getTime()) {
