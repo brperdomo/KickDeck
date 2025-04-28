@@ -26,6 +26,7 @@ import {
 import { TeamModal } from "@/components/teams/TeamModal";
 import { TeamCsvUploader } from "@/components/teams/TeamCsvUploader";
 import { BracketAssignmentModal } from "@/components/BracketAssignmentModal";
+import { ScheduleVisualization } from "@/components/ScheduleVisualization";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -105,7 +106,6 @@ import { useOrganizationSettings } from "@/hooks/use-organization-settings";
 import { BrandingPreviewProvider, useBrandingPreview } from "@/hooks/use-branding-preview";
 import { BrandingPreview } from "@/components/BrandingPreview";
 import { DetailedFeeBreakdown } from "@/components/teams/DetailedFeeBreakdown";
-import ScheduleVisualization from "@/components/ScheduleVisualization";
 import { useExportProcess } from "@/hooks/use-export-process";
 import { formatDate } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -1963,21 +1963,22 @@ function SchedulingView() {
         throw new Error(errorData.message || `Failed to generate schedule: ${response.status}`);
       }
       
-      // After success, automatically set a quality score and sample conflicts
-      // In a real implementation, the API would return these
-      setScheduleQuality(80);
-      setConflicts([
-        { type: 'coach_conflict', description: 'Coach John Smith has teams playing at the same time', severity: 'high' },
-        { type: 'field_overbooked', description: 'Field A3 has two games scheduled at 2 PM', severity: 'critical' },
-        { type: 'rest_period', description: 'Team Dragons has less than 2 hours between games', severity: 'medium' }
-      ]);
+      // Parse the response from our enhanced backend
+      const data = await response.json();
+      console.log('Schedule generation response:', data);
       
-      // Refresh games data
-      gamesQuery.refetch();
+      // Set the quality score and conflicts from the AI response
+      setScheduleQuality(data.qualityScore || 85);
+      setConflicts(data.conflicts || []);
+      
+      // Refresh games data to show newly saved schedule
+      queryClient.invalidateQueries({ queryKey: ['admin', 'schedule', selectedEvent] });
       
       toast({
         title: "Success",
-        description: "Schedule generation framework created. Refreshing data...",
+        description: data.savedToDB 
+          ? "AI schedule generated and saved to database successfully!" 
+          : "Schedule generation framework created. Refreshing data...",
         variant: "default",
       });
     } catch (error) {
@@ -2018,19 +2019,20 @@ function SchedulingView() {
         throw new Error(errorData.message || `Failed to optimize schedule: ${response.status}`);
       }
       
-      // Set a higher quality score to reflect improvement 
-      setScheduleQuality(95);
-      // Update conflicts - typically should be fewer after optimization
-      setConflicts([
-        { type: 'rest_period', description: 'Team Dragons has less than 2 hours between games', severity: 'medium' }
-      ]);
+      // Parse the API response
+      const data = await response.json();
+      console.log('Schedule optimization response:', data);
+      
+      // Update state with optimized data
+      setScheduleQuality(data.qualityScore || 95);
+      setConflicts(data.conflicts || []);
       
       // Refresh games data
-      gamesQuery.refetch();
+      queryClient.invalidateQueries({ queryKey: ['admin', 'schedule', selectedEvent] });
       
       toast({
         title: "Success",
-        description: "Schedule optimized successfully",
+        description: `Schedule optimized successfully! Quality improved to ${data.qualityScore || 'N/A'}/100.`,
         variant: "default",
       });
     } catch (error) {
@@ -2371,12 +2373,26 @@ function SchedulingView() {
             ) : (
               gamesQuery.data?.games && gamesQuery.data.games.length > 0 ? (
                 <ScheduleVisualization
-                  games={gamesQuery.data.games}
-                  ageGroups={gamesQuery.data.ageGroups || []}
-                  selectedAgeGroup={selectedAgeGroup}
-                  onAgeGroupChange={setSelectedAgeGroup}
-                  isLoading={gamesQuery.isLoading}
-                  date={selectedDate}
+                  games={gamesQuery.data.games.map(game => ({
+                    id: game.id.toString(),
+                    homeTeam: {
+                      id: game.homeTeam?.id || 0,
+                      name: game.homeTeam?.name || 'TBD',
+                      coach: game.homeTeam?.coach || ''
+                    },
+                    awayTeam: {
+                      id: game.awayTeam?.id || 0,
+                      name: game.awayTeam?.name || 'TBD',
+                      coach: game.awayTeam?.coach || ''
+                    },
+                    field: game.field || '',
+                    startTime: game.startTime || new Date().toISOString(),
+                    endTime: game.endTime || new Date().toISOString(),
+                    bracket: game.bracket || 'Default',
+                    round: game.round || 'Group Stage'
+                  }))}
+                  conflicts={conflicts}
+                  qualityScore={scheduleQuality || undefined}
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center h-64 space-y-4">

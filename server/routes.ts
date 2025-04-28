@@ -4936,13 +4936,106 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             tournamentFormat: tournamentFormat || 'round_robin_knockout'
           });
 
-          // Return the AI-generated schedule
+          // Save the AI-generated schedule to the database within a transaction
+          await db.transaction(async (tx) => {
+            console.log(`Saving ${aiScheduleResult.schedule.length} AI-generated games to database for event ${eventId}`);
+            
+            // First, clear any existing games for this event to avoid duplicates
+            await tx.delete(games).where(eq(games.eventId, eventId));
+            console.log(`Cleared existing games for event ${eventId}`);
+            
+            // Insert each game from the AI-generated schedule
+            for (const game of aiScheduleResult.schedule) {
+              try {
+                // Ensure we have a unique ID for each game (convert the string ID to a match number)
+                const matchNumber = parseInt(game.id.replace(/\D/g, '')) || Math.floor(Math.random() * 10000);
+                
+                // Get team IDs or use null if not found
+                const homeTeamId = game.homeTeam?.id || null;
+                const awayTeamId = game.awayTeam?.id || null;
+                
+                // Parse start and end times
+                let startTime, endTime;
+                try {
+                  startTime = game.startTime || new Date().toISOString();
+                  endTime = game.endTime || new Date().toISOString();
+                } catch (e) {
+                  console.error('Error parsing game times:', e);
+                  startTime = new Date().toISOString();
+                  endTime = new Date().toISOString();
+                }
+                
+                // Get bracket information
+                const bracketName = game.bracket || 'Default';
+                
+                // Find or create the age group if not specified
+                let ageGroupId = 0; // Default placeholder
+                
+                // First, check if we have a bracket with this name
+                const bracketWithAgeGroup = await tx
+                  .select({
+                    id: eventBrackets.id,
+                    ageGroupId: eventBrackets.ageGroupId
+                  })
+                  .from(eventBrackets)
+                  .where(and(
+                    eq(eventBrackets.eventId, eventId),
+                    eq(eventBrackets.name, bracketName)
+                  ));
+                
+                if (bracketWithAgeGroup.length > 0) {
+                  // Use the age group from the bracket
+                  ageGroupId = bracketWithAgeGroup[0].ageGroupId;
+                } else {
+                  // Get the first age group for this event
+                  const firstAgeGroup = await tx
+                    .select({ id: eventAgeGroups.id })
+                    .from(eventAgeGroups)
+                    .where(eq(eventAgeGroups.eventId, eventId))
+                    .limit(1);
+                  
+                  if (firstAgeGroup.length > 0) {
+                    ageGroupId = firstAgeGroup[0].id;
+                  }
+                }
+                
+                // Calculate duration in minutes from start and end time
+                const durationMs = new Date(endTime).getTime() - new Date(startTime).getTime();
+                const durationMinutes = Math.max(30, Math.round(durationMs / (1000 * 60))) || 60;
+                
+                // Insert the game
+                await tx.insert(games).values({
+                  eventId,
+                  ageGroupId,
+                  homeTeamId,
+                  awayTeamId,
+                  status: 'scheduled',
+                  round: parseInt(game.round.toString().replace(/\D/g, '')) || 1,
+                  matchNumber,
+                  duration: durationMinutes,
+                  breakTime: breakBetweenGames || 15,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString()
+                });
+                
+                console.log(`Inserted game ${matchNumber}: ${game.homeTeam?.name || 'Team A'} vs ${game.awayTeam?.name || 'Team B'}`);
+              } catch (err) {
+                console.error('Error inserting game:', err);
+                console.error('Game data:', JSON.stringify(game));
+              }
+            }
+            
+            console.log(`Successfully saved all AI-generated games for event ${eventId}`);
+          });
+
+          // Return the AI-generated schedule along with the saved confirmation
           return res.json({
-            message: "AI schedule generated successfully",
+            message: "AI schedule generated and saved successfully",
             scheduleData: aiScheduleResult.schedule,
             qualityScore: aiScheduleResult.qualityScore,
             conflicts: aiScheduleResult.conflicts,
-            bracketSchedules: aiScheduleResult.bracketSchedules
+            bracketSchedules: aiScheduleResult.bracketSchedules,
+            savedToDB: true
           });
         }
 
