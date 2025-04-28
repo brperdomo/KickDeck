@@ -129,7 +129,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Select, 
+  SelectContent, 
+  SelectGroup,
+  SelectItem, 
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { AdminModal } from "@/components/admin/AdminModal";
 import { ComplexEditor } from "@/components/ComplexEditor";
