@@ -585,11 +585,11 @@ export class SoccerSchedulerAI {
         .from(eventBrackets)
         .where(eq(eventBrackets.eventId, eventIdStr));
         
-      // Get fields for this event
+      // Get fields for this event - fields don't have an eventId column
+      // We'll just get all fields since they're not directly linked to events
       const fieldsData = await db
         .select()
-        .from(fields)
-        .where(eq(fields.eventId, eventIdStr));
+        .from(fields);
         
       // Get available time slots for this event
       const timeSlotsData = await db
