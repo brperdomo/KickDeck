@@ -3264,27 +3264,9 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         // Only filter for archived status
         eventsQuery = eventsQuery.where(eq(events.isArchived, false));
         
-        // For non-super-admin users, restrict events to those they are administrators for
-        if (!isSuperAdmin) {
-          // Get list of events where the user is an administrator
-          const userEventIds = await db
-            .select({
-              eventId: eventAdministrators.eventId
-            })
-            .from(eventAdministrators)
-            .where(eq(eventAdministrators.userId, req.user.id))
-            .then(results => results.map(r => r.eventId));
-          
-          // If there are no events assigned to the user, return an empty array
-          if (userEventIds.length === 0) {
-            return res.json([]);
-          }
-          
-          // Modify the query to only include events the user has access to
-          eventsQuery = eventsQuery.where(
-            sql`${events.id} IN (${sql.join(userEventIds.map(id => sql`${id}`), sql`, `)})`
-          );
-        }
+        // For team imports, we want to show ALL events regardless of registration deadline
+        // and allow all users with admin access to import teams to any event
+        // So we don't restrict events by user assignment for this endpoint
         
         // Execute the query
         const eventsList = await eventsQuery
