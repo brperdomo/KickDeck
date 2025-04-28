@@ -192,39 +192,99 @@ export function ScheduleVisualization({
         </Accordion>
       )}
 
-      {sortedDays.map(day => (
-        <div key={day} className="border rounded-md overflow-hidden">
-          <div className="bg-muted px-4 py-2 font-medium">{day}</div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[100px]">Time</TableHead>
-                <TableHead>Match</TableHead>
-                <TableHead className="hidden md:table-cell">Bracket</TableHead>
-                <TableHead className="hidden md:table-cell">Round</TableHead>
-                <TableHead>Field</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {gamesByDay[day].map(game => (
-                <TableRow key={game.id}>
-                  <TableCell className="font-mono">
-                    {formatTime(game.startTime)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span>{game.homeTeam.name}</span>
-                      <span className="text-muted-foreground">vs</span>
-                      <span>{game.awayTeam.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">{game.bracket}</TableCell>
-                  <TableCell className="hidden md:table-cell">{game.round}</TableCell>
-                  <TableCell>{game.field}</TableCell>
-                </TableRow>
+      {/* Group games by age group for easier viewing */}
+      <div className="mb-4">
+        <h3 className="text-lg font-medium mb-2">Schedule Summary</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="border rounded-md p-4">
+            <h4 className="font-medium mb-1">Age Groups</h4>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {[...new Set(games.map(game => game.ageGroup))].filter(Boolean).map((ageGroup, index) => (
+                <Badge key={index} variant="outline">{ageGroup}</Badge>
               ))}
-            </TableBody>
-          </Table>
+            </div>
+          </div>
+          
+          <div className="border rounded-md p-4">
+            <h4 className="font-medium mb-1">Brackets</h4>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {[...new Set(games.map(game => game.bracket))].filter(Boolean).map((bracket, index) => (
+                <Badge key={index} variant="outline">{bracket}</Badge>
+              ))}
+            </div>
+          </div>
+          
+          <div className="border rounded-md p-4">
+            <h4 className="font-medium mb-1">Facilities</h4>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {[...new Set(games.map(game => game.complexName))].filter(Boolean).map((complex, index) => (
+                <Badge key={index} variant="outline">{complex}</Badge>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Display games by day with additional information */}
+      {sortedDays.map(day => (
+        <div key={day} className="border rounded-md overflow-hidden mb-6">
+          <div className="bg-muted px-4 py-2 font-medium">{day}</div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[120px]">Time</TableHead>
+                  <TableHead>Match</TableHead>
+                  <TableHead>Age Group</TableHead>
+                  <TableHead>Bracket</TableHead>
+                  <TableHead className="hidden md:table-cell">Round</TableHead>
+                  <TableHead>Field</TableHead>
+                  <TableHead className="hidden md:table-cell">Complex</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {gamesByDay[day].map(game => (
+                  <TableRow key={game.id}>
+                    <TableCell className="font-mono whitespace-nowrap">
+                      {formatTime(game.startTime)} - {formatTime(game.endTime)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center">
+                          <span className="font-medium truncate max-w-[160px]">{game.homeTeam.name}</span>
+                          {game.homeTeam.clubName && (
+                            <span className="text-xs text-muted-foreground ml-1">
+                              ({game.homeTeam.clubName})
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-muted-foreground text-xs">vs</span>
+                        <div className="flex items-center">
+                          <span className="font-medium truncate max-w-[160px]">{game.awayTeam.name}</span>
+                          {game.awayTeam.clubName && (
+                            <span className="text-xs text-muted-foreground ml-1">
+                              ({game.awayTeam.clubName})
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{game.ageGroup || 'N/A'}</Badge>
+                    </TableCell>
+                    <TableCell>{game.bracket || 'Default'}</TableCell>
+                    <TableCell className="hidden md:table-cell">{game.round || 'Group Stage'}</TableCell>
+                    <TableCell>
+                      <span className="font-medium">{game.field}</span>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {game.complexName || 'Unknown Facility'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       ))}
     </div>
