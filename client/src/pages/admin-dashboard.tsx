@@ -2402,7 +2402,9 @@ function TeamsView() {
     queryFn: async () => {
       const response = await fetch('/api/admin/import-eligible-events');
       if (!response.ok) throw new Error('Failed to fetch import-eligible events');
-      return response.json();
+      const data = await response.json();
+      console.log('Import eligible events:', data);
+      return data;
     }
   });
 
