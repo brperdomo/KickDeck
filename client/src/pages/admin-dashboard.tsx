@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import { 
   Link2, X, Ticket, Plus, Mail, KeyRound, Check, RefreshCcw, UserMinus, RotateCcw, 
   Pencil, PlusCircle, CalendarRange, UserRoundPlus, ClipboardX, ArrowLeft,
-  Upload
+  Upload, Wand2, Sparkles, AlertTriangle, CalendarDays, Loader2,
+  Trophy, WandSparkles
 } from "lucide-react";
 import { ComplexCard } from "@/components/admin/ComplexCard";
 import { formatAddress } from "@/lib/format-address";
@@ -54,7 +55,6 @@ import {
   UserPlus,
   Home,
   LogOut,
-  AlertTriangle,
   User,
   UserRound,
   Palette,
@@ -65,7 +65,6 @@ import {
   MoreHorizontal,
   Building2,
   MessageSquare,
-  Trophy,
   DollarSign,
   Settings,
   Users,
@@ -76,23 +75,18 @@ import {
   Percent,
   Printer,
   Flag,
-  CalendarDays,
   ImageIcon,
   FormInput,
   Bell,
   Moon,
   Sun,
   Trash2,
-  WandSparkles,
-  Sparkles,
-  Wand2,
   CalendarIcon,
   Map,
   Download,
   Trash,
   FileUp,
   FileText,
-  Loader2,
   Filter,
   ListFilter,
   ListChecks,
@@ -2045,6 +2039,90 @@ function SchedulingView() {
       });
     } finally {
       setIsOptimizing(false);
+    }
+  };
+  
+  // Function to suggest bracket assignments for teams without assigned brackets
+  const suggestBracketAssignments = async () => {
+    setIsSuggestingBrackets(true);
+    try {
+      if (!selectedEvent) {
+        throw new Error("No event selected");
+      }
+      
+      // Call the AI bracket assignment API endpoint
+      const response = await fetch(`/api/admin/events/${selectedEvent}/suggest-bracket-assignments`);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to suggest bracket assignments: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Update the bracket suggestions state
+      setBracketSuggestions(data.suggestions || []);
+      
+      // Open the bracket assignment modal
+      setBracketAssignmentModalOpen(true);
+      
+      toast({
+        title: "Suggestions Ready",
+        description: `AI has suggested brackets for ${data.suggestions?.length || 0} teams`,
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Error suggesting bracket assignments:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to suggest bracket assignments",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSuggestingBrackets(false);
+    }
+  };
+  
+  // Function to apply bracket assignments from AI suggestions
+  const applyBracketAssignments = async (assignments: any[]) => {
+    try {
+      if (!selectedEvent) {
+        throw new Error("No event selected");
+      }
+      
+      // Call the API to update team brackets
+      const response = await fetch(`/api/admin/events/${selectedEvent}/update-team-brackets`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ assignments })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to update team brackets: ${response.status}`);
+      }
+      
+      // Close the modal
+      setBracketAssignmentModalOpen(false);
+      
+      // Clear the suggestions
+      setBracketSuggestions([]);
+      
+      // Show success toast
+      toast({
+        title: "Success",
+        description: "Bracket assignments applied successfully",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Error applying bracket assignments:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to apply bracket assignments",
+        variant: "destructive",
+      });
     }
   };
   
