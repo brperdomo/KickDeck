@@ -2042,7 +2042,7 @@ function SchedulingView() {
     }
   };
   
-  // Function to suggest bracket assignments for teams without assigned brackets
+  // Function to suggest bracket assignments using AI
   const suggestBracketAssignments = async () => {
     setIsSuggestingBrackets(true);
     try {
@@ -2050,8 +2050,13 @@ function SchedulingView() {
         throw new Error("No event selected");
       }
       
-      // Call the AI bracket assignment API endpoint
-      const response = await fetch(`/api/admin/events/${selectedEvent}/suggest-bracket-assignments`);
+      // Call the AI bracket suggestion endpoint
+      const response = await fetch(`/api/admin/events/${selectedEvent}/suggest-bracket-assignments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -2060,17 +2065,40 @@ function SchedulingView() {
       
       const data = await response.json();
       
-      // Update the bracket suggestions state
-      setBracketSuggestions(data.suggestions || []);
-      
-      // Open the bracket assignment modal
-      setBracketAssignmentModalOpen(true);
-      
-      toast({
-        title: "Suggestions Ready",
-        description: `AI has suggested brackets for ${data.suggestions?.length || 0} teams`,
-        variant: "default",
-      });
+      // Process the suggestions received from the AI service
+      if (data.suggestions && Array.isArray(data.suggestions)) {
+        // Format the suggestions for the UI
+        const formattedSuggestions = data.suggestions.map((suggestion: any) => ({
+          teamId: suggestion.teamId,
+          teamName: suggestion.teamName,
+          ageGroup: suggestion.ageGroup,
+          suggestedBracket: suggestion.bracketId,
+          confidence: suggestion.confidence || 0.7,
+          accepted: true, // Default to accepted
+          availableBrackets: suggestion.availableBrackets || [] 
+        }));
+        
+        setBracketSuggestions(formattedSuggestions);
+        
+        // If there are suggestions, open the modal to show them
+        if (formattedSuggestions.length > 0) {
+          setBracketAssignmentModalOpen(true);
+          
+          toast({
+            title: "Suggestions Ready",
+            description: `AI has suggested brackets for ${formattedSuggestions.length} teams`,
+            variant: "default",
+          });
+        } else {
+          toast({
+            title: "No teams found",
+            description: "No teams requiring bracket assignment were found.",
+            variant: "default",
+          });
+        }
+      } else {
+        throw new Error("Invalid response format from bracket suggestion service");
+      }
     } catch (error) {
       console.error("Error suggesting bracket assignments:", error);
       toast({
@@ -2083,14 +2111,23 @@ function SchedulingView() {
     }
   };
   
-  // Function to apply bracket assignments from AI suggestions
-  const applyBracketAssignments = async (assignments: any[]) => {
+  // Function to apply bracket assignments
+  const applyBracketAssignments = async (assignments: Array<{teamId: number, bracketId: number}>) => {
     try {
       if (!selectedEvent) {
         throw new Error("No event selected");
       }
       
-      // Call the API to update team brackets
+      if (assignments.length === 0) {
+        toast({
+          title: "No changes",
+          description: "No bracket assignments were selected to apply.",
+          variant: "default",
+        });
+        return;
+      }
+      
+      // Call the API to apply the bracket assignments
       const response = await fetch(`/api/admin/events/${selectedEvent}/update-team-brackets`, {
         method: 'POST',
         headers: {
@@ -2104,18 +2141,19 @@ function SchedulingView() {
         throw new Error(errorData.message || `Failed to update team brackets: ${response.status}`);
       }
       
-      // Close the modal
-      setBracketAssignmentModalOpen(false);
-      
-      // Clear the suggestions
-      setBracketSuggestions([]);
-      
-      // Show success toast
+      // Successfully applied bracket assignments
       toast({
         title: "Success",
-        description: "Bracket assignments applied successfully",
+        description: `Applied ${assignments.length} bracket assignments successfully.`,
         variant: "default",
       });
+      
+      // Clear suggestions and close the modal
+      setBracketSuggestions([]);
+      setBracketAssignmentModalOpen(false);
+      
+      // Refresh data if needed
+      gamesQuery.refetch();
     } catch (error) {
       console.error("Error applying bracket assignments:", error);
       toast({
@@ -2133,11 +2171,20 @@ function SchedulingView() {
         <div className="flex gap-2">
           <Button 
             variant="outline"
-            onClick={() => setBracketAssignmentModalOpen(true)}
-            disabled={!selectedEvent}
+            onClick={suggestBracketAssignments}
+            disabled={!selectedEvent || isSuggestingBrackets}
           >
-            <Trophy className="mr-2 h-4 w-4" />
-            Assign Brackets
+            {isSuggestingBrackets ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Suggesting...
+              </>
+            ) : (
+              <>
+                <Trophy className="mr-2 h-4 w-4" />
+                Assign Brackets
+              </>
+            )}
           </Button>
           <Button 
             variant="outline"
