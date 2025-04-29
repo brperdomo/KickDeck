@@ -1975,6 +1975,48 @@ function SchedulingView() {
     enabled: !!selectedEvent
   });
   
+  // Delete game mutation
+  const deleteGameMutation = useMutation({
+    mutationFn: async (gameId: string) => {
+      const response = await fetch(`/api/admin/games/${gameId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to delete game: ${response.status}`);
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['admin', 'games', selectedEvent] });
+      toast({
+        title: "Success",
+        description: "Game deleted successfully",
+        variant: "default",
+      });
+    },
+    onError: (error) => {
+      console.error("Error deleting game:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete game",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Function to handle game deletion
+  const handleDeleteGame = async (gameId: string) => {
+    try {
+      await deleteGameMutation.mutateAsync(gameId);
+    } catch (error) {
+      // Error is handled in the mutation's onError
+    }
+  };
+  
   // Function to generate AI schedule
   const queryClient = useQueryClient();
   
@@ -2442,6 +2484,8 @@ function SchedulingView() {
                   }))}
                   conflicts={conflicts}
                   qualityScore={scheduleQuality || undefined}
+                  onDeleteGame={handleDeleteGame}
+                  allowEditing={permissions.has('manage_games')}
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center h-64 space-y-4">
