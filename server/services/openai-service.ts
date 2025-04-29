@@ -24,6 +24,19 @@ const MODEL = "gpt-4o";
  */
 export class SoccerSchedulerAI {
   /**
+   * Utility method to convert a time string (e.g. "08:00") to a proper Date object
+   * on the same day as the reference date
+   * @param referenceDate - The reference date to use for year/month/day
+   * @param timeString - The time string in format "HH:MM"
+   * @returns A Date object with the same day as referenceDate but time from timeString
+   */
+  private static getTimeFromString(referenceDate: Date, timeString: string): Date {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const result = new Date(referenceDate);
+    result.setHours(hours, minutes, 0, 0);
+    return result;
+  }
+  /**
    * Generates an optimal schedule for a soccer tournament
    * @param eventId - The ID of the event
    * @param constraints - Scheduling constraints
@@ -106,7 +119,7 @@ export class SoccerSchedulerAI {
         
         // 5. Check for conflicts and validation issues
         console.log("Detecting potential schedule conflicts...");
-        const conflicts = this.detectScheduleConflicts(scheduleResult.games, teamsData);
+        const conflicts = this.detectScheduleConflicts(scheduleResult.games, teamsData, eventData);
         console.log(`Detected ${conflicts.length} potential conflicts`);
         
         // 6. Return the complete schedule with conflicts
@@ -236,7 +249,7 @@ export class SoccerSchedulerAI {
         
         // 6. Check for remaining conflicts
         console.log("Detecting potential remaining conflicts...");
-        const remainingConflicts = this.detectScheduleConflicts(optimizedResult.games, teamsData);
+        const remainingConflicts = this.detectScheduleConflicts(optimizedResult.games, teamsData, eventData);
         console.log(`Detected ${remainingConflicts.length} potential conflicts after optimization`);
         
         // 7. Return the optimized schedule with any remaining conflicts
@@ -430,7 +443,7 @@ export class SoccerSchedulerAI {
    * @param teamsData - Team data including coaches
    * @returns Array of detected conflicts
    */
-  private static detectScheduleConflicts(scheduledGames: any[], teamsData: any) {
+  private static detectScheduleConflicts(scheduledGames: any[], teamsData: any, eventData?: any) {
     const conflicts: ScheduleConflict[] = [];
     
     // Map to track coach schedules
@@ -477,6 +490,39 @@ export class SoccerSchedulerAI {
           coachSchedules.set(game.awayTeam.coach, []);
         }
         coachSchedules.get(game.awayTeam.coach)?.push(game);
+      }
+      
+      // Check for field operating hour constraints if eventData is provided
+      if (eventData && eventData.fieldsByName) {
+        const fieldInfo = eventData.fieldsByName[game.field];
+        if (fieldInfo) {
+          const gameStart = new Date(game.startTime);
+          const gameEnd = new Date(game.endTime);
+          
+          // Convert field hours to comparable times on the same day as the game
+          const fieldOpenTime = this.getTimeFromString(gameStart, fieldInfo.openTime);
+          const fieldCloseTime = this.getTimeFromString(gameStart, fieldInfo.closeTime);
+          
+          // Check if game is outside of field operating hours
+          if (gameStart < fieldOpenTime || gameEnd > fieldCloseTime) {
+            conflicts.push({
+              type: 'field_hours',
+              description: `Game scheduled on field ${game.field} outside of operating hours (${fieldInfo.openTime} to ${fieldInfo.closeTime})`,
+              severity: 'high',
+              affectedGames: [game.id]
+            });
+          }
+          
+          // Check if field's complex is closed
+          if (fieldInfo.complex && !fieldInfo.complex.isOpen) {
+            conflicts.push({
+              type: 'complex_closed',
+              description: `Game scheduled on field ${game.field} where the complex (${fieldInfo.complex.name}) is closed`,
+              severity: 'critical',
+              affectedGames: [game.id]
+            });
+          }
+        }
       }
     }
     
@@ -611,11 +657,18 @@ export class SoccerSchedulerAI {
         .from(gameTimeSlots)
         .where(eq(gameTimeSlots.eventId, eventIdStr));
       
+      // Create a fields-by-name map for easy access during conflict detection
+      const fieldsByName = {};
+      for (const field of fieldsData) {
+        fieldsByName[field.name] = field;
+      }
+      
       return {
         event: eventData,
         ageGroups: ageGroupsData,
         brackets: bracketsData,
         fields: fieldsData,
+        fieldsByName: fieldsByName,
         timeSlots: timeSlotsData
       };
     } catch (error) {
@@ -938,7 +991,7 @@ interface OptimizationOptions {
  * Schedule conflict interface
  */
 interface ScheduleConflict {
-  type: 'coach_conflict' | 'field_overbooked' | 'rest_period' | 'other';
+  type: 'coach_conflict' | 'field_overbooked' | 'rest_period' | 'field_hours' | 'complex_closed' | 'other';
   description: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
   affectedGames: string[];
