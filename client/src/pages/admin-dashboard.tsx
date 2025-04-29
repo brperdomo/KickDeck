@@ -1826,7 +1826,7 @@ function HouseholdsView() {
 }
 
 function SchedulingView() {
-  const { permissions } = usePermissions();
+  const { hasPermission } = usePermissions();
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<string>("");
@@ -2486,7 +2486,7 @@ function SchedulingView() {
                   conflicts={conflicts}
                   qualityScore={scheduleQuality || undefined}
                   onDeleteGame={handleDeleteGame}
-                  allowEditing={permissions.has('manage_games')}
+                  allowEditing={hasPermission('edit_schedule')}
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center h-64 space-y-4">
