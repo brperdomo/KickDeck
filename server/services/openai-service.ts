@@ -587,9 +587,23 @@ export class SoccerSchedulerAI {
         
       // Get fields for this event - fields don't have an eventId column
       // We'll just get all fields since they're not directly linked to events
+      // Also get complexes to get field-complex relationships and operating hours
       const fieldsData = await db
-        .select()
-        .from(fields);
+        .select({
+          id: fields.id,
+          name: fields.name,
+          hasLights: fields.hasLights,
+          hasParking: fields.hasParking,
+          isOpen: fields.isOpen,
+          openTime: fields.openTime,
+          closeTime: fields.closeTime,
+          specialInstructions: fields.specialInstructions,
+          complexId: fields.complexId,
+          complex: complexes
+        })
+        .from(fields)
+        .leftJoin(complexes, eq(fields.complexId, complexes.id))
+        .where(eq(fields.isOpen, true));
         
       // Get available time slots for this event
       const timeSlotsData = await db
@@ -738,6 +752,9 @@ EVENT INFORMATION:
 - Number of Fields: ${eventData.fields.length}
 - Available Fields: ${eventData.fields.map(f => f.name).join(', ')}
 
+FIELD AVAILABILITY CONSTRAINTS:
+${eventData.fields.map(f => `- ${f.name}: Open from ${f.openTime} to ${f.closeTime} ${f.complex && f.complex.isOpen ? `(Complex: ${f.complex.name})` : ''}`).join('\n')}
+
 TEAMS INFORMATION:
 ${teamsData.map(team => `- Team ID: ${team.id}, Name: ${team.name}, Age Group: ${team.ageGroup}, Coach: ${team.coach || 'Unknown'}, Bracket: ${team.bracketId || 'Not assigned'}`).join('\n')}
 
@@ -756,7 +773,9 @@ SCHEDULING INSTRUCTIONS:
 3. Ensure adequate rest periods between games for each team
 4. Teams should play roughly the same number of games
 5. Distribute games evenly across all available fields
-6. For tournament formats:
+6. IMPORTANT: Only schedule games during the operating hours of each field
+7. IMPORTANT: Do not schedule games on fields where their complex is closed
+8. For tournament formats:
    - Round Robin: Each team plays against every other team in their bracket once
    - Knockout: Teams advance based on wins
    - Round Robin + Knockout: Group stage followed by playoffs
@@ -815,10 +834,15 @@ EVENT INFORMATION:
 - End Date: ${eventData.event.endDate}
 - Available Fields: ${eventData.fields.map(f => f.name).join(', ')}
 
+FIELD AVAILABILITY CONSTRAINTS:
+${eventData.fields.map(f => `- ${f.name}: Open from ${f.openTime} to ${f.closeTime} ${f.complex && f.complex.isOpen ? `(Complex: ${f.complex.name})` : ''}`).join('\n')}
+
 OPTIMIZATION PRIORITIES:
 - Resolve Coach Conflicts: ${options.resolveCoachConflicts ? 'Yes' : 'No'} (The same coach should not have overlapping games)
 - Optimize Field Usage: ${options.optimizeFieldUsage ? 'Yes' : 'No'} (Distribute games evenly across fields)
 - Minimize Travel: ${options.minimizeTravel ? 'Yes' : 'No'} (Keep a team's games on the same or nearby fields when possible)
+- IMPORTANT: Only schedule games during the operating hours of each field
+- IMPORTANT: Do not schedule games on fields where their complex is closed
 
 OUTPUT REQUIREMENTS:
 Generate a JSON with the optimized schedule with the following structure:
