@@ -2533,6 +2533,7 @@ function SchedulingView() {
                   conflicts={conflicts}
                   qualityScore={scheduleQuality || undefined}
                   onDeleteGame={handleDeleteGame}
+                  onBulkDeleteGames={handleBulkDeleteGames}
                   allowEditing={canEditSchedule}
                 />
               ) : (
