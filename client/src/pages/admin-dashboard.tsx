@@ -7,7 +7,7 @@ import {
   Upload, Wand2, Sparkles, AlertTriangle, CalendarDays, Loader2,
   Trophy, WandSparkles
 } from "lucide-react";
-import { ClubLogo } from "@/components/clubs/ClubLogo";
+// Removed ClubLogo import as we now display club name as text
 import { ComplexCard } from "@/components/admin/ComplexCard";
 import { formatAddress } from "@/lib/format-address";
 import { EventsTable } from "@/components/events/EventsTable";
@@ -3489,11 +3489,11 @@ function TeamsView() {
                             .map((team: any, index) => (
                               <TableRow key={team.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                                 <TableCell className="font-medium">
-                                  <div className="flex items-center space-x-2">
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-medium">{team.name}</span>
                                     {team.clubName && (
-                                      <ClubLogo clubName={team.clubName} size="sm" />
+                                      <span className="text-xs text-muted-foreground">({team.clubName})</span>
                                     )}
-                                    <span>{team.name}</span>
                                   </div>
                                 </TableCell>
                                 <TableCell>{team.event?.name || "N/A"}</TableCell>
@@ -3582,11 +3582,11 @@ function TeamsView() {
                             .map((team: any, index) => (
                               <TableRow key={team.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                                 <TableCell className="font-medium">
-                                  <div className="flex items-center space-x-2">
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-medium">{team.name}</span>
                                     {team.clubName && (
-                                      <ClubLogo clubName={team.clubName} size="sm" />
+                                      <span className="text-xs text-muted-foreground">({team.clubName})</span>
                                     )}
-                                    <span>{team.name}</span>
                                   </div>
                                 </TableCell>
                                 <TableCell>{team.event?.name || "N/A"}</TableCell>
