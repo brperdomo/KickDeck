@@ -4845,7 +4845,7 @@ function AdminDashboard({ initialView = 'events' }: AdminDashboardProps) {
               view="formTemplates"
               activeView={activeView}
               onClick={() => navigate('/admin/form-templates')}
-              icon={<FormInput className="mr-2 h-4 w-4" />}
+              icon={<FormInput className="h-4 w-4" />}
               label="Form Templates"
               permission="view_form_templates"
               index={0}
@@ -4855,7 +4855,7 @@ function AdminDashboard({ initialView = 'events' }: AdminDashboardProps) {
               view="events"
               activeView={activeView}
               onClick={() => navigate('/admin/events')}
-              icon={<Calendar className="mr-2 h-4 w-4" />}
+              icon={<Calendar className="h-4 w-4" />}
               label="Events"
               permission="view_events"
               index={1}
@@ -4865,7 +4865,7 @@ function AdminDashboard({ initialView = 'events' }: AdminDashboardProps) {
               view="teams"
               activeView={activeView}
               onClick={() => navigate('/admin/teams')}
-              icon={<Users className="mr-2 h-4 w-4" />}
+              icon={<Users className="h-4 w-4" />}
               label="Teams"
               permission="view_teams"
               index={2}
@@ -4875,7 +4875,7 @@ function AdminDashboard({ initialView = 'events' }: AdminDashboardProps) {
               view="administrators"
               activeView={activeView}
               onClick={() => navigate('/admin/administrators')}
-              icon={<Shield className="mr-2 h-4 w-4" />}
+              icon={<Shield className="h-4 w-4" />}
               label="Administrators"
               permission="view_administrators"
               index={3}
@@ -4885,7 +4885,7 @@ function AdminDashboard({ initialView = 'events' }: AdminDashboardProps) {
               view="complexes"
               activeView={activeView}
               onClick={() => navigate('/admin/complexes')}
-              icon={<Building2 className="mr-2 h-4 w-4" />}
+              icon={<Building2 className="h-4 w-4" />}
               label="Field Complexes"
               permission="view_complexes"
             />
@@ -4894,7 +4894,7 @@ function AdminDashboard({ initialView = 'events' }: AdminDashboardProps) {
               view="households"
               activeView={activeView}
               onClick={() => navigate('/admin/households')}
-              icon={<Home className="mr-2 h-4 w-4" />}
+              icon={<Home className="h-4 w-4" />}
               label="MatchPro Client"
               permission="view_households"
             />
@@ -4903,7 +4903,7 @@ function AdminDashboard({ initialView = 'events' }: AdminDashboardProps) {
               view="scheduling"
               activeView={activeView}
               onClick={() => navigate('/admin/scheduling')}
-              icon={<CalendarDays className="mr-2 h-4 w-4" />}
+              icon={<CalendarDays className="h-4 w-4" />}
               label="Scheduling"
               permission="view_scheduling"
             />
@@ -4912,7 +4912,7 @@ function AdminDashboard({ initialView = 'events' }: AdminDashboardProps) {
               view="reports"
               activeView={activeView}
               onClick={() => navigate('/admin/reports')}
-              icon={<FileText className="mr-2 h-4 w-4" />}
+              icon={<FileText className="h-4 w-4" />}
               label="Reports and Financials"
               permission="view_reports"
             />
@@ -4921,7 +4921,7 @@ function AdminDashboard({ initialView = 'events' }: AdminDashboardProps) {
               view="files"
               activeView={activeView}
               onClick={() => navigate('/admin/file-manager')}
-              icon={<ImageIcon className="mr-2 h-4 w-4" />}
+              icon={<ImageIcon className="h-4 w-4" />}
               label="File Manager"
               permission="view_files"
             />
@@ -4930,7 +4930,7 @@ function AdminDashboard({ initialView = 'events' }: AdminDashboardProps) {
               view="members"
               activeView={activeView}
               onClick={() => navigate('/admin/members')}
-              icon={<Users className="mr-2 h-4 w-4" />}
+              icon={<Users className="h-4 w-4" />}
               label="Members"
               permission="view_members"
             />
@@ -4941,7 +4941,7 @@ function AdminDashboard({ initialView = 'events' }: AdminDashboardProps) {
               view="roles"
               activeView={activeView}
               onClick={() => navigate('/admin/roles')}
-              icon={<KeyRound className="mr-2 h-4 w-4" />}
+              icon={<KeyRound className="h-4 w-4" />}
               label="Role Permissions"
               permission="view_role_permissions"
             />
@@ -4959,7 +4959,7 @@ function AdminDashboard({ initialView = 'events' }: AdminDashboardProps) {
                     className="w-full justify-between"
                   >
                     <span className="flex items-center">
-                      <Settings className="mr-2 h-4 w-4" />
+                      <Settings className="h-4 w-4" />
                       Settings
                     </span>
                     <ChevronRight
@@ -4987,7 +4987,7 @@ function AdminDashboard({ initialView = 'events' }: AdminDashboardProps) {
                         setActiveSettingsView('general');
                       }}
                     >
-                      <Settings className="mr-2 h-4 w-4" />
+                      <Settings className="h-4 w-4" />
                       General
                     </Button>
                   )}
@@ -5009,7 +5009,7 @@ function AdminDashboard({ initialView = 'events' }: AdminDashboardProps) {
               }}
               onClick={() => navigate('/admin/account')}
             >
-              <User className="mr-2 h-4 w-4" />
+              <User className="h-4 w-4" />
               My Account
             </Button>
 
@@ -5022,9 +5022,9 @@ function AdminDashboard({ initialView = 'events' }: AdminDashboardProps) {
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center">
                     {theme === 'dark' ? (
-                      <Sun className="mr-2 h-4 w-4" />
+                      <Sun className="h-4 w-4" />
                     ) : (
-                      <Moon className="mr-2 h-4 w-4" />
+                      <Moon className="h-4 w-4" />
                     )}
                     <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
                   </div>
@@ -5040,7 +5040,7 @@ function AdminDashboard({ initialView = 'events' }: AdminDashboardProps) {
               >
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center">
-                    <LogOut className="mr-2 h-4 w-4" />
+                    <LogOut className="h-4 w-4" />
                     <span>Logout</span>
                   </div>
                   <div className="bg-red-800 rounded-full p-1 h-5 w-5 flex items-center justify-center">
