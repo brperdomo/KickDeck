@@ -61,6 +61,60 @@ router.get('/:eventId/clubs', hasEventAccess, async (req, res) => {
   }
 });
 
+// This route handles the specific /clubs/clubs endpoint that the frontend is calling
+router.get('/:eventId/clubs/clubs', hasEventAccess, async (req, res) => {
+  try {
+    const eventId = parseInt(req.params.eventId);
+
+    // Get teams for this event that have club information
+    const teamsWithClubs = await db
+      .select({
+        teamId: teams.id,
+        teamName: teams.name,
+        clubId: teams.clubId,
+        clubName: teams.clubName,
+      })
+      .from(teams)
+      .where(and(
+        eq(teams.eventId, eventId),
+        isNotNull(teams.clubId)
+      ));
+
+    // Get unique club IDs from teams
+    const clubIds = [...new Set(teamsWithClubs
+      .filter(team => team.clubId !== null)
+      .map(team => team.clubId))];
+
+    // Get club details for these club IDs
+    const clubsData = clubIds.length > 0 
+      ? await db
+          .select()
+          .from(clubs)
+          .where(sql`${clubs.id} IN (${clubIds.join(',')})`)
+      : [];
+
+    // Count teams per club
+    const clubStats = clubIds.map(clubId => {
+      const teamsForClub = teamsWithClubs.filter(team => team.clubId === clubId);
+      const clubData = clubsData.find(club => club.id === clubId) || { 
+        id: clubId,
+        name: teamsForClub[0]?.clubName || 'Unknown Club',
+        logoUrl: null,
+      };
+      
+      return {
+        ...clubData,
+        teamCount: teamsForClub.length,
+      };
+    });
+
+    return res.json(clubStats);
+  } catch (error) {
+    console.error(`Error getting clubs for event ID ${req.params.eventId}:`, error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Update club information
 router.patch('/:eventId/clubs/:clubId', hasEventAccess, async (req, res) => {
   try {
