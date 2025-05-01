@@ -1,8 +1,8 @@
 /**
  * Test script to verify team registration with club information
  */
-const fs = require('fs');
-const fetch = require('node-fetch');
+import { promises as fs } from 'fs';
+import fetch from 'node-fetch';
 
 /**
  * Helper function for making API requests with cookie support
