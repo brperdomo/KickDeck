@@ -35,9 +35,9 @@ async function testTeamWithClub() {
       ) VALUES (
         'Test Team With Club',
         '1251362271',
+        3055, -- Valid age_group_id from event_age_groups table
         1,
-        1,
-        'Test Club Name',
+        'Winners FC', -- Real club name from the database
         '{"headCoachName":"Test Coach", "headCoachEmail":"test@example.com", "headCoachPhone":"123-456-7890"}',
         'Test Manager',
         'manager@example.com',
