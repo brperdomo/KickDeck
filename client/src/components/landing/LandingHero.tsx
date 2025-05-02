@@ -53,35 +53,35 @@ const LandingHero = () => {
         }}
       ></motion.div>
       
-      <div className="container px-4 md:px-6 relative z-10">
-        <div className="flex flex-col items-center justify-center text-center mb-12">
+      <div className="container max-w-7xl mx-auto px-4 md:px-6 relative z-10">
+        <div className="flex flex-col items-center justify-center text-center mb-12 w-full">
           <motion.h1 
             variants={fadeUpVariant}
             custom={0}
-            className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tighter text-[#4d79ff] mb-4"
+            className="text-3xl md:text-4xl lg:text-6xl font-bold tracking-tighter text-[#4d79ff] mb-4 w-full"
           >
             For Soccer Tournament Directors.
           </motion.h1>
           <motion.h2 
             variants={fadeUpVariant}
             custom={1}
-            className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tighter text-[#4d79ff] mb-12"
+            className="text-3xl md:text-4xl lg:text-6xl font-bold tracking-tighter text-[#4d79ff] mb-12 w-full"
           >
             By Soccer Tournament Directors.
           </motion.h2>
           
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-5xl mx-auto w-full">
             <motion.p 
               variants={fadeUpVariant}
               custom={2}
-              className="text-base md:text-lg text-gray-300 mb-6"
+              className="text-base md:text-xl text-gray-300 mb-6"
             >
               Our software is built with adaptability at its core. From player development to game-day management, we're constantly iterating, refining, and pushing boundaries. Every update, every feature, and every integration is driven by real-world feedback and forward-thinking strategy.
             </motion.p>
             <motion.p 
               variants={fadeUpVariant}
               custom={3}
-              className="text-base md:text-lg text-gray-300 mb-12"
+              className="text-base md:text-xl text-gray-300 mb-12"
             >
               We envision a sports ecosystem where data isn't just collected, it's translated into actionable insight — where coaches, players, and organizations are empowered by software that grows with the game.
             </motion.p>
