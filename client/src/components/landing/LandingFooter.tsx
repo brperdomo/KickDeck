@@ -55,7 +55,7 @@ const LandingFooter = () => {
             <div className="mb-4">
               <Link href="/" className="flex items-center">
                 <img 
-                  src="/uploads/MatchProAI_Linear_WhiteNOBUFFER_1746209469843_at6929.png" 
+                  src="/uploads/MatchProAI_Linear_WhiteNOBUFFER_1746209708212_2e1hcr.png" 
                   alt="MatchPro.ai" 
                   className="h-10 w-auto"
                   onError={(e) => {
