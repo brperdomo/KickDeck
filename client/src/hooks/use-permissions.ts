@@ -219,29 +219,39 @@ export function usePermissions() {
   });
 
   /**
+   * Cache for superadmin status to avoid repeated checks
+   */
+  const isUserSuperAdmin = user?.isAdmin && userPermissions?.roles?.includes('super_admin');
+
+  /**
    * Check if the current user has a specific permission
    */
   const hasPermission = (permission: Permission): boolean => {
-    // If permissions are still loading, be conservative and deny access
-    if (isLoading || !userPermissions) {
-      console.log('Permission check failed - permissions still loading or null:', permission);
-      return false;
-    }
-    
-    // Super admins always have all permissions
-    if (userPermissions.roles.includes('super_admin')) {
-      console.log('Permission granted (super_admin):', permission);
+    // If user is definitely a super admin (based on user object and roles), short-circuit and grant access
+    // This is the key fix - we use cached result for superadmin status first
+    if (isUserSuperAdmin) {
+      // Debug logs disabled to reduce console noise
+      // console.log('Permission granted (super_admin):', permission);
       return true;
     }
     
-    // Debug: Log permissions for debugging
-    console.log('Checking permission:', permission);
-    console.log('User roles:', userPermissions.roles);
-    console.log('User permissions:', userPermissions.permissions);
+    // If permissions are still loading but user is logged in as admin, GRANT access temporarily
+    // This prevents the flashing "Access Restricted" during loading
+    if (isLoading && user?.isAdmin) {
+      // console.log('Permission temporarily granted while loading for admin user:', permission);
+      return true;
+    }
+
+    // If permissions failed to load or user isn't logged in, deny access
+    if (!userPermissions) {
+      // console.log('Permission check failed - permissions null:', permission);
+      return false;
+    }
     
+    // At this point, we have permissions loaded but user isn't a super_admin
     // Check if the user has the specified permission
     const hasAccess = userPermissions.permissions.includes(permission);
-    console.log('Permission check result for', permission, ':', hasAccess);
+    // console.log('Permission check result for', permission, ':', hasAccess);
     return hasAccess;
   };
 
