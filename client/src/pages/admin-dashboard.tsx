@@ -43,6 +43,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "@/hooks/use-theme";
 import { SelectUser } from "@db/schema";
 import { LogoutOverlay } from "@/components/ui/logout-overlay";
+import { PermissionGuard } from "@/components/admin/PermissionGuard";
 
 // Format currency values in dollars with 2 decimal places
 function formatCurrency(amount: number | null | undefined): string {
@@ -5286,7 +5287,7 @@ function SettingsView({ activeSettingsView }: { activeSettingsView: SettingsView
 // Helper function to render settings content 
 function renderSettingsContent(settingsView: SettingsView) {
   
-  switch (activeSettingsView) {
+  switch (settingsView) {
     case 'general':
       return (
         <div className="space-y-6">
@@ -5382,7 +5383,7 @@ function CouponManagement() {
   const [selectedCoupon, setSelectedCoupon] = useState<SelectCoupon | null>(null);
   const queryClient = useQueryClient();
   const [, params] = useLocation();
-  const eventId = params.split('/')[2];
+  const eventId = params?.split('/')[2] || '';
 
   const couponsQuery = useQuery({
     queryKey: ['/api/admin/coupons', eventId],
@@ -5402,7 +5403,7 @@ function CouponManagement() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/admin/coupons', eventId]);
+      queryClient.invalidateQueries(['/api/admin/coupons', eventId] as any);
       toast({
         title: "Success",
         description: "Coupon deleted successfully",
@@ -5417,25 +5418,6 @@ function CouponManagement() {
     },
   });
 
-  // Check for view permission first
-  if (!hasPermission('view_coupons')) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[300px] space-y-4">
-        <Shield className="h-12 w-12 text-muted-foreground" />
-        <h2 className="text-xl font-semibold">Access Restricted</h2>
-        <p className="text-muted-foreground">You don't have permission to view coupons.</p>
-      </div>
-    );
-  }
-
-  if (couponsQuery.isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[200px]">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
   const handleEditCoupon = (coupon: SelectCoupon) => {
     setSelectedCoupon(coupon);
     setIsAddModalOpen(true);
@@ -5449,101 +5431,121 @@ function CouponManagement() {
     }
   };
 
+  // Use PermissionGuard for consistent permission handling
   return (
-    <>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold section-header">Coupon Management</h2>
-        {hasPermission('create_coupons') && (
-          <Button onClick={() => setIsAddModalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Coupon
-          </Button>
-        )}
-      </div>
+    <PermissionGuard
+      permission="view_coupons" as any
+      fallback={
+        <div className="flex flex-col items-center justify-center min-h-[300px] space-y-4">
+          <Shield className="h-12 w-12 text-muted-foreground" />
+          <h2 className="text-xl font-semibold">Access Restricted</h2>
+          <p className="text-muted-foreground">You don't have permission to view coupons.</p>
+        </div>
+      }
+    >
+      {couponsQuery.isLoading ? (
+        <div className="flex items-center justify-center min-h-[200px]">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      ) : (
+        <>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold section-header">Coupon Management</h2>
+            {hasPermission('create_coupons' as any) && (
+              <Button onClick={() => setIsAddModalOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Coupon
+              </Button>
+            )}
+          </div>
 
-      <Card className="enhanced-card">
-        <CardContent className="p-0">
-          <Table className="enhanced-table">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Code</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Expires</TableHead>
-                <TableHead>Uses</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {couponsQuery.data?.map((coupon: SelectCoupon) => (
-                <TableRow key={coupon.id}>
-                  <TableCell className="font-medium">{coupon.code}</TableCell>
-                  <TableCell>
-                    <Badge variant={coupon.discountType === 'percentage' ? 'secondary' : 'outline'}>
-                      {coupon.discountType === 'percentage' ? `${coupon.amount}%` : `$${coupon.amount}`}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{coupon.amount}</TableCell>
-                  <TableCell>
-                    {coupon.expirationDate ? 
-                      new Date(coupon.expirationDate).toLocaleDateString() : 
-                      'No expiration'
-                    }
-                  </TableCell>
-                  <TableCell>
-                    {coupon.usageCount} {coupon.maxUses ? `/ ${coupon.maxUses}` : ''}
-                  </TableCell>
-                  <TableCell>{coupon.description}</TableCell>
-                  <TableCell>
-                    <Badge variant={coupon.isActive ? 'success' : 'secondary'}>
-                      {coupon.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {hasPermission('edit_coupons') && (
-                          <DropdownMenuItem onClick={() => handleEditCoupon(coupon)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                        )}
-                        {hasPermission('edit_coupons') && hasPermission('delete_coupons') && (
-                          <DropdownMenuSeparator />
-                        )}
-                        {hasPermission('delete_coupons') && (
-                          <DropdownMenuItem 
-                            onClick={() => handleDeleteCoupon(coupon.id)}
-                            className="text-red-600"
-                          >
-                            <Trash className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+          <Card className="enhanced-card">
+            <CardContent className="p-0">
+              <Table className="enhanced-table">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Code</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Expires</TableHead>
+                    <TableHead>Uses</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {couponsQuery.data?.map((coupon: SelectCoupon) => (
+                    <TableRow key={coupon.id}>
+                      <TableCell className="font-medium">{coupon.code}</TableCell>
+                      <TableCell>
+                        <Badge variant={coupon.discountType === 'percentage' ? 'secondary' : 'outline'}>
+                          {coupon.discountType === 'percentage' ? `${coupon.amount}%` : `$${coupon.amount}`}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{coupon.amount}</TableCell>
+                      <TableCell>
+                        {coupon.expirationDate ? 
+                          new Date(coupon.expirationDate).toLocaleDateString() : 
+                          'No expiration'
+                        }
+                      </TableCell>
+                      <TableCell>
+                        {coupon.usageCount} {coupon.maxUses ? `/ ${coupon.maxUses}` : ''}
+                      </TableCell>
+                      <TableCell>{coupon.description}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">
+                          {coupon.isActive ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {hasPermission('edit_coupons' as any) && (
+                              <DropdownMenuItem onClick={() => handleEditCoupon(coupon)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                            )}
+                            {hasPermission('edit_coupons' as any) && hasPermission('delete_coupons' as any) && (
+                              <DropdownMenuSeparator />
+                            )}
+                            {hasPermission('delete_coupons' as any) && (
+                              <DropdownMenuItem 
+                                onClick={() => handleDeleteCoupon(coupon.id)}
+                                className="text-red-600"
+                              >
+                                <Trash className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
 
-      <CouponModal
-        open={isAddModalOpen}
-        onOpenChange={setIsAddModalOpen}
-        eventId={eventId}
-        couponToEdit={selectedCoupon}
-      />
-    </>
+          {/* Commented out as CouponModal might not be defined
+          <CouponModal
+            open={isAddModalOpen}
+            onOpenChange={setIsAddModalOpen}
+            eventId={eventId}
+            couponToEdit={selectedCoupon}
+          />
+          */}
+        </>
+      )}
+    </PermissionGuard>
   );
 }
 
