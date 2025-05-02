@@ -33,17 +33,17 @@ const LandingHeader = () => {
         </div>
         
         {/* Center Navigation */}
-        <nav className="hidden md:flex md:items-center md:gap-8">
-          <Link href="/#features" className="text-sm font-medium text-white transition-colors hover:text-blue-400">
+        <nav className="hidden md:flex md:items-center md:gap-8 bg-[#1a1e36] px-6 py-1 rounded-full">
+          <Link href="/#features" className="text-sm font-medium text-[#4d79ff] transition-colors hover:text-white">
             Features
           </Link>
-          <Link href="/#testimonials" className="text-sm font-medium text-white transition-colors hover:text-blue-400">
+          <Link href="/#testimonials" className="text-sm font-medium text-[#4d79ff] transition-colors hover:text-white">
             Testimonials
           </Link>
-          <Link href="/#pricing" className="text-sm font-medium text-white transition-colors hover:text-blue-400">
+          <Link href="/#pricing" className="text-sm font-medium text-[#4d79ff] transition-colors hover:text-white">
             Pricing
           </Link>
-          <Link href="/#contact" className="text-sm font-medium text-white transition-colors hover:text-blue-400">
+          <Link href="/#contact" className="text-sm font-medium text-[#4d79ff] transition-colors hover:text-white">
             Contact
           </Link>
         </nav>
@@ -85,28 +85,28 @@ const LandingHeader = () => {
           <nav className="flex flex-col space-y-3 p-4 px-4 md:px-8">
             <Link 
               href="/#features" 
-              className="text-sm font-medium text-gray-300 transition-colors hover:text-blue-400"
+              className="text-sm font-medium text-[#4d79ff] transition-colors hover:text-white"
               onClick={() => setIsMenuOpen(false)}
             >
               Features
             </Link>
             <Link 
               href="/#testimonials" 
-              className="text-sm font-medium text-gray-300 transition-colors hover:text-blue-400"
+              className="text-sm font-medium text-[#4d79ff] transition-colors hover:text-white"
               onClick={() => setIsMenuOpen(false)}
             >
               Testimonials
             </Link>
             <Link 
               href="/#pricing" 
-              className="text-sm font-medium text-gray-300 transition-colors hover:text-blue-400"
+              className="text-sm font-medium text-[#4d79ff] transition-colors hover:text-white"
               onClick={() => setIsMenuOpen(false)}
             >
               Pricing
             </Link>
             <Link 
               href="/#contact" 
-              className="text-sm font-medium text-gray-300 transition-colors hover:text-blue-400"
+              className="text-sm font-medium text-[#4d79ff] transition-colors hover:text-white"
               onClick={() => setIsMenuOpen(false)}
             >
               Contact
