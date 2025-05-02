@@ -54,12 +54,12 @@ const LandingTestimonials = () => {
       className="w-full py-12 md:py-24 lg:py-32 bg-[#0a0c16] border-b border-[#1a1e36]/40" 
       id="testimonials"
     >
-      <div className="container px-4 md:px-6">
+      <div className="container max-w-7xl mx-auto px-4 md:px-8">
         <motion.div 
           variants={fadeUpVariant}
-          className="flex flex-col items-center justify-center space-y-4 text-center"
+          className="flex flex-col items-center justify-center space-y-4 text-center w-full"
         >
-          <div className="space-y-2">
+          <div className="space-y-2 w-full">
             <motion.div 
               variants={scaleVariant}
               className="inline-block rounded-lg bg-[#1a1e36] px-3 py-1 text-sm text-[#4d79ff] font-medium"
@@ -68,19 +68,19 @@ const LandingTestimonials = () => {
             </motion.div>
             <motion.h2 
               variants={fadeUpVariant}
-              className="text-3xl font-bold tracking-tighter sm:text-4xl text-white mt-6"
+              className="text-3xl font-bold tracking-tighter sm:text-5xl text-white mt-6"
             >
               Trusted by Soccer Organizations
             </motion.h2>
             <motion.p 
               variants={fadeUpVariant}
-              className="max-w-[900px] text-gray-300 md:text-lg mt-4"
+              className="max-w-[1000px] mx-auto text-gray-300 md:text-xl mt-6"
             >
               See what tournament directors, club presidents, and league administrators are saying about MatchPro.ai.
             </motion.p>
           </div>
         </motion.div>
-        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 py-12 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mx-auto grid max-w-full grid-cols-1 gap-8 py-16 md:grid-cols-2 lg:grid-cols-3">
           {testimonials.map((testimonial, index) => (
             <motion.div 
               key={index}
