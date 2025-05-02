@@ -3,6 +3,7 @@ import { db } from '@db/index';
 import { emailProviderSettings } from '@db/schema';
 import { emailTemplates } from '@db/schema/emailTemplates';
 import { eq, and } from 'drizzle-orm';
+import * as sendgridService from './sendgridService';
 
 interface EmailOptions {
   to: string;
@@ -19,6 +20,9 @@ interface TemplateContext {
 let emailTransporter: Transporter | null = null;
 let emailTransporterLastFetch: number = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// SendGrid specific types
+type EmailProvider = 'smtp' | 'sendgrid';
 
 /**
  * Gets the configured email provider settings from the database
@@ -40,6 +44,27 @@ async function getEmailProvider() {
     }
 
     // No provider found in database, check for environment variables as fallback
+    const sendgridApiKey = process.env.SENDGRID_API_KEY;
+    if (sendgridApiKey) {
+      console.log('Using SendGrid API key from environment variables as fallback');
+      
+      // Create a fallback provider from SendGrid environment variables
+      return {
+        id: 0,
+        providerType: 'sendgrid' as EmailProvider,
+        providerName: 'Fallback SendGrid Provider',
+        settings: {
+          apiKey: sendgridApiKey,
+          from: process.env.SENDGRID_FROM_EMAIL || 'noreply@example.com'
+        },
+        isActive: true,
+        isDefault: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    // Check for SMTP settings if SendGrid is not available
     const smtpHost = process.env.SMTP_HOST;
     const smtpPort = process.env.SMTP_PORT;
     const smtpUser = process.env.SMTP_USER;
@@ -52,7 +77,7 @@ async function getEmailProvider() {
       // Create a fallback provider from environment variables
       return {
         id: 0,
-        providerType: 'smtp',
+        providerType: 'smtp' as EmailProvider,
         providerName: 'Fallback SMTP Provider',
         settings: {
           host: smtpHost,
@@ -69,7 +94,7 @@ async function getEmailProvider() {
     }
 
     // No fallback available either
-    throw new Error('No email provider configured in database and no valid SMTP settings in environment variables');
+    throw new Error('No email provider configured in database and no valid email settings in environment variables');
   } catch (error) {
     console.error('Error getting email provider:', error);
     throw error;
@@ -102,6 +127,30 @@ async function getEmailTransporter(): Promise<Transporter> {
           pass: password
         }
       });
+    } else if (provider.providerType === 'sendgrid') {
+      // For SendGrid, we return a dummy transporter that will be overridden
+      // by SendGrid-specific methods later
+      const { apiKey } = provider.settings as any;
+      
+      // Make sure the SendGrid API key is valid
+      if (!apiKey) {
+        throw new Error('Missing SendGrid API key in provider settings');
+      }
+      
+      // Create a "dummy" nodemailer transport that isn't actually used
+      // We'll bypass this by using SendGrid's API directly in the sendEmail function
+      emailTransporter = nodemailer.createTransport({
+        host: 'smtp.sendgrid.net',
+        port: 587,
+        secure: false,
+        auth: {
+          user: 'apikey',
+          pass: apiKey
+        }
+      });
+      
+      // Also set up the SendGrid API key for direct API access
+      sendgridService.setApiKey(apiKey);
     } else {
       throw new Error(`Unsupported email provider type: ${provider.providerType}`);
     }
