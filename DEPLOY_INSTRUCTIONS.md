@@ -1,21 +1,22 @@
 # SendGrid Fix Deployment Instructions
 
-This package fixes the password reset email functionality by ensuring SendGrid properly sends emails in both development and production environments.
+This package fixes the password reset email functionality by ensuring SendGrid properly sends emails in both development and production environments, with the correct reset URLs.
 
 ## What's Fixed
 1. Updated `passwordResetService.ts` to always send emails (not just log them)
 2. Fixed `sendgridService.ts` to ensure valid content is always provided to SendGrid
 3. Updated `emailService.ts` to handle email templates properly and provide fallbacks
+4. **NEW:** Fixed the reset URLs to ensure they point to the production environment when in production
 
 ## Deployment Steps
 
 ### 1. Upload the Package
-Upload the `sendgrid_fix.tar.gz` file to your production server.
+Upload the `sendgrid_fix_updated.tar.gz` file to your production server.
 
 ### 2. Extract the Files
 ```bash
 # On your production server
-tar -xzvf sendgrid_fix.tar.gz
+tar -xzvf sendgrid_fix_updated.tar.gz
 ```
 
 ### 3. Copy the Files
@@ -26,12 +27,15 @@ cp -r server/services/emailService.ts /path/to/your/app/server/services/
 cp -r server/services/sendgridService.ts /path/to/your/app/server/services/
 ```
 
-### 4. Verify Environment Variables
-Make sure your production environment has the SendGrid API key:
+### 4. Set Environment Variables
+Set these environment variables in your production environment:
 ```
 SENDGRID_API_KEY=your_sendgrid_api_key
 NODE_ENV=production
+PRODUCTION_URL=https://matchpro.ai     # Add this new variable with your actual production URL
 ```
+
+The `PRODUCTION_URL` environment variable is important as it ensures that password reset links in emails always point to your production site, not your development environment.
 
 ### 5. Restart Your Server
 ```bash
@@ -47,6 +51,7 @@ After deploying, test the password reset functionality:
 2. Click "Forgot Password"
 3. Enter a valid email address
 4. Check that email for the reset link
+5. Verify the link is pointing to your production domain (not development)
 
 ## Rollback Plan
 If issues occur, revert to the previous versions of these files from your backup or source control.

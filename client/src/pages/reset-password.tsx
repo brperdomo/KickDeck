@@ -15,7 +15,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import AuthLayout from "@/components/layouts/AuthLayout";
+import { AnimatedBackground } from "@/components/ui/AnimatedBackground";
 
 const resetPasswordSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
@@ -193,110 +195,167 @@ export default function ResetPassword() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-600 to-green-800 p-4">
-        <Card className="w-full max-w-md bg-white/95 backdrop-blur text-center p-6">
-          <div className="flex justify-center mb-4">
-            <Loader2 className="h-8 w-8 text-green-600 animate-spin" />
+      <AuthLayout>
+        <div className="relative">
+          <AnimatedBackground type="particles" primaryColor="#3d3a98" secondaryColor="#2d2a88" speed="medium" />
+          
+          <div className="relative z-10 flex items-center justify-center min-h-screen">
+            <div className="w-full max-w-[min(400px,100%-2rem)] mx-auto">
+              <Card className="w-full bg-[#3d3a98]/70 backdrop-blur-md shadow-xl border-0 ring-4 ring-[#6a67ff]/60 ring-offset-4 ring-offset-[#3d3a98]/20 shadow-[0_0_20px_5px_rgba(106,103,255,0.4)]">
+                <CardContent className="p-8 text-center">
+                  <div className="flex justify-center mb-4">
+                    <Loader2 className="h-10 w-10 text-white animate-spin" />
+                  </div>
+                  <h2 className="text-lg font-medium text-white">Verifying your reset link...</h2>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-          <h2 className="text-lg font-medium">Verifying your reset link...</h2>
-        </Card>
-      </div>
+        </div>
+      </AuthLayout>
     );
   }
 
   // Invalid token
   if (!isTokenValid && !isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-600 to-green-800 p-4">
-        <Card className="w-full max-w-md bg-white/95 backdrop-blur">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-2">
-              <Trophy className="h-12 w-12 text-green-600" />
+      <AuthLayout>
+        <div className="relative">
+          <AnimatedBackground type="particles" primaryColor="#3d3a98" secondaryColor="#2d2a88" speed="medium" />
+          
+          <div className="relative z-10 flex items-center justify-center min-h-screen">
+            <div className="w-full max-w-[min(400px,100%-2rem)] mx-auto">
+              <Card className="w-full bg-[#3d3a98]/70 backdrop-blur-md shadow-xl border-0 ring-4 ring-[#6a67ff]/60 ring-offset-4 ring-offset-[#3d3a98]/20 shadow-[0_0_20px_5px_rgba(106,103,255,0.4)]">
+                <CardHeader className="space-y-3 pb-6">
+                  <div className="flex justify-center">
+                    <div className="w-100 h-100">
+                      <img
+                        src="/uploads/MatchProAI_Linear_BlackNOBUFFER.png"
+                        alt="MatchPro Logo"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  </div>
+                  <CardTitle className="text-2xl sm:text-3xl font-bold text-center text-white">
+                    Invalid Reset Link
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-center mb-6 text-white">This password reset link is invalid or has expired.</p>
+                  <Link href="/forgot-password">
+                    <Button className="w-full h-11 text-base bg-white hover:bg-white/90 text-[#3d3a98] font-medium transition-colors">
+                      Request a new reset link
+                    </Button>
+                  </Link>
+                  <div className="text-center mt-4">
+                    <Link href="/">
+                      <Button variant="link" className="w-full text-sm text-yellow-200 p-0 h-auto font-semibold hover:text-yellow-100" type="button">
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Back to Login
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            <CardTitle className="text-2xl font-bold">Invalid Reset Link</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-center mb-6">This password reset link is invalid or has expired.</p>
-            <Link href="/forgot-password">
-              <Button className="w-full bg-green-600 hover:bg-green-700">
-                Request a new reset link
-              </Button>
-            </Link>
-            <div className="text-center mt-4">
-              <Link href="/">
-                <Button variant="link" className="text-sm text-green-600" type="button">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Login
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </div>
+      </AuthLayout>
     );
   }
 
   // Valid token - show reset form
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-600 to-green-800 p-4">
-      <Card className="w-full max-w-md bg-white/95 backdrop-blur">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-2">
-            <Trophy className="h-12 w-12 text-green-600" />
+    <AuthLayout>
+      <div className="relative">
+        <AnimatedBackground type="particles" primaryColor="#3d3a98" secondaryColor="#2d2a88" speed="medium" />
+        
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="w-full max-w-[min(400px,100%-2rem)] mx-auto">
+            <Card className="w-full bg-[#3d3a98]/70 backdrop-blur-md shadow-xl border-0 ring-4 ring-[#6a67ff]/60 ring-offset-4 ring-offset-[#3d3a98]/20 shadow-[0_0_20px_5px_rgba(106,103,255,0.4)]">
+              <CardHeader className="space-y-3 pb-6">
+                <div className="flex justify-center">
+                  <div className="w-100 h-100">
+                    <img
+                      src="/uploads/MatchProAI_Linear_BlackNOBUFFER.png"
+                      alt="MatchPro Logo"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                </div>
+                <CardTitle className="text-2xl sm:text-3xl font-bold text-center text-white">
+                  Set New Password
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base text-white">New Password</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="password"
+                              className="h-11 text-base px-4 bg-white/90 border-white/50 focus:border-white focus:ring-white/50"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-yellow-200" />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base text-white">Confirm Password</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="password"
+                              className="h-11 text-base px-4 bg-white/90 border-white/50 focus:border-white focus:ring-white/50"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-yellow-200" />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button 
+                      type="submit" 
+                      className="w-full h-11 text-base bg-white hover:bg-white/90 text-[#3d3a98] font-medium transition-colors"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Updating Password...
+                        </>
+                      ) : (
+                        'Set New Password'
+                      )}
+                    </Button>
+
+                    <div className="text-center">
+                      <Link href="/">
+                        <Button variant="link" className="w-full text-sm text-yellow-200 p-0 h-auto font-semibold hover:text-yellow-100" type="button">
+                          <ArrowLeft className="h-4 w-4 mr-2" />
+                          Back to Login
+                        </Button>
+                      </Link>
+                    </div>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
           </div>
-          <CardTitle className="text-2xl font-bold">Set New Password</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>New Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button 
-                type="submit" 
-                className="w-full bg-green-600 hover:bg-green-700"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Updating Password..." : "Reset Password"}
-              </Button>
-
-              <div className="text-center mt-4">
-                <Link href="/">
-                  <Button variant="link" className="text-sm text-green-600" type="button">
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to Login
-                  </Button>
-                </Link>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </AuthLayout>
   );
 }
