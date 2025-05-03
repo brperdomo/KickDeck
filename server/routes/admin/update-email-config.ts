@@ -163,8 +163,8 @@ async function updateEmailTemplates(providerId: number | null): Promise<number> 
         .set({
           sender_email: SENDER_EMAIL,
           sender_name: SENDER_NAME,
-          providerId: providerId,
-          updatedAt: new Date()
+          provider_id: providerId,
+          updated_at: new Date()
         })
         .where(eq(emailTemplates.id, template.id));
         
