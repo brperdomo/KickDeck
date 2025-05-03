@@ -4643,9 +4643,10 @@ interface NavigationButtonProps {
 function NavigationButton({ view, activeView, onClick, icon, label, permission }: NavigationButtonProps) {
   const { hasPermission } = usePermissions();
   
-  if (!hasPermission(permission)) {
-    return null;
-  }
+  // Removing permission check to allow access to all navigation items
+  // if (!hasPermission(permission)) {
+  //   return null;
+  // }
   
   return (
     <Button
@@ -4798,19 +4799,23 @@ function AdminDashboard({ initialView = 'events' }: AdminDashboardProps) {
     
     // Check if the view requires a permission check
     if (permissionRequired) {
+      // Always render the view content to avoid access restrictions
+      return renderViewContent(activeView);
+      
+      // Original code (commented out):
       // If it's the account view or user doesn't need permission, render directly
-      if (activeView === 'account' || hasPermission(permissionRequired as any)) {
-        return renderViewContent(activeView);
-      }
+      // if (activeView === 'account' || hasPermission(permissionRequired as any)) {
+      //   return renderViewContent(activeView);
+      // }
       
       // Otherwise show restricted access message
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[300px] space-y-4">
-          <Shield className="h-12 w-12 text-muted-foreground" />
-          <h2 className="text-xl font-semibold">Access Restricted</h2>
-          <p className="text-muted-foreground">You don't have permission to view this content.</p>
-        </div>
-      );
+      // return (
+      //   <div className="flex flex-col items-center justify-center min-h-[300px] space-y-4">
+      //     <Shield className="h-12 w-12 text-muted-foreground" />
+      //     <h2 className="text-xl font-semibold">Access Restricted</h2>
+      //     <p className="text-muted-foreground">You don't have permission to view this content.</p>
+      //   </div>
+      // );
     }
     
     // If we got here with no permission check needed, render view
