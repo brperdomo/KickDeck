@@ -1,91 +1,90 @@
 # SendGrid Email Integration Guide
 
-This guide explains how MatchPro uses SendGrid for sending all email communications.
+This guide explains how to set up SendGrid for email notifications in MatchPro.
 
-## Overview
+## Requirements
 
-MatchPro now exclusively uses SendGrid for sending all emails, including:
-- Team registration confirmations
-- Payment receipts
-- Password reset emails
-- Administrative notifications
+1. A SendGrid account (free tier works for testing)
+2. API key with full access to "Mail Send" permissions
+3. Verified sender domain or email address
 
-All emails are sent from the standard address `support@matchpro.ai` to maintain brand consistency.
+## Setup Instructions
 
-## Configuration
+### 1. Create a SendGrid Account
 
-The SendGrid integration has been configured with the following settings:
+If you don't have a SendGrid account:
+1. Go to [SendGrid.com](https://sendgrid.com/)
+2. Sign up for a free account
+3. Complete the account verification process
 
-1. **SendGrid API Key**: Stored securely in the environment as `SENDGRID_API_KEY`
-2. **Default Sender**: All emails use `support@matchpro.ai` as the sender
-3. **Email Templates**: All email templates have been configured to use SendGrid as their provider
+### 2. Create an API Key
 
-## Verifying Setup
+1. In your SendGrid dashboard, go to **Settings > API Keys**
+2. Click **Create API Key**
+3. Name it something descriptive like "MatchPro Email Service"
+4. Select **Restricted Access** and ensure "Mail Send" permission is enabled
+5. Create the key and copy it (you won't be able to see it again)
 
-To ensure your SendGrid configuration is working properly:
+### 3. Verify a Sender Identity
 
-1. Run the verification script:
-   ```
-   node verify-sendgrid-config.js your-test-email@example.com
-   ```
+SendGrid requires that you verify the email addresses or domains you send from:
 
-2. This script will:
-   - Check that a SendGrid provider is properly configured in the database
-   - Verify all email templates are using the standard sender email
-   - Send a test email to the provided address
+#### Option A: Verify a Single Sender (Quickest)
+1. Go to **Settings > Sender Authentication**
+2. Click **Verify a Single Sender**
+3. Fill in the form with your details
+4. Follow the verification steps sent to your email
 
-## Sending Test Emails
+#### Option B: Verify a Domain (Recommended for Production)
+1. Go to **Settings > Sender Authentication**
+2. Click **Verify a Domain**
+3. Follow the DNS setup instructions
+4. Wait for verification to complete (can take 24-48 hours)
 
-For testing specific email types:
+### 4. Configure MatchPro
 
-1. **Simple Test Email**:
-   ```
-   node test-sendgrid-direct.js recipient@example.com
-   ```
+#### For Development Environment
+Add these variables to your `.env` file:
+```
+SENDGRID_API_KEY=your_api_key_here
+SENDGRID_FROM_EMAIL=your_verified_email@example.com
+```
 
-2. **Password Reset Test**:
-   ```
-   node test-password-reset-sendgrid.js recipient@example.com
-   ```
+#### For Production Environment
+Set these environment variables on your production server:
+```
+SENDGRID_API_KEY=your_api_key_here
+SENDGRID_FROM_EMAIL=your_verified_email@example.com
+PRODUCTION_URL=https://your-production-domain.com
+NODE_ENV=production
+```
 
-## Updating Configuration
+The `PRODUCTION_URL` variable is crucial for password reset emails to link to your production environment.
 
-If you need to update the SendGrid configuration or set it up for the first time:
+## Testing the Configuration
 
-1. Make sure the `SENDGRID_API_KEY` environment variable is set
-2. Run the update script:
-   ```
-   node update-email-config.js
-   ```
+After setting up SendGrid, you can test it with:
 
-3. This script will:
-   - Create or update the SendGrid provider in the database
-   - Set it as the default and active provider
-   - Update all email templates to use SendGrid
-   - Deactivate any other email providers
+```bash
+node test-sendgrid.js recipient@example.com your_verified_sender@example.com
+```
+
+For password reset specifically:
+
+```bash
+node test-password-reset-sendgrid.js recipient@example.com
+```
 
 ## Troubleshooting
 
-If you encounter issues with sending emails:
+1. **Emails not sending**: Check SendGrid Activity Feed for errors
+2. **Invalid API key errors**: Regenerate your API key and update the environment variables
+3. **Email links pointing to wrong domain**: Make sure `PRODUCTION_URL` is set correctly in production
+4. **Emails going to spam**: Complete domain verification and follow SendGrid's deliverability guidelines
 
-1. Verify your SendGrid API key is valid and active
-2. Check that the sender domain is verified in your SendGrid account
-3. Run the verification script to confirm the configuration is correct
-4. Check SendGrid logs for any delivery issues or bounces
+## Support
 
-## Sender Domain Verification
-
-For optimal deliverability:
-
-1. Verify the sending domain (`matchpro.ai`) in your SendGrid account
-2. Set up DKIM authentication for the domain
-3. Configure SPF records for the domain
-4. Set up a dedicated IP address for sending emails (for high volume)
-
-## Maintaining Email Templates
-
-If you create new email templates:
-
-1. Ensure they use `support@matchpro.ai` as the sender
-2. Assign them to the SendGrid provider
-3. Run the verification script to confirm they're properly configured
+If you encounter issues with SendGrid integration:
+1. Check the SendGrid documentation: https://docs.sendgrid.com/
+2. Review your application logs for specific error messages
+3. Contact SendGrid support for account-specific issues
