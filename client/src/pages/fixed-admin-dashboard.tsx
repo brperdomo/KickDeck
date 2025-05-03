@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useUser } from "@/hooks/use-user";
+import { useAuth } from "@/hooks/use-auth";
 import { 
   Calendar, 
   Shield, 
@@ -36,7 +36,7 @@ export default function AdminDashboard({ initialView = 'events' }: AdminDashboar
   // Use the initialView prop as the initial state
   const [activeView, setActiveView] = useState<View>(initialView as View);
   const [, navigate] = useLocation();
-  const { user, logoutMutation } = useUser();
+  const { user, logoutMutation } = useAuth();
   const [theme, setTheme] = useState(() => {
     // Default to 'dark' theme or get from localStorage if available
     return localStorage.getItem('theme') || 'dark';

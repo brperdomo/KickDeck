@@ -40,7 +40,7 @@ import EventClubsPage from "@/pages/event-clubs";
 import RegistrationOrdersReport from "@/pages/registration-orders-report";
 import Checkout from "@/pages/checkout";
 import PaymentConfirmation from "@/pages/payment-confirmation";
-import { AuthProvider } from "@/hooks/use-auth-provider";
+import { AuthProvider } from "@/lib/auth-provider";
 // Account page import
 import AccountPage from "./pages/account";
 import { LogoutHandler } from "@/components/LogoutHandler";
