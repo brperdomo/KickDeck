@@ -222,6 +222,7 @@ export function registerRoutes(app: Express): Server {
     app.use('/api/admin/games', isAdmin, gamesRouter); // Game management router
     app.use('/api/admin/clubs', isAdmin, adminClubsRouter); // Admin club management router
     app.use('/api/admin/events', isAdmin, eventClubsRouter); // Event clubs management router
+    app.use('/api/admin/email-config', isAdmin, emailConfigRouter); // Email configuration router
     
     // Role permissions management endpoints
     app.get('/api/admin/roles', isAdmin, getRolesWithPermissions);
