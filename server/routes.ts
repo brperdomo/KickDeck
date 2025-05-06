@@ -5754,6 +5754,9 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
     });
 
     // Add administrators endpoint
+    // IMPORTANT: This is a duplicate administrator creation endpoint
+    // It should be removed in a future update to avoid conflicts
+    // Kept for now with welcome email implementation to ensure backwards compatibility
     app.post('/api/admin/administrators', isAdmin, async (req, res) => {
       try {
         const { firstName, lastName, email, password, roles } = req.body;
@@ -5838,6 +5841,33 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             lastName: newAdmin.lastName,
             roles
           });
+
+          // After successful transaction, send admin welcome email
+          try {
+            console.log('Sending admin welcome email to:', email);
+            
+            // Get base application URL for login link
+            const appUrl = process.env.APP_URL || 
+                         (process.env.REPLIT_DOMAINS ? 
+                          `https://${process.env.REPLIT_DOMAINS.split(',')[0]}` : 
+                          'https://matchpro.ai');
+            
+            // Send the welcome email with login link and admin context
+            await sendTemplatedEmail(email, 'admin_welcome', {
+              firstName,
+              lastName,
+              email,
+              loginUrl: `${appUrl}/login`,
+              appUrl,
+              role: 'Administrator',
+              isAdmin: true
+            });
+            
+            console.log('Admin welcome email sent successfully');
+          } catch (emailError) {
+            // Log but don't fail the request if email sending fails
+            console.error('Error sending admin welcome email:', emailError);
+          }
         });
       } catch (error) {
         console.error('Error creating administrator:', error);
