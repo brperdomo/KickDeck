@@ -52,15 +52,15 @@ This email should include:
 ### 5. Set Up Dynamic Template Variables
 
 Both templates should support these variables:
-- `{{user.firstName}}` - User's first name
-- `{{user.lastName}}` - User's last name
-- `{{user.email}}` - User's email address
+- `{{firstName}}` - User's first name
+- `{{lastName}}` - User's last name
+- `{{email}}` - User's email address
 - `{{loginUrl}}` - URL to the login page
 - `{{appUrl}}` - Base URL of the application
-- `{{organizationName}}` - Name of the organization
+- `{{organizationName}}` - Name of the organization (if available)
 
 Admin template should also use:
-- `{{isAdmin}}` - Boolean flag indicating admin status
+- `{{role}}` - Role of the user (e.g., "Administrator")
 
 ## Configuration in MatchPro
 
@@ -82,11 +82,22 @@ Admin template should also use:
 
 ### 3. Test the Templates
 
-1. Run the test script to verify both templates are working:
+1. Run the test scripts to verify both templates are working:
    ```
-   node test-both-welcome-emails.js test@example.com
+   # Test both welcome email templates
+   node test-both-welcome-emails.js
+
+   # Test admin welcome email only
+   node test-sendgrid-admin-welcome-direct.js
+
+   # Test member welcome email only
+   node test-sendgrid-member-welcome-direct.js
    ```
-2. Check the email delivery and formatting
+2. Check the email delivery and formatting in your inbox
+3. You can also create a test administrator to verify the welcome email flow:
+   ```
+   node test-admin-welcome-email.js
+   ```
 
 ## Troubleshooting
 
