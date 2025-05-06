@@ -165,12 +165,19 @@ export default function EmailTemplatesPage() {
               Manage email templates for various system communications
             </p>
           </div>
-          <Button asChild>
-            <Link href="/admin/email-templates/create">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Template
-            </Link>
-          </Button>
+          <div className="flex gap-3">
+            <Button variant="outline" asChild>
+              <Link href="/sendgrid-settings">
+                SendGrid Integration
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link href="/admin/email-templates/create">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Template
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <div className="bg-card border rounded-lg shadow-sm p-6">
