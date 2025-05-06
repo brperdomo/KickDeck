@@ -4003,8 +4003,8 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             
             for (const { key, value } of brandingProps) {
               // For colors, always ensure we have a value (the default if nothing provided)
-              // For logoUrl, only process if actually provided
-              if ((key.includes('Color') || value !== undefined)) {
+              // For logoUrl, always process it regardless of value to ensure updates work
+              if ((key.includes('Color') || key.includes('logoUrl'))) {
                 console.log(`Saving branding setting: ${key} = ${value}`);
                 
                 // Check if setting already exists
