@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, RefreshCw, CheckCircle2, AlertCircle, ArrowLeft, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -180,6 +181,20 @@ export default function SendGridSettingsPage() {
     <>
       <AdminBanner />
       <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center mb-6">
+          <Link href="/admin">
+            <Button variant="outline" size="sm" className="mr-4">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Dashboard
+            </Button>
+          </Link>
+          <Link href="/admin/email-templates">
+            <Button variant="outline" size="sm" className="mr-4">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Email Templates
+            </Button>
+          </Link>
+        </div>
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">SendGrid Settings</h1>
           <Button

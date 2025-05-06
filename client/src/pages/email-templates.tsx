@@ -11,7 +11,9 @@ import {
   Copy, 
   CheckCircle, 
   XCircle,
-  Search
+  Search,
+  ArrowLeft,
+  LayoutDashboard
 } from "lucide-react";
 import { AdminBanner } from "@/components/admin/AdminBanner";
 import { Button } from "@/components/ui/button";
@@ -158,6 +160,14 @@ export default function EmailTemplatesPage() {
     <>
       <AdminBanner />
       <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center mb-6">
+          <Link href="/admin">
+            <Button variant="outline" size="sm" className="mr-4">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Dashboard
+            </Button>
+          </Link>
+        </div>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
             <h1 className="text-2xl font-bold">Email Templates</h1>
