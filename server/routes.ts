@@ -65,6 +65,7 @@ import {
 } from "./routes/admin/event-administrators";
 import userRouter from "./routes/user";
 import { sql, eq, and, or, inArray, notInArray } from "drizzle-orm";
+import { sendTemplatedEmail } from "./services/emailService";
 import {
   users,
   organizationSettings,
@@ -1648,6 +1649,33 @@ export function registerRoutes(app: Express): Server {
             });
 
           console.log(`Assigned role ${roleName} to user ${newUser.id}`);
+        }
+
+        // Send admin welcome email
+        try {
+          console.log('Sending admin welcome email to:', email);
+          
+          // Get base application URL for login link
+          const appUrl = process.env.APP_URL || 
+                         (process.env.REPLIT_DOMAINS ? 
+                          `https://${process.env.REPLIT_DOMAINS.split(',')[0]}` : 
+                          'https://matchpro.ai');
+          
+          // Send the welcome email with login link and admin context
+          await sendTemplatedEmail(email, 'admin_welcome', {
+            firstName,
+            lastName,
+            email,
+            loginUrl: `${appUrl}/login`,
+            appUrl,
+            role: 'Administrator',
+            isAdmin: true
+          });
+          
+          console.log('Admin welcome email sent successfully');
+        } catch (emailError) {
+          // Log but don't fail the request if email sending fails
+          console.error('Error sending admin welcome email:', emailError);
         }
 
         // Return success response
