@@ -52,6 +52,7 @@ interface Registration {
   errorCode?: string;
   errorMessage?: string;
   paymentStatus?: string;
+  payLater?: boolean;
   submitter?: {
     name: string;
     email: string;
@@ -59,7 +60,7 @@ interface Registration {
 }
 
 // Component to display the status of a team in a nice badge
-function TeamStatusBadge({ status }: { status: Registration['status'] }) {
+function TeamStatusBadge({ status, payLater }: { status: Registration['status'], payLater?: boolean }) {
   switch (status) {
     case 'approved':
       return <Badge className="bg-green-500/90 whitespace-nowrap">Team Approved</Badge>;
@@ -68,9 +69,13 @@ function TeamStatusBadge({ status }: { status: Registration['status'] }) {
     case 'paid':
       return <Badge className="bg-blue-500/90 whitespace-nowrap">Team Paid</Badge>;
     case 'pending_payment':
-      return <Badge variant="outline" className="text-amber-500 border-amber-500 whitespace-nowrap">Payment Needed</Badge>;
+      return payLater 
+        ? <Badge variant="outline" className="text-orange-500 border-orange-500 whitespace-nowrap font-medium">Pay Later Selected</Badge>
+        : <Badge variant="outline" className="text-amber-500 border-amber-500 whitespace-nowrap">Payment Needed</Badge>;
     case 'registered':
-      return <Badge variant="outline" className="whitespace-nowrap">Team Registered</Badge>;
+      return payLater
+        ? <Badge variant="outline" className="text-orange-500 border-orange-500 whitespace-nowrap font-medium">Pay Later Selected</Badge>
+        : <Badge variant="outline" className="whitespace-nowrap">Team Registered</Badge>;
     case 'withdrawn':
       return <Badge variant="secondary" className="whitespace-nowrap">Team Withdrawn</Badge>;
     case 'refunded':
@@ -120,7 +125,7 @@ function RegistrationsList({ registrations }: { registrations: Registration[] })
               <div className="flex gap-2 items-center">
                 <div className="flex flex-col items-end gap-1">
                   <div className="flex gap-2 items-center">
-                    <TeamStatusBadge status={registration.status} />
+                    <TeamStatusBadge status={registration.status} payLater={registration.payLater} />
                     {registration.paymentStatus && (
                       <PaymentStatusBadge status={registration.paymentStatus} />
                     )}
@@ -146,7 +151,7 @@ function RegistrationsList({ registrations }: { registrations: Registration[] })
                 <div>
                   <h4 className="font-medium text-sm mb-1">Status</h4>
                   <div className="flex items-center gap-2">
-                    <TeamStatusBadge status={registration.status} />
+                    <TeamStatusBadge status={registration.status} payLater={registration.payLater} />
                     {registration.paymentStatus && (
                       <PaymentStatusBadge status={registration.paymentStatus} />
                     )}
@@ -162,6 +167,12 @@ function RegistrationsList({ registrations }: { registrations: Registration[] })
                       <TableCell className="font-medium">Amount</TableCell>
                       <TableCell>${(registration.amount / 100).toFixed(2)}</TableCell>
                     </TableRow>
+                    {registration.payLater && (
+                      <TableRow>
+                        <TableCell className="font-medium">Payment Option</TableCell>
+                        <TableCell className="text-orange-500 font-medium">Pay Later Selected</TableCell>
+                      </TableRow>
+                    )}
                     {registration.paymentDate && (
                       <TableRow>
                         <TableCell className="font-medium">Payment Date</TableCell>
