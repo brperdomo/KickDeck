@@ -143,7 +143,9 @@ export default function SendGridSettingsPage() {
 
   // Handle mapping a template
   const handleMapTemplate = (templateType: string, sendgridTemplateId: string | null) => {
-    mapTemplateMutation.mutate({ templateType, sendgridTemplateId });
+    // Convert "none" to null for API calls
+    const templateId = sendgridTemplateId === "none" ? null : sendgridTemplateId;
+    mapTemplateMutation.mutate({ templateType, sendgridTemplateId: templateId });
   };
 
   // Handle sending a test email
@@ -248,14 +250,14 @@ export default function SendGridSettingsPage() {
                               SendGrid Template
                             </Label>
                             <Select
-                              value={template.sendgridTemplateId || ""}
-                              onValueChange={(value) => handleMapTemplate(template.type, value || null)}
+                              value={template.sendgridTemplateId || "none"}
+                              onValueChange={(value) => handleMapTemplate(template.type, value)}
                             >
                               <SelectTrigger id={`template-${template.id}`}>
                                 <SelectValue placeholder="Select a template" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">None (Use HTML template)</SelectItem>
+                                <SelectItem value="none">None (Use HTML template)</SelectItem>
                                 {sendgridTemplates.map((sgTemplate: SendGridTemplate) => (
                                   <SelectItem key={sgTemplate.id} value={sgTemplate.id}>
                                     {sgTemplate.name}
