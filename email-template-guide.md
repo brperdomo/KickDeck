@@ -1,84 +1,161 @@
-# Email Template Configuration Guide
+# Email Template Guide
 
-## Accessing Email Templates
+This guide explains the email templates used in MatchPro and how they're implemented.
 
-You can configure and customize all email templates in the MatchPro admin dashboard:
+## Welcome Email Templates
 
-1. Log in to your MatchPro account as an admin
-2. Navigate to **Admin Dashboard**
-3. Go to **Settings** → **Email Templates**
+MatchPro has two distinct welcome email templates:
 
-## Available Email Templates
+1. **Member Welcome Email** - Sent to regular users who register via the `/register` endpoint
+2. **Admin Welcome Email** - Sent to administrators when they are created by a super admin
 
-The system supports the following email template types:
+### Implementation Details
 
-- **Welcome** - Sent when a new user creates an account
-- **Password Reset** - Sent when a user requests to reset their password
-- **Event Registration** - Sent to confirm event registrations
-- **Payment Confirmation** - Sent after successful payments
-- **Notification** - General notifications sent by the system
+Both email templates are implemented using SendGrid's dynamic templates, which allow for visual editing and version control of email content.
 
-## Customizing Templates
+#### Template Variables
 
-Each template can be fully customized with the following options:
+Both templates support the following variables:
 
-### Basic Information
-- **Template Name** - Identifier for the template
-- **Subject Line** - Email subject that recipients will see
-- **Sender Name** - Name that appears in the "From" field
-- **Sender Email** - Email address that appears in the "From" field (must be verified in SendGrid)
+- `{{firstName}}` - User's first name
+- `{{lastName}}` - User's last name
+- `{{email}}` - User's email address
+- `{{loginUrl}}` - URL to the login page (includes the base URL)
+- `{{role}}` - The user's role (e.g., "Team Manager", "Administrator")
 
-### Content
-- **HTML Content** - The rich HTML content of the email
-- **Text Content** - Plain text version for email clients that don't support HTML
+#### Template Content Guidelines
 
-### Variables
-You can use these variables in your templates, which will be automatically replaced with actual values:
+**Member Welcome Email**
+- Personalized greeting using `{{firstName}}` and `{{lastName}}`
+- Brief explanation of MatchPro's features
+- Information about the dashboard and what users can do there
+- Clear login button/link using `{{loginUrl}}`
+- Support information
 
-- `{{firstName}}` - Recipient's first name
-- `{{lastName}}` - Recipient's last name
-- `{{email}}` - Recipient's email address
-- `{{username}}` - Recipient's username
-- `{{resetLink}}` - Password reset link (for password reset emails)
-- `{{eventName}}` - Name of the event (for event-related emails)
-- `{{teamName}}` - Name of the team (for team-related emails)
-- `{{bracketName}}` - Name of the bracket (for bracket-related emails)
-- `{{paymentAmount}}` - Payment amount (for payment-related emails)
+**Admin Welcome Email**
+- Personalized greeting using `{{firstName}}` and `{{lastName}}`
+- Notification that they've been given admin privileges
+- Explanation of admin capabilities
+- Clear login button/link using `{{loginUrl}}`
+- Support information
 
-## SendGrid Compatibility
+### Technical Implementation
 
-Our email system is fully integrated with SendGrid. To ensure your templates work correctly with SendGrid:
+The email sending functionality is implemented in multiple components:
 
-1. **Use Mobile-Responsive Design** - SendGrid delivers emails to various devices, so ensure your templates are responsive
-2. **Keep HTML Simple** - Avoid complex CSS or JavaScript that might not be supported by email clients
-3. **Test Before Sending** - Use the preview function to test how your email looks before saving it
-4. **Verify Sender Domains** - Make sure your sender email domain is verified in SendGrid
-5. **Use Proper HTML Structure** - Include proper HTML tags and structure for best compatibility
+#### 1. Email Service (`server/services/emailService.js`)
 
-## Template Testing
+This service provides a unified interface for sending emails regardless of the email provider (SendGrid, SMTP, etc.). The key function is:
 
-You can test your templates before using them in production:
+```javascript
+async function sendTemplatedEmail(to, templateType, variables) {
+  // Get email provider (SendGrid)
+  const provider = await getEmailProvider();
+  
+  // Get email template by type
+  const template = await getEmailTemplate(templateType);
+  
+  // Send email using provider-specific method
+  return sendEmail(provider, {
+    to,
+    template,
+    variables
+  });
+}
+```
 
-1. Click the **Preview** button on any template
-2. Enter test data for variables
-3. View how the email will appear to recipients
+#### 2. SendGrid Integration (`server/services/sendgridService.js`)
 
-## Email Provider Settings
+This service handles the direct integration with SendGrid's API:
 
-To configure SendGrid as your email provider:
+```javascript
+async function sendEmailWithSendGrid(provider, params) {
+  const mailService = new MailService();
+  mailService.setApiKey(provider.settings.apiKey);
+  
+  // Prepare SendGrid message with template
+  const msg = {
+    to: params.to,
+    from: params.template.senderEmail,
+    templateId: params.template.sendgridTemplateId,
+    dynamicTemplateData: params.variables
+  };
+  
+  // Send email using SendGrid
+  return mailService.send(msg);
+}
+```
 
-1. Go to **Admin Dashboard** → **Settings** → **Email Providers**
-2. Select **SendGrid** as your provider
-3. Enter your SendGrid API key
-4. Set a default sender email address (must be verified in SendGrid)
-5. Test the configuration to ensure it works properly
+#### 3. Welcome Email Sending in User Creation
 
-## Troubleshooting
+**Member Registration** (`server/routes.ts` `/api/register` endpoint):
 
-If emails are not being delivered:
+```javascript
+await sendTemplatedEmail(
+  req.body.email,
+  'welcome',
+  {
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    email: req.body.email,
+    loginUrl: `${getAppUrl(req)}/login`,
+    role: 'Team Manager'
+  }
+);
+```
 
-1. Check that your SendGrid API key is valid and has proper permissions
-2. Verify that the sender email domain is verified in SendGrid
-3. Check SendGrid's activity log for possible delivery issues
-4. Ensure your template has valid HTML structure
-5. Check that your email templates are using the SendGrid provider configuration
+**Admin Creation** (`server/routes.ts` `/api/admin/administrators` endpoint):
+
+```javascript
+await sendTemplatedEmail(
+  req.body.email,
+  'admin_welcome',
+  {
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    email: req.body.email,
+    loginUrl: `${getAppUrl(req)}/login`,
+    role: 'Administrator'
+  }
+);
+```
+
+### Testing the Email Templates
+
+Several test scripts are available to verify the email templates:
+
+1. **Test Both Templates:**
+   ```
+   node test-both-welcome-emails.js
+   ```
+
+2. **Test Admin Welcome Email:**
+   ```
+   node test-sendgrid-admin-welcome-direct.js
+   ```
+
+3. **Test Member Welcome Email:**
+   ```
+   node test-sendgrid-member-welcome-direct.js
+   ```
+
+4. **Test Admin Creation Flow:**
+   ```
+   node test-admin-welcome-email.js
+   ```
+
+### SendGrid Template Management
+
+The SendGrid template IDs are stored in the database in the `email_templates` table. Each template record includes:
+
+- `id` - Database record ID
+- `type` - Template type (e.g., 'welcome', 'admin_welcome')
+- `name` - Display name
+- `subject` - Email subject line
+- `body` - HTML template content (for SMTP fallback)
+- `sendgridTemplateId` - ID of the SendGrid dynamic template
+- `senderEmail` - Email address to use as sender
+
+### Mapping Templates in the UI
+
+The SendGrid Settings page (`/admin/email/sendgrid-settings`) allows administrators to map email types to SendGrid dynamic templates. This mapping is stored in the database.
