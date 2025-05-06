@@ -8,9 +8,9 @@
  *   node test-registration-receipt.js recipient@example.com
  */
 
-import { db } from './server/db/index.js';
-import { createRegistrationReceiptTemplate } from './create-registration-receipt-template.js';
-import { sendRegistrationReceiptEmail } from './server/services/emailService.js';
+const { db } = require('./server/db/index');
+const { createRegistrationReceiptTemplate } = require('./create-registration-receipt');
+const { sendRegistrationReceiptEmail } = require('./server/services/emailService');
 
 async function testRegistrationReceipt() {
   try {
