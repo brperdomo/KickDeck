@@ -736,23 +736,38 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
     fetchEvent();
   }, [eventId]);
 
-  // Updated useEffect to properly handle authentication state WITHOUT forced redirects
+  // SIMPLIFIED AUTHENTICATION APPROACH - DIRECT SOLUTION
   useEffect(() => {
-    // If auth is not loading, make a decision based on authentication status
+    // First, check if the URL has the auth=required parameter
+    // If it does, and the user is authenticated, remove it 
+    const url = new URL(window.location.href);
+    const hasAuthParam = url.searchParams.has('auth');
+    
+    if (hasAuthParam && user) {
+      // User is already authenticated and there's an auth parameter
+      // Remove all parameters and force to personal step
+      console.log('AUTH REDIRECT FIX: User is logged in but auth parameter exists, clearing URL');
+      window.history.replaceState(
+        { step: 'personal', eventId }, 
+        '', 
+        `/register/event/${eventId}`
+      );
+      setCurrentStep('personal');
+      return;
+    }
+    
+    // Regular authentication check - much simpler now
     if (!authLoading) {
-      console.log('Auth state determined:', { 
-        user: user ? `User #${user.id} (${user.email})` : 'Not logged in', 
-        isPreview, 
-        currentStep 
-      });
-      
       if (user) {
-        // User is already authenticated, skip auth step entirely
-        if (currentStep === 'auth') {
-          console.log('User is already authenticated, advancing to personal details');
-          setCurrentStep('personal');
-          
-          // Store this navigation in window history for potential back button support
+        // User is authenticated, always go to personal details
+        console.log('User is authenticated, setting to personal details step');
+        
+        // CRITICAL FIX: Always set to personal step regardless of current step
+        // This overrides any URL parameters or redirects
+        setCurrentStep('personal');
+        
+        // Clear any auth parameters from URL to prevent future issues
+        if (url.searchParams.has('auth') || url.searchParams.has('eventId')) {
           window.history.replaceState(
             { step: 'personal', eventId }, 
             '', 
@@ -760,61 +775,19 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
           );
         }
       } else if (!isPreview) {
-        // Only set auth step if not in preview mode and user is not authenticated
+        // User is not logged in
         console.log('User is not authenticated, showing auth step');
         
-        // Store return URL in sessionStorage for post-login redirect button click
-        // This is crucial for returning to the correct registration step
-        const returnUrl = `/register/event/${eventId}`;
-        sessionStorage.setItem('redirectAfterAuth', returnUrl);
+        // Store return URL for after login
+        sessionStorage.setItem('redirectAfterAuth', `/register/event/${eventId}`);
         
-        // Also add eventId to URL as fallback mechanism
-        // This helps if sessionStorage is cleared or not accessible
-        window.history.replaceState(
-          { step: 'auth', eventId }, 
-          '', 
-          `/register/event/${eventId}?auth=required&eventId=${eventId}`
-        );
-        
-        // Do NOT force redirect - let the component render the auth step UI
-        // This gives the user a chance to see what event they're registering for
-        // The Sign In button will have the proper redirect setup when clicked
+        // Always set to auth step
         setCurrentStep('auth');
       }
     }
-  }, [authLoading, user, isPreview, currentStep, eventId]);
+  }, [authLoading, user, isPreview, eventId]);
   
-  // Enhanced check to force immediate update when user state changes
-  // This useEffect runs whenever the user or auth loading state changes
-  useEffect(() => {
-    // Only proceed if we have authentication data loaded
-    if (!authLoading) {
-      // If user is logged in, force move to personal details step
-      if (user) {
-        console.log('User authenticated detected, forcing advance to personal details step');
-        
-        // IMPORTANT FIX: Check for the authentication completion flag
-        // This flag is set by the auth page when redirecting back here
-        const authComplete = sessionStorage.getItem('registration_auth_complete');
-        
-        if (authComplete) {
-          console.log('Registration auth complete flag detected, removing flag');
-          // Remove the flag to prevent future auto-advances
-          sessionStorage.removeItem('registration_auth_complete');
-        }
-        
-        // Force the current step to personal regardless of current state
-        setCurrentStep('personal');
-        
-        // Make sure to update history state here too for consistency
-        window.history.replaceState(
-          { step: 'personal', eventId }, 
-          '', 
-          `/register/event/${eventId}`
-        );
-      }
-    }
-  }, [user, authLoading, eventId]);
+  // We've removed the duplicate useEffect to avoid conflicts
   
   // Fetch clubs for the current event
   useEffect(() => {
