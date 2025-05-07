@@ -521,15 +521,15 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
       return;
     }
     
-    // Create the redirect URL with the current page as the return destination
-    // Include the full URL with eventId to ensure proper return after auth
-    // Don't use window.location.href as it includes query parameters that can cause confusion
-    const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
-    const redirectUrl = encodeURIComponent(baseUrl);
+    console.log('User is not authenticated, redirecting directly to server login endpoint');
     
-    console.log('Redirecting to auth page with redirect parameter:', baseUrl);
-    // Pass the current page URL as a redirect parameter
-    setLocation(`/auth?redirect=${redirectUrl}`);
+    // Instead of redirecting to auth page with complex URL parameters, 
+    // store the current location in sessionStorage and use a simpler redirect method
+    const returnUrl = `/register/event/${eventId}`;
+    sessionStorage.setItem('redirectAfterAuth', returnUrl);
+    
+    // Redirect directly to auth page without complex URL parameters
+    window.location.href = '/auth';
   };
 
   // Helper function to parse user metadata

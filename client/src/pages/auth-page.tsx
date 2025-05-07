@@ -39,9 +39,18 @@ export default function AuthPage() {
   useEffect(() => {
     // If the user is already authenticated when the auth page loads, handle redirect immediately
     if (user) {
-      console.log("User is already logged in when auth page loaded, handling redirect immediately");
+      console.log("User is already logged in at auth page, handling redirect...");
       
-      // Get redirect params if present
+      // First check session storage for the redirectAfterAuth value
+      const sessionRedirect = sessionStorage.getItem('redirectAfterAuth');
+      if (sessionRedirect) {
+        console.log("Found redirect in session storage:", sessionRedirect);
+        sessionStorage.removeItem('redirectAfterAuth'); // Clear it to prevent future redirects
+        window.location.href = sessionRedirect;
+        return;
+      }
+      
+      // Fallback to URL query parameter if session storage isn't available
       const searchParams = new URLSearchParams(window.location.search);
       const redirectParam = searchParams.get('redirect');
       
@@ -63,41 +72,11 @@ export default function AuthPage() {
             }
           }
           
-          // Match "/event/{id}/register" pattern (alternative format)
-          if (!eventId && decodedPath.includes('/event/')) {
-            const matches = decodedPath.match(/\/event\/(\d+)\/register/);
-            if (matches && matches[1]) {
-              eventId = matches[1];
-            }
-          }
-          
           // If we found a valid event ID, redirect to the registration page
           if (eventId) {
             console.log("Auth page: Already logged in, redirecting to event registration with ID:", eventId);
             window.location.href = `/register/event/${eventId}`;
             return;
-          }
-          
-          // Handle full URLs (if this appears to be an absolute URL from a different domain)
-          if (decodedPath.startsWith('http')) {
-            try {
-              // Extract only the path portion if it's from our domain
-              const url = new URL(decodedPath);
-              const currentHost = window.location.host;
-              
-              if (url.host === currentHost) {
-                // Same domain, use just the path portion
-                console.log("Auth page: Redirecting to same-domain path:", url.pathname + url.search);
-                window.location.href = url.pathname + url.search;
-              } else {
-                // Different domain, redirect to our registration page
-                console.log("Auth page: Detected cross-domain URL, using fallback dashboard redirect");
-                window.location.href = user.isAdmin ? '/admin' : '/dashboard';
-              }
-              return;
-            } catch (e) {
-              console.error("Error parsing URL:", e);
-            }
           }
           
           // Default case: redirect to the provided path
