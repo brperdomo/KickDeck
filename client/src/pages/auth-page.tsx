@@ -56,10 +56,29 @@ export default function AuthPage() {
       sessionStorage.setItem('redirectAfterAuth', redirectUrl);
     }
     
-    // If we already have a redirect saved, don't overwrite it - it takes priority
+    // We need a valid eventId for registration; redirects without eventId aren't handled
+    // If we don't have an eventId, but we're coming from registration, try to parse other parameters
     if (!sessionStorage.getItem('redirectAfterAuth') && window.location.href.includes('from=registration')) {
-      console.log('Coming from registration flow without specific eventId, setting generic redirect');
-      sessionStorage.setItem('redirectAfterAuth', '/register/event');
+      console.log('Coming from registration flow without specific eventId in URL parameter...');
+      
+      // Check for eventId in the referrer URL, if available
+      const referrer = document.referrer;
+      if (referrer && referrer.includes('/register/event/')) {
+        const matches = referrer.match(/\/register\/event\/(\d+)/);
+        if (matches && matches[1]) {
+          const eventIdFromReferrer = matches[1];
+          console.log('Found eventId in referrer URL:', eventIdFromReferrer);
+          sessionStorage.setItem('redirectAfterAuth', `/register/event/${eventIdFromReferrer}`);
+        } else {
+          // Default to dashboard if we can't get a specific eventId
+          console.log('No eventId found in referrer, redirecting to dashboard instead');
+          sessionStorage.setItem('redirectAfterAuth', '/dashboard');
+        }
+      } else {
+        // Default to dashboard if no referrer
+        console.log('No referrer URL available, redirecting to dashboard instead');
+        sessionStorage.setItem('redirectAfterAuth', '/dashboard');
+      }
     }
   }, []);
 
