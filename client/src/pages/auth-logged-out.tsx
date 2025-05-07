@@ -6,12 +6,17 @@ export default function AuthLoggedOut() {
   const [, setLocation] = useLocation();
   
   useEffect(() => {
-    console.log('Auth-logged-out page loaded, redirecting to /auth with sessionStorage logout message');
+    console.log('Auth-logged-out page loaded, setting logout message and redirecting');
     // Set the logout message in sessionStorage
     sessionStorage.setItem('logout_message', 'You have been successfully logged out');
     
-    // Redirect to the main auth page
-    setLocation('/auth');
+    // Redirect to the main auth page WITHOUT the logged_out parameter
+    // This prevents the redirect loop
+    if (window.location.search.includes('logged_out=true')) {
+      window.location.href = '/auth'; // Use window.location to ensure a full page reload
+    } else {
+      setLocation('/auth');
+    }
   }, [setLocation]);
   
   // Simple loading state while redirect happens
