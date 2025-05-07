@@ -504,8 +504,9 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
   const [loading, setLoading] = useState(true);
   // For initialization, check if user is already logged in to bypass auth step
   // This ensures we start at the correct step even before the useEffect runs
-  const initialStep = isPreview ? 'personal' : (user ? 'personal' : 'auth');
-  console.log('Setting initial step based on auth status:', { initialStep, isLoggedIn: !!user });
+  // Always go to personal step if user is already logged in or in preview mode
+  const initialStep = isPreview || user ? 'personal' : 'auth';
+  console.log('Setting initial step based on auth status:', { initialStep, isLoggedIn: !!user, isPreview });
   const [currentStep, setCurrentStep] = useState<RegistrationStep>(initialStep);
   const [players, setPlayers] = useState<PlayerForm[]>([]);
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeGroup | null>(null);
@@ -744,14 +745,11 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
       console.log('FIXED AUTH FLOW: User is authenticated, forcing to personal details step');
       
       // ALWAYS set to personal step if authenticated, override any existing state
-      if (currentStep === 'auth') {
-        console.log('FIXED AUTH FLOW: Forcibly advancing from auth to personal step');
+      if (currentStep !== 'personal') {
+        console.log('FIXED AUTH FLOW: Forcibly advancing to personal step');
         
-        // Add a small delay to ensure UI has time to render correctly first
-        setTimeout(() => {
-          console.log('FIXED AUTH FLOW: Changing step from auth to personal');
-          setCurrentStep('personal');
-        }, 800);
+        // Set it immediately to avoid flickering of auth step
+        setCurrentStep('personal');
       }
       
       // Clean the URL by removing query parameters no matter what
