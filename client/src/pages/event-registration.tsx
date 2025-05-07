@@ -1578,8 +1578,8 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                   transition={{ duration: 0.3 }}
                   className="text-center"
                 >
-                  {/* Show a different message if user is already logged in */}
                   {user ? (
+                    /* Show a different message if user is already logged in */
                     <>
                       <div className="flex justify-center mb-4">
                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -1594,6 +1594,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                       {setTimeout(() => setCurrentStep('personal'), 0)}
                     </>
                   ) : (
+                    /* User is not logged in - show sign in button */
                     <>
                       <h3 className="text-xl font-semibold mb-4">Sign In Required</h3>
                       <p className="text-gray-600 mb-6">
@@ -1624,21 +1625,10 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                           console.log('Auth redirect btn: Using direct window.location to auth page:', authUrl);
                           window.location.href = authUrl;
                         }}
+                      >
+                        Sign In / Register
+                      </Button>
                     </>
-                  )}
-                  
-                  {!user && (
-                    <Button
-                      size="lg"
-                      className="font-semibold px-8"
-                      style={{ 
-                        backgroundColor: event?.branding?.primaryColor || '#2C5282',
-                        color: primaryContrastColor,
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                      }}
-                    >
-                      Sign In / Register
-                    </Button>
                   )}
                 </motion.div>
               )}
