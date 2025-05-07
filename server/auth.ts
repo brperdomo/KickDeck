@@ -102,8 +102,13 @@ export function setupAuth(app: Express) {
   app.use(emulationMiddleware);
 
   passport.use(
-    new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
+    new LocalStrategy({ 
+      usernameField: 'email',
+      passwordField: 'password' 
+    }, async (email, password, done) => {
       try {
+        console.log('Login attempt for:', email);
+        
         // Check for user by email or username
         const [user] = await db
           .select()
@@ -112,14 +117,18 @@ export function setupAuth(app: Express) {
           .limit(1);
 
         if (!user) {
+          console.log('User not found:', email);
           return done(null, false, { message: "Incorrect email or username." });
         }
 
         const isMatch = await crypto.compare(password, user.password);
         if (!isMatch) {
+          console.log('Password mismatch for user:', email);
           return done(null, false, { message: "Incorrect password." });
         }
 
+        console.log('Login successful for user:', email);
+        
         // Update user cache on successful login
         userCache[user.id] = {
           user,
@@ -128,6 +137,7 @@ export function setupAuth(app: Express) {
 
         return done(null, user);
       } catch (err) {
+        console.error('Login error:', err);
         return done(err);
       }
     })

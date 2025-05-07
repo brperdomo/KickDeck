@@ -99,8 +99,35 @@ export default function AuthPage() {
 
   async function onSubmit(data: LoginFormData) {
     try {
+      console.log('Submitting login with email:', data.email);
       loginForm.clearErrors();
+      
+      // Login request with improved error handling
       await loginMutation.mutateAsync(data);
+      
+      console.log('Login mutation completed successfully');
+      
+      // Additional step: explicitly fetch user data to ensure session is established
+      try {
+        console.log('Performing explicit user data fetch after login');
+        const userResponse = await fetch('/api/user', {
+          credentials: 'include',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'X-No-Cache': Date.now().toString()
+          }
+        });
+        
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          console.log('User data retrieved after login:', userData ? 'success' : 'not found');
+        } else {
+          console.warn('Failed to fetch user data after login:', userResponse.status);
+        }
+      } catch (userFetchError) {
+        console.error('Error fetching user data after login:', userFetchError);
+      }
       
       // Login success is handled in useEffect for redirects
     } catch (error: any) {
