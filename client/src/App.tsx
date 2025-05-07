@@ -123,7 +123,16 @@ function Router() {
       <Route path="/logout" component={LogoutHandler} />
 
       {/* Public routes that don't require authentication */}
-      {/* Handle all routes based on auth status */}
+      
+      {/* Event registration routes - always available regardless of auth status */}
+      <Route path="/register/event/:eventId">
+        {(params) => <EventRegistration />}
+      </Route>
+      <Route path="/event/:eventId/register">
+        {(params) => <EventRegistration />}
+      </Route>
+      
+      {/* Handle other routes based on auth status */}
       {!user ? (
         <>
           {/* Create a separate route for auth-logged-out to handle the redirect */}
@@ -177,10 +186,8 @@ function Router() {
             }}
           </Route>
           <Route path="/register" component={Register} />
-          <Route path="/register/event/:eventId" component={EventRegistration} />
           <Route path="/forgot-password" component={ForgotPassword} />
           <Route path="/reset-password" component={ResetPassword} />
-          <Route path="/event/:eventId/register" component={EventRegistration} />
           <Route path="/dashboard">
             <AuthPage />
           </Route>
