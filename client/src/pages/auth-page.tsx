@@ -35,13 +35,25 @@ export default function AuthPage() {
   const [location, setLocation] = useLocation();
   const [logoutMessage, setLogoutMessage] = useState<string | null>(null);
 
-  // Check for logout message in session storage
+  // Check for logout message in session storage and handle eventId parameter
   useEffect(() => {
+    // Handle logout message
     const message = sessionStorage.getItem('logout_message');
     if (message) {
       console.log('Found logout message in session storage:', message);
       setLogoutMessage(message);
       sessionStorage.removeItem('logout_message');
+    }
+
+    // Check for eventId in URL parameters and set redirectAfterAuth
+    const urlParams = new URLSearchParams(window.location.search);
+    const eventId = urlParams.get('eventId');
+    
+    if (eventId) {
+      console.log('Found eventId in URL parameters:', eventId);
+      const redirectUrl = `/register/event/${eventId}`;
+      console.log('Setting redirectAfterAuth to:', redirectUrl);
+      sessionStorage.setItem('redirectAfterAuth', redirectUrl);
     }
   }, []);
 
