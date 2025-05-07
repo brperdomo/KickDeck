@@ -245,6 +245,20 @@ export default function AuthPage() {
       }
     }
     
+    // Before defaulting to admin/dashboard, check if we have an event ID in the current URL
+    // This is an additional safety measure to ensure event registration redirects work
+    const pathname = window.location.pathname;
+    if (pathname.includes('/auth') && window.location.search.includes('eventId=')) {
+      // Extract event ID from URL query params for event registration flow
+      const urlParams = new URLSearchParams(window.location.search);
+      const eventIdParam = urlParams.get('eventId');
+      if (eventIdParam) {
+        console.log("Found event ID in URL params, redirecting to event registration:", eventIdParam);
+        setLocation(`/register/event/${eventIdParam}`);
+        return;
+      }
+    }
+    
     // Default behavior if all else fails or no redirect info is available
     // We reach here only if no successful redirect was performed above
     if (user.isAdmin) {
