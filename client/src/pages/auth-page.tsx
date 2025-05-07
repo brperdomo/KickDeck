@@ -50,44 +50,64 @@ export default function AuthPage() {
     // Only process if we have user data and authentication is complete
     if (!user) return;
     
-    console.log("AUTH REDIRECT: User logged in, handling redirect", { 
+    console.log("AUTH REDIRECT FIXED: User logged in, handling redirect", { 
       user, 
       isAdmin: user.isAdmin,
       sessionStorage: sessionStorage.getItem('redirectAfterAuth'),
       urlParams: window.location.search
     });
     
-    // Check for redirectAfterAuth in session storage (highest priority)
+    // CRITICAL FIX: First check URL parameters for event_reg (highest priority)
+    const urlParams = new URLSearchParams(window.location.search);
+    const eventRegParam = urlParams.get('event_reg');
+    
+    if (eventRegParam) {
+      const eventId = eventRegParam;
+      console.log("AUTH REDIRECT FIXED: URL parameter contains eventId", eventId);
+      
+      // Go directly to the registration page with this event ID, bypassing all other logic
+      const registrationUrl = `/register/event/${eventId}`;
+      console.log("AUTH REDIRECT FIXED: URL parameter redirect to", registrationUrl);
+      window.location.href = registrationUrl;
+      return;
+    }
+    
+    // Next, check direct URL path match as backup
+    const urlMatch = window.location.pathname.match(/\/register\/event\/(\d+)/);
+    if (urlMatch && urlMatch[1]) {
+      const eventId = urlMatch[1];
+      console.log("AUTH REDIRECT FIXED: Direct URL path contains eventId", eventId);
+      
+      // Go directly to the registration page with this event ID
+      const registrationUrl = `/register/event/${eventId}`;
+      console.log("AUTH REDIRECT FIXED: Direct URL path redirect to", registrationUrl);
+      window.location.href = registrationUrl;
+      return;
+    }
+    
+    // Next check for redirectAfterAuth in session storage
     const storedRedirectPath = sessionStorage.getItem('redirectAfterAuth');
     
     if (storedRedirectPath) {
-      console.log("AUTH REDIRECT: Found stored redirect path", storedRedirectPath);
+      console.log("AUTH REDIRECT FIXED: Found stored redirect path", storedRedirectPath);
       
       // Clear the stored redirect immediately to prevent future redirects
       sessionStorage.removeItem('redirectAfterAuth');
       
-      // SPECIAL HANDLING FOR EVENT REGISTRATION
-      if (storedRedirectPath.includes('/register/event/')) {
-        console.log("AUTH REDIRECT: This is an event registration redirect");
-        
-        // Simple forced redirect - don't bother with any other flags or checks
-        // Just go straight to the registration page
-        window.location.href = storedRedirectPath;
-        return;
-      }
-      
-      // Non-event paths - use normal wouter navigation
-      console.log("AUTH REDIRECT: Using normal wouter navigation", storedRedirectPath);
-      setLocation(storedRedirectPath);
+      // Force page reload for all redirects to ensure clean state
+      window.location.href = storedRedirectPath;
       return;
     }
     
-    // If no stored path, do the normal admin/dashboard redirect
+    // For debugging only - log the current URL
+    console.log("AUTH REDIRECT FIXED: Current URL", window.location.href);
+    
+    // Only if we have no other information, fall back to normal dashboard redirect
     if (user.isAdmin) {
-      console.log("AUTH REDIRECT: No stored path, redirecting admin to admin dashboard");
+      console.log("AUTH REDIRECT FIXED: No redirect info, going to admin dashboard");
       window.location.href = '/admin';
     } else {
-      console.log("AUTH REDIRECT: No stored path, redirecting user to dashboard");
+      console.log("AUTH REDIRECT FIXED: No redirect info, going to user dashboard");
       window.location.href = '/dashboard';
     }
   }, [user, setLocation]);

@@ -776,9 +776,15 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
     } else {
       // User is not authenticated - always show auth step
       console.log('FIXED AUTH FLOW: User is not authenticated, showing auth step');
-      // Store the redirect for AuthPage to use later
+      
+      // CRITICAL FIX: Do a hard redirect to the auth page with a special parameter
+      // This is the most reliable way to ensure proper login/redirect flow
       sessionStorage.setItem('redirectAfterAuth', `/register/event/${eventId}`);
-      setCurrentStep('auth');
+      
+      // Force navigation to auth page with eventId parameter
+      // This will allow auth page to directly redirect back after login
+      window.location.href = `/auth?event_reg=${eventId}`;
+      return; // Exit early - we're handling navigation elsewhere
     }
   }, [authLoading, user, isPreview, eventId]);
   
