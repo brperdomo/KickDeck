@@ -156,13 +156,36 @@ export default function Register() {
         description: "Registration successful",
       });
       
+      // Create a loading screen state to avoid showing 404 during state transition
+      const processingRegistration = document.createElement('div');
+      processingRegistration.className = 'fixed inset-0 bg-background flex items-center justify-center z-50';
+      processingRegistration.innerHTML = `
+        <div class="text-center">
+          <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
+          <p class="text-lg font-medium">Setting up your account...</p>
+          <p class="text-sm text-muted-foreground mt-2">Please wait a moment</p>
+        </div>
+      `;
+      document.body.appendChild(processingRegistration);
+      
       // Automatically log in the user after registration
       try {
-        // No need to await, just trigger the login
-        fetch('/api/user', { 
+        console.log('Fetching fresh user data after registration');
+        // Actually await the user data to ensure we're authenticated
+        const userResponse = await fetch('/api/user', { 
           credentials: 'include',
-          cache: 'no-cache' // Force fresh data
+          cache: 'no-cache', // Force fresh data
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
         });
+        
+        if (userResponse.ok) {
+          // Wait a moment for React Query to update
+          await new Promise(resolve => setTimeout(resolve, 300));
+        }
       } catch (err) {
         console.error('Error fetching user after registration:', err);
       }
@@ -171,22 +194,31 @@ export default function Register() {
       // Parse the redirect URL to handle special case for event registration
       const decodedUrl = decodeURIComponent(redirectUrl);
       
+      // Set session variable to indicate we're freshly registered
+      sessionStorage.setItem('just_registered', 'true');
+      sessionStorage.setItem('registration_time', Date.now().toString());
+      
       // Check if this is a registration from an event
       if (decodedUrl.includes('/register/event/')) {
         const eventId = decodedUrl.split('/register/event/')[1];
         if (eventId) {
+          console.log('Redirecting to event registration', eventId);
           // Use a shorter timeout to improve UX - with wouter navigation
-          setTimeout(() => {
-            setLocation(`/register/event/${eventId}`);
-          }, 500);
+          window.location.href = `/register/event/${eventId}`;
           return;
         }
       }
       
-      // For all other URLs, use the standard redirect with wouter
+      // For all other URLs, redirect to dashboard instead of root
+      console.log('Redirecting to dashboard after registration');
+      window.location.href = '/dashboard';
+      
+      // Clean up loading screen after redirect
       setTimeout(() => {
-        setLocation(decodedUrl);
-      }, 500);
+        if (document.body.contains(processingRegistration)) {
+          document.body.removeChild(processingRegistration);
+        }
+      }, 2000);
     } catch (error: any) {
       toast({
         variant: "destructive",
