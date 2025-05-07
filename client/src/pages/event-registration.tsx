@@ -744,14 +744,30 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
         if (currentStep === 'auth') {
           console.log('User is authenticated, forcibly advancing from auth step to personal details');
           setCurrentStep('personal');
+          
+          // Store this navigation in window history for potential back button support
+          window.history.replaceState(
+            { step: 'personal', eventId }, 
+            '', 
+            `/register/event/${eventId}`
+          );
         }
       } else if (!isPreview) {
         // Only set auth step if not in preview mode
         console.log('User is not authenticated, showing auth step');
         
         // Store return URL in sessionStorage for post-login redirect button click
+        // This is crucial for returning to the correct registration step
         const returnUrl = `/register/event/${eventId}`;
         sessionStorage.setItem('redirectAfterAuth', returnUrl);
+        
+        // Also add eventId to URL as fallback mechanism
+        // This helps if sessionStorage is cleared or not accessible
+        window.history.replaceState(
+          { step: 'auth', eventId }, 
+          '', 
+          `/register/event/${eventId}?auth=required&eventId=${eventId}`
+        );
         
         // Do NOT force redirect - let the component render the auth step UI
         // This gives the user a chance to see what event they're registering for
@@ -766,8 +782,15 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
     if (user && currentStep === 'auth') {
       console.log('User authenticated detected, immediate advance to personal details');
       setCurrentStep('personal');
+      
+      // Make sure to update history state here too for consistency
+      window.history.replaceState(
+        { step: 'personal', eventId }, 
+        '', 
+        `/register/event/${eventId}`
+      );
     }
-  }, [user, currentStep]);
+  }, [user, currentStep, eventId]);
   
   // Fetch clubs for the current event
   useEffect(() => {
