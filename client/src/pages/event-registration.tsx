@@ -516,35 +516,9 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
   const [isNewClub, setIsNewClub] = useState(false);
   const [clubLogo, setClubLogo] = useState<File | null>(null);
   
-  // Handle redirection to auth pages with proper return URL
-  const handleAuthRedirect = () => {
-    // Check if the user is already authenticated
-    if (user) {
-      console.log('User is already authenticated, advancing to personal details step');
-      setCurrentStep('personal');
-      return;
-    }
-    
-    console.log('User is not authenticated, redirecting to auth page');
-    
-    // Store return URL in sessionStorage for post-login redirect
-    // This is more reliable than URL parameters
-    const returnUrl = `/register/event/${eventId}`;
-    sessionStorage.setItem('redirectAfterAuth', returnUrl);
-    
-    // Double-check that the sessionStorage was set correctly
-    const storedValue = sessionStorage.getItem('redirectAfterAuth');
-    console.log('Stored redirectAfterAuth in sessionStorage:', storedValue);
-    
-    // Also set the eventId in the URL as a fallback
-    // This helps if sessionStorage is cleared or not accessible
-    const authUrl = `/auth?eventId=${eventId}`;
-    
-    // Use direct window.location for a guaranteed full refresh
-    // This ensures a clean auth page state and prevents any React context issues
-    console.log('Using direct window.location to navigate to auth page:', authUrl);
-    window.location.href = authUrl;
-  };
+  // We don't need the handleAuthRedirect function anymore since we're handling auth state
+  // directly in the useEffect hooks. This was causing the redirect to /auth when unnecessary.
+  // Removing this function and direct redirections prevents circular redirects.
 
   // Helper function to parse user metadata
   const getUserAddressData = () => {
@@ -1595,7 +1569,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             <AnimatePresence mode="wait">
-              {currentStep === 'auth' && !authLoading && !user && (
+              {currentStep === 'auth' && !authLoading && (
                 <motion.div 
                   key="auth-step"
                   initial={{ opacity: 0, y: 20 }}
@@ -1604,38 +1578,68 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                   transition={{ duration: 0.3 }}
                   className="text-center"
                 >
-                  <h3 className="text-xl font-semibold mb-4">Sign In Required</h3>
-                  <p className="text-gray-600 mb-6">
-                    Please sign in or create an account to register for this event.
-                  </p>
-                  <Button 
-                    size="lg"
-                    className="font-semibold px-8"
-                    style={{ 
-                      backgroundColor: event?.branding?.primaryColor || '#2C5282',
-                      color: primaryContrastColor,
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                    }}
-                    onClick={() => {
-                      // Extra safety check to ensure we capture this click
-                      const returnUrl = `/register/event/${eventId}`;
-                      sessionStorage.setItem('redirectAfterAuth', returnUrl);
-                      
-                      // Double-check that the sessionStorage was set correctly
-                      const storedValue = sessionStorage.getItem('redirectAfterAuth');
-                      console.log('Auth redirect btn: Stored redirectAfterAuth in sessionStorage:', storedValue);
-                      
-                      // Add eventId parameter to URL as a backup mechanism 
-                      const authUrl = `/auth?eventId=${eventId}`;
-                      
-                      // Use direct window.location for a guaranteed full page refresh 
-                      // This ensures we get a clean auth state and prevents any context issues
-                      console.log('Auth redirect btn: Using direct window.location to auth page:', authUrl);
-                      window.location.href = authUrl;
-                    }}
-                  >
-                    Sign In / Register
-                  </Button>
+                  {/* Show a different message if user is already logged in */}
+                  {user ? (
+                    <>
+                      <div className="flex justify-center mb-4">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                      </div>
+                      <h3 className="text-xl font-semibold mb-4">
+                        Already Signed In
+                      </h3>
+                      <p className="text-gray-600 mb-6">
+                        You're already signed in. Proceeding to registration...
+                      </p>
+                      {/* Force redirect to personal details step */}
+                      {setTimeout(() => setCurrentStep('personal'), 0)}
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-xl font-semibold mb-4">Sign In Required</h3>
+                      <p className="text-gray-600 mb-6">
+                        Please sign in or create an account to register for this event.
+                      </p>
+                      <Button 
+                        size="lg"
+                        className="font-semibold px-8"
+                        style={{ 
+                          backgroundColor: event?.branding?.primaryColor || '#2C5282',
+                          color: primaryContrastColor,
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                        }}
+                        onClick={() => {
+                          // Extra safety check to ensure we capture this click
+                          const returnUrl = `/register/event/${eventId}`;
+                          sessionStorage.setItem('redirectAfterAuth', returnUrl);
+                          
+                          // Double-check that the sessionStorage was set correctly
+                          const storedValue = sessionStorage.getItem('redirectAfterAuth');
+                          console.log('Auth redirect btn: Stored redirectAfterAuth in sessionStorage:', storedValue);
+                          
+                          // Add eventId parameter to URL as a backup mechanism 
+                          const authUrl = `/auth?eventId=${eventId}`;
+                          
+                          // Use direct window.location for a guaranteed full page refresh 
+                          // This ensures we get a clean auth state and prevents any context issues
+                          console.log('Auth redirect btn: Using direct window.location to auth page:', authUrl);
+                          window.location.href = authUrl;
+                        }}
+                    </>
+                  )}
+                  
+                  {!user && (
+                    <Button
+                      size="lg"
+                      className="font-semibold px-8"
+                      style={{ 
+                        backgroundColor: event?.branding?.primaryColor || '#2C5282',
+                        color: primaryContrastColor,
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                      }}
+                    >
+                      Sign In / Register
+                    </Button>
+                  )}
                 </motion.div>
               )}
 
