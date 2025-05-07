@@ -67,42 +67,64 @@ router.get('/', async (req, res) => {
 router.get('/event/:eventId', async (req, res) => {
   try {
     const { eventId } = req.params;
+    console.log(`Fetching clubs for event: ${eventId}`);
     
     // Get unique club names from teams in this event
     const existingClubs = await db.execute(sql`
-      SELECT DISTINCT club_name 
+      SELECT DISTINCT club_name, club_id
       FROM teams 
       WHERE event_id = ${eventId} 
       AND club_name IS NOT NULL 
       AND club_name != ''
     `);
     
-    // Get club records that match these names
+    // Get club records that match these names and IDs from this specific event
     let clubsList = [];
     if (existingClubs.rows.length > 0) {
-      const clubNames = existingClubs.rows.map((row: any) => row.club_name);
+      console.log(`Found ${existingClubs.rows.length} club names in event ${eventId}`);
       
-      // First check if these clubs exist in the clubs table
-      clubsList = await db
-        .select()
-        .from(clubs)
-        .where(
-          clubNames.length === 1 
-            ? eq(clubs.name, clubNames[0]) 
-            : sql`${clubs.name} IN (${sql.join(clubNames.map(name => sql`${name}`), sql`, `)})`)
-        .orderBy(clubs.name);
+      // Extract club names and club IDs
+      const clubNames = existingClubs.rows.map((row: any) => row.club_name);
+      const clubIds = existingClubs.rows
+        .filter((row: any) => row.club_id !== null)
+        .map((row: any) => row.club_id);
+      
+      // First check clubs by IDs if available
+      if (clubIds.length > 0) {
+        clubsList = await db
+          .select()
+          .from(clubs)
+          .where(
+            clubIds.length === 1 
+              ? eq(clubs.id, clubIds[0]) 
+              : sql`${clubs.id} IN (${sql.join(clubIds.map(id => sql`${id}`), sql`, `)})`
+          )
+          .orderBy(clubs.name);
+      }
+      
+      // Then check remaining club names
+      if (clubNames.length > 0 && (clubIds.length === 0 || clubsList.length < clubNames.length)) {
+        const nameClubs = await db
+          .select()
+          .from(clubs)
+          .where(
+            clubNames.length === 1 
+              ? eq(clubs.name, clubNames[0]) 
+              : sql`${clubs.name} IN (${sql.join(clubNames.map(name => sql`${name}`), sql`, `)})`
+          )
+          .orderBy(clubs.name);
+        
+        // Add clubs by name only if not already added by ID
+        for (const club of nameClubs) {
+          if (!clubsList.some(c => c.id === club.id)) {
+            clubsList.push(club);
+          }
+        }
+      }
     }
     
-    // Also get all other clubs
-    const allClubs = await db.select().from(clubs).orderBy(clubs.name);
-    
-    // Merge the results, prioritizing clubs for this event
-    const combinedClubs = [
-      ...clubsList,
-      ...allClubs.filter(club => !clubsList.some(c => c.id === club.id))
-    ];
-    
-    res.json(combinedClubs);
+    console.log(`Returning ${clubsList.length} clubs for event ${eventId}`);
+    res.json(clubsList);
   } catch (error) {
     console.error('Error fetching clubs for event:', error);
     res.status(500).json({ error: 'Failed to fetch clubs for event' });
