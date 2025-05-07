@@ -76,12 +76,12 @@ function Router() {
             // Check if this is a logout scenario
             const urlParams = new URLSearchParams(window.location.search);
             const hasLoggedOut = urlParams.get('logged_out') === 'true';
-            
+
             if (hasLoggedOut) {
               // Store the logout message in session storage so AuthPage can display it
               console.log('Setting logout message in sessionStorage (landing page)');
               sessionStorage.setItem('logout_message', 'You have been successfully logged out');
-              
+
               // Remove the logged_out=true param from the URL to prevent any issues
               try {
                 const newUrl = new URL(window.location.href);
@@ -91,7 +91,7 @@ function Router() {
                 console.error('Failed to clean URL:', e);
               }
             }
-            
+
             // Always render the auth page - it will show the logout message if present
             return <AuthPage />;
           }}
@@ -101,12 +101,12 @@ function Router() {
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/reset-password" component={ResetPassword} />
         <Route path="/product-updates" component={ProductUpdatesPage} />
-        
+
         {/* Main landing page for the root path */}
         <Route path="/">
           <LandingPage />
         </Route>
-        
+
         {/* Fallback for any other paths on the main domain */}
         <Route>
           <LandingPage />
@@ -121,14 +121,23 @@ function Router() {
     <Switch>
       {/* Dedicated logout route that will forcibly clear all app state */}
       <Route path="/logout" component={LogoutHandler} />
-      
+
       {/* Public routes that don't require authentication */}
-      {/* Handle all routes based on auth status */}
+      
+      {/* Event registration routes - always available regardless of auth status */}
+      <Route path="/register/event/:eventId">
+        {(params) => <EventRegistration />}
+      </Route>
+      <Route path="/event/:eventId/register">
+        {(params) => <EventRegistration />}
+      </Route>
+      
+      {/* Handle other routes based on auth status */}
       {!user ? (
         <>
           {/* Create a separate route for auth-logged-out to handle the redirect */}
           <Route path="/auth-logged-out" component={AuthLoggedOut} />
-          
+
           {/* Regular auth route */}
           <Route path="/auth">
             {() => {
@@ -136,19 +145,19 @@ function Router() {
               // Check URL params directly here to handle different states
               const urlParams = new URLSearchParams(window.location.search);
               const hasLoggedOut = urlParams.get('logged_out') === 'true';
-              
+
               console.log('Auth route accessed - params:', {
                 hasLoggedOut,
                 searchParams: window.location.search,
                 urlParams: Object.fromEntries(urlParams.entries())
               });
-              
+
               // If this is the logout URL, set the message and render AuthPage directly
               if (hasLoggedOut) {
                 // Store the logout message in session storage so AuthPage can display it
                 console.log('Setting logout message in sessionStorage');
                 sessionStorage.setItem('logout_message', 'You have been successfully logged out');
-                
+
                 // Remove the logged_out=true param from the URL to prevent redirect loops
                 // We'll replace the URL without page reload
                 try {
@@ -158,20 +167,20 @@ function Router() {
                 } catch (e) {
                   console.error('Failed to clean URL:', e);
                 }
-                
+
                 // Directly render the auth page which will show the message from session storage
                 return <AuthPage />;
               }
-              
+
               // Special case: If the user is already authenticated, we might need to handle redirect
               if (user) {
                 console.log('Auth route: User already authenticated, letting AuthPage component handle redirect');
-                
+
                 // Let the AuthPage component handle the redirect logic based on sessionStorage
                 // This will be picked up by the useEffect in AuthPage that checks for redirectAfterAuth
                 return <AuthPage />;
               }
-              
+
               // Otherwise render the normal login page
               return <AuthPage />;
             }}
@@ -179,12 +188,6 @@ function Router() {
           <Route path="/register" component={Register} />
           <Route path="/forgot-password" component={ForgotPassword} />
           <Route path="/reset-password" component={ResetPassword} />
-          <Route path="/register/event/:eventId">
-            {(params) => <EventRegistration eventIdOverride={params.eventId} />}
-          </Route>
-          <Route path="/event/:eventId/register">
-            {(params) => <EventRegistration eventIdOverride={params.eventId} />}
-          </Route>
           <Route path="/dashboard">
             <AuthPage />
           </Route>
@@ -352,24 +355,24 @@ function App() {
   // Set up cross-tab logout communication
   useEffect(() => {
     let broadcastChannel: BroadcastChannel | null = null;
-    
+
     try {
       // Create a broadcast channel for multi-tab/window communication
       broadcastChannel = new BroadcastChannel('app-logout');
-      
+
       // Handler for logout messages
       const handleLogoutMessage = (event: MessageEvent) => {
         if (event.data && event.data.type === 'LOGOUT') {
           console.log('Received logout event from another tab/window');
-          
+
           // Force route to our dedicated logout handler
           window.location.href = '/logout';
         }
       };
-      
+
       // Listen for logout messages
       broadcastChannel.addEventListener('message', handleLogoutMessage);
-      
+
       // Clean up when component unmounts
       return () => {
         broadcastChannel?.removeEventListener('message', handleLogoutMessage);
@@ -380,7 +383,7 @@ function App() {
       // No cleanup needed if channel creation failed
     }
   }, []);
-  
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
