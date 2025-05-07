@@ -78,9 +78,21 @@ function Router() {
             const hasLoggedOut = urlParams.get('logged_out') === 'true';
             
             if (hasLoggedOut) {
-              return <AuthLoggedOut />;
+              // Store the logout message in session storage so AuthPage can display it
+              console.log('Setting logout message in sessionStorage (landing page)');
+              sessionStorage.setItem('logout_message', 'You have been successfully logged out');
+              
+              // Remove the logged_out=true param from the URL to prevent any issues
+              try {
+                const newUrl = new URL(window.location.href);
+                newUrl.searchParams.delete('logged_out');
+                window.history.replaceState({}, '', newUrl.toString());
+              } catch (e) {
+                console.error('Failed to clean URL:', e);
+              }
             }
             
+            // Always render the auth page - it will show the logout message if present
             return <AuthPage />;
           }}
         </Route>
@@ -130,9 +142,24 @@ function Router() {
                 urlParams: Object.fromEntries(urlParams.entries())
               });
               
-              // If this is the logout URL, use the AuthLoggedOut component directly instead of redirecting
+              // If this is the logout URL, set the message and render AuthPage directly
               if (hasLoggedOut) {
-                return <AuthLoggedOut />;
+                // Store the logout message in session storage so AuthPage can display it
+                console.log('Setting logout message in sessionStorage');
+                sessionStorage.setItem('logout_message', 'You have been successfully logged out');
+                
+                // Remove the logged_out=true param from the URL to prevent redirect loops
+                // We'll replace the URL without page reload
+                try {
+                  const newUrl = new URL(window.location.href);
+                  newUrl.searchParams.delete('logged_out');
+                  window.history.replaceState({}, '', newUrl.toString());
+                } catch (e) {
+                  console.error('Failed to clean URL:', e);
+                }
+                
+                // Directly render the auth page which will show the message from session storage
+                return <AuthPage />;
               }
               
               // Special case: If the user is already authenticated, we might need to handle redirect
