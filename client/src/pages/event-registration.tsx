@@ -749,6 +749,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
         
         // Add a small delay to ensure UI has time to render correctly first
         setTimeout(() => {
+          console.log('FIXED AUTH FLOW: Changing step from auth to personal');
           setCurrentStep('personal');
         }, 800);
       }
