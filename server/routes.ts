@@ -36,7 +36,12 @@ import productUpdatesRouter from "./routes/product-updates.js";
 import { createCoupon, getCoupons, updateCoupon, deleteCoupon } from "./routes/coupons";
 import { getFeeAssignments, updateFeeAssignments } from "./routes/fee-assignments";
 import paymentsRouter from "./routes/payments";
-import { getRegistrationOrdersReport } from "./routes/reports";
+import { 
+  getRegistrationOrdersReport, 
+  getFinancialOverviewReport, 
+  getEventFinancialReport, 
+  getFeesAnalysisReport 
+} from "./routes/reports";
 import { getNewRegistrationsCount, acknowledgeNewRegistrations } from "./routes/admin/registrations";
 import { getTinyMCEConfig } from "./services/configService";
 import { requestPasswordReset, verifyResetToken, completePasswordReset } from "./routes/auth";
@@ -1243,6 +1248,9 @@ export function registerRoutes(app: Express): Server {
     // Financial reporting endpoints
     // Financial reporting endpoints - former getFinancialReportData endpoint has been removed
     app.get('/api/reports/registration-orders', isAdmin, getRegistrationOrdersReport);
+    app.get('/api/reports/financial-overview', isAdmin, getFinancialOverviewReport);
+    app.get('/api/reports/events/:eventId/financial', isAdmin, getEventFinancialReport);
+    app.get('/api/reports/fees-analysis', isAdmin, getFeesAnalysisReport);
     
     // Terms acknowledgment endpoints
     app.post('/api/teams/:teamId/terms-acknowledgment/generate', isAdmin, generateTermsAcknowledgmentDocument);
