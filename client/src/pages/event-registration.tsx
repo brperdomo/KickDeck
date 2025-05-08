@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BracketSelector } from "@/components/registration/BracketSelector";
 import { useToast } from "@/hooks/use-toast";
-import { useRegistrationSaveState } from "@/hooks/use-registration-save-state";
-import { SavedRegistrationAlert } from "@/components/registration/SavedRegistrationAlert";
+import { useSavedRegistration } from "@/hooks/use-saved-registration";
+import { SavedRegistrationNotice } from "@/components/registration/SavedRegistrationNotice";
 import { SaveForLaterButton } from "@/components/registration/SaveForLaterButton";
 import { 
   Loader2, 
