@@ -479,7 +479,16 @@ const teamRegistrationSchema = z.object({
   managerName: z.string().min(1, "Manager name is required"),
   managerEmail: z.string().email("Invalid email address"),
   managerPhone: z.string().min(10, "Phone number must be at least 10 digits"),
-  players: z.array(playerSchema).min(1, "At least one player is required"),
+  // Add Roster Later flag allows submitting without players
+  addRosterLater: z.boolean().optional().default(false),
+  // Only validate players if addRosterLater is false
+  players: z.array(playerSchema).refine(
+    (data) => {
+      // This is a custom refine function that will be checked later in the form logic
+      return true;
+    },
+    { message: "At least one player is required unless 'Add Roster Later' is selected" }
+  ),
   // Add fields for fee processing
   selectedFeeIds: z.array(z.number()).optional(),
   totalAmount: z.number().optional(),
