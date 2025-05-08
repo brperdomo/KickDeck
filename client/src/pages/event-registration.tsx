@@ -3074,6 +3074,11 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                 )}
                 
                 <div className="flex justify-between pt-6">
+                  <SaveForLaterButton 
+                    onSave={saveCurrentState} 
+                    variant="ghost"
+                  />
+                  
                   <Button
                     type="button"
                     variant="outline"
