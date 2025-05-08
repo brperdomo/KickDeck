@@ -505,8 +505,30 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
   // For initialization, check if user is already logged in to bypass auth step
   // This ensures we start at the correct step even before the useEffect runs
   const initialStep = isPreview ? 'personal' : (user ? 'personal' : 'auth');
-  console.log('Setting initial step based on auth status:', { initialStep, isLoggedIn: !!user });
+  console.log('Setting initial step based on auth status:', { initialStep, isLoggedIn: !!user, isAdmin: user?.isAdmin });
   const [currentStep, setCurrentStep] = useState<RegistrationStep>(initialStep);
+  
+  // Special handling for admin users who may have session recognition issues
+  useEffect(() => {
+    // Only run this for admin users and only when we're at the auth step but actually have a user
+    if (user && user.isAdmin && currentStep === 'auth') {
+      console.log('Admin user detected but still at auth step, forcing step advancement');
+      
+      // Force reload the page with a special parameter to trigger auth refresh
+      // Only do this if we haven't already tried (to avoid infinite loops)
+      const hasForceParam = window.location.search.includes('force_refresh=true');
+      if (!hasForceParam) {
+        console.log('Adding force_refresh parameter to URL and reloading');
+        const separator = window.location.search ? '&' : '?';
+        window.location.href = `${window.location.pathname}${window.location.search}${separator}force_refresh=true`;
+        return;
+      }
+      
+      // If we already have the force param, just advance the step
+      console.log('Force parameter detected, advancing to personal step');
+      setCurrentStep('personal');
+    }
+  }, [user, currentStep]);
   const [players, setPlayers] = useState<PlayerForm[]>([]);
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeGroup | null>(null);
   const [selectedBracket, setSelectedBracket] = useState<number | null>(null);
