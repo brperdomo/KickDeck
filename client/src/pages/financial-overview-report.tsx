@@ -84,7 +84,7 @@ const TIME_PERIODS = [
 ];
 
 export default function FinancialOverviewReport() {
-  const navigate = useNavigate();
+  const [_, navigate] = useLocation();
   const [selectedPeriod, setSelectedPeriod] = useState('30d');
   const [includeAI, setIncludeAI] = useState(true);
   
