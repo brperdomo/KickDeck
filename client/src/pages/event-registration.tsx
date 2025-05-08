@@ -1975,33 +1975,40 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                     </div>
                   </div>
 
-                  <div className="flex justify-end space-x-4 pt-6">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setCurrentStep('auth')}
-                    >
-                      Back
-                    </Button>
-                    <Button 
-                      type="submit"
-                      className="font-medium"
-                      style={{ 
-                        backgroundColor: event?.branding?.primaryColor || '#2C5282',
-                        color: primaryContrastColor,
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)' 
-                      }}
-                      disabled={updatePersonalDetailsMutation.isPending}
-                    >
-                      {updatePersonalDetailsMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        'Next'
-                      )}
-                    </Button>
+                  <div className="flex justify-between pt-6">
+                    <SaveForLaterButton 
+                      onSave={saveCurrentState} 
+                      variant="ghost"
+                    />
+                    
+                    <div className="flex space-x-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setCurrentStep('auth')}
+                      >
+                        Back
+                      </Button>
+                      <Button 
+                        type="submit"
+                        className="font-medium"
+                        style={{ 
+                          backgroundColor: event?.branding?.primaryColor || '#2C5282',
+                          color: primaryContrastColor,
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)' 
+                        }}
+                        disabled={updatePersonalDetailsMutation.isPending}
+                      >
+                        {updatePersonalDetailsMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          'Next'
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </form>
               </Form>
@@ -2646,29 +2653,36 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                     )}
                   </div>
                   
-                  <div className="flex justify-end space-x-4 pt-6">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setCurrentStep('personal')}
-                    >
-                      Back
-                    </Button>
-                    <Button 
-                      type="submit"
-                      className="text-white"
-                      style={{ backgroundColor: event?.branding?.primaryColor || '#2C5282' }}
-                      disabled={registerTeamMutation.isPending}
-                    >
-                      {registerTeamMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Registering...
-                        </>
-                      ) : (
-                        'Continue to Next Step'
-                      )}
-                    </Button>
+                  <div className="flex justify-between pt-6">
+                    <SaveForLaterButton 
+                      onSave={saveCurrentState} 
+                      variant="ghost"
+                    />
+                    
+                    <div className="flex space-x-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setCurrentStep('personal')}
+                      >
+                        Back
+                      </Button>
+                      <Button 
+                        type="submit"
+                        className="text-white"
+                        style={{ backgroundColor: event?.branding?.primaryColor || '#2C5282' }}
+                        disabled={registerTeamMutation.isPending}
+                      >
+                        {registerTeamMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Registering...
+                          </>
+                        ) : (
+                          'Continue to Next Step'
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </form>
               </Form>
