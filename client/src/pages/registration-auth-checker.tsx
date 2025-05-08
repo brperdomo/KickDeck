@@ -53,7 +53,10 @@ export default function RegistrationAuthChecker({
       const urlParams = new URLSearchParams(window.location.search);
       const redirectDone = urlParams.get('redirect') === 'done';
       
-      return authRedirectCompleted || comingFromAuth || redirectDone;
+      // Check if we have a forced refresh flag (used for admin users)
+      const forceRefresh = urlParams.get('force_refresh') === 'true';
+      
+      return authRedirectCompleted || comingFromAuth || redirectDone || forceRefresh;
     };
 
     // If we detect any sign of a completed auth redirect, refresh auth state
