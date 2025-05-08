@@ -21,7 +21,8 @@ import {
   Download,
   AlertCircle,
   FileText,
-  Save
+  Save,
+  Clock
 } from "lucide-react";
 import { SoccerFieldBackground } from "@/components/ui/SoccerFieldBackground";
 import { AnimatedEventBackground } from "@/components/ui/AnimatedEventBackground";
@@ -1615,41 +1616,45 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
       return;
     }
     
-    if (players.length === 0) {
+    // Skip player validation if the user chose to add roster later
+  if (players.length === 0 && !addRosterLater) {
       toast({
         title: "Error",
-        description: "Please add at least one player to the roster",
+        description: "Please add at least one player to the roster or select the 'Add Roster Later' option",
         variant: "destructive",
       });
       return;
     }
     
-    // Validate each player has required fields
-    const invalidPlayers = players.filter(player => 
-      !player.firstName || !player.lastName || !player.dateOfBirth
-    );
-    
-    if (invalidPlayers.length > 0) {
-      toast({
-        title: "Incomplete Player Information",
-        description: "Please complete all required player fields (First Name, Last Name, Date of Birth)",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Check for missing emergency contact information
-    const missingEmergency = players.filter(player => 
-      !player.emergencyContactName || !player.emergencyContactPhone
-    );
-    
-    if (missingEmergency.length > 0) {
-      toast({
-        title: "Missing Emergency Contact",
-        description: "Please provide emergency contact information for all players",
-        variant: "destructive",
-      });
-      return;
+    // Only validate players if we're not using the "add roster later" option
+    if (!addRosterLater && players.length > 0) {
+      // Validate each player has required fields
+      const invalidPlayers = players.filter(player => 
+        !player.firstName || !player.lastName || !player.dateOfBirth
+      );
+      
+      if (invalidPlayers.length > 0) {
+        toast({
+          title: "Incomplete Player Information",
+          description: "Please complete all required player fields (First Name, Last Name, Date of Birth)",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Check for missing emergency contact information
+      const missingEmergency = players.filter(player => 
+        !player.emergencyContactName || !player.emergencyContactPhone
+      );
+      
+      if (missingEmergency.length > 0) {
+        toast({
+          title: "Missing Emergency Contact",
+          description: "Please provide emergency contact information for all players",
+          variant: "destructive",
+        });
+        return;
+      }
     }
     
     // Now proceed to the payment step instead of submitting right away
@@ -2358,12 +2363,36 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                   
                   <div className="space-y-4 border-t pt-4">
                     <div className="flex justify-between items-center">
-                      <h3 
-                        className="text-xl font-semibold"
-                        style={{ color: event?.branding?.primaryColor || '#2C5282' }}
-                      >
-                        Player Roster
-                      </h3>
+                      <div className="flex items-center gap-4">
+                        <h3 
+                          className="text-xl font-semibold"
+                          style={{ color: event?.branding?.primaryColor || '#2C5282' }}
+                        >
+                          Player Roster
+                        </h3>
+                        
+                        {/* Add Roster Later Checkbox */}
+                        <div className="flex items-center">
+                          <Checkbox 
+                            id="add-roster-later" 
+                            checked={addRosterLater}
+                            onCheckedChange={(checked) => {
+                              setAddRosterLater(checked === true);
+                            }}
+                            className="mr-2"
+                          />
+                          <label
+                            htmlFor="add-roster-later"
+                            className="text-sm font-medium text-muted-foreground leading-none cursor-pointer flex gap-1 items-center"
+                          >
+                            Add roster later
+                            <span title="Complete registration now and add your players later from your dashboard">
+                              <AlertCircle className="h-3 w-3 text-muted-foreground" />
+                            </span>
+                          </label>
+                        </div>
+                      </div>
+                      
                       <div className="flex gap-2">
                         <Button
                           type="button"
@@ -2371,6 +2400,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                           size="sm"
                           onClick={addPlayer}
                           className="flex items-center"
+                          disabled={addRosterLater}
                         >
                           <PlusCircle className="w-4 h-4 mr-2" />
                           Add Player
@@ -2382,6 +2412,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                               variant="outline"
                               size="sm"
                               className="flex items-center"
+                              disabled={addRosterLater}
                             >
                               <Upload className="w-4 h-4 mr-2" />
                               CSV Upload
