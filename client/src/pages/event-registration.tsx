@@ -661,6 +661,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
   const [isNewClub, setIsNewClub] = useState(false);
   const [clubLogo, setClubLogo] = useState<File | null>(null);
   const [selectedFees, setSelectedFees] = useState<Fee[]>([]);
+  const [addRosterLater, setAddRosterLater] = useState<boolean>(false);
   
   // We don't need the handleAuthRedirect function anymore since we're handling auth state
   // directly in the useEffect hooks. This was causing the redirect to /auth when unnecessary.
@@ -2422,10 +2423,37 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                       </div>
                     </div>
                     
-                    {players.length === 0 ? (
+                    {addRosterLater ? (
+                      <div className="text-center p-8 border border-dashed rounded-md bg-amber-50">
+                        <Clock className="w-12 h-12 mx-auto text-amber-500 mb-2" />
+                        <h4 className="font-medium text-amber-800">Add Roster Later</h4>
+                        <p className="text-amber-700 mt-2">
+                          You've chosen to complete your roster later. After registration, 
+                          you'll be able to add players from your dashboard or via CSV upload.
+                        </p>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="mt-4 text-amber-700 border-amber-300"
+                          onClick={() => setAddRosterLater(false)}
+                        >
+                          <X className="w-4 h-4 mr-2" />
+                          Cancel & Add Players Now
+                        </Button>
+                      </div>
+                    ) : players.length === 0 ? (
                       <div className="text-center p-8 border border-dashed rounded-md">
                         <UserRoundPlus className="w-12 h-12 mx-auto text-gray-300 mb-2" />
                         <p className="text-gray-500">No players added yet. Click "Add Player" or "CSV Upload" to begin building your roster.</p>
+                        <Button
+                          type="button"
+                          variant="link"
+                          className="mt-4 text-blue-600"
+                          onClick={() => setAddRosterLater(true)}
+                        >
+                          <Clock className="w-4 h-4 mr-2" />
+                          Do This Later - Add Roster After Registration
+                        </Button>
                       </div>
                     ) : (
                       <div className="space-y-6">
