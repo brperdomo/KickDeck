@@ -530,6 +530,39 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
   // Flag to track auto-saving
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
   
+  // Check for saved data on component mount
+  useEffect(() => {
+    if (hasSavedData && !showSavedRegistrationAlert && !isPreview) {
+      console.log('Found saved registration data from:', new Date(lastSaved || 0).toLocaleString());
+      setShowSavedRegistrationAlert(true);
+    }
+  }, [hasSavedData, lastSaved, isPreview]);
+  
+  // Setup auto-saving
+  useEffect(() => {
+    if (!autoSaveEnabled || isPreview) return;
+    
+    // Save the state every 30 seconds if enabled
+    const autoSaveTimer = setInterval(() => {
+      if (currentStep !== 'auth' && currentStep !== 'complete') {
+        console.log('Auto-saving registration data...');
+        saveCurrentState();
+      }
+    }, 30000); // 30 seconds
+    
+    // Save on form changes
+    const formSubscription = form.watch(() => {
+      if (currentStep === 'personal') {
+        saveCurrentState();
+      }
+    });
+    
+    // Cleanup
+    return () => {
+      clearInterval(autoSaveTimer);
+    };
+  }, [autoSaveEnabled, isPreview, currentStep]);
+  
   // Function to save the current registration state
   const saveCurrentState = () => {
     if (!autoSaveEnabled) return false;
@@ -633,6 +666,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
   const [clubLoading, setClubLoading] = useState(false);
   const [isNewClub, setIsNewClub] = useState(false);
   const [clubLogo, setClubLogo] = useState<File | null>(null);
+  const [selectedFees, setSelectedFees] = useState<Fee[]>([]);
   
   // We don't need the handleAuthRedirect function anymore since we're handling auth state
   // directly in the useEffect hooks. This was causing the redirect to /auth when unnecessary.
@@ -1727,6 +1761,40 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
+            {/* Show saved registration notice if available */}
+            {showSavedRegistrationAlert && hasSavedData && lastSaved && (
+              <SavedRegistrationNotice 
+                lastSaved={lastSaved}
+                eventName={event?.name || 'this event'}
+                onResume={() => {
+                  // Load the saved state and hide the notice
+                  const success = loadSavedState();
+                  if (success) {
+                    toast({
+                      title: "Registration Restored",
+                      description: "Your saved registration has been loaded successfully.",
+                    });
+                  } else {
+                    toast({
+                      title: "Error",
+                      description: "Failed to restore your registration. Please try again.",
+                      variant: "destructive"
+                    });
+                  }
+                  setShowSavedRegistrationAlert(false);
+                }}
+                onDiscard={() => {
+                  // Clear the saved data and hide the notice
+                  clearSavedData();
+                  setShowSavedRegistrationAlert(false);
+                  toast({
+                    title: "Registration Discarded",
+                    description: "Starting a fresh registration.",
+                  });
+                }}
+              />
+            )}
+            
             <AnimatePresence mode="wait">
               {currentStep === 'auth' && !authLoading && (
                 <motion.div 
