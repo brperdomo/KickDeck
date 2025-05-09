@@ -3538,6 +3538,99 @@ function TeamsView() {
                   </div>
                 </TabsContent>
                 
+                <TabsContent value="waitlisted">
+                  <div className="shadow-md rounded-xl overflow-hidden border border-gray-200">
+                    <Table className="team-list">
+                      <TableHeader>
+                        <TableRow className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-gray-800 dark:to-gray-700">
+                          <TableHead className="font-semibold py-4 text-amber-900 dark:text-amber-100">Team Name</TableHead>
+                          <TableHead className="font-semibold py-4 text-amber-900 dark:text-amber-100">Event</TableHead>
+                          <TableHead className="font-semibold py-4 text-amber-900 dark:text-amber-100">Age Group</TableHead>
+                          <TableHead className="font-semibold py-4 text-amber-900 dark:text-amber-100">Submitter</TableHead>
+                          <TableHead className="font-semibold py-4 text-amber-900 dark:text-amber-100">Manager</TableHead>
+                          <TableHead className="font-semibold py-4 text-amber-900 dark:text-amber-100">Coach</TableHead>
+                          <TableHead className="font-semibold py-4 text-amber-900 dark:text-amber-100">Registration Fee</TableHead>
+                          <TableHead className="font-semibold py-4 text-amber-900 dark:text-amber-100">Payment Status</TableHead>
+                          <TableHead className="font-semibold py-4 text-amber-900 dark:text-amber-100 text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {teamsQuery.isLoading ? (
+                          <TableRow>
+                            <TableCell colSpan={9} className="text-center py-4">
+                              <div className="flex justify-center">
+                                <Loader2 className="h-6 w-6 animate-spin" />
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ) : filteredTeams.filter((team: any) => team && team.status === 'waitlisted').length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={9} className="text-center py-4">
+                              No waitlisted teams found
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          filteredTeams
+                            .filter((team: any) => team && team.status === 'waitlisted')
+                            .map((team: any, index) => (
+                              <TableRow key={team.id} className={index % 2 === 0 ? "bg-white" : "bg-amber-50"}>
+                                <TableCell className="font-medium">
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-medium">{team.name}</span>
+                                    {team.clubName && (
+                                      <span className="text-xs text-muted-foreground">({team.clubName})</span>
+                                    )}
+                                  </div>
+                                </TableCell>
+                                <TableCell>{team.event?.name || "N/A"}</TableCell>
+                                <TableCell>{team.ageGroup?.ageGroup || "N/A"}</TableCell>
+                                <TableCell>{team.submitterEmail || team.managerEmail}</TableCell>
+                                <TableCell>{team.managerEmail}</TableCell>
+                                <TableCell>{getCoachName(team.coach)}</TableCell>
+                                <TableCell>{formatCurrency(team.registrationFee || 0)}</TableCell>
+                                <TableCell>
+                                  <Badge variant={team.paymentStatus === 'paid' ? 'default' : 'outline'}>
+                                    {team.paymentStatus || 'Unpaid'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end gap-2">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleViewTeamDetails(team)}
+                                    >
+                                      <Eye className="h-4 w-4 mr-1" />
+                                      Details
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      className="team-edit-button team-status-button"
+                                      onClick={() => handleStatusUpdate(team, 'approved')}
+                                    >
+                                      <Check className="h-4 w-4 mr-1" />
+                                      Approve
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="text-destructive team-edit-button team-status-button"
+                                      onClick={() => handleStatusUpdate(team, 'rejected')}
+                                    >
+                                      <X className="h-4 w-4 mr-1" />
+                                      Reject
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </TabsContent>
+                
                 <TabsContent value="approved">
                   <div className="shadow-md rounded-xl overflow-hidden border border-gray-200">
                     <Table className="team-list">
