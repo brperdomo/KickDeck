@@ -149,17 +149,14 @@ export default function BracketSelector({
   return (
     <div className="space-y-2">
       {hasInsufficientTeams && (
-        <Alert variant="warning" className="mb-2">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Warning</AlertTitle>
-          <AlertDescription>
-            Some brackets have fewer than 2 teams, which is not sufficient for generating competitive games.
-          </AlertDescription>
-        </Alert>
+        <div className="text-amber-600 text-xs flex items-start mb-1 -mt-1">
+          <AlertTriangle className="h-3 w-3 mr-1 mt-0.5 flex-shrink-0" />
+          <span>Some brackets have fewer than 2 teams and cannot be scheduled</span>
+        </div>
       )}
 
-      <ScrollArea className="h-24 border rounded-md p-2">
-        <div className="space-y-4">
+      <ScrollArea className="h-28 border rounded-md p-2">
+        <div className="space-y-1">
           {Object.entries(bracketsByAgeGroup).map(([ageGroupId, bracketList]) => (
             <div key={ageGroupId} className="space-y-1">
               {bracketList.map((bracket) => (
@@ -180,14 +177,14 @@ export default function BracketSelector({
                   />
                   <Label 
                     htmlFor={`bracket-${bracket.id}`}
-                    className={bracket.teamCount !== undefined && bracket.teamCount < 2 
+                    className={`text-sm ${bracket.teamCount !== undefined && bracket.teamCount < 2 
                       ? "text-muted-foreground" 
                       : ""
-                    }
+                    }`}
                   >
                     {bracket.name}
                     {bracket.teamCount !== undefined && (
-                      <span className={bracket.teamCount < 2 ? "text-red-500 ml-2" : "text-muted-foreground ml-2"}>
+                      <span className={bracket.teamCount < 2 ? "text-red-500 ml-1 text-xs" : "text-muted-foreground ml-1 text-xs"}>
                         ({bracket.teamCount} team{bracket.teamCount !== 1 ? 's' : ''})
                       </span>
                     )}
