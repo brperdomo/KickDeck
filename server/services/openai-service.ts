@@ -808,29 +808,73 @@ export class SoccerSchedulerAI {
         .from(eventBrackets)
         .where(eq(eventBrackets.eventId, eventIdStr));
         
-      // Get fields for this event - fields don't have an eventId column
-      // We'll just get all fields since they're not directly linked to events
+      // Get complex IDs assigned to this event
+      const eventComplexesData = await db
+        .select()
+        .from(eventComplexes)
+        .where(eq(eventComplexes.eventId, eventIdStr));
+        
+      // Extract complex IDs
+      const complexIds = eventComplexesData.map(ec => ec.complexId);
+      
+      console.log(`Event ${eventId} has ${complexIds.length} assigned complexes: ${complexIds.join(', ')}`);
+      
+      // Get fields ONLY for the complexes assigned to this event
       // Also get complexes to get field-complex relationships and operating hours
-      const fieldsData = await db
-        .select({
-          id: fields.id,
-          name: fields.name,
-          hasLights: fields.hasLights,
-          hasParking: fields.hasParking,
-          isOpen: fields.isOpen,
-          openTime: fields.openTime,
-          closeTime: fields.closeTime,
-          specialInstructions: fields.specialInstructions,
-          complexId: fields.complexId,
-          // Select only specific complex fields that exist in the database
-          complexName: complexes.name,
-          complexOpenTime: complexes.openTime,
-          complexCloseTime: complexes.closeTime,
-          complexIsOpen: complexes.isOpen
-        })
-        .from(fields)
-        .leftJoin(complexes, eq(fields.complexId, complexes.id))
-        .where(eq(fields.isOpen, true));
+      let fieldsData = [];
+      
+      if (complexIds.length > 0) {
+        fieldsData = await db
+          .select({
+            id: fields.id,
+            name: fields.name,
+            hasLights: fields.hasLights,
+            hasParking: fields.hasParking,
+            isOpen: fields.isOpen,
+            openTime: fields.openTime,
+            closeTime: fields.closeTime,
+            specialInstructions: fields.specialInstructions,
+            complexId: fields.complexId,
+            // Select only specific complex fields that exist in the database
+            complexName: complexes.name,
+            complexOpenTime: complexes.openTime,
+            complexCloseTime: complexes.closeTime,
+            complexIsOpen: complexes.isOpen
+          })
+          .from(fields)
+          .leftJoin(complexes, eq(fields.complexId, complexes.id))
+          .where(
+            and(
+              eq(fields.isOpen, true),
+              inArray(fields.complexId, complexIds)
+            )
+          );
+      } else {
+        // Fallback to all active fields if no complexes are assigned
+        console.log(`No complexes assigned to event ${eventId}, falling back to all active fields`);
+        fieldsData = await db
+          .select({
+            id: fields.id,
+            name: fields.name,
+            hasLights: fields.hasLights,
+            hasParking: fields.hasParking,
+            isOpen: fields.isOpen,
+            openTime: fields.openTime,
+            closeTime: fields.closeTime,
+            specialInstructions: fields.specialInstructions,
+            complexId: fields.complexId,
+            // Select only specific complex fields that exist in the database
+            complexName: complexes.name,
+            complexOpenTime: complexes.openTime,
+            complexCloseTime: complexes.closeTime,
+            complexIsOpen: complexes.isOpen
+          })
+          .from(fields)
+          .leftJoin(complexes, eq(fields.complexId, complexes.id))
+          .where(eq(fields.isOpen, true));
+      }
+      
+      console.log(`Found ${fieldsData.length} available fields for event ${eventId}`);
         
       // Get available time slots for this event
       const timeSlotsData = await db
@@ -1067,9 +1111,11 @@ SCHEDULING INSTRUCTIONS:
 3. Ensure adequate rest periods between games for each team
 4. Teams should play roughly the same number of games
 5. Distribute games evenly across all available fields
-6. IMPORTANT: Only schedule games during the operating hours of each field
-7. IMPORTANT: Do not schedule games on fields where their complex is closed
-8. For tournament formats:
+6. CRITICAL: Start the first games of each day exactly at the opening time of each field or complex
+7. CRITICAL: Only schedule games during the operating hours of each field and complex
+8. CRITICAL: If a field belongs to a complex, make sure games are only scheduled when both the field AND its complex are open
+9. CRITICAL: Utilize the exact time range for each field - start the first games exactly when fields open
+10. For tournament formats:
    - Round Robin: Each team plays against every other team in their bracket once
    - Knockout: Teams advance based on wins
    - Round Robin + Knockout: Group stage followed by playoffs
