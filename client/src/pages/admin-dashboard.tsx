@@ -3061,7 +3061,7 @@ function TeamsView() {
     } else if (team.status === 'registered' && status === 'rejected') {
       dialogMessage = `Reject team "${team.name}" from participating in the event?`;
     } else if (team.status === 'registered' && status === 'waitlisted') {
-      dialogMessage = `Place team "${team.name}" on the waitlist? Their payment will be processed, but they will not take up a slot in the event until approved.`;
+      dialogMessage = `Place team "${team.name}" on the waitlist? They will not take up a slot in the event until approved, and can be moved to approved status if space becomes available.`;
     } else if (status === 'withdrawn') {
       dialogMessage = `Mark team "${team.name}" as withdrawn from the event? This indicates the team has voluntarily withdrawn their registration.`;
     } else if (team.status !== 'registered' && status === 'registered') {
