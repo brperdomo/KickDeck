@@ -92,7 +92,7 @@ export async function createTeamWaitlistTemplate() {
       </div>
       
       <div class="details">
-        <p>Being on the waitlist means your team may be approved at a later date if space becomes available. Your payment has been processed, and will be refunded if your team is not ultimately approved to participate.</p>
+        <p>Being on the waitlist means your team may be approved at a later date if space becomes available. If your team is not ultimately approved to participate, your payment will be refunded.</p>
         
         <p><strong>Notes:</strong> {{notes}}</p>
       </div>
