@@ -3041,13 +3041,14 @@ function TeamsView() {
   };
 
   // Handle team status update
-  const handleStatusUpdate = (team: any, status: 'registered' | 'approved' | 'rejected' | 'withdrawn' | 'refunded') => {
+  const handleStatusUpdate = (team: any, status: 'registered' | 'approved' | 'rejected' | 'withdrawn' | 'refunded' | 'waitlisted') => {
     const statusDisplayMap = {
       'registered': 'Pending Review',
       'approved': 'Approved',
       'rejected': 'Rejected',
       'withdrawn': 'Withdrawn',
-      'refunded': 'Refunded'
+      'refunded': 'Refunded',
+      'waitlisted': 'Waitlisted'
     };
     
     // Set appropriate dialog message based on status transition
@@ -3059,6 +3060,8 @@ function TeamsView() {
       dialogMessage = `Approve team "${team.name}" for participation in the event?`;
     } else if (team.status === 'registered' && status === 'rejected') {
       dialogMessage = `Reject team "${team.name}" from participating in the event?`;
+    } else if (team.status === 'registered' && status === 'waitlisted') {
+      dialogMessage = `Place team "${team.name}" on the waitlist? Their payment will be processed, but they will not take up a slot in the event until approved.`;
     } else if (status === 'withdrawn') {
       dialogMessage = `Mark team "${team.name}" as withdrawn from the event? This indicates the team has voluntarily withdrawn their registration.`;
     } else if (team.status !== 'registered' && status === 'registered') {
@@ -3414,6 +3417,15 @@ function TeamsView() {
                     </span>
                   </TabsTrigger>
                   <TabsTrigger 
+                    value="waitlisted" 
+                    className="data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:shadow-md transition-all duration-200 px-4 py-2 rounded-md"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Waitlisted
+                    </span>
+                  </TabsTrigger>
+                  <TabsTrigger 
                     value="rejected" 
                     className="data-[state=active]:bg-red-500 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:shadow-md transition-all duration-200 px-4 py-2 rounded-md"
                   >
@@ -3497,6 +3509,15 @@ function TeamsView() {
                                     >
                                       <Check className="h-4 w-4 mr-1" />
                                       Approve
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      className="team-status-button"
+                                      onClick={() => handleStatusUpdate(team, 'waitlisted')}
+                                    >
+                                      <Clock className="h-4 w-4 mr-1" />
+                                      Waitlist
                                     </Button>
                                     <Button 
                                       variant="outline" 
@@ -3717,6 +3738,8 @@ function TeamsView() {
                   ? 'This will reject the team registration. Please provide a reason for rejection.'
                   : selectedTeam?.status === 'withdrawn'
                   ? 'This will mark the team as withdrawn from the event. Please provide a reason if applicable.'
+                  : selectedTeam?.status === 'waitlisted'
+                  ? 'This will place the team on the waitlist. Their payment will be processed, but they will not occupy a slot in scheduling until later approved.'
                   : selectedTeam?.status === 'registered'
                   ? 'This will reset the team status to pending review.'
                   : 'This will update the team status and notify the manager.'
@@ -3748,6 +3771,7 @@ function TeamsView() {
               {selectedTeam?.status === 'approved' ? 'Confirm Approval' : 
                selectedTeam?.status === 'rejected' ? 'Confirm Rejection' :
                selectedTeam?.status === 'withdrawn' ? 'Confirm Withdrawal' :
+               selectedTeam?.status === 'waitlisted' ? 'Confirm Waitlist' :
                selectedTeam?.status === 'registered' ? 'Reset Status' : 'Update Status'}
             </Button>
           </DialogFooter>
@@ -4248,6 +4272,41 @@ function TeamsView() {
                     >
                       <UserMinus className="h-4 w-4 mr-1" />
                       Mark Withdrawn
+                    </Button>
+                  </>
+                )}
+                
+                {/* For teams in waitlisted status */}
+                {selectedTeam.status === 'waitlisted' && (
+                  <>
+                    <Button 
+                      onClick={() => {
+                        setIsDetailsDialogOpen(false);
+                        handleStatusUpdate(selectedTeam, 'approved');
+                      }}
+                    >
+                      <Check className="h-4 w-4 mr-1" />
+                      Approve Team
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        setIsDetailsDialogOpen(false);
+                        handleStatusUpdate(selectedTeam, 'registered');
+                      }}
+                    >
+                      <RotateCcw className="h-4 w-4 mr-1" />
+                      Reset to Pending
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        setIsDetailsDialogOpen(false);
+                        handleStatusUpdate(selectedTeam, 'rejected');
+                      }}
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Reject Team
                     </Button>
                   </>
                 )}
