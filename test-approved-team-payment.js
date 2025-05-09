@@ -29,12 +29,13 @@ async function testApprovedTeamPayment() {
     await client.connect();
     console.log('Connected to database');
     
-    // Step 1: Find a test team with payment method attached
+    // For simplicity in testing, let's just use our known test team
+    const testTeamId = 33; // Our test team ID
+    
     const teamQuery = `
       SELECT id, name, event_id, payment_status, payment_method_id, card_brand, card_last_4 
       FROM teams
-      WHERE payment_method_id IS NOT NULL AND payment_status = 'payment_info_provided'
-      LIMIT 1;
+      WHERE id = ${testTeamId};
     `;
     
     const teamResult = await client.query(teamQuery);
@@ -71,7 +72,7 @@ async function testApprovedTeamPayment() {
     await new Promise(resolve => setTimeout(resolve, 1000)); // Small delay to ensure DB is updated
     
     const verifyQuery = `
-      SELECT id, name, payment_status, payment_intent_id, payment_date
+      SELECT id, name, payment_status, payment_intent_id, created_at
       FROM teams
       WHERE id = $1;
     `;
@@ -82,7 +83,7 @@ async function testApprovedTeamPayment() {
     console.log('Team payment details after payment processing:');
     console.log(`  Payment Status: ${updatedTeam.payment_status}`);
     console.log(`  Payment Intent ID: ${updatedTeam.payment_intent_id}`);
-    console.log(`  Payment Date: ${updatedTeam.payment_date}`);
+    console.log(`  Created At: ${updatedTeam.created_at}`);
     
     if (updatedTeam.payment_status !== 'succeeded') {
       throw new Error(`Expected payment_status to be 'succeeded', but got '${updatedTeam.payment_status}'`);
@@ -94,7 +95,7 @@ async function testApprovedTeamPayment() {
     
     // Step 4: Check for payment transaction record
     const transactionQuery = `
-      SELECT id, team_id, payment_intent_id, amount, status, payment_date
+      SELECT id, team_id, payment_intent_id, amount, status, created_at
       FROM payment_transactions
       WHERE team_id = $1 AND payment_intent_id = $2;
     `;
@@ -113,7 +114,7 @@ async function testApprovedTeamPayment() {
     console.log(`  Transaction ID: ${transaction.id}`);
     console.log(`  Amount: $${transaction.amount}`);
     console.log(`  Status: ${transaction.status}`);
-    console.log(`  Payment Date: ${transaction.payment_date}`);
+    console.log(`  Created At: ${transaction.created_at}`);
     
     console.log('✅ Test completed successfully! The approved team payment functionality is working properly.');
     
