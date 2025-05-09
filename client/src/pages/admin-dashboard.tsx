@@ -2676,7 +2676,7 @@ function SchedulingView() {
       
       {/* AI Schedule Generation Dialog */}
       <Dialog open={aiSchedulingModalOpen} onOpenChange={setAiSchedulingModalOpen}>
-        <DialogContent className="sm:max-w-[650px]">
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>AI Schedule Generator</DialogTitle>
             <DialogDescription>
@@ -2686,7 +2686,7 @@ function SchedulingView() {
           
           {/* Preview Games UI */}
           {previewMode && previewGames.length > 0 ? (
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 py-2">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium">Schedule Preview</h4>
                 <Button 
@@ -2783,155 +2783,158 @@ function SchedulingView() {
               </div>
             </div>
           ) : (
-            <div className="space-y-5 py-4">
-              <div className="space-y-2">
-                <h4 className="font-medium">Schedule Constraints</h4>
-                
-                <div className="grid grid-cols-2 gap-4">
+            <div className="py-2">
+              {/* Main content in 2 columns to save vertical space */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                {/* Left column */}
+                <div className="space-y-4">
+                  {/* Schedule Constraints */}
                   <div className="space-y-2">
-                    <Label htmlFor="min-rest">Minimum Rest Period</Label>
-                    <div className="flex items-center space-x-2">
-                      <Input 
-                        id="min-rest" 
-                        type="number" 
-                        defaultValue="30" 
-                        min="10" 
-                        max="240" 
-                      />
-                      <span className="text-sm text-muted-foreground">minutes</span>
+                    <h4 className="font-medium">Schedule Constraints</h4>
+                    
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="min-rest">Minimum Rest Period</Label>
+                        <div className="flex items-center space-x-2">
+                          <Input 
+                            id="min-rest" 
+                            type="number" 
+                            defaultValue="30" 
+                            min="10" 
+                            max="240"
+                            className="w-24"
+                          />
+                          <span className="text-sm text-muted-foreground">minutes</span>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="max-games">Max Games Per Day</Label>
+                        <Input 
+                          id="max-games" 
+                          type="number" 
+                          defaultValue="3" 
+                          min="1" 
+                          max="6"
+                          className="w-24"
+                        />
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground">Minimum time between games for the same team</p>
                   </div>
                   
+                  {/* Coach Conflict Resolution */}
                   <div className="space-y-2">
-                    <Label htmlFor="max-games">Max Games Per Day</Label>
-                    <Input 
-                      id="max-games" 
-                      type="number" 
-                      defaultValue="3" 
-                      min="1" 
-                      max="6" 
-                    />
-                    <p className="text-xs text-muted-foreground">Maximum number of games a team can play in one day</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Age Groups Selection */}
-              <div className="space-y-2">
-                <h4 className="font-medium">Age Groups</h4>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Select age groups to include in the schedule (leave empty to include all)
-                </p>
-                
-                {gamesQuery.data?.ageGroups && gamesQuery.data.ageGroups.length > 0 ? (
-                  <ScrollArea className="h-24 border rounded-md p-2">
-                    <div className="space-y-2">
-                      {gamesQuery.data.ageGroups.map((ageGroup) => (
-                        <div key={ageGroup} className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={`age-group-${ageGroup}`}
-                            checked={selectedAgeGroups.includes(ageGroup)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setSelectedAgeGroups([...selectedAgeGroups, ageGroup]);
-                              } else {
-                                setSelectedAgeGroups(
-                                  selectedAgeGroups.filter((ag) => ag !== ageGroup)
-                                );
-                              }
-                            }}
-                          />
-                          <Label htmlFor={`age-group-${ageGroup}`}>{ageGroup}</Label>
-                        </div>
-                      ))}
+                    <h4 className="font-medium">Coach & Field Settings</h4>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="resolve-coach-conflicts" defaultChecked />
+                      <Label htmlFor="resolve-coach-conflicts">Resolve coach conflicts</Label>
                     </div>
-                  </ScrollArea>
-                ) : (
-                  <div className="text-sm text-muted-foreground italic">
-                    No age groups available
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="field-optimization" defaultChecked />
+                      <Label htmlFor="field-optimization">Optimize field usage</Label>
+                    </div>
                   </div>
-                )}
-              </div>
-              
-              {/* Brackets Selection */}
-              <div className="space-y-2">
-                <h4 className="font-medium">Brackets</h4>
-                <p className="text-xs text-muted-foreground mb-2">
-                  {selectedAgeGroups.length === 0 
-                    ? "Please select age groups to see available brackets" 
-                    : "Select brackets to include in the schedule (leave empty to include all)"}
-                </p>
-                
-                {selectedAgeGroups.length === 0 ? (
-                  <div className="flex items-center justify-center h-24 border rounded-md p-2 bg-muted/20">
-                    <p className="text-sm text-muted-foreground">
-                      Select one or more age groups above to view available brackets
+                  
+                  {/* Tournament Format */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Tournament Format</h4>
+                    <RadioGroup defaultValue="round-robin-knockout" className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="round-robin-knockout" id="round-robin-knockout" />
+                        <Label htmlFor="round-robin-knockout">Group stage + knockout</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="double-elimination" id="double-elimination" />
+                        <Label htmlFor="double-elimination">Double elimination</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="single-elimination" id="single-elimination" />
+                        <Label htmlFor="single-elimination">Single elimination</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  
+                  {/* Preview Mode Toggle */}
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="preview-mode" 
+                        checked={previewMode}
+                        onCheckedChange={(checked) => setPreviewMode(!!checked)}
+                      />
+                      <Label htmlFor="preview-mode">Preview mode (5 sample games)</Label>
+                    </div>
+                    <p className="text-xs text-muted-foreground pl-6">
+                      Preview before full generation
                     </p>
                   </div>
-                ) : (
-                  <BracketSelector 
-                    eventId={selectedEvent}
-                    selectedAgeGroups={selectedAgeGroups}
-                    selectedBrackets={selectedBrackets}
-                    onBracketsChange={setSelectedBrackets}
-                  />
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="font-medium">Coach Conflict Resolution</h4>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="resolve-coach-conflicts" defaultChecked />
-                  <Label htmlFor="resolve-coach-conflicts">Automatically resolve coach conflicts</Label>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  The AI will ensure coaches with multiple teams don't have overlapping games
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="font-medium">Field Utilization</h4>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="field-optimization" defaultChecked />
-                  <Label htmlFor="field-optimization">Optimize field usage</Label>
+                
+                {/* Right column */}
+                <div className="space-y-4">
+                  {/* Age Groups Selection */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Age Groups</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Select age groups to include (leave empty for all)
+                    </p>
+                    
+                    {gamesQuery.data?.ageGroups && gamesQuery.data.ageGroups.length > 0 ? (
+                      <ScrollArea className="h-28 border rounded-md p-2">
+                        <div className="space-y-1">
+                          {gamesQuery.data.ageGroups.map((ageGroup) => (
+                            <div key={ageGroup} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`age-group-${ageGroup}`}
+                                checked={selectedAgeGroups.includes(ageGroup)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSelectedAgeGroups([...selectedAgeGroups, ageGroup]);
+                                  } else {
+                                    setSelectedAgeGroups(
+                                      selectedAgeGroups.filter((ag) => ag !== ageGroup)
+                                    );
+                                  }
+                                }}
+                              />
+                              <Label htmlFor={`age-group-${ageGroup}`} className="text-sm">{ageGroup}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    ) : (
+                      <div className="text-sm text-muted-foreground italic">
+                        No age groups available
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Brackets Selection */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Brackets</h4>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedAgeGroups.length === 0 
+                        ? "Select age groups to see available brackets" 
+                        : "Select brackets to include (leave empty for all)"}
+                    </p>
+                    
+                    {selectedAgeGroups.length === 0 ? (
+                      <div className="flex items-center justify-center h-28 border rounded-md p-2 bg-muted/20">
+                        <p className="text-sm text-muted-foreground">
+                          Select one or more age groups above
+                        </p>
+                      </div>
+                    ) : (
+                      <BracketSelector 
+                        eventId={selectedEvent}
+                        selectedAgeGroups={selectedAgeGroups}
+                        selectedBrackets={selectedBrackets}
+                        onBracketsChange={setSelectedBrackets}
+                      />
+                    )}
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Distribute games evenly across available fields to minimize downtime
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="font-medium">Tournament Format</h4>
-                <RadioGroup defaultValue="round-robin-knockout">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="round-robin-knockout" id="round-robin-knockout" />
-                    <Label htmlFor="round-robin-knockout">Group stage + knockout</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="double-elimination" id="double-elimination" />
-                    <Label htmlFor="double-elimination">Double elimination</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="single-elimination" id="single-elimination" />
-                    <Label htmlFor="single-elimination">Single elimination</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-              
-              {/* Preview Mode Toggle */}
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="preview-mode" 
-                    checked={previewMode}
-                    onCheckedChange={(checked) => setPreviewMode(!!checked)}
-                  />
-                  <Label htmlFor="preview-mode">Preview mode (show 5 sample games before generating full schedule)</Label>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Preview a small sample of the schedule before committing to the full generation
-                </p>
               </div>
             </div>
           )}
