@@ -5199,7 +5199,8 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           tournamentFormat,
           useAI: useAIFromBody,
           selectedAgeGroups,
-          selectedBrackets
+          selectedBrackets,
+          previewMode
         } = req.body;
 
         // Check if we should use AI to generate the schedule
@@ -5209,6 +5210,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         console.log(`Request parameters: resolveCoachConflicts=${resolveCoachConflicts}, optimizeFieldUsage=${optimizeFieldUsage}, tournamentFormat=${tournamentFormat}`);
         console.log(`Filtering by age groups: ${JSON.stringify(selectedAgeGroups)}`);
         console.log(`Filtering by brackets: ${JSON.stringify(selectedBrackets)}`);
+        console.log(`Preview mode: ${previewMode ? 'ON' : 'OFF'}`);
 
         if (useAI) {
           // Import the OpenAI service
