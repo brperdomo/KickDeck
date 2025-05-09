@@ -5,7 +5,8 @@ import {
   Link2, X, Ticket, Plus, Mail, KeyRound, Check, RefreshCcw, UserMinus, RotateCcw, 
   Pencil, PlusCircle, CalendarRange, UserRoundPlus, ClipboardX, ArrowLeft,
   Upload, Wand2, Sparkles, AlertTriangle, CalendarDays, Loader2,
-  Trophy, WandSparkles
+  Trophy, WandSparkles, FileText, Edit, Trash, Download, ImageIcon,
+  BarChart2, FileBarChart, Users, Calendar, UserPlus
 } from "lucide-react";
 // Removed ClubLogo import as we now display club name as text
 import { ComplexCard } from "@/components/admin/ComplexCard";
@@ -1210,21 +1211,36 @@ function ReportsView() {
                 )}
               </Button>
             </div>
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-muted-foreground">Manager report content will be implemented here</p>
-              </CardContent>
-            </Card>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-indigo-100 dark:border-gray-700">
+              <div className="bg-gradient-to-r from-indigo-50/50 to-blue-50/50 dark:from-gray-800 dark:to-gray-700 p-4 border-b border-indigo-100 dark:border-gray-700">
+                <h4 className="text-base font-medium text-indigo-900 dark:text-blue-100">Manager Information</h4>
+              </div>
+              <div className="p-6">
+                <div className="flex items-center justify-center p-6 text-center">
+                  <div className="space-y-3">
+                    <FileBarChart className="mx-auto h-12 w-12 text-indigo-300 dark:text-indigo-400" />
+                    <p className="text-indigo-700 dark:text-indigo-300">Manager report content will be implemented here</p>
+                    <p className="text-sm text-indigo-500 dark:text-indigo-400">Track and manage team managers across all tournaments</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         );
       case 'player':
         return (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Player Reports</h3>
+            <div className="flex justify-between items-center bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-gray-800 dark:to-gray-700 p-4 rounded-lg shadow-sm">
+              <div className="space-y-1">
+                <h3 className="text-lg font-semibold text-indigo-900 dark:text-blue-100">Player Reports</h3>
+                <p className="text-sm text-indigo-700 dark:text-blue-200">
+                  View and export all registered player information
+                </p>
+              </div>
               <Button
                 onClick={() => startExport('player')}
                 disabled={isExporting !== 'player'}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
               >
                 {isExporting === 'player' ? (
                   <>
@@ -1239,21 +1255,36 @@ function ReportsView() {
                 )}
               </Button>
             </div>
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-muted-foreground">Player report content will be implemented here</p>
-              </CardContent>
-            </Card>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-indigo-100 dark:border-gray-700">
+              <div className="bg-gradient-to-r from-indigo-50/50 to-blue-50/50 dark:from-gray-800 dark:to-gray-700 p-4 border-b border-indigo-100 dark:border-gray-700">
+                <h4 className="text-base font-medium text-indigo-900 dark:text-blue-100">Player Information</h4>
+              </div>
+              <div className="p-6">
+                <div className="flex items-center justify-center p-6 text-center">
+                  <div className="space-y-3">
+                    <Users className="mx-auto h-12 w-12 text-indigo-300 dark:text-indigo-400" />
+                    <p className="text-indigo-700 dark:text-indigo-300">Player report content will be implemented here</p>
+                    <p className="text-sm text-indigo-500 dark:text-indigo-400">View and manage player information for all registered teams</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         );
       case 'schedule':
         return (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Schedule Reports</h3>
+            <div className="flex justify-between items-center bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-gray-800 dark:to-gray-700 p-4 rounded-lg shadow-sm">
+              <div className="space-y-1">
+                <h3 className="text-lg font-semibold text-indigo-900 dark:text-blue-100">Schedule Reports</h3>
+                <p className="text-sm text-indigo-700 dark:text-blue-200">
+                  Generate and export tournament schedules and match information
+                </p>
+              </div>
               <Button
                 onClick={() => startExport('schedule')}
                 disabled={isExporting !== 'schedule'}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
               >
                 {isExporting === 'schedule' ? (
                   <>
@@ -1268,21 +1299,36 @@ function ReportsView() {
                 )}
               </Button>
             </div>
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-muted-foreground">Schedule report content will be implemented here</p>
-              </CardContent>
-            </Card>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-indigo-100 dark:border-gray-700">
+              <div className="bg-gradient-to-r from-indigo-50/50 to-blue-50/50 dark:from-gray-800 dark:to-gray-700 p-4 border-b border-indigo-100 dark:border-gray-700">
+                <h4 className="text-base font-medium text-indigo-900 dark:text-blue-100">Schedule Information</h4>
+              </div>
+              <div className="p-6">
+                <div className="flex items-center justify-center p-6 text-center">
+                  <div className="space-y-3">
+                    <Calendar className="mx-auto h-12 w-12 text-indigo-300 dark:text-indigo-400" />
+                    <p className="text-indigo-700 dark:text-indigo-300">Schedule report content will be implemented here</p>
+                    <p className="text-sm text-indigo-500 dark:text-indigo-400">View and export tournament schedules and match information</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         );
       case 'guest-player':
         return (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Guest Player Reports</h3>
+            <div className="flex justify-between items-center bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-gray-800 dark:to-gray-700 p-4 rounded-lg shadow-sm">
+              <div className="space-y-1">
+                <h3 className="text-lg font-semibold text-indigo-900 dark:text-blue-100">Guest Player Reports</h3>
+                <p className="text-sm text-indigo-700 dark:text-blue-200">
+                  Track and analyze guest player registrations across events
+                </p>
+              </div>
               <Button
                 onClick={() => startExport('guest-player')}
                 disabled={isExporting !== 'guest-player'}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
               >
                 {isExporting === 'guest-player' ? (
                   <>
