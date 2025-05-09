@@ -977,6 +977,7 @@ function ReportsView() {
                   <option value="registration-orders">Registration Orders</option>
                   <option value="financial-overview">Financial Overview</option>
                   <option value="fees-analysis">Fees Analysis</option>
+                  <option value="bookkeeping">Bookkeeping Report</option>
                   <option value="fees-by-event">Fees by Event</option>
                   <option value="fees-by-age-group">Fees by Age Group</option>
                 </select>
@@ -1140,6 +1141,36 @@ function ReportsView() {
                         <DollarSign className="w-4 h-4" />
                         <span>Open Fees Analysis</span>
                       </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+            
+            {selectedFinancialReport === 'bookkeeping' && (
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle>Bookkeeping Report</CardTitle>
+                    <CardDescription>Comprehensive financial data for accounting and bookkeeping purposes</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col space-y-4">
+                      <p className="text-sm text-muted-foreground">
+                        This report provides detailed financial information for bookkeeping, including:
+                      </p>
+                      <ul className="list-disc pl-5 text-sm space-y-1 text-muted-foreground">
+                        <li>Teams registered by date range with gross/net amounts</li>
+                        <li>Stripe fees and settlement dates</li>
+                        <li>Detailed reports for refunds, chargebacks, and pending payments</li>
+                        <li>Export options for accounting software integration</li>
+                      </ul>
+                      <div className="flex justify-center items-center py-4">
+                        <Button onClick={() => navigate('/bookkeeping-report')} className="space-x-2">
+                          <FileText className="w-4 h-4" />
+                          <span>Open Bookkeeping Report</span>
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

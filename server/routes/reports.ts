@@ -709,10 +709,263 @@ export async function getFeesAnalysisReport(req: Request, res: Response) {
     });
   }
 }
+/**
+ * Bookkeeping Report
+ * 
+ * Provides comprehensive financial data for bookkeeping and accounting purposes.
+ * Includes options for date range filtering, transaction types, and settlement details.
+ * 
+ * Query parameters:
+ * - startDate: Start date for filtering (ISO string)
+ * - endDate: End date for filtering (ISO string)
+ * - reportType: Type of report (all-transactions, refunds, chargebacks, pending-payments)
+ * - settledOnly: Only include settled transactions (boolean)
+ */
+export async function getBookkeepingReport(req: Request, res: Response) {
+  try {
+    const { 
+      startDate, 
+      endDate, 
+      reportType = 'all-transactions',
+      settledOnly = 'false'
+    } = req.query;
+    
+    // Parse date range
+    let startDateObj = startDate ? new Date(startDate as string) : new Date(0);
+    let endDateObj = endDate ? new Date(endDate as string) : new Date();
+    
+    // Ensure end date is set to end of day
+    endDateObj.setHours(23, 59, 59, 999);
+    
+    // Base query for all transactions with details
+    let baseQuery = sql`
+      WITH transaction_details AS (
+        SELECT 
+          pt.id, 
+          pt.team_id,
+          pt.amount, 
+          pt.payment_method_type as payment_method, 
+          pt.status, 
+          pt.created_at,
+          pt.payment_intent_id,
+          pt.refunded_at,
+          pt.transaction_type,
+          -- Estimate Stripe fee (2.9% + 30 cents for standard pricing)
+          CASE
+            WHEN pt.status = 'succeeded' AND pt.transaction_type = 'payment' THEN 
+              ROUND(pt.amount * 0.029 + 30)
+            ELSE 0
+          END as stripe_fee,
+          pt.metadata,
+          teams.name as team_name,
+          teams.manager_name,
+          teams.manager_email,
+          teams.manager_phone,
+          teams.club_name,
+          teams.registration_fee as amount_due,
+          events.id as event_id,
+          events.name as event_name,
+          event_age_groups.age_group as age_group,
+          -- For chargebacks and refunds
+          CASE 
+            WHEN pt.transaction_type IN ('refund', 'partial_refund', 'chargeback') AND pt.metadata->>'original_payment_id' IS NOT NULL THEN 
+              pt.metadata->>'original_payment_id'
+            ELSE NULL 
+          END as original_payment_id,
+          -- For refunds
+          CASE
+            WHEN pt.transaction_type = 'partial_refund' THEN true
+            ELSE false
+          END as is_partial,
+          CASE
+            WHEN pt.metadata->>'refund_reason' IS NOT NULL THEN
+              pt.metadata->>'refund_reason'
+            ELSE NULL
+          END as refund_reason,
+          CASE
+            WHEN pt.metadata->>'original_amount' IS NOT NULL THEN
+              (pt.metadata->>'original_amount')::integer
+            ELSE NULL
+          END as original_amount,
+          -- For chargebacks
+          CASE
+            WHEN pt.metadata->>'dispute_status' IS NOT NULL THEN
+              pt.metadata->>'dispute_status'
+            ELSE NULL
+          END as dispute_status,
+          CASE
+            WHEN pt.metadata->>'dispute_reason' IS NOT NULL THEN
+              pt.metadata->>'dispute_reason'
+            ELSE NULL
+          END as dispute_reason,
+          -- Settlement date (estimated as 2 business days after payment)
+          CASE
+            WHEN pt.status = 'succeeded' AND pt.transaction_type = 'payment' THEN
+              (pt.created_at + INTERVAL '2 days')::timestamp
+            ELSE NULL
+          END as settled_date
+        FROM payment_transactions pt
+        LEFT JOIN teams ON pt.team_id = teams.id
+        LEFT JOIN events ON teams.event_id = events.id
+        LEFT JOIN event_age_groups ON teams.age_group_id = event_age_groups.id
+        WHERE pt.created_at BETWEEN ${startDateObj.toISOString()} AND ${endDateObj.toISOString()}
+    `;
+    
+    // Filter by transaction type based on reportType
+    let filterQuery = '';
+    if (reportType === 'refunds') {
+      filterQuery = ` AND pt.transaction_type IN ('refund', 'partial_refund')`;
+    } else if (reportType === 'chargebacks') {
+      filterQuery = ` AND pt.transaction_type = 'chargeback'`;
+    } else if (reportType === 'pending-payments') {
+      // For pending payments, we need to look at teams with pending payment status
+      return getPendingPaymentsReport(req, res, startDateObj, endDateObj);
+    }
+    
+    // Add settled only filter if requested
+    if (settledOnly === 'true') {
+      filterQuery += ` AND pt.status = 'succeeded' AND pt.created_at < (NOW() - INTERVAL '2 days')`;
+    }
+    
+    // Complete the query
+    const query = sql`
+      ${baseQuery} ${sql.raw(filterQuery)}
+      )
+      SELECT * FROM transaction_details
+      ORDER BY created_at DESC
+    `;
+    
+    const transactions = await db.execute(query);
+    
+    // Generate summary statistics
+    const summaryQuery = sql`
+      WITH transaction_details AS (
+        SELECT 
+          pt.id, 
+          pt.amount, 
+          CASE
+            WHEN pt.status = 'succeeded' AND pt.transaction_type = 'payment' THEN 
+              ROUND(pt.amount * 0.029 + 30)
+            ELSE 0
+          END as stripe_fee
+        FROM payment_transactions pt
+        WHERE pt.created_at BETWEEN ${startDateObj.toISOString()} AND ${endDateObj.toISOString()}
+        ${sql.raw(filterQuery)}
+        ${sql.raw(settledOnly === 'true' ? ` AND pt.status = 'succeeded' AND pt.created_at < (NOW() - INTERVAL '2 days')` : '')}
+      )
+      SELECT 
+        COUNT(*) as total_transactions,
+        SUM(amount) as total_amount,
+        SUM(stripe_fee) as total_stripe_fees,
+        (SUM(amount) - SUM(stripe_fee)) as net_amount
+      FROM transaction_details
+    `;
+    
+    const summaryResult = await db.execute(summaryQuery);
+    
+    const summary = {
+      totalTransactions: summaryResult[0]?.total_transactions || 0,
+      totalAmount: summaryResult[0]?.total_amount || 0,
+      stripeFees: summaryResult[0]?.total_stripe_fees || 0,
+      netAmount: summaryResult[0]?.net_amount || 0
+    };
+    
+    return res.json({
+      success: true,
+      transactions,
+      summary,
+      filters: {
+        startDate: startDateObj.toISOString(),
+        endDate: endDateObj.toISOString(),
+        reportType,
+        settledOnly: settledOnly === 'true'
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching bookkeeping report:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    });
+  }
+}
+
+/**
+ * Get Pending Payments Report
+ * 
+ * Helper function to fetch pending payments (Pay Later submissions)
+ */
+async function getPendingPaymentsReport(req: Request, res: Response, startDate: Date, endDate: Date) {
+  try {
+    const pendingQuery = sql`
+      SELECT 
+        teams.id,
+        teams.name as team_name,
+        teams.manager_name,
+        teams.manager_email,
+        teams.manager_phone,
+        teams.created_at,
+        teams.registration_fee as amount_due,
+        teams.payment_status as status,
+        events.id as event_id,
+        events.name as event_name,
+        event_age_groups.age_group as age_group
+      FROM teams
+      LEFT JOIN events ON teams.event_id = events.id
+      LEFT JOIN event_age_groups ON teams.age_group_id = event_age_groups.id
+      WHERE teams.created_at BETWEEN ${startDate.toISOString()} AND ${endDate.toISOString()}
+      AND teams.payment_status = 'pending'
+      ORDER BY teams.created_at DESC
+    `;
+    
+    const transactions = await db.execute(pendingQuery);
+    
+    // Generate summary statistics
+    const summaryQuery = sql`
+      SELECT 
+        COUNT(*) as total_transactions,
+        SUM(registration_fee) as total_amount,
+        0 as total_stripe_fees,
+        SUM(registration_fee) as net_amount
+      FROM teams
+      WHERE created_at BETWEEN ${startDate.toISOString()} AND ${endDate.toISOString()}
+      AND payment_status = 'pending'
+    `;
+    
+    const summaryResult = await db.execute(summaryQuery);
+    
+    const summary = {
+      totalTransactions: summaryResult[0]?.total_transactions || 0,
+      totalAmount: summaryResult[0]?.total_amount || 0,
+      stripeFees: 0, // No fees for pending payments
+      netAmount: summaryResult[0]?.net_amount || 0
+    };
+    
+    return res.json({
+      success: true,
+      transactions,
+      summary,
+      filters: {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        reportType: 'pending-payments',
+        settledOnly: false
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching pending payments report:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    });
+  }
+}
+
 // Set up routes
 router.get('/registration-orders', getRegistrationOrdersReport);
 router.get('/financial-overview', getFinancialOverviewReport);
 router.get('/event/:eventId/financial', getEventFinancialReport);
 router.get('/fees-analysis', getFeesAnalysisReport);
+router.get('/bookkeeping', getBookkeepingReport);
 
 export default router;
