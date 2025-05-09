@@ -2,7 +2,7 @@ import express from 'express';
 import Stripe from 'stripe';
 import bodyParser from 'body-parser';
 import { createPaymentIntent, handlePaymentSuccess, handlePaymentFailure, handleRefund, createRefund } from '../services/stripeService';
-import { createGeneralPaymentIntent } from './payments/create-payment-intent';
+import { createGeneralPaymentIntent, getPaymentIntent, getStripeConfig } from './payments/create-payment-intent';
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
