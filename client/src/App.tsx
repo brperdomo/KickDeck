@@ -128,6 +128,14 @@ function Router() {
 
       {/* Public routes that don't require authentication */}
       
+      {/* Payment routes */}
+      <Route path="/checkout/:amount?">
+        {(params) => <Checkout />}
+      </Route>
+      <Route path="/payment-success">
+        <PaymentSuccess />
+      </Route>
+      
       {/* Event registration routes - always available regardless of auth status */}
       <Route path="/register/event/:eventId">
         {(params) => <EventRegistration />}
@@ -348,7 +356,7 @@ function Router() {
             <Checkout />
           </Route>
           <Route path="/payment-confirmation">
-            <PaymentConfirmation />
+            <PaymentSuccess />
           </Route>
           <Route path="/dashboard" component={UserDashboard} />
 
