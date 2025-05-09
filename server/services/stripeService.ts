@@ -393,6 +393,38 @@ export async function processPaymentForApprovedTeam(teamId: number, amount: numb
       await stripe.paymentMethods.attach(team.paymentMethodId, {
         customer: customerId,
       });
+    } else {
+      // Verify if payment method is attached to this customer
+      log(`Using existing Stripe customer for team: ${teamId}`);
+      
+      try {
+        // Check if payment method is already attached to this customer
+        const paymentMethod = await stripe.paymentMethods.retrieve(team.paymentMethodId);
+        
+        if (paymentMethod.customer !== customerId) {
+          // If not attached, attach it now
+          log(`Attaching payment method ${team.paymentMethodId} to customer ${customerId}`);
+          await stripe.paymentMethods.attach(team.paymentMethodId, {
+            customer: customerId,
+          });
+        }
+      } catch (error) {
+        // If an error occurred, the payment method might be attached to another customer
+        // In this case we need to detach it first and then attach to our customer
+        log(`Detaching and re-attaching payment method for team: ${teamId}`);
+        
+        try {
+          await stripe.paymentMethods.detach(team.paymentMethodId);
+        } catch (detachError) {
+          // If detach fails, let's continue and try to attach anyway
+          log(`Failed to detach payment method: ${detachError.message}`);
+        }
+        
+        // Attach to our customer
+        await stripe.paymentMethods.attach(team.paymentMethodId, {
+          customer: customerId,
+        });
+      }
     }
     
     // Create a payment intent with the saved payment method
@@ -586,6 +618,34 @@ export async function handleSetupIntentSuccess(setupIntent: Stripe.SetupIntent) 
     // Get payment method details
     const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
     const cardDetails = paymentMethod.card;
+    
+    // Create a Stripe customer and attach the payment method
+    let customerId = existingTeam.stripeCustomerId;
+    
+    if (!customerId) {
+      // Create a new customer
+      const customer = await stripe.customers.create({
+        name: existingTeam.name || `Team ${teamId}`,
+        email: existingTeam.submitterEmail || `team-${teamId}@example.com`,
+        metadata: {
+          teamId: teamId.toString(),
+          eventId: existingTeam.eventId?.toString() || '',
+        }
+      });
+      customerId = customer.id;
+      
+      // Attach the payment method to the customer
+      await stripe.paymentMethods.attach(paymentMethodId, {
+        customer: customerId,
+      });
+      
+      // Set this payment method as the default
+      await stripe.customers.update(customerId, {
+        invoice_settings: {
+          default_payment_method: paymentMethodId,
+        },
+      });
+    }
 
     // Update team with payment method details
     await db.update(teams)
@@ -594,6 +654,7 @@ export async function handleSetupIntentSuccess(setupIntent: Stripe.SetupIntent) 
         paymentStatus: 'payment_info_provided',
         cardBrand: cardDetails?.brand || null,
         cardLast4: cardDetails?.last4 || null,
+        stripeCustomerId: customerId,
       })
       .where(eq(teams.id, teamIdNumber));
 
