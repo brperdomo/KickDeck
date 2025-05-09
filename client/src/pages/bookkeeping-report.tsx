@@ -594,6 +594,34 @@ export default function BookkeepingReport() {
         </Card>
       </div>
       
+      {/* Settlement Info - only show for "all-transactions" tab when there are transactions */}
+      {activeTab === 'all-transactions' && filteredTransactions.length > 0 && (
+        <Card className="bg-muted/30">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Settlement Information
+            </CardTitle>
+            <CardDescription>
+              Stripe typically deposits funds within 2 business days of successful payments
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm">
+              <p className="mb-2">
+                <strong>Payment processing:</strong> Stripe collects a fee of 2.9% + 30¢ per transaction.
+              </p>
+              <p>
+                <strong>Estimated next deposit:</strong> Payments from {formatDate(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000))} and earlier should be deposited today.
+              </p>
+            </div>
+          </CardContent>
+          <CardFooter className="pt-0 text-xs text-muted-foreground">
+            Note: Settlement estimates are for reference only. Actual deposit dates may vary based on Stripe's processing schedule and holidays.
+          </CardFooter>
+        </Card>
+      )}
+      
       {/* Search Bar */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -681,8 +709,20 @@ export default function BookkeepingReport() {
                   </Table>
                 </div>
               ) : (
-                <div className="text-center py-10">
+                <div className="text-center py-10 space-y-4">
                   <p className="text-muted-foreground">No transactions found for the selected filters.</p>
+                  <div className="max-w-md mx-auto text-sm text-muted-foreground space-y-2">
+                    <p>Try adjusting your filters or date range to see more results.</p>
+                    <div className="bg-muted/30 p-4 rounded-md">
+                      <h4 className="font-medium mb-2">Bookkeeping Tips:</h4>
+                      <ul className="list-disc list-inside space-y-1 text-left">
+                        <li>Export reports monthly for accounting records</li>
+                        <li>Reconcile with Stripe dashboard for accuracy</li>
+                        <li>Track settlement dates for cash flow management</li>
+                        <li>Monitor refund and chargeback activity</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -742,8 +782,20 @@ export default function BookkeepingReport() {
                   </Table>
                 </div>
               ) : (
-                <div className="text-center py-10">
+                <div className="text-center py-10 space-y-4">
                   <p className="text-muted-foreground">No refunds found for the selected filters.</p>
+                  <div className="max-w-md mx-auto text-sm text-muted-foreground space-y-2">
+                    <p>Try adjusting your date range to include periods when refunds were processed.</p>
+                    <div className="bg-muted/30 p-4 rounded-md">
+                      <h4 className="font-medium mb-2">Refund Policy Reminders:</h4>
+                      <ul className="list-disc list-inside space-y-1 text-left">
+                        <li>Full refunds are available up to 14 days before an event</li>
+                        <li>Partial refunds may be issued at the administrator's discretion</li>
+                        <li>All refunds should include a documented reason</li>
+                        <li>Refunds typically process within 5-7 business days</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -801,8 +853,20 @@ export default function BookkeepingReport() {
                   </Table>
                 </div>
               ) : (
-                <div className="text-center py-10">
+                <div className="text-center py-10 space-y-4">
                   <p className="text-muted-foreground">No chargebacks found for the selected filters.</p>
+                  <div className="max-w-md mx-auto text-sm text-muted-foreground space-y-2">
+                    <p>Chargebacks are rare - this is a good thing! They only appear when a customer disputes a charge.</p>
+                    <div className="bg-muted/30 p-4 rounded-md">
+                      <h4 className="font-medium mb-2">Chargeback Guidelines:</h4>
+                      <ul className="list-disc list-inside space-y-1 text-left">
+                        <li>Respond promptly to all chargeback notifications</li>
+                        <li>Provide evidence of service delivery when disputing</li>
+                        <li>Document all customer communications</li>
+                        <li>Chargebacks may incur additional fees from Stripe</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               )}
             </CardContent>
