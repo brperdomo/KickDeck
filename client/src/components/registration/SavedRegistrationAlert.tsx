@@ -11,7 +11,7 @@ import { formatDistanceToNow } from 'date-fns';
 interface SavedRegistrationAlertProps {
   lastUpdated: number;
   onResume: () => void;
-  onDiscard: () => void;
+  onDiscard?: () => void; // Make this optional since we're not using it anymore
   eventName?: string;
 }
 
