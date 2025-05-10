@@ -883,7 +883,8 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
   
   // Check for saved data on component mount and automatically load it
   useEffect(() => {
-    if (hasSavedData && !isPreview) {
+    // Only try to load saved data when the form is initialized
+    if (hasSavedData && !isPreview && form) {
       console.log('Found saved registration data from:', new Date(lastSaved || 0).toLocaleString());
       // Automatically load saved data without asking user
       if (savedData) {
@@ -905,7 +906,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
       
       return () => clearTimeout(timer);
     }
-  }, [hasSavedData, lastSaved, savedData, isPreview]);
+  }, [hasSavedData, lastSaved, savedData, isPreview, form, toast, loadSavedState]);
   
   // Setup auto-saving
   useEffect(() => {
@@ -952,12 +953,36 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
   
   // Function to load saved state and populate forms
   const loadSavedState = () => {
-    if (!savedData) return false;
+    if (!savedData || !form) return false;
     
     try {
+      console.log('Loading saved registration state:', savedData);
+      
       // Check if we have data to restore
       if (savedData.personalDetails) {
-        form.reset(savedData.personalDetails);
+        // If user is logged in, we want to merge saved form data with account data
+        if (user) {
+          // First, reset with saved data
+          form.reset(savedData.personalDetails);
+          
+          // Then override with user account info for critical fields
+          form.setValue('firstName', user.firstName || savedData.personalDetails.firstName || '');
+          form.setValue('lastName', user.lastName || savedData.personalDetails.lastName || '');
+          form.setValue('email', user.email || savedData.personalDetails.email || '');
+          form.setValue('phone', user.phone || savedData.personalDetails.phone || '');
+          form.setValue('authenticated', true);
+          
+          // Apply household data if available
+          if (household && !householdLoading) {
+            const addressApplied = applyHouseholdData(form);
+            if (addressApplied) {
+              console.log('Applied household address data during savedState loading');
+            }
+          }
+        } else {
+          // Just use the saved data as is
+          form.reset(savedData.personalDetails);
+        }
       }
       
       if (savedData.teamDetails && teamForm) {
