@@ -133,8 +133,10 @@ export default function AuthPage() {
     }
     
     // No redirect path found, go to default location
-    // But first check if we're on the auth page directly (not from a registration flow)
-    const isDirectAuthPage = window.location.pathname === '/auth';
+    // Check if we're on the login page (could be /auth or /)
+    // Use more robust detection for the auth page
+    const isAuthPage = window.location.pathname === '/auth' || window.location.pathname === '/';
+    console.log("Current path:", window.location.pathname, "isAuthPage:", isAuthPage);
     
     // Check all possible flags that indicate we're in a registration flow
     const inRegistrationFlow = sessionStorage.getItem('inRegistrationFlow') === 'true';
@@ -164,9 +166,9 @@ export default function AuthPage() {
       return;
     }
     
-    if (isDirectAuthPage) {
+    if (isAuthPage) {
       const defaultPath = user.isAdmin ? '/admin' : '/dashboard';
-      console.log("No redirect path, going to:", defaultPath);
+      console.log("On auth page, redirecting to:", defaultPath);
       window.location.href = defaultPath;
     } else {
       console.log("On a non-auth page while logged in, not redirecting");
