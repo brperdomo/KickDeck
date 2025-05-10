@@ -4008,7 +4008,10 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                 </div>
                 
                 <Button
-                  onClick={() => setLocation('/dashboard')}
+                  onClick={() => {
+                    // Make sure we navigate to the absolute dashboard path, not a relative one
+                    window.location.href = '/dashboard';
+                  }}
                   className="text-white"
                   style={{ backgroundColor: event?.branding?.primaryColor || '#2C5282' }}
                 >
