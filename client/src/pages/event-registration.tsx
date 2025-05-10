@@ -719,6 +719,32 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
       // Update the user data in the React Query cache
       queryClient.setQueryData(['/api/user'], userData);
       
+      // Force a refetch of household details to get the address information
+      console.log('Login successful - fetching household details...');
+      try {
+        // Make direct API call to household details
+        const householdResponse = await fetch('/api/household/details', {
+          credentials: 'include'
+        });
+        
+        if (householdResponse.ok) {
+          const householdData = await householdResponse.json();
+          console.log('Household details fetched after login:', householdData);
+          
+          // Update the address fields with the household data
+          if (householdData) {
+            form.setValue('address', householdData.address || '');
+            form.setValue('city', householdData.city || '');
+            form.setValue('state', householdData.state || '');
+            form.setValue('zipCode', householdData.zipCode || '');
+          }
+        } else {
+          console.error('Failed to fetch household details after login');
+        }
+      } catch (householdError) {
+        console.error('Error fetching household details:', householdError);
+      }
+      
       toast({
         title: 'Success',
         description: 'You have been logged in successfully',
@@ -1041,25 +1067,58 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
         // Set authenticated flag in form data
         form.setValue('authenticated', true);
         
-        // Populate form with complete user data
-        if (redactedUserData) {
-          form.setValue('firstName', redactedUserData.firstName);
-          form.setValue('lastName', redactedUserData.lastName);
-          form.setValue('phone', redactedUserData.phone);
+        // Always try to fetch household details directly after login
+        try {
+          console.log('STEP 2: Directly fetching household details after login verification');
+          const householdResponse = await fetch('/api/household/details', {
+            credentials: 'include'
+          });
           
-          // Use household data if available, otherwise use redacted data
-          if (household) {
-            console.log('Using household data for address fields after verification');
-            form.setValue('address', household.address || '');
-            form.setValue('city', household.city || '');
-            form.setValue('state', household.state || '');
-            form.setValue('zipCode', household.zipCode || '');
+          if (householdResponse.ok) {
+            const householdData = await householdResponse.json();
+            console.log('STEP 2: Successfully fetched household details:', householdData);
+            
+            // Populate name and contact from redacted data
+            form.setValue('firstName', redactedUserData.firstName);
+            form.setValue('lastName', redactedUserData.lastName);
+            form.setValue('phone', redactedUserData.phone);
+            
+            // Always use the freshly fetched household data for address
+            if (householdData) {
+              console.log('STEP 2: Using fresh household data for address fields');
+              form.setValue('address', householdData.address || '');
+              form.setValue('city', householdData.city || '');
+              form.setValue('state', householdData.state || '');
+              form.setValue('zipCode', householdData.zipCode || '');
+            } else {
+              // Fallback to redacted data if household fetch succeeded but returned no data
+              console.log('STEP 2: No household data found, using redacted data');
+              form.setValue('address', redactedUserData.address);
+              form.setValue('city', redactedUserData.city);
+              form.setValue('state', redactedUserData.state);
+              form.setValue('zipCode', redactedUserData.zipCode);
+            }
           } else {
+            console.error('STEP 2: Failed to fetch household details, using redacted data');
+            // Fallback to all redacted data
+            form.setValue('firstName', redactedUserData.firstName);
+            form.setValue('lastName', redactedUserData.lastName);
+            form.setValue('phone', redactedUserData.phone);
             form.setValue('address', redactedUserData.address);
             form.setValue('city', redactedUserData.city);
             form.setValue('state', redactedUserData.state);
             form.setValue('zipCode', redactedUserData.zipCode);
           }
+        } catch (householdError) {
+          console.error('STEP 2: Error fetching household details:', householdError);
+          // Fallback to all redacted data on error
+          form.setValue('firstName', redactedUserData.firstName);
+          form.setValue('lastName', redactedUserData.lastName);
+          form.setValue('phone', redactedUserData.phone);
+          form.setValue('address', redactedUserData.address);
+          form.setValue('city', redactedUserData.city);
+          form.setValue('state', redactedUserData.state);
+          form.setValue('zipCode', redactedUserData.zipCode);
         }
         
         toast({
