@@ -1019,9 +1019,11 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
     setIsVerifyingPassword(true);
     
     try {
+      console.log('Verifying existing account for:', email);
       const success = await loginWithCredentials(email, password);
       
       if (success) {
+        console.log('Login successful, populating form and advancing to next step');
         // Set authenticated flag in form data
         form.setValue('authenticated', true);
         
@@ -1040,6 +1042,9 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
           title: "Account Verified",
           description: "You're now using your saved information.",
         });
+        
+        // Important: Proceed to the team step after successful verification
+        setCurrentStep('team');
       }
     } catch (error) {
       console.error('Error verifying account:', error);
@@ -1519,6 +1524,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
         setAuthError(null);
         try {
           // Login using the existing API
+          console.log('Logging in through personal details submit with:', { email: data.email });
           const response = await fetch('/api/login', {
             method: 'POST',
             headers: {
@@ -1542,6 +1548,9 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
           console.log('Login successful, continuing with registration');
           form.setValue('authenticated', true);
           updatePersonalDetailsMutation.mutate(data);
+          
+          // Important: Proceed to the team step after successful login
+          setCurrentStep('team');
         } catch (loginError) {
           console.error('Login error:', loginError);
           setAuthError('An error occurred during login. Please try again.');
@@ -1596,6 +1605,9 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
           console.log('Registration successful, continuing with registration');
           form.setValue('authenticated', true);
           updatePersonalDetailsMutation.mutate(data);
+          
+          // Important: Proceed to the team step after successful registration
+          setCurrentStep('team');
         } catch (registerError) {
           console.error('Registration error:', registerError);
           setAuthError('An error occurred during account creation. Please try again.');
