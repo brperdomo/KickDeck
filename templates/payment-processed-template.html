@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Team Approved - Payment Processed</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      background-color: {{branding.primaryColor}};
+      padding: 20px;
+      text-align: center;
+    }
+    .header h1 {
+      color: white;
+      margin: 0;
+      font-size: 24px;
+    }
+    .content {
+      padding: 20px;
+      background: #fff;
+    }
+    .footer {
+      background-color: #f7f7f7;
+      padding: 15px;
+      text-align: center;
+      font-size: 12px;
+      color: #777;
+    }
+    .info-box {
+      background-color: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .payment-info {
+      background-color: #e6f7ec;
+      border: 1px solid #b3e6c4;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .fees-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    .fees-table th, .fees-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    .fees-table th {
+      background-color: #f2f2f2;
+    }
+    .button {
+      display: inline-block;
+      background-color: {{branding.primaryColor}};
+      color: white;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      margin-top: 15px;
+    }
+    .status {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 3px;
+      background-color: #d4edda;
+      color: #155724;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .receipt-box {
+      border: 1px dashed #ccc;
+      padding: 15px;
+      margin: 20px 0;
+      background-color: #fafafa;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      {{#if branding.logoUrl}}
+        <img src="{{branding.logoUrl}}" alt="{{eventName}} Logo" style="max-height: 80px; max-width: 80%;">
+      {{else}}
+        <h1>{{eventName}}</h1>
+      {{/if}}
+    </div>
+    
+    <div class="content">
+      <h2>Team Approved - Payment Confirmation</h2>
+      
+      <p>Hello {{submitterName}},</p>
+      
+      <p>Great news! Your team <strong>{{teamName}}</strong> has been <span class="status">approved</span> for <strong>{{eventName}}</strong>, and your payment has been successfully processed.</p>
+      
+      <div class="info-box">
+        <h3>Registration Details</h3>
+        <p><strong>Team Name:</strong> {{teamName}}</p>
+        <p><strong>Division/Age Group:</strong> {{ageGroup}}</p>
+        <p><strong>Registered By:</strong> {{submitterName}} ({{submitterEmail}})</p>
+        <p><strong>Registration Date:</strong> {{registrationDate}}</p>
+        {{#if clubName}}
+        <p><strong>Club:</strong> {{clubName}}</p>
+        {{/if}}
+        <p><strong>Registration Status:</strong> <span class="status">Approved</span></p>
+      </div>
+      
+      <div class="payment-info">
+        <h3>Payment Receipt</h3>
+        <p><strong>Total Amount:</strong> {{formatCurrency totalAmount}}</p>
+        <p><strong>Payment Status:</strong> <strong>Paid</strong></p>
+        <p><strong>Payment Date:</strong> {{paymentDate}}</p>
+        <p><strong>Payment Method:</strong> {{cardBrand}} ending in {{cardLastFour}}</p>
+        <p><strong>Transaction ID:</strong> {{paymentId}}</p>
+      </div>
+      
+      <div class="receipt-box">
+        <h3 style="text-align: center; margin-top: 0;">OFFICIAL RECEIPT</h3>
+        <p style="text-align: center; margin-bottom: 20px;">{{eventName}}</p>
+        <p><strong>Receipt #:</strong> {{receiptNumber}}</p>
+        <p><strong>Date:</strong> {{paymentDate}}</p>
+        <p><strong>Team Name:</strong> {{teamName}}</p>
+        <p><strong>Paid By:</strong> {{submitterName}}</p>
+        
+        {{#if selectedFees.length}}
+        <h4>Fee Details</h4>
+        <table class="fees-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each selectedFees}}
+            <tr>
+              <td>{{name}}</td>
+              <td>{{formatCurrency amount}}</td>
+            </tr>
+            {{/each}}
+            <tr>
+              <td><strong>Total</strong></td>
+              <td><strong>{{formatCurrency totalAmount}}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        {{/if}}
+        
+        <p style="text-align: center; font-weight: bold; margin-top: 20px;">Thank you for your payment!</p>
+      </div>
+      
+      <h3>What Happens Next?</h3>
+      <p>Your team is now officially registered for the event. Here's what you need to know:</p>
+      <ul>
+        <li>You will receive updates about the event schedule when it becomes available</li>
+        <li>Make sure your team is prepared with all required equipment and uniforms</li>
+        <li>Review the tournament rules and guidelines for important information</li>
+      </ul>
+      
+      <p>You can view all your registrations and event information on your dashboard:</p>
+      <p style="text-align: center;">
+        <a href="{{loginLink}}" class="button">Go to Dashboard</a>
+      </p>
+      
+      <p>If you have any questions about your registration or the upcoming event, please contact us at <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>.</p>
+      
+      <p>We look forward to seeing your team at {{eventName}}!</p>
+      <p>Best regards,</p>
+      <p>The {{eventName}} Team</p>
+    </div>
+    
+    <div class="footer">
+      <p>&copy; {{currentYear}} {{organizationName}}. All rights reserved.</p>
+      <p>This receipt is automatically generated and is valid without a signature.</p>
+    </div>
+  </div>
+</body>
+</html>

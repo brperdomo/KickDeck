@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Team Registration Status - Waitlisted</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      background-color: {{branding.primaryColor}};
+      padding: 20px;
+      text-align: center;
+    }
+    .header h1 {
+      color: white;
+      margin: 0;
+      font-size: 24px;
+    }
+    .content {
+      padding: 20px;
+      background: #fff;
+    }
+    .footer {
+      background-color: #f7f7f7;
+      padding: 15px;
+      text-align: center;
+      font-size: 12px;
+      color: #777;
+    }
+    .info-box {
+      background-color: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .waitlist-info {
+      background-color: #fff3cd;
+      border: 1px solid #ffeeba;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .payment-info {
+      background-color: #e9f7fe;
+      border: 1px solid #b3e0ff;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .button {
+      display: inline-block;
+      background-color: {{branding.primaryColor}};
+      color: white;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      margin-top: 15px;
+    }
+    .status {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 3px;
+      background-color: #fff3cd;
+      color: #856404;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .fees-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    .fees-table th, .fees-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    .fees-table th {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      {{#if branding.logoUrl}}
+        <img src="{{branding.logoUrl}}" alt="{{eventName}} Logo" style="max-height: 80px; max-width: 80%;">
+      {{else}}
+        <h1>{{eventName}}</h1>
+      {{/if}}
+    </div>
+    
+    <div class="content">
+      <h2>Team Registration Status - Waitlisted</h2>
+      
+      <p>Hello {{submitterName}},</p>
+      
+      <p>Thank you for registering <strong>{{teamName}}</strong> for <strong>{{eventName}}</strong>. We wanted to inform you that your team has been placed on the <span class="status">waitlist</span> for this event.</p>
+      
+      <div class="info-box">
+        <h3>Registration Details</h3>
+        <p><strong>Team Name:</strong> {{teamName}}</p>
+        <p><strong>Division/Age Group:</strong> {{ageGroup}}</p>
+        <p><strong>Registered By:</strong> {{submitterName}} ({{submitterEmail}})</p>
+        <p><strong>Registration Date:</strong> {{registrationDate}}</p>
+        {{#if clubName}}
+        <p><strong>Club:</strong> {{clubName}}</p>
+        {{/if}}
+        <p><strong>Registration Status:</strong> <span class="status">Waitlisted</span></p>
+      </div>
+      
+      <div class="waitlist-info">
+        <h3>About the Waitlist</h3>
+        <p>Your team has been added to our waitlist because:</p>
+        <ul>
+          <li>The division is currently at capacity and demand has exceeded available spots</li>
+          <li>Teams are accepted from the waitlist in the order they were received if spots become available</li>
+          <li>You will be notified promptly if your team is moved from the waitlist to accepted status</li>
+        </ul>
+        
+        {{#if waitlistPosition}}
+        <p><strong>Current Waitlist Position:</strong> {{waitlistPosition}}</p>
+        {{/if}}
+        
+        {{#if waitlistNote}}
+        <p><strong>Note from Organizers:</strong> {{waitlistNote}}</p>
+        {{/if}}
+      </div>
+      
+      <div class="payment-info">
+        <h3>Payment Information</h3>
+        <p><strong>Total Amount Due:</strong> {{formatCurrency totalAmount}}</p>
+        
+        {{#if setupIntentId}}
+        <p><strong>Payment Status:</strong> <strong>On Hold</strong></p>
+        <p>Your payment method has been securely saved but will only be charged if your team is moved from the waitlist to an approved status.</p>
+        <p><strong>Card Information:</strong> {{cardBrand}} ending in {{cardLastFour}}</p>
+        {{else}}
+        <p><strong>Payment Status:</strong> <strong>Pending</strong></p>
+        <p>No payment has been processed at this time. You will be prompted to complete payment if your team is moved from the waitlist to an approved status.</p>
+        {{/if}}
+      </div>
+      
+      {{#if selectedFees.length}}
+      <h3>Registration Fees (to be paid if accepted)</h3>
+      <table class="fees-table">
+        <thead>
+          <tr>
+            <th>Fee Description</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each selectedFees}}
+          <tr>
+            <td>{{name}}</td>
+            <td>{{formatCurrency amount}}</td>
+          </tr>
+          {{/each}}
+          <tr>
+            <td><strong>Total</strong></td>
+            <td><strong>{{formatCurrency totalAmount}}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+      {{/if}}
+      
+      <h3>What Happens Next?</h3>
+      <p>While your team is on the waitlist:</p>
+      <ul>
+        <li>Continue to prepare your team as if you will participate</li>
+        <li>Check your dashboard periodically for status updates</li>
+        <li>We will contact you immediately if your status changes</li>
+        <li>You may withdraw from the waitlist at any time through your dashboard if you wish to pursue other options</li>
+      </ul>
+      
+      <p>You can check your waitlist status on your dashboard:</p>
+      <p style="text-align: center;">
+        <a href="{{loginLink}}" class="button">View Waitlist Status</a>
+      </p>
+      
+      <p>If you have any questions about the waitlist process, please contact us at <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>.</p>
+      
+      <p>Thank you for your patience and understanding!</p>
+      <p>The {{eventName}} Team</p>
+    </div>
+    
+    <div class="footer">
+      <p>&copy; {{currentYear}} {{organizationName}}. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>

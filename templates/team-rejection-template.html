@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Team Registration Status Update - Not Approved</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      background-color: {{branding.primaryColor}};
+      padding: 20px;
+      text-align: center;
+    }
+    .header h1 {
+      color: white;
+      margin: 0;
+      font-size: 24px;
+    }
+    .content {
+      padding: 20px;
+      background: #fff;
+    }
+    .footer {
+      background-color: #f7f7f7;
+      padding: 15px;
+      text-align: center;
+      font-size: 12px;
+      color: #777;
+    }
+    .info-box {
+      background-color: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .payment-info {
+      background-color: #f8f8f8;
+      border: 1px solid #e1e1e1;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .rejection-box {
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .button {
+      display: inline-block;
+      background-color: {{branding.primaryColor}};
+      color: white;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      margin-top: 15px;
+    }
+    .status {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 3px;
+      background-color: #f8d7da;
+      color: #721c24;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .secondary-button {
+      display: inline-block;
+      background-color: #6c757d;
+      color: white;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      {{#if branding.logoUrl}}
+        <img src="{{branding.logoUrl}}" alt="{{eventName}} Logo" style="max-height: 80px; max-width: 80%;">
+      {{else}}
+        <h1>{{eventName}}</h1>
+      {{/if}}
+    </div>
+    
+    <div class="content">
+      <h2>Team Registration Update</h2>
+      
+      <p>Hello {{submitterName}},</p>
+      
+      <p>We have carefully reviewed your application for <strong>{{teamName}}</strong> to participate in <strong>{{eventName}}</strong>. We regret to inform you that your team registration has been <span class="status">not approved</span> at this time.</p>
+      
+      <div class="info-box">
+        <h3>Registration Details</h3>
+        <p><strong>Team Name:</strong> {{teamName}}</p>
+        <p><strong>Division/Age Group:</strong> {{ageGroup}}</p>
+        <p><strong>Registered By:</strong> {{submitterName}} ({{submitterEmail}})</p>
+        <p><strong>Registration Date:</strong> {{registrationDate}}</p>
+        {{#if clubName}}
+        <p><strong>Club:</strong> {{clubName}}</p>
+        {{/if}}
+        <p><strong>Registration Status:</strong> <span class="status">Not Approved</span></p>
+      </div>
+      
+      <div class="rejection-box">
+        <h3>Reason for Non-Approval</h3>
+        {{#if rejectionReason}}
+          <p>{{rejectionReason}}</p>
+        {{else}}
+          <p>The event organizers have determined that your team does not meet the current requirements for participation. This could be due to various factors including age group limitations, competitive balance considerations, or capacity constraints.</p>
+        {{/if}}
+      </div>
+      
+      <div class="payment-info">
+        <h3>Payment Information</h3>
+        <p><strong>Payment Status:</strong> <strong>No Charge Made</strong></p>
+        <p>Your payment method has not been charged. Since your team's registration was not approved, no payment was processed.</p>
+        
+        {{#if setupIntentId}}
+        <p>The payment method you previously provided ({{cardBrand}} ending in {{cardLastFour}}) has not been charged and no further action is needed regarding payment.</p>
+        {{/if}}
+      </div>
+      
+      <h3>What Happens Next?</h3>
+      <p>You may consider the following options:</p>
+      <ul>
+        <li>Register for a different division or age group if available and appropriate</li>
+        <li>Apply for a future event that better matches your team's profile</li>
+        <li>Contact the organizers for more detailed feedback or clarification</li>
+      </ul>
+      
+      <p>To view other available events that might be a better fit for your team:</p>
+      <p style="text-align: center;">
+        <a href="{{eventsListUrl}}" class="button">Browse Other Events</a>
+      </p>
+      
+      <p>If you have any questions or would like to discuss this decision, please contact us at <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>.</p>
+      
+      <p>We appreciate your interest in {{eventName}} and hope to see your team at future events.</p>
+      <p>Best regards,</p>
+      <p>The {{eventName}} Team</p>
+    </div>
+    
+    <div class="footer">
+      <p>&copy; {{currentYear}} {{organizationName}}. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
