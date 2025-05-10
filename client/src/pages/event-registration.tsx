@@ -570,51 +570,50 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
     }
   }, [user, currentStep, isPreview]);
   
+  // Create ref outside the effect for auth check tracking
+  const authCheckRef = useRef(false);
+  
   // Additional auth handling for URL parameters and redirects
   useEffect(() => {
-    // The authCheckRef helps us prevent multiple repeated checks
-    const authCheckRef = useRef(false);
+    // Check URL parameters for auth completion signal only once per component mount
+    if (authCheckRef.current) return;
+    authCheckRef.current = true;
     
-    // Check URL parameters for auth completion signal only once
-    if (!authCheckRef.current) {
-      authCheckRef.current = true;
+    const params = new URLSearchParams(window.location.search);
+    const authComplete = params.get('auth_complete') === 'true';
+    
+    // Only do this check when auth_complete param exists and we're on auth step
+    if (authComplete && currentStep === 'auth') {
+      console.log('🔐 Auth complete parameter detected, checking auth status once');
       
-      const params = new URLSearchParams(window.location.search);
-      const authComplete = params.get('auth_complete') === 'true';
-      
-      // Only do this check once per component mount
-      if (authComplete && currentStep === 'auth') {
-        console.log('🔐 Auth complete parameter detected, checking auth status once');
-        
-        // Force a single refresh of the user state from the backend
-        fetch('/api/user', { 
-          credentials: 'include',
-          headers: { 'Cache-Control': 'no-cache' }
-        })
-          .then(res => res.status === 200 ? res.json() : null)
-          .then(userData => {
-            console.log('🔓 Manual auth check result:', !!userData);
+      // Force a single refresh of the user state from the backend
+      fetch('/api/user', { 
+        credentials: 'include',
+        headers: { 'Cache-Control': 'no-cache' }
+      })
+        .then(res => res.status === 200 ? res.json() : null)
+        .then(userData => {
+          console.log('🔓 Manual auth check result:', !!userData);
+          
+          if (userData) {
+            console.log('🔑 User is authenticated, advancing to personal step', userData);
+            setCurrentStep('personal');
             
-            if (userData) {
-              console.log('🔑 User is authenticated, advancing to personal step', userData);
-              setCurrentStep('personal');
-              
-              // Clean up the URL by removing the auth_complete parameter
-              try {
-                const newUrl = new URL(window.location.href);
-                newUrl.searchParams.delete('auth_complete');
-                window.history.replaceState({}, '', newUrl.toString());
-              } catch (e) {
-                console.error('Failed to clean URL:', e);
-              }
+            // Clean up the URL by removing the auth_complete parameter
+            try {
+              const newUrl = new URL(window.location.href);
+              newUrl.searchParams.delete('auth_complete');
+              window.history.replaceState({}, '', newUrl.toString());
+            } catch (e) {
+              console.error('Failed to clean URL:', e);
             }
-          })
-          .catch(err => {
-            console.error('Error checking auth status:', err);
-          });
-      }
+          }
+        })
+        .catch(err => {
+          console.error('Error checking auth status:', err);
+        });
     }
-  }, []);
+  }, [currentStep]);
   
   // Check for saved data on component mount
   useEffect(() => {
