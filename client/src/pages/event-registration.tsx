@@ -24,7 +24,10 @@ import {
   Save,
   Clock,
   ArrowRight,
-  Info
+  Info,
+  UserCircle,
+  UserSquare,
+  Users
 } from "lucide-react";
 import { InfoPopover } from "@/components/ui/InfoPopover";
 import { SoccerFieldBackground } from "@/components/ui/SoccerFieldBackground";
@@ -1466,40 +1469,42 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
   }, [eventId, toast]);
 
   const renderStepIndicator = () => {
-    const steps: { key: RegistrationStep; label: string }[] = [
-      { key: 'auth', label: 'Sign In' },
-      { key: 'personal', label: 'Personal Details' },
-      { key: 'team', label: 'Team Information' },
-      { key: 'payment', label: 'Payment & Terms' },
-      { key: 'review', label: 'Review & Confirm' }
+    const steps: { key: RegistrationStep; label: string; icon: React.ReactNode }[] = [
+      { key: 'auth', label: 'Sign In', icon: <UserCircle className="w-4 h-4" /> },
+      { key: 'personal', label: 'Personal Details', icon: <UserSquare className="w-4 h-4" /> },
+      { key: 'team', label: 'Team Information', icon: <Users className="w-4 h-4" /> },
+      { key: 'payment', label: 'Payment & Terms', icon: <CreditCard className="w-4 h-4" /> },
+      { key: 'review', label: 'Review & Confirm', icon: <CheckCircle className="w-4 h-4" /> }
     ];
 
     return (
-      <div className="flex items-center justify-center mb-8">
+      <div className="flex items-center justify-center mb-8 animate-fadeIn">
         {steps.map((step, index) => {
           const isActive = currentStep === step.key;
           const isCompleted = index < steps.findIndex(s => s.key === currentStep);
           const stepColor = isActive ? 
             (event?.branding?.primaryColor || '#2C5282') : 
-            (isCompleted ? '#48BB78' : '#718096'); // Darker gray for better visibility
+            (isCompleted ? '#48BB78' : '#718096'); 
           
           return (
             <div key={step.key} className="flex items-center">
-              <div className="flex flex-col items-center">
+              <div className="flex flex-col items-center group">
                 <div 
-                  className="w-8 h-8 rounded-full flex items-center justify-center mb-2 text-white shadow"
+                  className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 text-white shadow-md transition-all duration-300 ${isActive ? 'scale-110' : ''}`}
                   style={{ 
                     backgroundColor: stepColor,
-                    boxShadow: isActive ? '0 2px 4px rgba(0,0,0,0.2)' : 'none'
+                    boxShadow: isActive ? '0 3px 10px rgba(0,0,0,0.2)' : '0 2px 4px rgba(0,0,0,0.1)'
                   }}>
                   {isCompleted ? (
                     <CheckCircle2 className="w-5 h-5" />
                   ) : (
-                    <span className="font-semibold">{index + 1}</span>
+                    <div className="flex items-center justify-center">
+                      {isActive ? <span className="font-semibold">{index + 1}</span> : step.icon}
+                    </div>
                   )}
                 </div>
                 <span 
-                  className={`text-sm font-medium ${isActive ? 'font-semibold' : ''}`}
+                  className={`text-sm font-medium transition-all ${isActive ? 'font-semibold scale-105' : ''}`}
                   style={{ 
                     color: isActive ? '#111827' : (isCompleted ? '#1F2937' : '#4B5563')
                   }}>
@@ -1507,7 +1512,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                 </span>
               </div>
               {index < steps.length - 1 && (
-                <div className="w-20 h-[3px] mx-1.5" style={{ 
+                <div className="w-16 sm:w-20 h-[3px] mx-2 transition-all duration-500" style={{ 
                   backgroundColor: isCompleted ? '#48BB78' : '#D1D5DB',
                   boxShadow: isCompleted ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'
                 }} />
