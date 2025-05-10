@@ -21,12 +21,12 @@ export function SavedRegistrationNotice({
   const timeAgo = formatDistanceToNow(new Date(lastSaved), { addSuffix: true });
   
   return (
-    <Alert className="mb-6 border-primary/20 bg-primary/5">
-      <Save className="h-4 w-4 text-primary" />
+    <Alert className="mb-6 border-primary/20 bg-primary/5 shadow-sm animate-fadeIn">
+      <Save className="h-5 w-5 text-primary" />
       <AlertTitle className="font-semibold text-primary">Registration in progress</AlertTitle>
       <AlertDescription>
         <p className="mb-3 mt-1">
-          You have a saved registration in progress for {eventName} from {timeAgo}.
+          You have a saved registration in progress for <span className="font-medium">{eventName}</span> from <span className="font-medium">{timeAgo}</span>.
           We've automatically loaded your saved progress.
         </p>
       </AlertDescription>

@@ -2736,7 +2736,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                   
                   {/* Password verification section when existing account is found */}
                   {emailExists && redactedUserData && !form.getValues().authenticated && (
-                    <div className="mt-6 p-4 border border-dashed border-primary rounded-md bg-primary/5">
+                    <div className="mt-6 p-5 border border-dashed border-primary rounded-md bg-primary/5 shadow-sm animate-fadeIn">
                       <h3 className="text-lg font-semibold text-primary mb-2">Existing Account Found</h3>
                       <p className="text-sm mb-4">
                         We found your information in our system. Please enter your password to continue with your saved information.
@@ -2748,9 +2748,13 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                           name="password"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Password</FormLabel>
+                              <FormLabel className="enhanced-label">Password</FormLabel>
                               <FormControl>
-                                <Input {...field} type="password" placeholder="Enter your password" />
+                                <Input 
+                                  className="enhanced-input" 
+                                  {...field} 
+                                  type="password" 
+                                  placeholder="Enter your password" />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -2759,8 +2763,8 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                         
                         <Button 
                           type="button" 
-                          variant="outline" 
-                          className="w-full"
+                          variant="default" 
+                          className="w-full transition-all duration-300 hover:scale-[1.02]"
                           onClick={verifyExistingAccount}
                           disabled={isVerifyingPassword}
                         >
