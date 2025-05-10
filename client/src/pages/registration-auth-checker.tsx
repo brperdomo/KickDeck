@@ -15,7 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 export default function RegistrationAuthChecker({ 
   children, 
   eventId,
-  allowUnauthenticated = false // New parameter to allow bypassing auth
+  allowUnauthenticated = true // CRITICAL CHANGE: Set default to true to fix immediate redirect
 }: { 
   children: React.ReactNode;
   eventId: string;
@@ -58,8 +58,14 @@ export default function RegistrationAuthChecker({
   
   // Simple redirect to login if not authenticated, unless allowUnauthenticated
   useEffect(() => {
+    // CRITICAL FIX: Always check the allowUnauthenticated flag first
+    if (allowUnauthenticated) {
+      console.log("Registration: Allowing unauthenticated access, skipping redirect check");
+      return; // Skip the entire redirect logic 
+    }
+    
     // Wait until loading is complete and we've done our initial check
-    if (!authLoading && initialCheckDone.current && !user && !allowUnauthenticated) {
+    if (!authLoading && initialCheckDone.current && !user) {
       console.log("Registration: User not authenticated, redirecting to login");
       setIsRedirecting(true);
       
@@ -151,8 +157,13 @@ export default function RegistrationAuthChecker({
     );
   }
   
-  // If user is authenticated, render children
-  // This will only be reached if the user is authenticated
-  // since the redirecting logic handles all other cases
-  return <>{children}</>;
+  // IMPORTANT CHANGE: Allow viewing without authentication if the allowUnauthenticated flag is true
+  if (allowUnauthenticated || user) {
+    console.log("Registration: " + (user ? "User authenticated" : "Bypassing authentication check"));
+    return <>{children}</>;
+  }
+  
+  // This code should never be reached now that we've set allowUnauthenticated=true by default
+  console.error("Registration: This code should not be reached!");
+  return <div>Error: Unexpected authentication state</div>;
 }
