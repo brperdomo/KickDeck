@@ -686,12 +686,15 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
     setAuthError(null);
     
     try {
+      // Log the payload for debugging
+      console.log('Sending login credentials:', { email, password: '********' });
+      
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username: email, password }),
+        body: JSON.stringify({ email, password }), // Changed username to email to match server expectations
         credentials: 'include',
       });
       
