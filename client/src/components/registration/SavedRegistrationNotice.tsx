@@ -7,7 +7,7 @@ import { RefreshCw, X, Save } from 'lucide-react';
 interface SavedRegistrationNoticeProps {
   lastSaved: number;
   onResume: () => void;
-  onDiscard: () => void;
+  onDiscard?: () => void; // Make this optional since we're not using it anymore
   eventName?: string;
 }
 

@@ -857,13 +857,24 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
     }
   }, []);
   
-  // Check for saved data on component mount
+  // Check for saved data on component mount and automatically load it
   useEffect(() => {
-    if (hasSavedData && !showSavedRegistrationAlert && !isPreview) {
+    if (hasSavedData && !isPreview) {
       console.log('Found saved registration data from:', new Date(lastSaved || 0).toLocaleString());
+      // Automatically load saved data without asking user
+      if (savedData) {
+        const success = loadSavedState(); // Use the existing loadSavedState function
+        if (success) {
+          toast({
+            title: "Registration Restored",
+            description: "Your saved registration has been loaded automatically.",
+          });
+        }
+      }
+      // Still show the notice to inform the user
       setShowSavedRegistrationAlert(true);
     }
-  }, [hasSavedData, lastSaved, isPreview]);
+  }, [hasSavedData, lastSaved, savedData, isPreview]);
   
   // Setup auto-saving
   useEffect(() => {
