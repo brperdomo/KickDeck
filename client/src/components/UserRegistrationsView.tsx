@@ -166,28 +166,43 @@ export default function UserRegistrationsView() {
             </CardContent>
             
             <CardFooter className="pt-2">
-              <div className="flex justify-between w-full gap-2">
-                <Button variant="outline" size="sm" className="w-full" asChild>
-                  <Link href={`/events/${registration.eventId}`}>View Event</Link>
-                </Button>
-                
-                {/* Only show payment button if payment is still pending AND user hasn't provided card yet */}
-                {(registration.paymentStatus === 'pending' || !registration.paymentStatus) && 
-                  registration.amount > 0 && 
-                  !registration.setupIntentId && // Don't show if card details already provided
-                  !registration.payLater && // Don't show if they selected pay later
-                  (
-                    <Button variant="default" size="sm" className="w-full" asChild>
-                      <Link href={`/events/${registration.eventId}/pay/${registration.id}`}>Pay Now</Link>
-                    </Button>
-                  )
-                }
+              <div className="flex flex-col w-full gap-2">
+                <div className="flex justify-between gap-2">
+                  <Button variant="outline" size="sm" className="w-full" asChild>
+                    <Link href={`/events/${registration.eventId}`}>View Event</Link>
+                  </Button>
+                  
+                  {/* Only show payment button if payment is still pending AND user hasn't provided card yet */}
+                  {(registration.paymentStatus === 'pending' || !registration.paymentStatus) && 
+                    registration.amount > 0 && 
+                    !registration.setupIntentId && // Don't show if card details already provided
+                    !registration.payLater && // Don't show if they selected pay later
+                    (
+                      <Button variant="default" size="sm" className="w-full" asChild>
+                        <Link href={`/events/${registration.eventId}/pay/${registration.id}`}>Pay Now</Link>
+                      </Button>
+                    )
+                  }
+                </div>
                 
                 {/* Show card info if it exists */}
                 {registration.setupIntentId && registration.cardDetails?.last4 && (
-                  <div className="text-sm text-center text-muted-foreground mt-1 border rounded p-2 flex items-center justify-center">
+                  <div className="text-sm text-center text-muted-foreground border rounded p-2 flex items-center justify-center bg-muted/30">
                     <CreditCard className="h-3.5 w-3.5 mr-2 text-primary/70" />
-                    Card on file: ••••{registration.cardDetails.last4}
+                    {registration.cardDetails.brand 
+                      ? `${registration.cardDetails.brand.charAt(0).toUpperCase() + registration.cardDetails.brand.slice(1)} ending in ${registration.cardDetails.last4}`
+                      : `Card ending in ${registration.cardDetails.last4}`
+                    }
+                    {registration.cardDetails.expMonth && registration.cardDetails.expYear && 
+                      ` (exp. ${registration.cardDetails.expMonth}/${registration.cardDetails.expYear.toString().slice(-2)})`
+                    }
+                  </div>
+                )}
+                
+                {/* Show "Payment Info Provided" message with appropriate explanation */}
+                {registration.setupIntentId && (
+                  <div className="text-xs text-center text-muted-foreground">
+                    <span className="font-medium">Note:</span> Your card will be charged after your registration is approved.
                   </div>
                 )}
               </div>
