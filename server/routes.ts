@@ -8,6 +8,7 @@ import { db } from "@db";
 import { coupons, emailTemplates } from "@db/schema";
 import { eq } from "drizzle-orm";
 import { isAdmin, hasEventAccess } from "./middleware";
+import { safeRegistrationFeesMiddleware } from "./middleware/index.js";
 import seasonalScopesRouter from "./routes/seasonal-scopes";
 import uploadRouter from "./routes/upload";
 import filesRouter from "./routes/files";
