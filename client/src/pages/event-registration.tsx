@@ -941,15 +941,16 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
       }
       
       // ALWAYS set to personal step if authenticated, override any existing state
-      if (currentStep === 'auth') {
-        console.log('FIXED AUTH FLOW: Forcibly advancing from auth to personal step');
-        
-        // Add a small delay to ensure UI has time to render correctly first
-        setTimeout(() => {
-          console.log('FIXED AUTH FLOW: Changing step from auth to personal');
-          setCurrentStep('personal');
-        }, 800);
-      }
+      console.log('FIXED AUTH FLOW: Forcibly advancing to personal step');
+      
+      // Always force step to personal when user is authenticated
+      // Regardless of current step to break any possible loop
+      console.log('FIXED AUTH FLOW: Changing step to personal');
+      setCurrentStep('personal');
+      
+      // Additional debug to help diagnose the issue
+      console.log('Current location:', window.location.href);
+      console.log('Current step after setCurrentStep:', currentStep);
       
       // Clean the URL by removing query parameters no matter what
       if (window.location.search) {
@@ -961,6 +962,10 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
           `/register/event/${eventId}`
         );
       }
+      
+      // Also remove any possible session storage items that might cause redirect loops
+      sessionStorage.removeItem('in_registration_process');
+      sessionStorage.removeItem('redirectAfterAuth');
     } else {
       // User is not authenticated - always show auth step
       console.log('FIXED AUTH FLOW: User is not authenticated, showing auth step');
