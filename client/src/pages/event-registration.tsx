@@ -2967,18 +2967,60 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                 </div>
                 
                 {/* Payment Options */}
-                {termsAgreed && registrationFee && (
+                {termsAgreed && (
                   <div className="border rounded-lg p-4 space-y-6">
                     <div>
                       <h4 
                         className="font-semibold"
                         style={{ color: event?.branding?.primaryColor || '#2C5282' }}
                       >Payment Options</h4>
-                      <p className="text-sm text-gray-600">Select how you would like to proceed with payment</p>
+                      {registrationFee ? (
+                        <p className="text-sm text-gray-600">Select how you would like to proceed with payment</p>
+                      ) : (
+                        <p className="text-sm text-gray-600">
+                          No registration fee is configured for this age group. You can register without payment at this time.
+                        </p>
+                      )}
                     </div>
                     
-                    {/* Payment Method Selection */}
-                    {isPayLaterShown ? (
+                    {/* No Fee Case - Show direct registration button */}
+                    {!registrationFee && (
+                      <div className="mt-4">
+                        <Button 
+                          type="button" 
+                          className="w-full text-white"
+                          style={{ backgroundColor: event?.branding?.primaryColor || '#2C5282' }}
+                          onClick={() => {
+                            // Make sure to sync the latest players array with form data
+                            teamForm.setValue('players', players);
+                            
+                            // Submit registration without payment info
+                            registerTeamMutation.mutate({
+                              ...teamForm.getValues(),
+                              selectedFeeIds: [],
+                              totalAmount: 0, // No amount
+                              paymentMethod: 'free',
+                              addRosterLater // Include the flag to indicate roster will be added later
+                            });
+                          }}
+                          disabled={registerTeamMutation.isPending}
+                        >
+                          {registerTeamMutation.isPending ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              Complete Registration
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {/* Payment Method Selection - Only show if there are fees */}
+                    {registrationFee && isPayLaterShown ? (
                       <div className="space-y-4">
                         <div className="flex flex-col space-y-3">
                           <label className="flex items-center space-x-3 p-3 border rounded-md cursor-pointer hover:bg-blue-50 transition-colors">
@@ -3116,8 +3158,8 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                         )}
                       </div>
                     ) : (
-                      // Regular Payment Flow (Pay Later not enabled)
-                      <div>
+                      // Regular Payment Flow (Pay Later not enabled) - Only show if there are fees
+                      registrationFee ? <div>
                         <h4 
                           className="font-semibold"
                           style={{ color: event?.branding?.primaryColor || '#2C5282' }}
@@ -3175,7 +3217,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                             }}
                           />
                         </SetupPaymentProvider>
-                      </div>
+                      </div> : null
                     )}
                   </div>
                 )}
