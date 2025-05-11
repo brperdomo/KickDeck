@@ -4434,7 +4434,6 @@ function TeamsView() {
           </Form>
         </DialogContent>
       </Dialog>
-              </div>
               
               {/* Team Roster Card */}
               <div className="bg-card rounded-xl shadow-sm overflow-hidden border border-muted mt-6">
