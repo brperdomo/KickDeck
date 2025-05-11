@@ -4260,22 +4260,20 @@ function TeamsView() {
 
       {/* Team Details Dialog */}
       <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
-          <div className="sticky top-0 z-10 bg-gradient-to-r from-primary/20 to-primary/5 px-6 py-4 border-b border-muted">
-            <DialogHeader>
-              <div className="flex items-center gap-2">
-                <Trophy className="h-6 w-6 text-primary" />
-                <DialogTitle className="text-xl font-bold">{selectedTeam?.name}</DialogTitle>
-              </div>
-              <DialogDescription className="text-muted-foreground">
-                Team Details
-              </DialogDescription>
-            </DialogHeader>
-          </div>
-          
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           {selectedTeam && (
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <>
+              <DialogHeader className="bg-gradient-to-r from-primary/20 to-primary/5 px-2 py-4 -mx-6 -mt-6 mb-6 border-b sticky top-[-24px] z-10">
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-6 w-6 text-primary" />
+                  <DialogTitle className="text-xl font-bold">{selectedTeam.name}</DialogTitle>
+                </div>
+                <DialogDescription className="text-muted-foreground">
+                  {selectedTeam.event?.name || 'Registration Details'}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-2">
                 {/* Team Info Card */}
                 <div className="bg-card rounded-lg shadow-sm border p-4">
                   <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
@@ -4615,51 +4613,10 @@ function TeamsView() {
                     </div>
                   )}
                 </div>
-                    
-                    {/* More details can be added here */}
-
-                    <div className="flex justify-between items-center py-1.5 border-b">
-                      <span className="text-muted-foreground flex items-center gap-2">
-                        <DollarSign className="h-4 w-4" />
-                        Fee
-                      </span>
-                      <div className="font-medium">
-                        {formatCurrency(selectedTeam.registrationFee || 0)}
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-                
-                {/* Contact Info Card */}
-                <div className="bg-card rounded-lg shadow-sm border p-4">
-                  <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
-                    <User className="h-4 w-4 text-primary" />
-                    Contact Information
-                  </h3>
-                  
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center py-1.5 border-b">
-                      <span className="text-muted-foreground flex items-center gap-2">
-                        <Mail className="h-4 w-4" />
-                        Email
-                      </span>
-                      <div className="font-medium">{selectedTeam.managerEmail || 'N/A'}</div>
-                    </div>
-                    
-                    <div className="flex justify-between items-center py-1.5 border-b">
-                      <span className="text-muted-foreground flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
-                        Phone
-                      </span>
-                      <div className="font-medium">{selectedTeam.managerPhone || 'N/A'}</div>
-                    </div>
-                  </div>
-                </div>
               </div>
               
               {/* Action buttons */}
-              <div className="flex justify-end gap-2 mt-4">
+              <div className="mt-6 flex justify-end gap-2">
                 <Button 
                   variant="outline" 
                   onClick={() => setIsDetailsDialogOpen(false)}
@@ -4672,7 +4629,7 @@ function TeamsView() {
         </DialogContent>
       </Dialog>
       
-      {/* Add/Edit Player Dialog */}
+      {/* Player Dialog */}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
