@@ -4507,8 +4507,6 @@ function TeamsView() {
           </div>
         </DialogContent>
       </Dialog>
-                      </div>
-                    )}
                     
                     {/* Fee breakdown section */}
                     {selectedTeam.selectedFeeIds && (
