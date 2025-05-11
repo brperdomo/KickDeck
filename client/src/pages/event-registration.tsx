@@ -2973,10 +2973,11 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
+                className="registration-step"
               >
                 <Form {...teamForm}>
                   <form onSubmit={teamForm.handleSubmit(onSubmitTeamRegistration)} className="space-y-6">
-                  <div className="space-y-4">
+                  <div className="space-y-4 form-field-group">
                     <h3 
                       className="text-xl font-semibold"
                       style={{ color: event?.branding?.primaryColor || '#2C5282' }}
@@ -3313,24 +3314,24 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                   </div>
                   
                   <div className="space-y-4 border-t pt-4">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-4">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 mb-3 sm:mb-0">
                         <h3 
-                          className="text-xl font-semibold"
+                          className="text-xl font-semibold mb-2 sm:mb-0"
                           style={{ color: event?.branding?.primaryColor || '#2C5282' }}
                         >
                           Player Roster
                         </h3>
                         
                         {/* Add Roster Later Checkbox */}
-                        <div className="flex items-center">
+                        <div className="flex items-center mobile-checkbox-wrapper">
                           <Checkbox 
                             id="add-roster-later" 
                             checked={addRosterLater}
                             onCheckedChange={(checked) => {
                               setAddRosterLater(checked === true);
                             }}
-                            className="mr-2"
+                            className="mr-2 checkbox"
                           />
                           <label
                             htmlFor="add-roster-later"
@@ -3344,13 +3345,13 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                         </div>
                       </div>
                       
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 roster-add-buttons">
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
                           onClick={addPlayer}
-                          className="flex items-center"
+                          className="flex items-center touch-target-input"
                           disabled={addRosterLater}
                         >
                           <PlusCircle className="w-4 h-4 mr-2" />
@@ -3362,14 +3363,14 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                               type="button"
                               variant="outline"
                               size="sm"
-                              className="flex items-center"
+                              className="flex items-center touch-target-input"
                               disabled={addRosterLater}
                             >
                               <Upload className="w-4 h-4 mr-2" />
                               CSV Upload
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="sm:max-w-[500px]">
+                          <DialogContent className="sm:max-w-[500px] w-[95vw] mx-auto">
                             <DialogHeader>
                               <DialogTitle>Upload Player Roster CSV</DialogTitle>
                               <DialogDescription>
@@ -3377,15 +3378,17 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                                 All required fields must be included.
                               </DialogDescription>
                             </DialogHeader>
-                            <CsvUploader
-                              onUploadSuccess={(players) => {
-                                setPlayers((prev) => [...prev, ...players]);
-                                toast({
-                                  title: "Upload Successful",
-                                  description: `Added ${players.length} players to your roster.`,
-                                });
-                              }}
-                            />
+                            <div className="mobile-upload-area">
+                              <CsvUploader
+                                onUploadSuccess={(players) => {
+                                  setPlayers((prev) => [...prev, ...players]);
+                                  toast({
+                                    title: "Upload Successful",
+                                    description: `Added ${players.length} players to your roster.`,
+                                  });
+                                }}
+                              />
+                            </div>
                             <div className="border-t pt-4 mt-4">
                               <h4 className="font-medium mb-2">Need a template?</h4>
                               <p className="text-sm text-gray-500 mb-4">
@@ -3394,7 +3397,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                               <a
                                 href="/api/upload/template"
                                 download="player-roster-template.csv"
-                                className="flex items-center text-[#2C5282] hover:underline"
+                                className="flex items-center text-[#2C5282] hover:underline mobile-upload-button"
                               >
                                 <Download className="w-4 h-4 mr-2" />
                                 Download Template

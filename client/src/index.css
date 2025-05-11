@@ -1,5 +1,6 @@
 @import './styles/dashboard-enhancements.css';
 @import './styles/mobile-optimizations.css';
+@import './styles/registration-mobile.css';
 
 @tailwind base;
 @tailwind components;
