@@ -5,8 +5,7 @@ import {
   Link2, X, Ticket, Plus, Mail, KeyRound, Check, RefreshCcw, UserMinus, RotateCcw, 
   Pencil, PlusCircle, CalendarRange, UserRoundPlus, ClipboardX, ArrowLeft,
   Upload, Wand2, Sparkles, AlertTriangle, CalendarDays, Loader2,
-  Trophy, WandSparkles, CheckCircle2, Phone, Building2, Users, FileUp,
-  CreditCard, ClipboardCheck, Receipt, ClipboardList, Trash, Clock, Eye
+  Trophy, WandSparkles, CheckCircle2
 } from "lucide-react";
 // Removed ClubLogo import as we now display club name as text
 import { ComplexCard } from "@/components/admin/ComplexCard";
@@ -27,7 +26,6 @@ import {
 } from "@/components/ui/collapsible";
 import { TeamModal } from "@/components/teams/TeamModal";
 import { TeamCsvUploader } from "@/components/teams/TeamCsvUploader";
-import { TeamDetailsDialog } from "@/components/teams/TeamDetailsDialog";
 import { BracketAssignmentModal } from "@/components/BracketAssignmentModal";
 import { ScheduleVisualization } from "@/components/ScheduleVisualization";
 import BracketSelector from "@/components/admin/scheduling/BracketSelector";
@@ -4260,255 +4258,359 @@ function TeamsView() {
       </Dialog>
 
       {/* Team Details Dialog */}
-      <TeamDetailsDialog 
-        isOpen={isDetailsDialogOpen} 
-        onOpenChange={setIsDetailsDialogOpen}
-        selectedTeam={selectedTeam}
-        setSelectedPlayer={setSelectedPlayer}
-        setIsAddPlayerMode={setIsAddPlayerMode}
-        setIsPlayerDialogOpen={setIsPlayerDialogOpen}
-        setSelectedTeamId={setSelectedTeamId}
-      />
-
-      {isCsvUploadDialogOpen && (
-        <TeamCsvUploader
-          open={isCsvUploadDialogOpen}
-          onOpenChange={setIsCsvUploadDialogOpen}
-          onUploadSuccess={(data) => {
-            playersRefetch();
-            setIsCsvUploadDialogOpen(false);
-          }}
-          team={selectedTeam}
-        />
-      )}
-
-      {/* Add/Edit Player Dialog */}
-      <Dialog open={isPlayerDialogOpen} onOpenChange={setIsPlayerDialogOpen}>
-        <DialogContent className="max-w-lg">
+      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{isAddPlayerMode ? 'Add Player' : 'Edit Player'}</DialogTitle>
+            <DialogTitle>Team Details: {selectedTeam?.name}</DialogTitle>
             <DialogDescription>
-              {isAddPlayerMode 
-                ? 'Add a new player to the team roster.'
-                : 'Edit player information.'
-              }
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>First Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="First name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Last Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Last name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormField
-                control={form.control}
-                name="dateOfBirth"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Date of Birth</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              formatDate(field.value)
-                            ) : (
-                              <span>Select date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value ? new Date(field.value) : undefined}
-                          onSelect={(date) => field.onChange(date ? format(date, 'yyyy-MM-dd') : '')}
-                          disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="position"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Position</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Position" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="jerseyNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Jersey Number</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="Jersey number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="emergencyContactName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Emergency Contact Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Emergency contact name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="emergencyContactPhone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Emergency Contact Phone</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Emergency contact phone" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex justify-end gap-2 mt-4">
-                <Button variant="outline" type="button" onClick={() => setIsPlayerDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {isAddPlayerMode ? 'Add Player' : 'Save Changes'}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Add/Edit Player Dialog */}
-      <Dialog 
-        open={isPlayerDialogOpen} 
-        onOpenChange={setIsPlayerDialogOpen}
-      >
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{isAddPlayerMode ? 'Add Player' : 'Edit Player'}</DialogTitle>
-            <DialogDescription>
-              {isAddPlayerMode ? 'Add a new player to the team roster.' : 'Edit player information.'}
+              Complete registration information for {selectedTeam?.name}
             </DialogDescription>
           </DialogHeader>
           
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onPlayerSubmit)} className="space-y-4 pt-4">
+          {selectedTeam && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Registration Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Status:</div>
+                      <div className="col-span-2">
+                        <Badge variant={
+                          selectedTeam.status === 'approved' ? 'success' : 
+                          selectedTeam.status === 'rejected' ? 'destructive' : 
+                          'default'
+                        }>
+                          {selectedTeam.status?.toUpperCase() || 'REGISTERED'}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Event:</div>
+                      <div className="col-span-2">{selectedTeam.event?.name || 'N/A'}</div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Age Group:</div>
+                      <div className="col-span-2">{selectedTeam.ageGroup?.ageGroup || 'N/A'}</div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Division:</div>
+                      <div className="col-span-2">{selectedTeam.ageGroup?.divisionCode || 'N/A'}</div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Submitted by:</div>
+                      <div className="col-span-2">{selectedTeam.submitterEmail || selectedTeam.managerEmail}</div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Submission Date:</div>
+                      <div className="col-span-2">{formatDate(selectedTeam.createdAt)}</div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Payment Status:</div>
+                      <div className="col-span-2">
+                        <Badge variant={
+                          selectedTeam.paymentStatus === 'paid' ? 'default' : 
+                          selectedTeam.paymentStatus === 'refunded' ? 'outline' : 
+                          'outline'
+                        }>
+                          {selectedTeam.paymentStatus || 'Unpaid'}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Registration Fee:</div>
+                      <div className="col-span-2">{formatCurrency(selectedTeam.registrationFee || 0)}</div>
+                    </div>
+                    {selectedTeam.status === 'rejected' && (
+                      <div className="grid grid-cols-3 gap-1">
+                        <div className="font-medium">Rejection Reason:</div>
+                        <div className="col-span-2">{selectedTeam.notes || 'No reason provided'}</div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Team Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Team Name:</div>
+                      <div className="col-span-2">{selectedTeam.name}</div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Manager:</div>
+                      <div className="col-span-2">{selectedTeam.managerName || selectedTeam.managerEmail}</div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Manager Email:</div>
+                      <div className="col-span-2">{selectedTeam.managerEmail || 'N/A'}</div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Manager Phone:</div>
+                      <div className="col-span-2">{selectedTeam.managerPhone || 'N/A'}</div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Head Coach:</div>
+                      <div className="col-span-2">{selectedTeam.coachData?.headCoachName || 'N/A'}</div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Coach Email:</div>
+                      <div className="col-span-2">{selectedTeam.coachData?.headCoachEmail || 'N/A'}</div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Coach Phone:</div>
+                      <div className="col-span-2">{selectedTeam.coachData?.headCoachPhone || 'N/A'}</div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Asst. Coach:</div>
+                      <div className="col-span-2">{selectedTeam.coachData?.assistantCoachName || 'N/A'}</div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Asst. Email:</div>
+                      <div className="col-span-2">{selectedTeam.coachData?.assistantCoachEmail || 'N/A'}</div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Asst. Phone:</div>
+                      <div className="col-span-2">{selectedTeam.coachData?.assistantCoachPhone || 'N/A'}</div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Club/Org:</div>
+                      <div className="col-span-2">{selectedTeam.clubName || 'N/A'}</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
               
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Player Confirmation Dialog */}
-      <Dialog
-        open={isDeletePlayerDialogOpen}
-        onOpenChange={setIsDeletePlayerDialogOpen}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Delete Player</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete {selectedPlayer?.firstName} {selectedPlayer?.lastName} from the team roster? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setIsDeletePlayerDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDeletePlayer}>
-              Delete Player
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* CSV Upload Dialog */}
-      <Dialog
-        open={isCsvUploadDialogOpen} 
-        onOpenChange={setIsCsvUploadDialogOpen}
-      >
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Import Players from CSV</DialogTitle>
-            <DialogDescription>
-              Upload a CSV file with player information to quickly add multiple players to the team.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="pt-4">
-            <CsvUploader 
-              onUploadSuccess={(players) => {
-                setIsCsvUploadDialogOpen(false);
-                queryClient.invalidateQueries(['team', selectedTeam.id]);
-                toast({
-                  title: "CSV Import Successful",
-                  description: `${players.length} players imported successfully.`,
-                });
-              }}
-              teamId={selectedTeam.id}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* End of Admin Dashboard Content */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>
+                    Team Roster ({selectedTeam.players ? selectedTeam.players.length : 0} players)
+                  </CardTitle>
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="csv-upload-button"
+                      onClick={() => setIsCsvUploadDialogOpen(true)}
+                    >
+                      <FileUp className="mr-2 h-4 w-4" />
+                      Import CSV
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="team-edit-button"
+                      onClick={() => {
+                        // Initialize a new blank player
+                        setSelectedPlayer({
+                          id: 0,
+                          teamId: selectedTeam.id,
+                          firstName: '',
+                          lastName: '',
+                          dateOfBirth: '',
+                          jerseyNumber: '',
+                          position: '',
+                          medicalNotes: '',
+                          parentGuardianName: '',
+                          parentGuardianEmail: '',
+                          parentGuardianPhone: '',
+                          emergencyContactName: '',
+                          emergencyContactPhone: '',
+                          isActive: true
+                        });
+                        setIsAddPlayerMode(true);
+                        setIsPlayerDialogOpen(true);
+                      }}
+                    >
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Add Player
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {selectedTeam.players && selectedTeam.players.length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Date of Birth</TableHead>
+                          <TableHead>Jersey #</TableHead>
+                          <TableHead>Position</TableHead>
+                          <TableHead>Contact</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {selectedTeam.players.map((player: any) => (
+                          <TableRow key={player.id}>
+                            <TableCell>{player.firstName} {player.lastName}</TableCell>
+                            <TableCell>{formatDate(player.dateOfBirth)}</TableCell>
+                            <TableCell>{player.jerseyNumber || 'N/A'}</TableCell>
+                            <TableCell>{player.position || 'N/A'}</TableCell>
+                            <TableCell>{player.parentGuardianEmail || 'N/A'}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="team-edit-button"
+                                  onClick={() => {
+                                    setSelectedPlayer(player);
+                                    setIsAddPlayerMode(false);
+                                    setIsPlayerDialogOpen(true);
+                                  }}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  <span className="sr-only">Edit</span>
+                                </Button>
+                                <Button
+                                  variant="ghost" 
+                                  size="icon"
+                                  className="team-edit-button"
+                                  onClick={() => {
+                                    setSelectedPlayer(player);
+                                    setIsDeletePlayerDialogOpen(true);
+                                  }}
+                                >
+                                  <Trash className="h-4 w-4 text-destructive" />
+                                  <span className="sr-only">Delete</span>
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground">
+                      No players added to this team yet.
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+                
+              {/* Additional notes or special requirements */}
+              {selectedTeam.specialRequirements && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Special Requirements</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p>{selectedTeam.specialRequirements}</p>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {/* Payment & Fee Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Payment Information</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Total Amount:</div>
+                      <div className="col-span-2 font-semibold text-blue-700">
+                        {selectedTeam.totalAmount 
+                          ? formatCurrency(selectedTeam.totalAmount) 
+                          : selectedTeam.registrationFee 
+                            ? formatCurrency(selectedTeam.registrationFee) 
+                            : 'Not available'}
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Payment Status:</div>
+                      <div className="col-span-2">
+                        <PaymentStatusBadge status={selectedTeam.paymentStatus} />
+                      </div>
+                    </div>
+                    
+                    {selectedTeam.paymentIntentId && (
+                      <div className="grid grid-cols-3 gap-1">
+                        <div className="font-medium">Payment ID:</div>
+                        <div className="col-span-2 font-mono text-xs bg-slate-50 p-1 rounded">
+                          {selectedTeam.paymentIntentId}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {selectedTeam.refundDate && (
+                      <div className="grid grid-cols-3 gap-1">
+                        <div className="font-medium">Refunded On:</div>
+                        <div className="col-span-2">{formatDate(selectedTeam.refundDate)}</div>
+                      </div>
+                    )}
+                    
+                    {/* Fee breakdown section */}
+                    {selectedTeam.selectedFeeIds && (
+                      <div className="mt-4 border-t pt-4">
+                        <h4 className="font-medium mb-2">Fee Breakdown</h4>
+                        <div className="bg-slate-50 rounded-md p-2">
+                          <p className="text-sm text-slate-500 mb-2">
+                            Selected fees: {selectedTeam.selectedFeeIds.split(',').length}
+                          </p>
+                          
+                          <DetailedFeeBreakdown teamId={selectedTeam.id} selectedFeeIds={selectedTeam.selectedFeeIds} />
+                          
+                          <div className="flex justify-between py-1 font-semibold mt-2 border-t border-slate-200 pt-2">
+                            <span>Total</span>
+                            <span>
+                              {selectedTeam.totalAmount 
+                                ? formatCurrency(selectedTeam.totalAmount) 
+                                : selectedTeam.registrationFee 
+                                  ? formatCurrency(selectedTeam.registrationFee) 
+                                  : 'N/A'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Terms acknowledgment information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Terms & Conditions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-3 gap-1">
+                      <div className="font-medium">Terms Acknowledged:</div>
+                      <div className="col-span-2">
+                        <Badge variant={selectedTeam.termsAcknowledged || selectedTeam.status === 'paid' ? 'success' : 'outline'}>
+                          {selectedTeam.termsAcknowledged || selectedTeam.status === 'paid' ? 'Yes' : 'No'}
+                        </Badge>
+                      </div>
+                    </div>
+                    {selectedTeam.termsAcknowledgedAt && (
+                      <div className="grid grid-cols-3 gap-1">
+                        <div className="font-medium">Acknowledged On:</div>
+                        <div className="col-span-2">{formatDate(selectedTeam.termsAcknowledgedAt)}</div>
+                      </div>
+                    )}
+                    <div className="pt-2">
+                      {(selectedTeam.termsAcknowledged || selectedTeam.status === 'paid') && (
+                        <div className="flex flex-col gap-2">
+                          {selectedTeam.termsAcknowledgementRecord ? (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="w-full"
+                              onClick={() => window.open(`/api/teams/${selectedTeam.id}/terms-acknowledgment/download`, '_blank')}
+                            >
+                              <FileText className="h-4 w-4 mr-2" />
+                              View Acknowledgment Document
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="outline" 
                               size="sm"
                               className="w-full"
                               onClick={async () => {
