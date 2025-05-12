@@ -14,8 +14,15 @@ export function RoleBasedRedirect() {
   const [location, setLocation] = useLocation();
   
   useEffect(() => {
-    // Wait until user data is loaded
+    // Wait until user data is loaded and we have a user
     if (isLoading || !user) return;
+
+    // Log initial state for debugging
+    console.log("RoleBasedRedirect activated", { 
+      path: location, 
+      isAdmin: user?.isAdmin, 
+      userInfo: `${user.firstName} ${user.lastName} (${user.email})`
+    });
     
     // Extract the current path for easier checking
     const path = location.toLowerCase();
@@ -25,25 +32,27 @@ export function RoleBasedRedirect() {
         path.includes('/event/') || 
         path.includes('/reset-password') ||
         path.includes('/forgot-password') ||
+        path.includes('/auth-logged-out') ||
         path.includes('/auth') ||
         path.includes('/login') ||
         path.includes('/logout')) {
+      console.log("Path excluded from redirection:", path);
       return;
     }
     
     // Handle admin routes when user is not an admin
     if ((path === '/admin' || path.startsWith('/admin/')) && !user.isAdmin) {
       console.log("User is not an admin, redirecting to dashboard");
-      setLocation('/dashboard');
+      window.location.href = '/dashboard';
       return;
     }
     
-    // Handle member routes when user is only an admin (no member role)
+    // Handle member routes when user is only an admin
     if ((path === '/dashboard' || path.startsWith('/dashboard/')) && user.isAdmin) {
-      // In the future, we might want to check if the admin also has member permissions
-      // For now, we'll just redirect to the admin panel
+      // If we want to check if user has both admin and member permissions, we would do it here
+      // For now, redirect all admins to admin dashboard
       console.log("Admin user accessing member route, redirecting to admin panel");
-      setLocation('/admin');
+      window.location.href = '/admin';
       return;
     }
     
@@ -51,13 +60,15 @@ export function RoleBasedRedirect() {
     if (path === '/') {
       if (user.isAdmin) {
         console.log("Admin user at root path, redirecting to admin panel");
-        setLocation('/admin');
+        window.location.href = '/admin';
       } else {
         console.log("Regular user at root path, redirecting to dashboard");
-        setLocation('/dashboard');
+        window.location.href = '/dashboard';
       }
+      return;
     }
-  }, [user, isLoading, location, setLocation]);
+    
+  }, [user, isLoading, location]);
   
   // This component doesn't render anything, it just performs redirects
   return null;

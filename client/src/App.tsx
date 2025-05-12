@@ -210,9 +210,6 @@ function Router() {
           <Route path="/register" component={Register} />
           <Route path="/forgot-password" component={ForgotPassword} />
           <Route path="/reset-password" component={ResetPassword} />
-          <Route path="/dashboard">
-            <AuthPage />
-          </Route>
           {/* Redirect all other routes to auth page */}
           <Route>
             <AuthPage />
@@ -374,8 +371,12 @@ function Router() {
           <Route path="/payment-setup-confirmation">
             <PaymentSetupConfirmation />
           </Route>
-          <Route path="/dashboard" component={UserDashboard} />
-
+          
+          {/* Dashboard routes - check for admin vs regular user */}
+          <Route path="/dashboard">
+            {user.isAdmin ? <RoleBasedRedirect /> : <UserDashboard />}
+          </Route>
+          
           {/* Preview routes */}
 
           {/* Home route */}

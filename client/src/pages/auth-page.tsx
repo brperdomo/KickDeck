@@ -85,12 +85,16 @@ export default function AuthPage() {
     }
   }, []);
 
-  // ULTRA SIMPLIFIED APPROACH
+  // Enhanced redirection approach
   useEffect(() => {
     // Only process if we have user data
     if (!user) return;
     
-    console.log("AUTH REDIRECT - SIMPLIFIED: User logged in, handling redirect");
+    console.log("AUTH REDIRECT - ENHANCED: User logged in, handling redirect", {
+      isAdmin: user.isAdmin,
+      currentPath: window.location.pathname,
+      userInfo: `${user.firstName} ${user.lastName} (${user.email})`
+    });
     
     // Check for redirectAfterAuth in session storage
     const redirectPath = sessionStorage.getItem('redirectAfterAuth');
@@ -166,11 +170,30 @@ export default function AuthPage() {
       return;
     }
     
+    // Handle the default case where we're on the auth page or related paths
     if (isAuthPage) {
       const defaultPath = user.isAdmin ? '/admin' : '/dashboard';
       console.log("On auth page, redirecting to:", defaultPath);
-      window.location.href = defaultPath;
+      
+      // Use a short timeout to ensure this happens after other useEffects
+      setTimeout(() => {
+        window.location.href = defaultPath;
+      }, 100);
     } else {
+      // If we're on an admin page but we're not an admin, redirect to dashboard
+      if (window.location.pathname.startsWith('/admin') && !user.isAdmin) {
+        console.log("Non-admin user on admin page, redirecting to dashboard");
+        window.location.href = '/dashboard';
+        return;
+      }
+      
+      // If we're on a dashboard page but we're an admin, redirect to admin panel
+      if (window.location.pathname.startsWith('/dashboard') && user.isAdmin) {
+        console.log("Admin user on dashboard page, redirecting to admin panel");
+        window.location.href = '/admin';
+        return;
+      }
+      
       console.log("On a non-auth page while logged in, not redirecting");
     }
   }, [user]);
