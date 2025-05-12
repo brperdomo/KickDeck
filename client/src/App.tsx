@@ -9,6 +9,7 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import { RouteDebugger } from "@/components/RouteDebugger";
 import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
@@ -222,61 +223,25 @@ function Router() {
           <RoleBasedRedirect />
           
           {/* Admin routes */}
-          <Route path="/admin/events/create">
-            {user.isAdmin ? <CreateEvent /> : <NotFound />}
-          </Route>
-          {/* Admin routes */}
-          <Route path="/admin/events/:id/edit">
-            {user.isAdmin ? <EditEvent /> : <NotFound />}
-          </Route>
-          <Route path="/admin/events/:id/application-form">
-            {(params) => user.isAdmin ? <FormEditorPage /> : <NotFound />}
-          </Route>
-          <Route path="/admin/events/:id/fees">
-            {(params) => user.isAdmin ? <FeeManagementPage /> : <NotFound />}
-          </Route>
-          <Route path="/admin/events/:id/coupons">
-            {(params) => user.isAdmin ? <CouponManagerPage /> : <NotFound />}
-          </Route>
-          <Route path="/admin/events/:id/clubs">
-            {(params) => user.isAdmin ? <EventClubsPage /> : <NotFound />}
-          </Route>
-          <Route path="/admin/events/:id/preview-registration">
-            {user.isAdmin ? <RegistrationPreview /> : <NotFound />}
-          </Route>
-          <Route path="/admin/events/preview">
-            {user.isAdmin ? <EventPreviewSelector /> : <NotFound />}
-          </Route>
-          <Route path="/admin/events/:id">
-            {user.isAdmin ? <EditEvent /> : <NotFound />}
-          </Route>
-          <Route path="/admin/accounting-codes">
-            {user.isAdmin ? <AccountingCodeManagement /> : <NotFound />}
-          </Route>
-          <Route path="/admin/email-templates/create">
-            {user.isAdmin ? <EmailTemplateEdit /> : <NotFound />}
-          </Route>
-          <Route path="/admin/email-templates/:id">
-            {user.isAdmin ? <EmailTemplateEdit /> : <NotFound />}
-          </Route>
-          <Route path="/admin/email-templates">
-            {user.isAdmin ? <EmailTemplatesPage /> : <NotFound />}
-          </Route>
-          <Route path="/sendgrid-settings">
-            {user.isAdmin ? <SendGridSettingsPage /> : <NotFound />}
-          </Route>
-          <Route path="/admin/form-templates/create">
-            {user.isAdmin ? <FormTemplateCreatePage /> : <NotFound />}
-          </Route>
-          <Route path="/admin/form-templates/:id/edit">
-            {user.isAdmin ? <FormTemplateEditPage /> : <NotFound />}
-          </Route>
-          <Route path="/admin/form-templates">
-            {user.isAdmin ? <AdminDashboard initialView="formTemplates" /> : <NotFound />}
-          </Route>
-          <Route path="/admin/team-status-test">
-            {user.isAdmin ? <TeamStatusTest /> : <NotFound />}
-          </Route>
+          <ProtectedRoute path="/admin/events/create" requiredRole="admin" component={<CreateEvent />} />
+          {/* Admin routes - using ProtectedRoute for better protection */}
+          <ProtectedRoute path="/admin/events/:id/edit" requiredRole="admin" component={<EditEvent />} />
+          <ProtectedRoute path="/admin/events/:id/application-form" requiredRole="admin" component={<FormEditorPage />} />
+          <ProtectedRoute path="/admin/events/:id/fees" requiredRole="admin" component={<FeeManagementPage />} />
+          <ProtectedRoute path="/admin/events/:id/coupons" requiredRole="admin" component={<CouponManagerPage />} />
+          <ProtectedRoute path="/admin/events/:id/clubs" requiredRole="admin" component={<EventClubsPage />} />
+          <ProtectedRoute path="/admin/events/:id/preview-registration" requiredRole="admin" component={<RegistrationPreview />} />
+          <ProtectedRoute path="/admin/events/preview" requiredRole="admin" component={<EventPreviewSelector />} />
+          <ProtectedRoute path="/admin/events/:id" requiredRole="admin" component={<EditEvent />} />
+          <ProtectedRoute path="/admin/accounting-codes" requiredRole="admin" component={<AccountingCodeManagement />} />
+          <ProtectedRoute path="/admin/email-templates/create" requiredRole="admin" component={<EmailTemplateEdit />} />
+          <ProtectedRoute path="/admin/email-templates/:id" requiredRole="admin" component={<EmailTemplateEdit />} />
+          <ProtectedRoute path="/admin/email-templates" requiredRole="admin" component={<EmailTemplatesPage />} />
+          <ProtectedRoute path="/sendgrid-settings" requiredRole="admin" component={<SendGridSettingsPage />} />
+          <ProtectedRoute path="/admin/form-templates/create" requiredRole="admin" component={<FormTemplateCreatePage />} />
+          <ProtectedRoute path="/admin/form-templates/:id/edit" requiredRole="admin" component={<FormTemplateEditPage />} />
+          <ProtectedRoute path="/admin/form-templates" requiredRole="admin" component={<AdminDashboard initialView="formTemplates" />} />
+          <ProtectedRoute path="/admin/team-status-test" requiredRole="admin" component={<TeamStatusTest />} />
           <Route path="/admin/file-manager">
             {user.isAdmin ? <AdminDashboard initialView="files" /> : <NotFound />}
           </Route>

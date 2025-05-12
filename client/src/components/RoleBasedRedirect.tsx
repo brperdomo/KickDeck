@@ -3,73 +3,73 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 
 /**
- * RoleBasedRedirect Component
+ * ProtectedRoute Component
  * 
  * Redirects users based on their role when they access restricted areas:
  * - Regular users trying to access admin routes are redirected to the dashboard
  * - Admin users trying to access member routes are redirected to the admin panel
+ * 
+ * This component is meant to be used alongside the <Route> component in App.tsx
  */
 export function RoleBasedRedirect() {
   const { user, isLoading } = useAuth();
   const [location, setLocation] = useLocation();
   
   useEffect(() => {
-    // Wait until user data is loaded and we have a user
+    // Don't do anything if we're still loading or there's no user
     if (isLoading || !user) return;
 
-    // Log initial state for debugging
-    console.log("RoleBasedRedirect activated", { 
+    // Log for debugging
+    console.log("RoleBasedRedirect checking access", { 
       path: location, 
-      isAdmin: user?.isAdmin, 
-      userInfo: `${user.firstName} ${user.lastName} (${user.email})`
+      isAdmin: user?.isAdmin
     });
     
-    // Extract the current path for easier checking
+    // Extract current path
     const path = location.toLowerCase();
     
-    // Don't redirect if the user is in the process of registration or other special flows
-    if (path.includes('/register/event/') || 
-        path.includes('/event/') || 
-        path.includes('/reset-password') ||
-        path.includes('/forgot-password') ||
-        path.includes('/auth-logged-out') ||
-        path.includes('/auth') ||
-        path.includes('/login') ||
-        path.includes('/logout')) {
-      console.log("Path excluded from redirection:", path);
+    // Skip redirects for non-protected paths
+    const nonProtectedPaths = [
+      '/register', 
+      '/event', 
+      '/reset-password',
+      '/forgot-password',
+      '/auth',
+      '/login',
+      '/logout',
+      '/auth-logged-out'
+    ];
+    
+    // Check if the current path matches any of the non-protected paths
+    if (nonProtectedPaths.some(nonProtectedPath => path.includes(nonProtectedPath))) {
+      console.log("Path is non-protected:", path);
       return;
     }
     
     // Handle admin routes when user is not an admin
     if ((path === '/admin' || path.startsWith('/admin/')) && !user.isAdmin) {
-      console.log("User is not an admin, redirecting to dashboard");
-      window.location.href = '/dashboard';
+      console.log("Non-admin accessing admin route, redirecting to dashboard");
+      setLocation('/dashboard');
       return;
     }
     
-    // Handle member routes when user is only an admin
+    // Handle member routes when user is an admin only
     if ((path === '/dashboard' || path.startsWith('/dashboard/')) && user.isAdmin) {
-      // If we want to check if user has both admin and member permissions, we would do it here
-      // For now, redirect all admins to admin dashboard
-      console.log("Admin user accessing member route, redirecting to admin panel");
-      window.location.href = '/admin';
+      console.log("Admin accessing member route, redirecting to admin panel");
+      setLocation('/admin');
       return;
     }
     
-    // Handle root path based on user's role
+    // Handle root path based on role
     if (path === '/') {
-      if (user.isAdmin) {
-        console.log("Admin user at root path, redirecting to admin panel");
-        window.location.href = '/admin';
-      } else {
-        console.log("Regular user at root path, redirecting to dashboard");
-        window.location.href = '/dashboard';
-      }
+      const targetPath = user.isAdmin ? '/admin' : '/dashboard';
+      console.log(`User at root path, redirecting to ${targetPath}`);
+      setLocation(targetPath);
       return;
     }
     
-  }, [user, isLoading, location]);
+  }, [user, isLoading, location, setLocation]);
   
-  // This component doesn't render anything, it just performs redirects
+  // No rendering - this is just for redirection
   return null;
 }
