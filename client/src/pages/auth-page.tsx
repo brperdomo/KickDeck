@@ -249,9 +249,13 @@ export default function AuthPage() {
       
       console.log('Login mutation completed successfully');
       
-      // Additional step: explicitly fetch user data to ensure session is established
-      try {
-        console.log('Performing explicit user data fetch after login');
+      // Force immediate redirect to fix-redirect page after successful login
+      console.log('DIRECT FIX: Redirecting to /fix-redirect after successful login');
+      
+      // Set a brief timeout to allow React Query to process the user data
+      setTimeout(() => {
+        window.location.href = "/fix-redirect";
+      }, 100);
         const userResponse = await fetch('/api/user', {
           credentials: 'include',
           headers: {
@@ -311,6 +315,19 @@ export default function AuthPage() {
     }
   }
 
+  // If user is authenticated, redirect to fix-redirect page
+  if (user && authState === 'authenticated') {
+    console.log("AUTH: User authenticated, redirecting to fix-redirect");
+    // Force redirect to the fix-redirect page which will handle proper routing
+    window.location.href = "/fix-redirect";
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Redirecting to dashboard...</span>
+      </div>
+    );
+  }
+  
   return (
     <AuthLayout>
       <div className="min-h-screen w-full relative">
