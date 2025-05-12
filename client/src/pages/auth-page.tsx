@@ -98,14 +98,17 @@ export default function AuthPage() {
       console.log('Login successful, user data:', userData);
       
       // Verify admin status directly before redirect
+      // Cast userData to ExtendedUser for type safety
+      const extendedUserData = userData as ExtendedUser;
+      
       let hasAdminRoles = false;
-      if (userData.roles && Array.isArray(userData.roles)) {
-        hasAdminRoles = userData.roles.some(role => 
+      if (extendedUserData.roles && Array.isArray(extendedUserData.roles)) {
+        hasAdminRoles = extendedUserData.roles.some(role => 
           ['super_admin', 'admin', 'tournament_admin', 'score_admin', 'finance_admin'].includes(role)
         );
       }
       
-      const isAdmin = userData.isAdmin === true || hasAdminRoles;
+      const isAdmin = extendedUserData.isAdmin === true || hasAdminRoles;
 
       const targetPath = isAdmin ? '/admin/dashboard' : '/dashboard';
       console.log(`Login successful, redirecting directly to ${targetPath}`);
@@ -145,18 +148,18 @@ export default function AuthPage() {
   if (user && authState === 'authenticated') {
     console.log("User already authenticated, redirecting to fix-redirect");
     
-    // First verify admin status directly
+    // First verify admin status directly using our type-safe extendedUser
     // Check if user has isAdmin flag or any admin roles
     let hasAdminRoles = false;
-    if (user.roles && Array.isArray(user.roles)) {
-      hasAdminRoles = user.roles.some(role => 
+    if (extendedUser?.roles && Array.isArray(extendedUser.roles)) {
+      hasAdminRoles = extendedUser.roles.some(role => 
         ['super_admin', 'admin', 'tournament_admin', 'score_admin', 'finance_admin'].includes(role)
       );
     }
     
-    const isAdmin = user.isAdmin === true || hasAdminRoles;
+    const isAdmin = extendedUser?.isAdmin === true || hasAdminRoles;
                      
-    console.log("User already authenticated with roles:", user.roles || [], "isAdmin:", isAdmin);
+    console.log("User already authenticated with roles:", extendedUser?.roles || [], "isAdmin:", isAdmin);
                      
     // Immediate redirect to dashboard
     const directTarget = isAdmin ? '/admin/dashboard' : '/dashboard';
