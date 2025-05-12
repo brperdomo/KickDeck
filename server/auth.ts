@@ -66,12 +66,14 @@ function invalidateUserCache(id: number): void {
 }
 
 /**
- * Create a new user account for coaches without requiring a password
- * @param firstName First name of the coach
- * @param lastName Last name of the coach
- * @param email Email address of the coach
- * @param phone Optional phone number for the coach
- * @returns The newly created user
+ * Create a new coach or team manager account
+ * This function is used when registering a team with a coach/manager that doesn't exist in the system
+ * 
+ * @param firstName - First name of the coach/manager
+ * @param lastName - Last name of the coach/manager
+ * @param email - Email address of the coach/manager
+ * @param phone - Phone number of the coach/manager (optional)
+ * @returns The newly created user or existing user if found
  */
 export async function createCoachAccount(
   firstName: string,
@@ -83,7 +85,7 @@ export async function createCoachAccount(
   const [existingUser] = await db
     .select()
     .from(users)
-    .where(eq(users.email, email))
+    .where(eq(users.email, email.toLowerCase()))
     .limit(1);
 
   if (existingUser) {
@@ -103,7 +105,7 @@ export async function createCoachAccount(
       city: "",
       state: "",
       zipCode: "",
-      primaryEmail: email,
+      primaryEmail: email.toLowerCase(),
       createdAt: new Date().toISOString(),
     })
     .returning();
@@ -112,11 +114,11 @@ export async function createCoachAccount(
   const [newUser] = await db
     .insert(users)
     .values({
-      username: email,
+      username: email.toLowerCase(),
       password: hashedPassword,
       firstName,
       lastName,
-      email,
+      email: email.toLowerCase(),
       phone,
       isParent: false,
       isAdmin: false,
@@ -127,23 +129,21 @@ export async function createCoachAccount(
 
   // Send welcome email
   try {
-    sendTemplatedEmail(
-      email,
-      'welcome',
-      {
+    await sendTemplatedEmail({
+      to: email,
+      templateType: 'welcome_email',
+      data: {
         firstName,
         lastName,
         email,
-        username: email
+        username: email,
+        password: tempPassword // Include the generated password (only sent via email)
       }
-    ).then(() => {
-      console.log(`Welcome email sent to coach ${email}`);
-    }).catch((err: Error) => {
-      console.error('Coach welcome email error:', err);
     });
+    console.log(`Welcome email sent to new coach/manager account: ${email}`);
   } catch (emailError) {
-    console.error('Failed to send coach welcome email:', emailError);
-    // Non-blocking - continue account creation even if email fails
+    console.error('Failed to send welcome email to new coach/manager:', emailError);
+    // Continue even if email fails - account is still created
   }
 
   return newUser;
