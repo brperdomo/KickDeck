@@ -4468,13 +4468,10 @@ function TeamsView() {
                           lastName: '',
                           dateOfBirth: '',
                           jerseyNumber: '',
-                          position: '',
                           medicalNotes: '',
-                          parentGuardianName: '',
-                          parentGuardianEmail: '',
-                          parentGuardianPhone: '',
-                          // Default placeholders for required fields
-                          emergencyContactName: '', 
+                          // Emergency contact information (required)
+                          emergencyContactFirstName: '',
+                          emergencyContactLastName: '',
                           emergencyContactPhone: '',
                           isActive: true
                         });
@@ -5021,62 +5018,38 @@ function TeamsView() {
               </div>
               
               <div className="space-y-4">
-                <h3 className="text-sm font-medium">Parent/Guardian Information</h3>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="parentGuardianName">Name</Label>
-                  <Input 
-                    id="parentGuardianName" 
-                    value={selectedPlayer.parentGuardianName || ''}
-                    onChange={(e) => setSelectedPlayer({
-                      ...selectedPlayer,
-                      parentGuardianName: e.target.value
-                    })}
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="parentGuardianEmail">Email</Label>
-                    <Input 
-                      id="parentGuardianEmail" 
-                      type="email"
-                      value={selectedPlayer.parentGuardianEmail || ''}
-                      onChange={(e) => setSelectedPlayer({
-                        ...selectedPlayer,
-                        parentGuardianEmail: e.target.value
-                      })}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="parentGuardianPhone">Phone</Label>
-                    <Input 
-                      id="parentGuardianPhone" 
-                      value={selectedPlayer.parentGuardianPhone || ''}
-                      onChange={(e) => setSelectedPlayer({
-                        ...selectedPlayer,
-                        parentGuardianPhone: e.target.value
-                      })}
-                    />
-                  </div>
-                </div>
+                {/* Parent/Guardian Information section removed to simplify data collection */}
               </div>
               
               <div className="space-y-4">
                 <h3 className="text-sm font-medium">Emergency Contact</h3>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="emergencyContactName">Name * (Required)</Label>
-                  <Input 
-                    id="emergencyContactName" 
-                    value={selectedPlayer.emergencyContactName || ''}
-                    onChange={(e) => setSelectedPlayer({
-                      ...selectedPlayer,
-                      emergencyContactName: e.target.value
-                    })}
-                    required
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="emergencyContactFirstName">First Name * (Required)</Label>
+                    <Input 
+                      id="emergencyContactFirstName" 
+                      value={selectedPlayer.emergencyContactFirstName || ''}
+                      onChange={(e) => setSelectedPlayer({
+                        ...selectedPlayer,
+                        emergencyContactFirstName: e.target.value
+                      })}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="emergencyContactLastName">Last Name * (Required)</Label>
+                    <Input 
+                      id="emergencyContactLastName" 
+                      value={selectedPlayer.emergencyContactLastName || ''}
+                      onChange={(e) => setSelectedPlayer({
+                        ...selectedPlayer,
+                        emergencyContactLastName: e.target.value
+                      })}
+                      required
+                    />
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
