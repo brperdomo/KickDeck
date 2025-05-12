@@ -516,11 +516,12 @@ const playerSchema = z.object({
   jerseyNumber: z.string().regex(/^\d{1,2}$/, "Jersey number must be 1-2 digits").optional(),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
   medicalNotes: z.string().optional(),
-  parentGuardianName: z.string().optional(),
-  parentGuardianEmail: z.string().email("Invalid email").optional(),
-  parentGuardianPhone: z.string().min(10, "Phone number must be at least 10 digits").optional(),
-  emergencyContactName: z.string().min(1, "Emergency contact name is required"),
-  emergencyContactPhone: z.string().min(10, "Emergency contact phone is required"),
+  emergencyContactFirstName: z.string().min(1, "Emergency contact first name is required"),
+  emergencyContactLastName: z.string().min(1, "Emergency contact last name is required"),
+  emergencyContactPhone: z.string()
+    .min(10, "Phone number must be at least 10 digits")
+    .max(10, "Phone number must not exceed 10 digits")
+    .regex(/^\d+$/, "Phone number must contain only digits"),
 });
 
 const teamRegistrationSchema = z.object({
@@ -530,13 +531,28 @@ const teamRegistrationSchema = z.object({
     invalid_type_error: "Age group must be selected"
   }),
   bracketId: z.number().nullable().optional(),
-  headCoachName: z.string().min(1, "Head coach name is required"),
+  headCoachFirstName: z.string().min(1, "Head coach first name is required"),
+  headCoachLastName: z.string().min(1, "Head coach last name is required"),
   headCoachEmail: z.string().email("Invalid email address"),
-  headCoachPhone: z.string().min(10, "Phone number must be at least 10 digits"),
-  assistantCoachName: z.string().optional(),
-  managerName: z.string().min(1, "Manager name is required"),
+  headCoachPhone: z.string()
+    .min(10, "Phone number must be at least 10 digits")
+    .max(10, "Phone number must not exceed 10 digits")
+    .regex(/^\d+$/, "Phone number must contain only digits"),
+  assistantCoachFirstName: z.string().optional(),
+  assistantCoachLastName: z.string().optional(),
+  assistantCoachEmail: z.string().email("Invalid email address").optional(),
+  assistantCoachPhone: z.string()
+    .min(10, "Phone number must be at least 10 digits")
+    .max(10, "Phone number must not exceed 10 digits")
+    .regex(/^\d+$/, "Phone number must contain only digits")
+    .optional(),
+  managerFirstName: z.string().min(1, "Manager first name is required"),
+  managerLastName: z.string().min(1, "Manager last name is required"),
   managerEmail: z.string().email("Invalid email address"),
-  managerPhone: z.string().min(10, "Phone number must be at least 10 digits"),
+  managerPhone: z.string()
+    .min(10, "Phone number must be at least 10 digits")
+    .max(10, "Phone number must not exceed 10 digits")
+    .regex(/^\d+$/, "Phone number must contain only digits"),
   // Add Roster Later flag allows submitting without players
   addRosterLater: z.boolean().optional().default(false),
   // Only validate players if addRosterLater is false
@@ -3502,22 +3518,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                                 />
                               </div>
                               
-                              <div className="space-y-2">
-                                <Label htmlFor={`player-${index}-position`}>Position</Label>
-                                <Input
-                                  id={`player-${index}-position`}
-                                  value={player.position || ''}
-                                  onChange={(e) => {
-                                    const newPlayers = [...players];
-                                    newPlayers[index].position = e.target.value;
-                                    setPlayers(newPlayers);
-                                    // Update form state with the modified players array
-                                    teamForm.setValue('players', newPlayers);
-                                  }}
-                                  className="w-full"
-                                  placeholder="Optional"
-                                />
-                              </div>
+
                               
                               <div className="space-y-2">
                                 <Label htmlFor={`player-${index}-jerseyNumber`}>Jersey #</Label>
@@ -3555,63 +3556,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                               </div>
                             </div>
                             
-                            <div className="mt-4 pt-4 border-t">
-                              <h5 className="font-medium mb-2">Parent/Guardian Information (For minors)</h5>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor={`player-${index}-parentName`}>Parent/Guardian Name</Label>
-                                  <Input
-                                    id={`player-${index}-parentName`}
-                                    value={player.parentGuardianName || ''}
-                                    onChange={(e) => {
-                                      const newPlayers = [...players];
-                                      newPlayers[index].parentGuardianName = e.target.value;
-                                      setPlayers(newPlayers);
-                                      // Update form state with the modified players array
-                                      teamForm.setValue('players', newPlayers);
-                                    }}
-                                    className="w-full"
-                                    placeholder="Optional"
-                                  />
-                                </div>
-                                
-                                <div className="space-y-2">
-                                  <Label htmlFor={`player-${index}-parentEmail`}>Parent/Guardian Email</Label>
-                                  <Input
-                                    id={`player-${index}-parentEmail`}
-                                    type="email"
-                                    value={player.parentGuardianEmail || ''}
-                                    onChange={(e) => {
-                                      const newPlayers = [...players];
-                                      newPlayers[index].parentGuardianEmail = e.target.value;
-                                      setPlayers(newPlayers);
-                                      // Update form state with the modified players array
-                                      teamForm.setValue('players', newPlayers);
-                                    }}
-                                    className="w-full"
-                                    placeholder="Optional"
-                                  />
-                                </div>
-                                
-                                <div className="space-y-2">
-                                  <Label htmlFor={`player-${index}-parentPhone`}>Parent/Guardian Phone</Label>
-                                  <Input
-                                    id={`player-${index}-parentPhone`}
-                                    type="tel"
-                                    value={player.parentGuardianPhone || ''}
-                                    onChange={(e) => {
-                                      const newPlayers = [...players];
-                                      newPlayers[index].parentGuardianPhone = e.target.value;
-                                      setPlayers(newPlayers);
-                                      // Update form state with the modified players array
-                                      teamForm.setValue('players', newPlayers);
-                                    }}
-                                    className="w-full"
-                                    placeholder="Optional"
-                                  />
-                                </div>
-                              </div>
-                            </div>
+
                             
                             <div className="mt-4 pt-4 border-t">
                               <h5 className="font-medium mb-2">Emergency Contact</h5>
