@@ -55,8 +55,6 @@ import AccountPage from "./pages/account";
 import { LogoutHandler } from "@/components/LogoutHandler";
 // Emergency fix for registration
 import EmergencyRegistrationFix from "@/pages/emergency-registration-fix";
-// Import fallback dashboard for white screen fix
-import FallbackDashboard from "@/pages/FallbackDashboard";
 
 // Import landing page components
 import LandingPage from "@/pages/landing-page";
@@ -310,16 +308,11 @@ function Router() {
             </DebugErrorBoundary>
           } />
           {/* We'll enhance the main dashboard with animations directly */}
-          {/* Using simple fallback dashboard */}
-          <ProtectedRoute 
-            path="/admin" 
-            requiredRole="admin" 
-            component={
-              <DebugErrorBoundary>
-                <FallbackDashboard />
-              </DebugErrorBoundary>
-            }
-          />
+          <ProtectedRoute path="/admin" requiredRole="admin" component={
+            <DebugErrorBoundary>
+              <AdminDashboard />
+            </DebugErrorBoundary>
+          } />
 
           {/* User routes - using ProtectedRoute for member-specific routes */}
           <ProtectedRoute path="/household" requiredRole="member" component={
@@ -393,16 +386,11 @@ function Router() {
           <Route path="/payment-setup-confirmation" component={PaymentSetupConfirmation} />
           
           {/* Dashboard routes - protected with role-based redirection */}
-          {/* Using simple fallback dashboard */}
-          <ProtectedRoute 
-            path="/dashboard" 
-            requiredRole="member" 
-            component={
-              <DebugErrorBoundary>
-                <FallbackDashboard />
-              </DebugErrorBoundary>
-            }
-          />
+          <ProtectedRoute path="/dashboard" requiredRole="member" component={
+            <DebugErrorBoundary>
+              <UserDashboard />
+            </DebugErrorBoundary>
+          } />
           
           {/* Preview routes */}
 
