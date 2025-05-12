@@ -515,7 +515,6 @@ const playerSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   jerseyNumber: z.string().regex(/^\d{1,2}$/, "Jersey number must be 1-2 digits").optional(),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
-  position: z.string().optional(),
   medicalNotes: z.string().optional(),
   parentGuardianName: z.string().optional(),
   parentGuardianEmail: z.string().email("Invalid email").optional(),
