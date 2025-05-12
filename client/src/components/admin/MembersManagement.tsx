@@ -539,7 +539,6 @@ export function MemberManagement() {
                           <TableHead>Name</TableHead>
                           <TableHead>Jersey #</TableHead>
                           <TableHead className="hidden md:table-cell">Date of Birth</TableHead>
-                          <TableHead className="hidden md:table-cell">Position</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -548,7 +547,6 @@ export function MemberManagement() {
                             <TableCell>{player.firstName} {player.lastName}</TableCell>
                             <TableCell>{player.jerseyNumber || 'N/A'}</TableCell>
                             <TableCell className="hidden md:table-cell">{formatDate(player.dateOfBirth)}</TableCell>
-                            <TableCell className="hidden md:table-cell">{player.position || 'N/A'}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
