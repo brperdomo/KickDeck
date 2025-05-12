@@ -1,3 +1,3 @@
-First Name,Last Name,Date of Birth,Jersey Number,Emergency Contact First Name,Emergency Contact Last Name,Emergency Contact Phone,Notes
-John,Doe,2005-01-15,10,Mary,Doe,555-987-6543,Team captain
-Jane,Smith,2005-03-22,7,Sarah,Smith,555-876-5432,Vice captain
+First Name,Last Name,Date of Birth,Jersey Number,Medical Notes,Emergency Contact First Name,Emergency Contact Last Name,Emergency Contact Phone
+John,Doe,2005-01-15,10,Allergic to penicillin,Mary,Doe,555-123-4567
+Jane,Smith,2005-03-22,7,No known conditions,Robert,Smith,555-987-6543

@@ -3501,22 +3501,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                                 />
                               </div>
                               
-                              <div className="space-y-2">
-                                <Label htmlFor={`player-${index}-position`}>Position</Label>
-                                <Input
-                                  id={`player-${index}-position`}
-                                  value={player.position || ''}
-                                  onChange={(e) => {
-                                    const newPlayers = [...players];
-                                    newPlayers[index].position = e.target.value;
-                                    setPlayers(newPlayers);
-                                    // Update form state with the modified players array
-                                    teamForm.setValue('players', newPlayers);
-                                  }}
-                                  className="w-full"
-                                  placeholder="Optional"
-                                />
-                              </div>
+                              {/* Position field removed as requested */}
                               
                               <div className="space-y-2">
                                 <Label htmlFor={`player-${index}-jerseyNumber`}>Jersey #</Label>
@@ -3555,61 +3540,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                             </div>
                             
                             <div className="mt-4 pt-4 border-t">
-                              <h5 className="font-medium mb-2">Parent/Guardian Information (For minors)</h5>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor={`player-${index}-parentName`}>Parent/Guardian Name</Label>
-                                  <Input
-                                    id={`player-${index}-parentName`}
-                                    value={player.parentGuardianName || ''}
-                                    onChange={(e) => {
-                                      const newPlayers = [...players];
-                                      newPlayers[index].parentGuardianName = e.target.value;
-                                      setPlayers(newPlayers);
-                                      // Update form state with the modified players array
-                                      teamForm.setValue('players', newPlayers);
-                                    }}
-                                    className="w-full"
-                                    placeholder="Optional"
-                                  />
-                                </div>
-                                
-                                <div className="space-y-2">
-                                  <Label htmlFor={`player-${index}-parentEmail`}>Parent/Guardian Email</Label>
-                                  <Input
-                                    id={`player-${index}-parentEmail`}
-                                    type="email"
-                                    value={player.parentGuardianEmail || ''}
-                                    onChange={(e) => {
-                                      const newPlayers = [...players];
-                                      newPlayers[index].parentGuardianEmail = e.target.value;
-                                      setPlayers(newPlayers);
-                                      // Update form state with the modified players array
-                                      teamForm.setValue('players', newPlayers);
-                                    }}
-                                    className="w-full"
-                                    placeholder="Optional"
-                                  />
-                                </div>
-                                
-                                <div className="space-y-2">
-                                  <Label htmlFor={`player-${index}-parentPhone`}>Parent/Guardian Phone</Label>
-                                  <Input
-                                    id={`player-${index}-parentPhone`}
-                                    type="tel"
-                                    value={player.parentGuardianPhone || ''}
-                                    onChange={(e) => {
-                                      const newPlayers = [...players];
-                                      newPlayers[index].parentGuardianPhone = e.target.value;
-                                      setPlayers(newPlayers);
-                                      // Update form state with the modified players array
-                                      teamForm.setValue('players', newPlayers);
-                                    }}
-                                    className="w-full"
-                                    placeholder="Optional"
-                                  />
-                                </div>
-                              </div>
+                              {/* Parent/Guardian Information section removed to simplify data collection */}
                             </div>
                             
                             <div className="mt-4 pt-4 border-t">
