@@ -3,8 +3,8 @@
  */
 import { Request, Response } from 'express';
 import { db } from '@db';
-import { teams, users } from '@db/schema';
-import { eq, and, or, sql } from 'drizzle-orm';
+import { teams, events, eventAgeGroups, users } from '@db/schema';
+import { eq, and, inArray, or, like, sql } from 'drizzle-orm';
 
 /**
  * Get teams associated with the current authenticated user as coach or manager
@@ -12,71 +12,67 @@ import { eq, and, or, sql } from 'drizzle-orm';
  */
 export async function getMyTeams(req: Request, res: Response) {
   try {
-    // User must be authenticated
-    if (!req.isAuthenticated() || !req.user) {
-      return res.status(401).json({ error: 'You must be logged in to view your teams' });
+    // User must be authenticated to access their teams
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
     }
     
-    const userEmail = req.user.email;
+    const userEmail = req.user.email.toLowerCase();
     
-    if (!userEmail) {
-      return res.status(400).json({ error: 'User email not found' });
-    }
-    
-    // Query teams where the user is either the coach or manager
-    const myTeams = await db.query.teams.findMany({
-      where: or(
-        // Check if user is coach (coach data is stored in JSON)
-        sql`(coach->>'email')::text = ${userEmail}`,
-        // Check if user is manager
+    // Fetch teams where the user is either the coach or manager
+    const result = await db.select({
+      id: teams.id,
+      name: teams.name,
+      eventId: teams.eventId,
+      eventName: events.name,
+      ageGroup: eventAgeGroups.ageGroup,
+      status: teams.status,
+      createdAt: teams.createdAt,
+      startDate: events.startDate,
+      coach: teams.coach,
+      managerEmail: teams.managerEmail
+    })
+    .from(teams)
+    .leftJoin(events, eq(teams.eventId, events.id))
+    .leftJoin(eventAgeGroups, eq(teams.ageGroupId, eventAgeGroups.id))
+    .where(
+      or(
+        // Check if user is the coach (stored in the coach JSON field)
+        like(teams.coach, `%${userEmail}%`),
+        // Check if user is the team manager
         eq(teams.managerEmail, userEmail)
-      ),
-      with: {
-        event: {
-          columns: {
-            id: true,
-            name: true,
-            startDate: true
-          }
-        },
-        ageGroup: {
-          columns: {
-            id: true,
-            ageGroup: true
-          }
-        }
-      }
-    });
+      )
+    );
     
-    // Format the teams for the response
-    const formattedTeams = myTeams.map(team => {
-      // Parse the coach data from JSON
-      const coach = team.coach ? 
-        (typeof team.coach === 'string' ? JSON.parse(team.coach) : team.coach) 
-        : null;
-      
-      // Determine the user's role on this team
-      const role = coach?.email === userEmail ? 'coach' : 'manager';
+    // Determine role for each team (coach or manager)
+    const teamsWithRole = result.map(team => {
+      // Parse the coach JSON to check if user is the coach
+      let isCoach = false;
+      try {
+        const coachData = JSON.parse(team.coach as string);
+        if (coachData && coachData.headCoachEmail === userEmail) {
+          isCoach = true;
+        }
+      } catch (e) {
+        // If JSON parsing fails, assume not coach
+      }
       
       return {
         id: team.id,
         name: team.name,
         eventId: team.eventId,
-        eventName: team.event.name,
-        ageGroup: team.ageGroup.ageGroup,
+        eventName: team.eventName,
+        ageGroup: team.ageGroup,
         status: team.status,
         createdAt: team.createdAt,
-        startDate: team.event.startDate,
-        role
+        startDate: team.startDate,
+        role: isCoach ? 'coach' : 'manager'
       };
     });
     
-    return res.json(formattedTeams);
+    return res.json(teamsWithRole);
   } catch (error) {
-    console.error('Error fetching teams:', error);
-    return res.status(500).json({ 
-      error: 'Failed to fetch teams',
-      details: process.env.NODE_ENV === 'development' ? String(error) : undefined
-    });
+    console.error('Error fetching user teams:', error);
+    return res.status(500).json({ error: 'Failed to fetch teams' });
   }
 }
