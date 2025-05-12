@@ -1849,11 +1849,16 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
       name: '',
       ageGroupId: 0,
       bracketId: null,
-      headCoachName: '',
+      headCoachFirstName: '',
+      headCoachLastName: '',
       headCoachEmail: '',
       headCoachPhone: '',
-      assistantCoachName: '',
-      managerName: '',
+      assistantCoachFirstName: '',
+      assistantCoachLastName: '',
+      assistantCoachEmail: '',
+      assistantCoachPhone: '',
+      managerFirstName: '',
+      managerLastName: '',
       managerEmail: '',
       managerPhone: '',
       players: [],
@@ -3683,7 +3688,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                     <div className="mt-1 text-gray-600">
                       <p><span className="font-medium">Team Name:</span> {teamForm.getValues().name}</p>
                       <p><span className="font-medium">Division:</span> {selectedAgeGroup?.divisionCode || selectedAgeGroup?.ageGroup}</p>
-                      <p><span className="font-medium">Coach:</span> {teamForm.getValues().headCoachName}</p>
+                      <p><span className="font-medium">Coach:</span> {teamForm.getValues().headCoachFirstName} {teamForm.getValues().headCoachLastName}</p>
                     </div>
                   </div>
                   
