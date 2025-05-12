@@ -19,18 +19,7 @@ import { Loader2 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-
-// Extended user type with roles for type safety
-interface ExtendedUser {
-  id: number;
-  email: string;
-  username?: string;
-  firstName?: string;
-  lastName?: string;
-  isAdmin?: boolean;
-  roles?: string[];
-  [key: string]: any; // Allow for additional properties
-}
+import { ExtendedUser, isUserAdmin } from "@/types/user";
 
 // Login schema
 const loginSchema = z.object({
@@ -101,14 +90,8 @@ export default function AuthPage() {
       // Cast userData to ExtendedUser for type safety
       const extendedUserData = userData as ExtendedUser;
       
-      let hasAdminRoles = false;
-      if (extendedUserData.roles && Array.isArray(extendedUserData.roles)) {
-        hasAdminRoles = extendedUserData.roles.some(role => 
-          ['super_admin', 'admin', 'tournament_admin', 'score_admin', 'finance_admin'].includes(role)
-        );
-      }
-      
-      const isAdmin = extendedUserData.isAdmin === true || hasAdminRoles;
+      // Check if user has admin privileges using our helper function
+      const isAdmin = isUserAdmin(extendedUserData);
 
       const targetPath = isAdmin ? '/admin/dashboard' : '/dashboard';
       console.log(`Login successful, redirecting directly to ${targetPath}`);
@@ -148,16 +131,8 @@ export default function AuthPage() {
   if (user && authState === 'authenticated') {
     console.log("User already authenticated, redirecting to fix-redirect");
     
-    // First verify admin status directly using our type-safe extendedUser
-    // Check if user has isAdmin flag or any admin roles
-    let hasAdminRoles = false;
-    if (extendedUser?.roles && Array.isArray(extendedUser.roles)) {
-      hasAdminRoles = extendedUser.roles.some(role => 
-        ['super_admin', 'admin', 'tournament_admin', 'score_admin', 'finance_admin'].includes(role)
-      );
-    }
-    
-    const isAdmin = extendedUser?.isAdmin === true || hasAdminRoles;
+    // Check if user has admin privileges using our helper function
+    const isAdmin = isUserAdmin(extendedUser);
                      
     console.log("User already authenticated with roles:", extendedUser?.roles || [], "isAdmin:", isAdmin);
                      

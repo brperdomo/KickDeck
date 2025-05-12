@@ -2,35 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Loader2 } from 'lucide-react';
 import { queryClient } from '@/lib/queryClient';
-
-// Extended user type with roles for type safety
-interface ExtendedUser {
-  id: number;
-  email: string;
-  username?: string;
-  firstName?: string;
-  lastName?: string;
-  isAdmin?: boolean;
-  roles?: string[];
-  [key: string]: any; // Allow for additional properties
-}
-
-// Helper function to check if a user has admin privileges
-function isUserAdmin(user: ExtendedUser | null): boolean {
-  if (!user) return false;
-  
-  // Check if user has isAdmin flag
-  if (user.isAdmin === true) return true;
-  
-  // Check if user has admin roles
-  if (user.roles && Array.isArray(user.roles)) {
-    return user.roles.some(role => 
-      ['super_admin', 'admin', 'tournament_admin', 'score_admin', 'finance_admin'].includes(role)
-    );
-  }
-  
-  return false;
-}
+import { ExtendedUser, isUserAdmin } from '@/types/user';
 
 /**
  * ForceRedirectCombinedFix
