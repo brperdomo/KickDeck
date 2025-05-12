@@ -152,17 +152,20 @@ export async function createCoachAccount(
 export function setupAuth(app: Express) {
   const MemoryStore = createMemoryStore(session);
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.REPL_ID || "soccer-registration-secret",
+    secret: "matchpro-persistent-session-secret-key", // Use stable secret instead of REPL_ID
     resave: true, // Changed to true to ensure session is saved on every request
     saveUninitialized: false,
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days for longer sessions
       httpOnly: true,
       sameSite: 'lax',
-      path: '/'
+      path: '/',
+      secure: app.get("env") === "production" // Only set secure in production
     },
     store: new MemoryStore({
       checkPeriod: 86400000, // 24 hours cleanup interval
+      // Increased max size for better performance
+      max: 1000,
       // Don't refresh/ping inactive sessions in the background
       stale: false
     }),
@@ -172,10 +175,7 @@ export function setupAuth(app: Express) {
 
   if (app.get("env") === "production") {
     app.set("trust proxy", 1);
-    sessionSettings.cookie = {
-      ...sessionSettings.cookie,
-      secure: true,
-    };
+    // No need to set cookie.secure here as we've already set it conditionally above
   }
 
   app.use(session(sessionSettings));
