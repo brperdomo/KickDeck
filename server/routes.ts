@@ -3611,9 +3611,6 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
     // Clubs routes
     app.use('/api/clubs', clubsRouter);
     
-    // Coach and team manager validation route
-    app.post('/api/coaches/check-email', checkCoachEmail);
-
     // Add bulk action endpoint after the upload router registration
     app.post('/api/files/bulk', isAdmin, async (req, res) => {
       try {
