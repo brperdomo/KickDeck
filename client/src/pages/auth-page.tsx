@@ -185,16 +185,23 @@ export default function AuthPage() {
     
     // Handle the default case where we're on the auth page or related paths
     if (isAuthPage) {
-      const defaultPath = user.isAdmin ? '/admin' : '/dashboard';
+      // Using direct path to ensure we bypass router issues
+      const defaultPath = user.isAdmin ? '/admin/dashboard' : '/dashboard';
       console.log("On auth page, redirecting to:", defaultPath);
       
       // Signal that we're starting a redirect
       setAuthState('redirecting');
       
-      // Use a short timeout to ensure this happens after other useEffects
+      // Create and store a redirect marker to help track this redirect attempt
+      const redirectId = Math.random().toString(36).substring(2, 15);
+      sessionStorage.setItem('lastRedirectAttempt', redirectId);
+      sessionStorage.setItem('lastRedirectTime', Date.now().toString());
+      console.log(`AUTH: Redirect attempt ${redirectId} to ${defaultPath}`);
+      
+      // Force full navigation to ensure clean state
       setTimeout(() => {
         window.location.href = defaultPath;
-      }, 50);
+      }, 100);
     } else {
       // If we're on an admin page but we're not an admin, redirect to dashboard
       if (window.location.pathname.startsWith('/admin') && !user.isAdmin) {
