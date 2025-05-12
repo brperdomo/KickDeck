@@ -20,6 +20,18 @@ import { Link, useLocation } from "wouter";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 
+// Extended user type with roles for type safety
+interface ExtendedUser {
+  id: number;
+  email: string;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+  isAdmin?: boolean;
+  roles?: string[];
+  [key: string]: any; // Allow for additional properties
+}
+
 // Login schema
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -31,6 +43,8 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function AuthPage() {
   const { toast } = useToast();
   const { loginMutation, user, authState, setAuthState } = useAuth();
+  // Cast user as ExtendedUser for type safety
+  const extendedUser = user as ExtendedUser | null;
   const [location, setLocation] = useLocation();
   const [logoutMessage, setLogoutMessage] = useState<string | null>(null);
 
@@ -79,14 +93,27 @@ export default function AuthPage() {
       setAuthState('logging-in');
       
       // Perform login
-      await loginMutation.mutateAsync(data);
+      const userData = await loginMutation.mutateAsync(data);
       
-      console.log('Login successful, redirecting to fix-redirect');
+      console.log('Login successful, user data:', userData);
       
-      // Force immediate redirect to fix-redirect page
-      setTimeout(() => {
-        window.location.href = "/fix-redirect";
-      }, 100);
+      // Verify admin status directly before redirect
+      let hasAdminRoles = false;
+      if (userData.roles && Array.isArray(userData.roles)) {
+        hasAdminRoles = userData.roles.some(role => 
+          ['super_admin', 'admin', 'tournament_admin', 'score_admin', 'finance_admin'].includes(role)
+        );
+      }
+      
+      const isAdmin = userData.isAdmin === true || hasAdminRoles;
+
+      const targetPath = isAdmin ? '/admin/dashboard' : '/dashboard';
+      console.log(`Login successful, redirecting directly to ${targetPath}`);
+      
+      // First, try the fix-redirect route
+      // This is a safety mechanism that will validate the session and roles again
+      // before redirecting to the appropriate dashboard
+      window.location.href = "/fix-redirect";
       
     } catch (error: any) {
       console.error('Login error:', error);
@@ -117,11 +144,46 @@ export default function AuthPage() {
   // If already authenticated, redirect to fix-redirect page
   if (user && authState === 'authenticated') {
     console.log("User already authenticated, redirecting to fix-redirect");
-    window.location.href = "/fix-redirect";
+    
+    // First verify admin status directly
+    // Check if user has isAdmin flag or any admin roles
+    let hasAdminRoles = false;
+    if (user.roles && Array.isArray(user.roles)) {
+      hasAdminRoles = user.roles.some(role => 
+        ['super_admin', 'admin', 'tournament_admin', 'score_admin', 'finance_admin'].includes(role)
+      );
+    }
+    
+    const isAdmin = user.isAdmin === true || hasAdminRoles;
+                     
+    console.log("User already authenticated with roles:", user.roles || [], "isAdmin:", isAdmin);
+                     
+    // Immediate redirect to dashboard
+    const directTarget = isAdmin ? '/admin/dashboard' : '/dashboard';
+    
+    // Use our fix-redirect mechanism for safer handling
+    setTimeout(() => {
+      console.log(`User already authenticated, redirecting safely to ${directTarget}`);
+      window.location.href = "/fix-redirect";
+    }, 250);
+    
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Redirecting to dashboard...</span>
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+        <h3 className="text-xl mb-2">You're already logged in!</h3>
+        <p className="text-sm text-muted-foreground mb-4">Redirecting you to your dashboard...</p>
+        <div className="flex space-x-3">
+          <button 
+            onClick={() => window.location.href = '/admin/dashboard'} 
+            className="bg-primary text-white px-3 py-1 rounded text-sm">
+            Admin Dashboard
+          </button>
+          <button 
+            onClick={() => window.location.href = '/dashboard'} 
+            className="bg-secondary px-3 py-1 rounded text-sm">
+            Member Dashboard
+          </button>
+        </div>
       </div>
     );
   }

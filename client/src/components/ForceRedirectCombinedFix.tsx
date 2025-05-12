@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Loader2 } from 'lucide-react';
+import { queryClient } from '@/lib/queryClient';
 
 /**
  * ForceRedirectCombinedFix
@@ -13,8 +14,25 @@ export function ForceRedirectCombinedFix() {
   const [redirectAttempts, setRedirectAttempts] = useState(0);
   const [redirectMethod, setRedirectMethod] = useState('Initializing');
   const [forceBackToLogin, setForceBackToLogin] = useState(false);
+  const [debugState, setDebugState] = useState<any>({
+    apiCheckComplete: false,
+    hookCheckComplete: false
+  });
 
-  // Make a direct API call to verify user data
+  // For troubleshooting the authentication state
+  useEffect(() => {
+    console.log("Current auth state:", {
+      userFromHook: !!user,
+      userDetails: user ? { id: user.id, email: user.email, isAdmin: user.isAdmin } : 'No user',
+      isLoading,
+      redirectAttempts,
+      redirectMethod,
+      forceBackToLogin,
+      cachedAuthData: queryClient.getQueryData(['/api/user'])
+    });
+  }, [user, isLoading, redirectAttempts, redirectMethod, forceBackToLogin]);
+
+  // Make a direct API call to verify user data - highest priority check
   useEffect(() => {
     // Directly fetch the user data for verification
     const verifyUser = async () => {
@@ -28,27 +46,51 @@ export function ForceRedirectCombinedFix() {
           }
         });
         
+        setDebugState(prev => ({ ...prev, apiCheckComplete: true }));
+        
         if (response.ok) {
           const userData = await response.json();
           console.log("ForceRedirectCombinedFix: Direct API call success:", userData);
           
           if (userData && userData.id) {
+            // Update the query cache with the latest user data
+            queryClient.setQueryData(['/api/user'], userData);
+            
             // User is authenticated, perform direct redirect
-            const isAdmin = userData.isAdmin === true;
+            // First check if user has roles array and determine admin status
+            const hasAdminRole = Array.isArray(userData.roles) && 
+                               (userData.roles.includes('super_admin') ||
+                                userData.roles.includes('admin') ||
+                                userData.roles.includes('tournament_admin') ||
+                                userData.roles.includes('score_admin') ||
+                                userData.roles.includes('finance_admin'));
+                                
+            // Check multiple ways if the user is an admin
+            const isAdmin = userData.isAdmin === true || hasAdminRole;
+            
             const targetPath = isAdmin ? '/admin/dashboard' : '/dashboard';
             
             console.log(`ForceRedirectCombinedFix: Direct API verification successful, user is ${isAdmin ? 'admin' : 'regular'}`);
             console.log(`ForceRedirectCombinedFix: Redirecting to ${targetPath}`);
             
-            // Use direct navigation
-            window.location.href = targetPath;
+            // Use direct navigation with a small delay
+            setTimeout(() => {
+              window.location.href = targetPath;
+            }, 250);
+            
+            // Don't do anything else, we're redirecting
+            return;
           } else {
             console.log("ForceRedirectCombinedFix: User data is empty or invalid from direct API call");
             setForceBackToLogin(true);
           }
         } else {
           console.log("ForceRedirectCombinedFix: Direct API call failed with status:", response.status);
-          setForceBackToLogin(true);
+          if (response.status === 401) {
+            // Force a refresh of the auth state in useAuth hook
+            queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+            setForceBackToLogin(true);
+          }
         }
       } catch (error) {
         console.error("ForceRedirectCombinedFix: Error during direct API call:", error);
@@ -60,22 +102,48 @@ export function ForceRedirectCombinedFix() {
     verifyUser();
   }, []);
 
+  // Manual login form submission as a last resort
+  const tryManualLogin = async () => {
+    try {
+      // Only try this as a last resort after multiple failures
+      if (redirectAttempts < 3) return;
+      
+      console.log("ForceRedirectCombinedFix: Attempting emergency manual login redirect");
+      setRedirectMethod('Emergency Manual Login Redirect');
+      
+      // Try to trigger login page with a special flag
+      window.location.href = '/auth?auth_emergency=true';
+    } catch (e) {
+      console.error("Error in emergency login redirect:", e);
+    }
+  };
+
   // Handle redirect back to login if needed
   useEffect(() => {
     if (forceBackToLogin) {
       console.log("ForceRedirectCombinedFix: Forcing back to login page");
-      window.location.href = '/auth';
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 500);
     }
   }, [forceBackToLogin]);
 
   // Fallback redirect based on useAuth hook data
   useEffect(() => {
-    // Skip if we're loading or forcing back to login already
-    if (isLoading || forceBackToLogin) return;
+    // Skip if we're loading, forcing back to login already, or API check isn't done yet
+    if (isLoading || forceBackToLogin || !debugState.apiCheckComplete) return;
+    
+    setDebugState(prev => ({ ...prev, hookCheckComplete: true }));
     
     if (!user) {
       console.log("ForceRedirectCombinedFix: No user found in useAuth hook");
-      setForceBackToLogin(true);
+      setRedirectAttempts(prev => prev + 1);
+      
+      // Only force back to login if we've tried multiple times
+      if (redirectAttempts >= 2) {
+        setForceBackToLogin(true);
+      }
+      
       return;
     }
 
@@ -91,15 +159,53 @@ export function ForceRedirectCombinedFix() {
     setRedirectMethod('useAuth Hook Redirect');
     console.log(`FORCE REDIRECT [${redirectId}]: Attempting redirect via useAuth hook to ${targetPath}`);
     
-    window.location.href = targetPath;
-  }, [user, isLoading, forceBackToLogin]);
+    setTimeout(() => {
+      window.location.href = targetPath;
+    }, 250);
+  }, [user, isLoading, forceBackToLogin, redirectAttempts, debugState.apiCheckComplete]);
 
+  // Use the tryManualLogin for emergencies
+  useEffect(() => {
+    if (redirectAttempts >= 3) {
+      tryManualLogin();
+    }
+  }, [redirectAttempts]);
+  
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
       <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
       <h2 className="text-xl font-medium mb-2">Redirecting to dashboard...</h2>
-      <p className="text-sm text-muted-foreground mb-1">Method: {redirectMethod}</p>
-      <p className="text-sm text-muted-foreground">Attempts: {redirectAttempts + 1}</p>
+      <div className="bg-accent/50 p-4 rounded-md max-w-md text-center">
+        <p className="text-sm text-muted-foreground mb-1">Method: {redirectMethod}</p>
+        <p className="text-sm text-muted-foreground mb-3">Attempts: {redirectAttempts + 1}</p>
+        
+        {redirectAttempts >= 2 && (
+          <div className="mt-3 text-sm">
+            <p>Having trouble redirecting you to the right dashboard.</p>
+            <div className="mt-2 space-x-2">
+              <button 
+                onClick={() => window.location.href = '/auth'} 
+                className="bg-primary text-white px-3 py-1 rounded text-xs">
+                Back to Login
+              </button>
+              <button 
+                onClick={() => window.location.href = '/admin/dashboard'} 
+                className="bg-secondary px-3 py-1 rounded text-xs">
+                Admin Dashboard
+              </button>
+              <button 
+                onClick={() => window.location.href = '/dashboard'} 
+                className="bg-secondary px-3 py-1 rounded text-xs">
+                Member Dashboard
+              </button>
+            </div>
+          </div>
+        )}
+        
+        {debugState.apiCheckComplete && (
+          <div className="mt-2 text-xs text-green-500">API check complete</div>
+        )}
+      </div>
     </div>
   );
 }
