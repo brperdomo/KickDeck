@@ -3,6 +3,18 @@ import { useAuth } from '@/hooks/use-auth';
 import { Loader2 } from 'lucide-react';
 import { queryClient } from '@/lib/queryClient';
 
+// Extended user type with roles for type safety
+interface ExtendedUser {
+  id: number;
+  email: string;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+  isAdmin?: boolean;
+  roles?: string[];
+  [key: string]: any; // Allow for additional properties
+}
+
 /**
  * ForceRedirectCombinedFix
  * 
@@ -11,6 +23,8 @@ import { queryClient } from '@/lib/queryClient';
  */
 export function ForceRedirectCombinedFix() {
   const { user, isLoading } = useAuth();
+  // Cast user to ExtendedUser for type safety
+  const extendedUser = user as ExtendedUser | null;
   const [redirectAttempts, setRedirectAttempts] = useState(0);
   const [redirectMethod, setRedirectMethod] = useState('Initializing');
   const [forceBackToLogin, setForceBackToLogin] = useState(false);
@@ -56,17 +70,20 @@ export function ForceRedirectCombinedFix() {
             // Update the query cache with the latest user data
             queryClient.setQueryData(['/api/user'], userData);
             
+            // Cast to our ExtendedUser type for type safety
+            const extUserData = userData as ExtendedUser;
+            
             // User is authenticated, perform direct redirect
             // First check if user has roles array and determine admin status
-            const hasAdminRole = Array.isArray(userData.roles) && 
-                               (userData.roles.includes('super_admin') ||
-                                userData.roles.includes('admin') ||
-                                userData.roles.includes('tournament_admin') ||
-                                userData.roles.includes('score_admin') ||
-                                userData.roles.includes('finance_admin'));
+            let hasAdminRole = false;
+            if (extUserData.roles && Array.isArray(extUserData.roles)) {
+              hasAdminRole = extUserData.roles.some(role => 
+                ['super_admin', 'admin', 'tournament_admin', 'score_admin', 'finance_admin'].includes(role)
+              );
+            }
                                 
             // Check multiple ways if the user is an admin
-            const isAdmin = userData.isAdmin === true || hasAdminRole;
+            const isAdmin = extUserData.isAdmin === true || hasAdminRole;
             
             const targetPath = isAdmin ? '/admin/dashboard' : '/dashboard';
             
