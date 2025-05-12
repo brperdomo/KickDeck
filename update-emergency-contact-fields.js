@@ -5,8 +5,11 @@
  * for emergency contacts instead of a single name field.
  */
 
-const { Pool } = require('pg');
-require('dotenv').config();
+import pg from 'pg';
+import dotenv from 'dotenv';
+
+dotenv.config();
+const { Pool } = pg;
 
 async function updateEmergencyContactFields() {
   console.log('Starting migration to update emergency contact fields...');
