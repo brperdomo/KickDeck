@@ -86,26 +86,15 @@ export default function AuthPage() {
       
       console.log('Login successful, user data:', userData);
       
-      // Verify admin status directly before redirect
-      // Extract user object and cast to ExtendedUser for type safety
-      // Handle both formats: { user: {...} } or the direct user object
-      const userObject = userData && typeof userData === 'object' && 'user' in userData 
-        ? userData.user 
-        : userData;
+      // Check if the user has admin privileges
+      const isAdmin = userData.isAdmin;
       
-      // Use type assertion after validation
-      const extendedUserData = userObject as ExtendedUser;
-      
-      // Check if user has admin privileges using our helper function
-      const isAdmin = isUserAdmin(extendedUserData);
-
+      // Determine the appropriate dashboard
       const targetPath = isAdmin ? '/admin/dashboard' : '/dashboard';
       console.log(`Login successful, redirecting directly to ${targetPath}`);
       
-      // First, try the fix-redirect route
-      // This is a safety mechanism that will validate the session and roles again
-      // before redirecting to the appropriate dashboard
-      window.location.href = "/fix-redirect";
+      // Use direct redirection to the target dashboard
+      window.location.href = targetPath;
       
     } catch (error: any) {
       console.error('Login error:', error);
