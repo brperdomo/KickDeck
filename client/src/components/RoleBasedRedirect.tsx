@@ -88,26 +88,22 @@ export function RoleBasedRedirect() {
       return;
     }
     
-    // Handle admin routes
+    // Handle admin routes with stricter checks
     if (path === '/admin' || path.startsWith('/admin/')) {
-      if (!user.isAdmin) {
-        console.log("Non-admin accessing admin route, redirecting to dashboard");
-        setAuthState('redirecting');
-        setRedirectCount(prev => prev + 1);
-        setTimeout(() => {
-          setLocation('/dashboard');
-          setAuthState('authenticated');
-          setHasRedirected(true);
-        }, 100);
-        return;
-      } else {
-        console.log("Admin accessing admin route, ensuring authentication state");
-        if (!hasRedirected) {
-          setAuthState('authenticated');
-          setHasRedirected(true);
-        }
+      console.log("Checking admin route access", { user, authState, path });
+      
+      if (!user || !user.isAdmin) {
+        console.log("Unauthorized admin access - redirecting");
+        setLocation('/dashboard');
         return;
       }
+      
+      if (user.isAdmin && !hasRedirected) {
+        console.log("Admin verified, setting auth state");
+        setAuthState('authenticated');
+        setHasRedirected(true);
+      }
+      return;
     }
     
     // Handle member routes when user is an admin only
