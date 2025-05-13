@@ -100,14 +100,34 @@ export default function AuthPage() {
         console.log('Using direct userData:', userObject);
       }
       
-      const isAdmin = userObject && userObject.isAdmin;
+      // Check for strict equality to ensure isAdmin is actually true
+      const isAdmin = userObject && userObject.isAdmin === true;
       
-      // Determine the appropriate dashboard - Admin and Dashboard are separate portals
-      const targetPath = isAdmin ? '/admin' : '/dashboard';
-      console.log(`Login successful, redirecting directly to ${targetPath}`);
+      // Check if there's a redirect after auth stored in session storage
+      const redirectAfterAuth = sessionStorage.getItem('redirectAfterAuth');
+      let targetPath;
       
-      // Use direct redirection to the target dashboard
-      window.location.href = targetPath;
+      if (redirectAfterAuth) {
+        console.log(`Found redirect after auth: ${redirectAfterAuth}`);
+        targetPath = redirectAfterAuth;
+        // Clear the stored redirect path
+        sessionStorage.removeItem('redirectAfterAuth');
+      } else {
+        // Determine the appropriate dashboard - Admin and Dashboard are separate portals
+        targetPath = isAdmin ? '/admin' : '/dashboard';
+        console.log(`No redirect path found, using default: ${targetPath}`);
+      }
+      
+      console.log(`Login successful, redirecting to ${targetPath}`);
+      
+      // Set auth state to authenticated before redirect
+      setAuthState('authenticated');
+      
+      // Add a small delay to ensure state update happens before redirect
+      setTimeout(() => {
+        // Force a reload when navigating to ensure fresh state
+        window.location.href = targetPath;
+      }, 100);
       
     } catch (error: any) {
       console.error('Login error:', error);
