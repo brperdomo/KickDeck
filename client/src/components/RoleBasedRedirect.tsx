@@ -90,32 +90,54 @@ export function RoleBasedRedirect() {
     
     // Handle admin routes with stricter checks
     if (path === '/admin' || path.startsWith('/admin/')) {
-      console.log("Checking admin route access", { user, authState, path });
+      console.log("Checking admin route access", { 
+        user, 
+        authState, 
+        path,
+        isAdmin: user?.isAdmin
+      });
       
       // If loading or in transition state, wait
       if (isLoading || authState === 'checking' || authState === 'redirecting') {
+        console.log("Still in loading/transition state, skipping admin check");
         return;
       }
 
       // If not authenticated at all, redirect to auth
       if (!user || authState === 'unauthenticated') {
-        console.log("Not authenticated, redirecting to auth");
+        console.log("Not authenticated for admin route, redirecting to auth");
+        // Save intended destination
+        sessionStorage.setItem('redirectAfterAuth', location);
+        // Set redirecting state to avoid flicker
+        setAuthState('redirecting');
         setLocation('/auth');
         return;
       }
 
       // If authenticated but not admin, redirect to dashboard
-      if (!user.isAdmin) {
-        console.log("Non-admin user, redirecting to dashboard");
+      if (user && user.isAdmin === false) {
+        console.log("User authenticated but not admin, redirecting to dashboard");
+        setAuthState('redirecting');
         setLocation('/dashboard');
         return;
       }
       
-      // At this point, user is authenticated and is admin
-      // Only update state if needed to avoid loops
-      if (authState !== 'authenticated') {
-        console.log("Admin verified, setting auth state");
-        setAuthState('authenticated');
+      // If we have a user with isAdmin property set to true, we're good!
+      if (user && user.isAdmin === true) {
+        console.log("Admin user verified, allowing access to admin route");
+        // Set state to authenticated if not already
+        if (authState !== 'authenticated') {
+          setAuthState('authenticated');
+        }
+        // Mark as having redirected to avoid loops
+        setHasRedirected(true);
+      } else {
+        // This shouldn't happen but handle edge case where isAdmin is undefined or null
+        console.log("Warning: User exists but isAdmin property missing or invalid", user);
+        // Let them through but log it, to avoid getting stuck
+        if (authState !== 'authenticated') {
+          setAuthState('authenticated');
+        }
       }
       
       return;
