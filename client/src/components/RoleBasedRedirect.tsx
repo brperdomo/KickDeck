@@ -88,6 +88,9 @@ export function RoleBasedRedirect() {
     }
     
     // Handle member routes when user is an admin only
+    // TEMPORARILY DISABLED to fix login redirect issue
+    // This was causing admins to be redirected away from /dashboard after login
+    /*
     if ((path === '/dashboard' || path.startsWith('/dashboard/')) && user.isAdmin) {
       console.log("Admin accessing member route, redirecting to admin panel");
       // Set auth state to redirecting to show proper UI feedback
@@ -103,6 +106,7 @@ export function RoleBasedRedirect() {
       }, 100);
       return;
     }
+    */
     
     // Handle root path based on role
     if (path === '/') {
@@ -133,7 +137,13 @@ export function RoleBasedRedirect() {
     
     // If we're on the admin or dashboard route but haven't rendered yet
     if ((path === '/admin' || path === '/dashboard') && !hasRedirected) {
-      console.log("On target route but component may not be rendered yet, forcing refresh");
+      console.log("On target route but component may not be rendered yet, forcing refresh", { 
+        path,
+        isAdmin: user?.isAdmin,
+        authState,
+        hasRedirected
+      });
+      
       // Force a refresh of the current route
       setAuthState('authenticated');
       setHasRedirected(true);
