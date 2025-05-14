@@ -168,9 +168,10 @@ export default function AuthPage() {
     console.log("User already authenticated, user fields:", user ? Object.keys(user) : 'No user');
     
     // Check if user has admin privileges - make sure we use the right property
-    let userObject = user;
-    if (user && 'user' in user) {
-      userObject = user.user;
+    // Use type assertion for safety
+    let userObject: any = user;
+    if (user && typeof user === 'object' && 'user' in (user as Record<string, unknown>)) {
+      userObject = (user as Record<string, unknown>)['user'];
       console.log('Auto-redirect: Using nested user object:', userObject);
     }
     const isAdmin = userObject && userObject.isAdmin;
