@@ -78,7 +78,18 @@ export function ProtectedRoute({
         }
 
         // Render the component if all checks pass
-        console.log('ProtectedRoute: All checks passed, rendering component');
+        console.log('ProtectedRoute: All checks passed, rendering component', {
+          path,
+          requiredRole,
+          isAdmin: user.isAdmin,
+          authState
+        });
+        
+        // Make sure we're in the right auth state before rendering
+        if (authState !== 'authenticated') {
+          setAuthState('authenticated');
+        }
+        
         return typeof Component === "function" 
           ? <Component />
           : Component;
