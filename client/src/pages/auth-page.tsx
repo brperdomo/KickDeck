@@ -128,11 +128,19 @@ export default function AuthPage() {
       // Set cookie to avoid 401 errors on page load
       document.cookie = "is_authenticated=true; path=/";
       
-      // Use admin-direct for admin users to avoid routing issues
+      // Use standalone admin for admins to completely bypass auth hooks
       const targetPath = isAdmin ? '/admin-direct' : '/dashboard';
       console.log(`Login successful, redirecting to ${targetPath}`);
       
-      // For all users, use direct browser navigation to ensure clean state
+      // Set session storage markers to help with auth fallbacks
+      if (isAdmin) {
+        // Store auth state for standalone admin component
+        sessionStorage.setItem('user_authenticated', 'true');
+        sessionStorage.setItem('user_is_admin', 'true');
+        console.log("Stored auth info in session storage");
+      }
+      
+      // Use direct browser navigation for guaranteed state refresh
       window.location.href = targetPath;
       
     } catch (error: any) {
