@@ -94,7 +94,14 @@ export default function StandaloneAdmin() {
     );
   }
   
-  // Once loaded, asynchronously import and render the admin dashboard
+  // Directly import the admin dashboard component to avoid dynamic import issues
+  // Note: this will be handled at build time by bundler
   const AdminDashboard = require('./admin-dashboard').default;
-  return <AdminDashboard initialView="events" />;
+  
+  console.log("StandaloneAdmin: Successfully loaded AdminDashboard component");
+  return (
+    <div className="admin-standalone-wrapper">
+      <AdminDashboard initialView="events" />
+    </div>
+  );
 }
