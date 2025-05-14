@@ -1,0 +1,166 @@
+Submitting login with email: bperdomo@zoho.com
+use-auth.tsx:141 Login mutation called with: bperdomo@zoho.com
+use-auth.tsx:152 Sending login request with data: 
+Object
+use-auth.tsx:167 Login response status: 200
+use-auth.tsx:184 Login successful, received user data: Yes
+use-auth.tsx:188 Fetching current user after login
+use-auth.tsx:200 User data fetched after login: success
+auth-page.tsx:86 Login successful, user data: 
+Object
+auth-page.tsx:87 Login successful, user data type: object
+auth-page.tsx:88 Login successful, user data fields: 
+Array(6)
+auth-page.tsx:94 Using freshUserData: 
+Object
+auth-page.tsx:107 Login successful, redirecting directly to /admin
+RouteDebugger.tsx:13 Current route location (Wouter): /admin
+RouteDebugger.tsx:14 Current URL: https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/admin
+RouteDebugger.tsx:15 Current pathname: /admin
+RouteDebugger.tsx:16 Current search: 
+RoleBasedRedirect.tsx:33 RoleBasedRedirect - Current state: 
+Object
+authState
+: 
+"authenticated"
+isLoading
+: 
+false
+location
+: 
+"/admin"
+redirectCount
+: 
+0
+user
+: 
+{id: 24, email: 'bperdomo@zoho.com', username: 'bperdomo@zoho.com', password: 'ad75c57234238781888aadb41f9ad64caa18a890fd69db1102…4a9dd70de55b58fc.71569fdab7897339753c4858c5414bb0', firstName: 'Bryan', …}
+[[Prototype]]
+: 
+Object
+RoleBasedRedirect.tsx:50 RoleBasedRedirect - User authenticated: 
+Object
+currentPath
+: 
+"/admin"
+isAdmin
+: 
+true
+[[Prototype]]
+: 
+Object
+RoleBasedRedirect.tsx:63 RoleBasedRedirect checking access 
+Object
+authState
+: 
+"authenticated"
+isAdmin
+: 
+true
+path
+: 
+"/admin"
+user
+: 
+{id: 24, email: 'bperdomo@zoho.com', username: 'bperdomo@zoho.com', password: 'ad75c57234238781888aadb41f9ad64caa18a890fd69db1102…4a9dd70de55b58fc.71569fdab7897339753c4858c5414bb0', firstName: 'Bryan', …}
+[[Prototype]]
+: 
+Object
+RoleBasedRedirect.tsx:104 Admin accessing admin route, ensuring authentication state
+RoleBasedRedirect.tsx:33 RoleBasedRedirect - Current state: 
+Object
+authState
+: 
+"authenticated"
+isLoading
+: 
+false
+location
+: 
+"/admin"
+redirectCount
+: 
+0
+user
+: 
+{id: 24, email: 'bperdomo@zoho.com', username: 'bperdomo@zoho.com', password: 'ad75c57234238781888aadb41f9ad64caa18a890fd69db1102…4a9dd70de55b58fc.71569fdab7897339753c4858c5414bb0', firstName: 'Bryan', …}
+[[Prototype]]
+: 
+Object
+RoleBasedRedirect.tsx:50 RoleBasedRedirect - User authenticated: 
+Object
+currentPath
+: 
+"/admin"
+isAdmin
+: 
+true
+[[Prototype]]
+: 
+Object
+RoleBasedRedirect.tsx:63 RoleBasedRedirect checking access 
+Object
+authState
+: 
+"authenticated"
+isAdmin
+: 
+true
+path
+: 
+"/admin"
+user
+: 
+{id: 24, email: 'bperdomo@zoho.com', username: 'bperdomo@zoho.com', password: 'ad75c57234238781888aadb41f9ad64caa18a890fd69db1102…4a9dd70de55b58fc.71569fdab7897339753c4858c5414bb0', firstName: 'Bryan', …}
+[[Prototype]]
+: 
+Object
+RoleBasedRedirect.tsx:104 Admin accessing admin route, ensuring authentication state
+RoleBasedRedirect.tsx:33 RoleBasedRedirect - Current state: 
+Object
+authState
+: 
+"authenticated"
+isLoading
+: 
+false
+location
+: 
+"/admin"
+redirectCount
+: 
+0
+user
+: 
+{id: 24, email: 'bperdomo@zoho.com', username: 'bperdomo@zoho.com', password: 'ad75c57234238781888aadb41f9ad64caa18a890fd69db1102…4a9dd70de55b58fc.71569fdab7897339753c4858c5414bb0', firstName: 'Bryan', …}
+[[Prototype]]
+: 
+Object
+RoleBasedRedirect.tsx:50 RoleBasedRedirect - User authenticated: 
+Object
+currentPath
+: 
+"/admin"
+isAdmin
+: 
+true
+[[Prototype]]
+: 
+Object
+RoleBasedRedirect.tsx:63 RoleBasedRedirect checking access 
+Object
+authState
+: 
+"authenticated"
+isAdmin
+: 
+true
+path
+: 
+"/admin"
+user
+: 
+{id: 24, email: 'bperdomo@zoho.com', username: 'bperdomo@zoho.com', password: 'ad75c57234238781888aadb41f9ad64caa18a890fd69db1102…4a9dd70de55b58fc.71569fdab7897339753c4858c5414bb0', firstName: 'Bryan', …}
+[[Prototype]]
+: 
+Object
