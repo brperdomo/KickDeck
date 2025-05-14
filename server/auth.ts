@@ -2,7 +2,6 @@ import passport from "passport";
 import { IVerifyOptions, Strategy as LocalStrategy } from "passport-local";
 import { type Express, Request } from "express";
 import session from "express-session";
-import cookieParser from "cookie-parser";
 import createMemoryStore from "memorystore";
 import { users, insertUserSchema, households, insertHouseholdSchema, type SelectUser } from "@db/schema";
 import { db } from "@db";
@@ -151,121 +150,40 @@ export async function createCoachAccount(
 }
 
 export function setupAuth(app: Express) {
-  // Create a simplified session store that explicitly focuses on development compatibility
   const MemoryStore = createMemoryStore(session);
-
-  // Get the hostname from the request for setting the cookie domain
-  app.use((req, res, next) => {
-    try {
-      const hostname = req.hostname;
-      console.log('Request hostname:', hostname);
-      const isReplit = hostname.includes('replit');
-      console.log('Is Replit environment:', isReplit);
-      
-      // Store for use in subsequent middleware using symbol property to avoid conflicts
-      (req as any)._customData = {
-        isReplit,
-        originalHostname: hostname
-      };
-      
-      next();
-    } catch (err) {
-      console.error('Error in hostname middleware:', err);
-      next(); // Continue even if there's an error
-    }
-  });
-
   const sessionSettings: session.SessionOptions = {
-    name: 'matchpro.sid', // Custom name to prevent conflicts
-    secret: process.env.SESSION_SECRET || "matchpro-dev-session-secret-key-fixed",
-    resave: true, 
-    saveUninitialized: true,
+    secret: process.env.SESSION_SECRET || "matchpro-persistent-session-secret-key",
+    resave: true, // Changed to true to ensure session is saved on every request
+    saveUninitialized: false,
     cookie: {
-      // Very important - use a much shorter maxAge for testing to avoid stale sessions
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days for longer sessions
       httpOnly: true,
-      sameSite: 'lax', // Changed to lax which works better for same-site in development
+      sameSite: 'lax',
       path: '/',
-      secure: false // Must be false in development
+      secure: app.get("env") === "production" // Only set secure in production
     },
     store: new MemoryStore({
-      checkPeriod: 86400000,
+      checkPeriod: 86400000, // 24 hours cleanup interval
+      // Increased max size for better performance
       max: 1000,
-      // Explicitly set the TTL to match cookie maxAge
-      ttl: 24 * 60 * 60 * 1000
+      // Don't refresh/ping inactive sessions in the background
+      stale: false
     }),
-    rolling: true
+    rolling: true, // Reset expiration countdown on every response
+    unset: 'destroy' // Immediately destroy when unset
   };
 
-  // Trust proxy for all environments, not just production
-  app.set("trust proxy", 1);
-  
-  // First add cookie parser for advanced cookie handling
-  app.use(cookieParser(sessionSettings.secret as string));
-  
-  // Log session settings for debugging
-  console.log("Session configuration:", {
-    resave: sessionSettings.resave,
-    saveUninitialized: sessionSettings.saveUninitialized,
-    cookieSecure: sessionSettings.cookie?.secure,
-    cookieSameSite: sessionSettings.cookie?.sameSite,
-    cookieName: sessionSettings.name,
-    rolling: sessionSettings.rolling,
-    environment: app.get("env")
-  });
+  if (app.get("env") === "production") {
+    app.set("trust proxy", 1);
+    // No need to set cookie.secure here as we've already set it conditionally above
+  }
 
-  // Initialize session middleware
   app.use(session(sessionSettings));
-  
-  // Initialize authentication middleware
   app.use(passport.initialize());
   app.use(passport.session());
   
-  // Add session recovery middleware to attempt to recover failed sessions
-  app.use((req, res, next) => {
-    if (!req.isAuthenticated() && req.cookies && Object.keys(req.cookies).length > 0) {
-      console.log('[Session Recovery] Attempting session recovery with cookies:', 
-        Object.keys(req.cookies).join(', '));
-    }
-    next();
-  });
-  
   // Add emulation middleware after the passport middleware
   app.use(emulationMiddleware);
-
-  // Add enhanced debug middleware to log authentication status on each request
-  app.use((req, res, next) => {
-    try {
-      // Only log API endpoints to reduce noise
-      if (req.path.startsWith('/api/') && !req.path.includes('assets')) {
-        console.log(`[Auth Debug] ${req.method} ${req.path} - Authenticated: ${req.isAuthenticated()} - Session ID: ${req.sessionID}`);
-        
-        // Log cookies for debugging
-        if (req.cookies) {
-          console.log(`[Cookie Debug] Cookies: ${JSON.stringify(req.cookies)}`);
-        } else {
-          console.log(`[Cookie Debug] No cookies found in request`);
-        }
-        
-        // For logout requests, log headers to help troubleshoot
-        if (req.path === '/api/logout') {
-          console.log('[Logout Debug] Request headers:', JSON.stringify(req.headers));
-        }
-      }
-      
-      // Add CORS headers for development environment
-      const origin = req.headers.origin || '*';
-      res.header('Access-Control-Allow-Origin', origin);
-      res.header('Access-Control-Allow-Credentials', 'true');
-      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-      
-      next();
-    } catch (err) {
-      console.error('Error in debug middleware:', err);
-      next(); // Continue even if there's an error
-    }
-  });
 
   passport.use(
     new LocalStrategy({ 
