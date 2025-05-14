@@ -102,11 +102,11 @@ export function RoleBasedRedirect() {
         return;
       } else {
         console.log("Admin accessing admin route, ensuring authentication state");
-        if (!hasRedirected) {
-          setAuthState('authenticated');
-          setHasRedirected(true);
-        }
-        return;
+        // Always update auth state to authenticated and mark as redirected
+        // This ensures the admin dashboard renders properly
+        setAuthState('authenticated');
+        setHasRedirected(true);
+        // Don't return here, let the component continue processing
       }
     }
     
