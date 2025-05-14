@@ -79,10 +79,7 @@ export function RoleBasedRedirect() {
       '/auth',
       '/login',
       '/logout',
-      '/auth-logged-out',
-      '/admin-direct',       // Add standalone admin path to bypass redirection
-      '/admin-emergency',    // Add emergency admin path to bypass redirection
-      '/admin-dashboard'     // Direct admin dashboard access to bypass redirection
+      '/auth-logged-out'
     ];
     
     // Check if the current path matches any of the non-protected paths
@@ -105,11 +102,11 @@ export function RoleBasedRedirect() {
         return;
       } else {
         console.log("Admin accessing admin route, ensuring authentication state");
-        // Always update auth state to authenticated and mark as redirected
-        // This ensures the admin dashboard renders properly
-        setAuthState('authenticated');
-        setHasRedirected(true);
-        // Don't return here, let the component continue processing
+        if (!hasRedirected) {
+          setAuthState('authenticated');
+          setHasRedirected(true);
+        }
+        return;
       }
     }
     
@@ -136,24 +133,16 @@ export function RoleBasedRedirect() {
     
     // Handle root path based on role
     if (path === '/') {
-      // Use standalone admin for admins to bypass hook issues
-      const targetPath = user.isAdmin ? '/admin-direct' : '/dashboard';
+      const targetPath = user.isAdmin ? '/admin' : '/dashboard';
       console.log(`User at root path, redirecting to ${targetPath}`);
-      
-      // Store auth info in session storage for admins
-      if (user.isAdmin) {
-        console.log("Storing admin auth info in session storage");
-        sessionStorage.setItem('user_authenticated', 'true');
-        sessionStorage.setItem('user_is_admin', 'true');
-      }
-      
       // Set auth state to redirecting to show proper UI feedback
       setAuthState('redirecting');
       setRedirectCount(prev => prev + 1);
       
-      // Force a direct navigation to the target path - always use window.location for admins
+      // Force a direct navigation to the target path
       setTimeout(() => {
-        if (user.isAdmin || redirectCount > 2) {
+        // Use window.location for a more forceful navigation if needed
+        if (redirectCount > 2) {
           console.log("Using window.location for forceful redirect");
           window.location.href = targetPath;
           return;
@@ -178,28 +167,9 @@ export function RoleBasedRedirect() {
         hasRedirected
       });
       
-      // Force a refresh of the current route with stronger measures
+      // Force a refresh of the current route
       setAuthState('authenticated');
       setHasRedirected(true);
-      
-      // Additional fail-safe: if on admin route but not showing content, try standalone admin
-      if (path === '/admin' && redirectCount > 1) {
-        console.log("Multiple redirect attempts detected, switching to standalone admin");
-        
-        // Store authentication state in session storage as backup
-        try {
-          sessionStorage.setItem('user_authenticated', 'true');
-          sessionStorage.setItem('user_is_admin', user.isAdmin ? 'true' : 'false');
-          sessionStorage.setItem('admin_access_timestamp', Date.now().toString());
-        } catch (e) {
-          console.warn('Failed to store auth backup in sessionStorage', e);
-        }
-        
-        // Use window.location for a hard navigation to our standalone admin component
-        // This bypasses all the hooks and routing concerns
-        window.location.href = "/admin-direct";
-        return;
-      }
     }
     
   }, [user, isLoading, authState, location, setLocation, redirectCount, setAuthState, hasRedirected]);

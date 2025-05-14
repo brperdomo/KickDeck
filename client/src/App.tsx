@@ -1,4 +1,4 @@
-import { Switch, Route, useLocation, Redirect } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
@@ -17,10 +17,6 @@ import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import AuthLoggedOut from "@/pages/auth-logged-out";
 import AdminDashboard from "@/pages/admin-dashboard";
-import StandaloneAdmin from "@/pages/standalone-admin";
-import DirectAdminViewer from "@/pages/direct-admin-viewer";
-import EmergencyAdmin from "@/pages/emergency-admin";
-import DirectLogin from "@/pages/direct-login";
 import CreateEvent from "@/pages/create-event";
 import CouponManagement from "@/pages/coupon-management";
 import AccountingCodeManagement from "@/pages/accounting-code-management";
@@ -318,18 +314,13 @@ function Router() {
             </DebugErrorBoundary>
           } />
           
-          {/* Direct admin dashboard without ProtectedRoute wrapper */}
-          <Route path="/admin-dashboard">
+          {/* Add a direct route to handle edge cases for admin dashboard */}
+          <Route path="/admin-direct">
             {() => (
               <DebugErrorBoundary>
                 <AdminDashboard />
               </DebugErrorBoundary>
             )}
-          </Route>
-          
-          {/* Simple direct login that avoids all authentication hooks */}
-          <Route path="/direct-login">
-            {() => <DirectLogin />}
           </Route>
 
           {/* User routes - using ProtectedRoute for member-specific routes */}
