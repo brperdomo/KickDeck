@@ -11,7 +11,7 @@ const fetch = require('node-fetch');
 const BASE_URL = 'http://localhost:5000/api';
 const TEST_EMAIL = 'markeconnelly@gmail.com'; // Use an existing user email
 // For testing, we'll use a known token from the database
-let savedToken = '05e4f42aa267d22aed9ba26460dd1ae5a52944531078718ffe9997d18416cb0a';
+let savedToken = '856ffb82c19fbb44c3e536a44d322529529450df409860904160d646d1c15860';
 
 // Helper function for API requests
 async function apiRequest(endpoint, method = 'GET', body = null) {
@@ -51,10 +51,22 @@ async function testRequestMagicLink() {
   if (status === 200 && data.success) {
     console.log('✅ Magic link request successful');
     
-    // For testing only - we retrieve the token directly
-    // In a real scenario, the user would click the link in the email
-    savedToken = data.token;
-    return true;
+    // For testing only - we retrieve the token directly from the testing endpoint
+    console.log('Retrieving the latest token from testing endpoint...');
+    try {
+      const testResponse = await apiRequest('/test/latest-magic-link-token?email=' + TEST_EMAIL, 'GET');
+      if (testResponse.status === 200 && testResponse.data.token) {
+        savedToken = testResponse.data.token;
+        console.log(`Retrieved token: ${savedToken.substring(0, 8)}...`);
+        return true;
+      } else {
+        console.error('❌ Failed to retrieve token:', testResponse.data);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Error retrieving token:', error);
+      return false;
+    }
   } else {
     console.error('❌ Magic link request failed:', data);
     return false;
