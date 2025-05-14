@@ -77,71 +77,36 @@ export default function AuthPage() {
       console.log('Submitting login with email:', data.email);
       loginForm.clearErrors();
       
-      // Set loading state for the button
+      // Update auth state to indicate login is in progress
       setAuthState('logging-in');
       
-      // Make a direct API call to login instead of using the mutation
-      // This gives us more control over the process
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-          username: data.email // Include username for compatibility
-        }),
-        credentials: 'include' // Important for session cookie
-      });
+      // Perform login
+      const userData = await loginMutation.mutateAsync(data);
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
-      }
+      console.log('Login successful, user data:', userData);
+      console.log('Login successful, user data type:', typeof userData);
+      console.log('Login successful, user data fields:', userData ? Object.keys(userData) : 'No userData');
       
-      const userData = await response.json();
-      console.log('Login successful, raw response data:', userData);
-      
-      // Determine user object from response
+      // Check if the user has admin privileges - check if data is wrapped in a user or freshUserData object
       let userObject;
       if (userData && userData.freshUserData) {
         userObject = userData.freshUserData;
+        console.log('Using freshUserData:', userObject);
       } else if (userData && userData.user) {
         userObject = userData.user;
+        console.log('Using user object:', userObject);
       } else {
         userObject = userData;
-      }
-      
-      // Store auth info in session storage as backup
-      try {
-        sessionStorage.setItem('user_authenticated', 'true');
-        sessionStorage.setItem('user_is_admin', userObject.isAdmin ? 'true' : 'false');
-        sessionStorage.setItem('auth_timestamp', Date.now().toString());
-        console.log('Stored auth info in session storage');
-      } catch (e) {
-        console.warn('Failed to store auth backup in sessionStorage', e);
+        console.log('Using direct userData:', userObject);
       }
       
       const isAdmin = userObject && userObject.isAdmin;
-      console.log('User is admin:', isAdmin);
       
-      // Handle redirect based on role
-      // Set cookie to avoid 401 errors on page load
-      document.cookie = "is_authenticated=true; path=/";
+      // Determine the appropriate dashboard - Admin and Dashboard are separate portals
+      const targetPath = isAdmin ? '/admin' : '/dashboard';
+      console.log(`Login successful, redirecting directly to ${targetPath}`);
       
-      // Direct admin path that bypasses all hooks and redirects
-      const targetPath = isAdmin ? '/admin-dashboard' : '/dashboard';
-      console.log(`Login successful, redirecting to ${targetPath}`);
-      
-      // Set session storage markers to help with auth fallbacks
-      if (isAdmin) {
-        // Store auth state for emergency admin component
-        sessionStorage.setItem('user_authenticated', 'true');
-        sessionStorage.setItem('user_is_admin', 'true');
-        sessionStorage.setItem('admin_login_time', Date.now().toString());
-        console.log("Stored auth info in session storage");
-      }
-      
-      // Use direct browser navigation for guaranteed state refresh
+      // Use direct redirection to the target dashboard
       window.location.href = targetPath;
       
     } catch (error: any) {
@@ -177,10 +142,9 @@ export default function AuthPage() {
     console.log("User already authenticated, user fields:", user ? Object.keys(user) : 'No user');
     
     // Check if user has admin privileges - make sure we use the right property
-    // Use type assertion for safety
-    let userObject: any = user;
-    if (user && typeof user === 'object' && 'user' in (user as Record<string, unknown>)) {
-      userObject = (user as Record<string, unknown>)['user'];
+    let userObject = user;
+    if (user && 'user' in user) {
+      userObject = user.user;
       console.log('Auto-redirect: Using nested user object:', userObject);
     }
     const isAdmin = userObject && userObject.isAdmin;
