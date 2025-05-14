@@ -1,273 +1,292 @@
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Redirect } from "wouter";
-import { Button } from "@/components/ui/button";
+import { AnimatedBackground } from "@/components/ui/AnimatedBackground";
+import AuthLayout from "@/components/layouts/AuthLayout";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { useEffect, useState } from "react";
+import { z } from "zod";
+
+
+// Login schema
+const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function AuthPage() {
-  const { user, isLoading, loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<string>("login");
+  const { loginMutation, user, authState, setAuthState } = useAuth();
 
-  // Form state
-  const [loginForm, setLoginForm] = useState({
-    email: "",
-    password: "",
-  });
-  
-  const [registerForm, setRegisterForm] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    firstName: "",
-    lastName: "",
+  const [location, setLocation] = useLocation();
+  const [logoutMessage, setLogoutMessage] = useState<string | null>(null);
+
+  // Check for logout message and handle redirection parameters
+  useEffect(() => {
+    // Handle logout message
+    const message = sessionStorage.getItem('logout_message');
+    if (message) {
+      console.log('Found logout message in session storage:', message);
+      setLogoutMessage(message);
+      sessionStorage.removeItem('logout_message');
+    }
+
+    // Handle redirect parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirectParam = urlParams.get('redirect');
+    const eventId = urlParams.get('eventId');
+    
+    if (redirectParam) {
+      console.log('Found redirect parameter:', redirectParam);
+      const decodedRedirect = decodeURIComponent(redirectParam);
+      sessionStorage.setItem('redirectAfterAuth', decodedRedirect);
+    } else if (eventId) {
+      console.log('Found eventId in URL parameters:', eventId);
+      const redirectUrl = `/register/event/${eventId}`;
+      sessionStorage.setItem('redirectAfterAuth', redirectUrl);
+    }
+  }, []);
+
+  // Form setup
+  const loginForm = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
   });
 
-  // If user is already logged in, redirect to dashboard
-  if (user) {
-    console.log("AUTH: User already logged in, redirecting to dashboard");
-    return <Redirect to="/" />;
+  // Handle form submission
+  async function onSubmit(data: LoginFormData) {
+    try {
+      console.log('Submitting login with email:', data.email);
+      loginForm.clearErrors();
+      
+      // Update auth state to indicate login is in progress
+      setAuthState('logging-in');
+      
+      // Perform login
+      const userData = await loginMutation.mutateAsync(data);
+      
+      console.log('Login successful, user data:', userData);
+      console.log('Login successful, user data type:', typeof userData);
+      console.log('Login successful, user data fields:', userData ? Object.keys(userData) : 'No userData');
+      
+      // Check if the user has admin privileges - check if data is wrapped in a user or freshUserData object
+      let userObject;
+      if (userData && userData.freshUserData) {
+        userObject = userData.freshUserData;
+        console.log('Using freshUserData:', userObject);
+      } else if (userData && userData.user) {
+        userObject = userData.user;
+        console.log('Using user object:', userObject);
+      } else {
+        userObject = userData;
+        console.log('Using direct userData:', userObject);
+      }
+      
+      const isAdmin = userObject && userObject.isAdmin;
+      
+      // Determine the appropriate dashboard - Admin and Dashboard are separate portals
+      const targetPath = isAdmin ? '/admin' : '/dashboard';
+      console.log(`Login successful, redirecting directly to ${targetPath}`);
+      
+      // Use direct redirection to the target dashboard
+      window.location.href = targetPath;
+      
+    } catch (error: any) {
+      console.error('Login error:', error);
+      
+      setAuthState('unauthenticated');
+      
+      // Show appropriate error messages
+      if (error.message?.toLowerCase().includes("password")) {
+        loginForm.setError("password", { message: "Invalid password" });
+      } else if (error.message?.toLowerCase().includes("email") || 
+                error.message?.toLowerCase().includes("user not found")) {
+        loginForm.setError("email", { message: "Email not found or invalid" });
+      } else {
+        // Generic error
+        loginForm.setError("root.serverError", { 
+          message: error.message || "Login failed. Please check your credentials and try again."
+        });
+        
+        toast({
+          title: "Login failed",
+          description: error.message || "An error occurred during login",
+          variant: "destructive"
+        });
+      }
+    }
   }
 
-  // Handle login form submission
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
+  // If already authenticated, redirect to dashboard
+  if (user && authState === 'authenticated') {
+    console.log("User already authenticated, redirecting to dashboard", user);
+    console.log("User already authenticated, user type:", typeof user);
+    console.log("User already authenticated, user fields:", user ? Object.keys(user) : 'No user');
     
-    console.log("AUTH: Login form submitted", loginForm);
-    
-    loginMutation.mutate({
-      email: loginForm.email,
-      password: loginForm.password,
-    });
-  };
-
-  // Handle register form submission
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate password match
-    if (registerForm.password !== registerForm.confirmPassword) {
-      toast({
-        title: "Passwords don't match",
-        description: "Please make sure your passwords match",
-        variant: "destructive",
-      });
-      return;
+    // Check if user has admin privileges - make sure we use the right property
+    let userObject = user;
+    if (user && 'user' in user) {
+      userObject = user.user;
+      console.log('Auto-redirect: Using nested user object:', userObject);
     }
+    const isAdmin = userObject && userObject.isAdmin;
+                     
+    console.log("User already authenticated, isAdmin:", isAdmin);
+                     
+    // Immediate redirect to dashboard - Admin and Dashboard are separate portals
+    const directTarget = isAdmin ? '/admin' : '/dashboard';
     
-    console.log("AUTH: Register form submitted", registerForm);
+    // Direct redirect to appropriate dashboard
+    setTimeout(() => {
+      console.log(`User already authenticated, redirecting to ${directTarget}`);
+      window.location.href = directTarget;
+    }, 250);
     
-    registerMutation.mutate({
-      email: registerForm.email,
-      password: registerForm.password,
-      firstName: registerForm.firstName,
-      lastName: registerForm.lastName,
-    });
-  };
-
-  const isLoginLoading = loginMutation.isPending;
-  const isRegisterLoading = registerMutation.isPending;
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-5xl grid md:grid-cols-2 gap-6 items-center">
-        {/* Left column - Form */}
-        <div className="w-full max-w-md mx-auto">
-          <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
-            </TabsList>
-            
-            {/* Login Tab */}
-            <TabsContent value="login">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Login</CardTitle>
-                  <CardDescription>
-                    Enter your credentials to access your account
-                  </CardDescription>
-                </CardHeader>
-                <form onSubmit={handleLogin}>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="your.email@example.com"
-                        value={loginForm.email}
-                        onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={loginForm.password}
-                        onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button type="submit" className="w-full" disabled={isLoginLoading}>
-                      {isLoginLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Logging in...
-                        </>
-                      ) : (
-                        "Login"
-                      )}
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
-            </TabsContent>
-            
-            {/* Register Tab */}
-            <TabsContent value="register">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Create an account</CardTitle>
-                  <CardDescription>
-                    Enter your information to create a new account
-                  </CardDescription>
-                </CardHeader>
-                <form onSubmit={handleRegister}>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name</Label>
-                        <Input
-                          id="firstName"
-                          value={registerForm.firstName}
-                          onChange={(e) => setRegisterForm({ ...registerForm, firstName: e.target.value })}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name</Label>
-                        <Input
-                          id="lastName"
-                          value={registerForm.lastName}
-                          onChange={(e) => setRegisterForm({ ...registerForm, lastName: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="registerEmail">Email</Label>
-                      <Input
-                        id="registerEmail"
-                        type="email"
-                        placeholder="your.email@example.com"
-                        value={registerForm.email}
-                        onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="registerPassword">Password</Label>
-                      <Input
-                        id="registerPassword"
-                        type="password"
-                        placeholder="••••••••"
-                        value={registerForm.password}
-                        onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirm Password</Label>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        placeholder="••••••••"
-                        value={registerForm.confirmPassword}
-                        onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button type="submit" className="w-full" disabled={isRegisterLoading}>
-                      {isRegisterLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Creating account...
-                        </>
-                      ) : (
-                        "Create Account"
-                      )}
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
-            </TabsContent>
-          </Tabs>
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+        <h3 className="text-xl mb-2">You're already logged in!</h3>
+        <p className="text-sm text-muted-foreground mb-4">Redirecting you to your dashboard...</p>
+        <div className="flex space-x-3">
+          <button 
+            onClick={() => window.location.href = '/admin/dashboard'} 
+            className="bg-primary text-white px-3 py-1 rounded text-sm">
+            Admin Dashboard
+          </button>
+          <button 
+            onClick={() => window.location.href = '/dashboard'} 
+            className="bg-secondary px-3 py-1 rounded text-sm">
+            Member Dashboard
+          </button>
         </div>
-        
-        {/* Right column - Hero section */}
-        <div className="hidden md:block bg-primary/5 p-8 rounded-lg">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold tracking-tight mb-4">Welcome to MatchPro</h1>
-            <p className="text-muted-foreground mb-6">
-              The comprehensive platform for tournament management and team organization. 
-              Streamline your sports events with our powerful tools.
-            </p>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <div className="bg-primary/10 p-2 rounded-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                  </svg>
+      </div>
+    );
+  }
+  
+  return (
+    <AuthLayout>
+      <div className="min-h-screen w-full relative">
+        <AnimatedBackground type="particles" primaryColor="#3d3a98" secondaryColor="#2d2a88" speed="medium" />
+
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="w-full max-w-[min(400px,100%-2rem)] mx-auto">
+            <Card className="w-full bg-[#3d3a98]/70 backdrop-blur-md shadow-xl border-0 ring-4 ring-[#6a67ff]/60 ring-offset-4 ring-offset-[#3d3a98]/20 shadow-[0_0_20px_5px_rgba(106,103,255,0.4)]">
+              <CardHeader className="space-y-3 pb-6">
+                <div className="flex justify-center">
+                  <div className="w-100 h-100">
+                    <img
+                      src="/uploads/MatchProAI_Linear_BlackNOBUFFER.png"
+                      alt="MatchPro Logo"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
                 </div>
-                <div className="text-left">
-                  <h3 className="font-medium">Effortless Tournament Management</h3>
-                  <p className="text-sm text-muted-foreground">Handle registrations, schedules, and results all in one place.</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="bg-primary/10 p-2 rounded-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
-                  </svg>
-                </div>
-                <div className="text-left">
-                  <h3 className="font-medium">Real-time Updates</h3>
-                  <p className="text-sm text-muted-foreground">Get instant notifications and live scoring for all your games.</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="bg-primary/10 p-2 rounded-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                  </svg>
-                </div>
-                <div className="text-left">
-                  <h3 className="font-medium">Team Collaboration</h3>
-                  <p className="text-sm text-muted-foreground">Invite coaches, players, and staff to collaborate seamlessly.</p>
-                </div>
-              </div>
-            </div>
+                <CardTitle className="text-2xl sm:text-3xl font-bold text-center text-white">
+                  Let's get you signed in
+                </CardTitle>
+                {logoutMessage && (
+                  <div className={`mt-2 px-4 py-2 rounded-md text-sm font-medium ${
+                    window.location.search.includes('forced') ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                  }`}>
+                    {logoutMessage}
+                  </div>
+                )}
+              </CardHeader>
+              <CardContent>
+                <Form {...loginForm}>
+                  <form
+                    onSubmit={loginForm.handleSubmit(onSubmit)}
+                    className="space-y-5"
+                    id="login-form"
+                    name="login"
+                    autoComplete="on"
+                  >
+                    <FormField
+                      control={loginForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base text-white">Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              autoComplete="username email"
+                              className="h-11 text-base px-4 bg-white/90 border-white/50 focus:border-white focus:ring-white/50"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-yellow-200" />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base text-white">Password</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="password"
+                              autoComplete="current-password"
+                              className="h-11 text-base px-4 bg-white/90 border-white/50 focus:border-white focus:ring-white/50"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-yellow-200" />
+                        </FormItem>
+                      )}
+                    />
+                    <Button
+                      type="submit"
+                      className="w-full h-11 text-base bg-white hover:bg-white/90 text-[#3d3a98] font-medium transition-colors"
+                      disabled={loginMutation.isPending}
+                    >
+                      {loginMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Signing in...
+                        </>
+                      ) : (
+                        "Sign In"
+                      )}
+                    </Button>
+
+                    <div className="mt-4 text-center">
+                      <Link to="/forgot-password" className="text-white hover:text-white/80 text-sm underline transition-colors">
+                        Forgot password?
+                      </Link>
+                      <div className="mt-1">
+                        <Link to="/register" className="text-white hover:text-white/80 text-sm underline transition-colors">
+                          Create an account
+                        </Link>
+                      </div>
+                    </div>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
