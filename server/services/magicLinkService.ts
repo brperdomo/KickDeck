@@ -108,7 +108,7 @@ export async function sendMagicLinkEmail(
       .where(
         and(
           eq(emailTemplates.type, 'magic_link'),
-          eq(emailTemplates.isActive, true)
+          eq(emailTemplates.is_active, true)
         )
       )
       .limit(1);
@@ -125,11 +125,11 @@ export async function sendMagicLinkEmail(
       console.log('Found magic_link template in database');
       
       // Try to send with SendGrid template if configured
-      if (emailTemplate.sendgridTemplateId) {
+      if (emailTemplate.sendgrid_template_id) {
         try {
           const result = await sendEmail({
             to: email,
-            from: `${emailTemplate.senderName} <${emailTemplate.senderEmail}>`,
+            from: `${emailTemplate.sender_name} <${emailTemplate.sender_email}>`,
             templateType: 'magic_link',
             subject: emailTemplate.subject,
             variables,
@@ -156,7 +156,7 @@ export async function sendMagicLinkEmail(
       
       const result = await sendEmail({
         to: email,
-        from: `${emailTemplate.senderName} <${emailTemplate.senderEmail}>`,
+        from: `${emailTemplate.sender_name} <${emailTemplate.sender_email}>`,
         subject,
         html,
       });
