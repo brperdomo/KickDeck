@@ -32,12 +32,12 @@ export async function createMagicLinkToken(
 
   try {
     await db.insert(magicLinkTokens).values({
-      userId,
+      user_id: userId,
       token,
-      expiresAt: expiresAt.toISOString(), // Convert to ISO string for compatibility
-      userAgent,
-      ipAddress,
-      createdAt: now.toISOString(), // Convert to ISO string for compatibility
+      expires_at: expiresAt, // Use the Date object directly
+      user_agent: userAgent,
+      ip_address: ipAddress,
+      // Let the database handle created_at
     });
     
     return token;
@@ -176,8 +176,8 @@ export async function verifyMagicLinkToken(token: string): Promise<number | null
     await db
       .update(magicLinkTokens)
       .set({ 
-        used: true, 
-        usedAt: new Date().toISOString() // Convert to ISO string for compatibility
+        used: true
+        // No usedAt field in the schema, stick with the used flag only
       })
       .where(eq(magicLinkTokens.id, magicLinkToken.id));
 
