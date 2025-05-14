@@ -8,9 +8,11 @@ import * as sendgridService from './sendgridService';
 interface EmailOptions {
   to: string;
   subject: string;
-  html: string;
+  html?: string;
   text?: string;
   from?: string;
+  templateType?: string;
+  variables?: Record<string, string>;
 }
 
 interface TemplateContext {
@@ -184,10 +186,54 @@ function renderTemplate(template: string, context: TemplateContext): string {
 /**
  * Sends an email using the SendGrid API
  */
-export async function sendEmail(options: EmailOptions): Promise<void> {
+export async function sendEmail(options: EmailOptions): Promise<{ success: boolean }> {
   const isDevelopment = process.env.NODE_ENV !== 'production';
   
   try {
+    // If a template type was provided, use the template system
+    if (options.templateType) {
+      // Handle templated emails directly to bypass circular reference
+      try {
+        const template = await getEmailTemplate(options.templateType, false);
+        const context = options.variables || {};
+        const isDevelopment = process.env.NODE_ENV !== 'production';
+        
+        // If no template found, use a fallback
+        const emailTemplate = template || createFallbackTemplate(options.templateType, context, isDevelopment);
+        
+        if (!emailTemplate || !emailTemplate.subject || !emailTemplate.content) {
+          throw new Error(`Failed to generate a valid email template for ${options.templateType}`);
+        }
+        
+        const subject = renderTemplate(emailTemplate.subject, context) || 'Notification';
+        let html = renderTemplate(emailTemplate.content, context);
+        
+        // Ensure html is never empty or undefined
+        if (!html || html.trim() === '') {
+          html = '<p>You have received a notification from MatchPro. Please check your account for more information.</p>';
+        }
+        
+        // Send directly via SendGrid service
+        const result = await sendgridService.sendEmail({
+          to: options.to,
+          from: options.from || `${emailTemplate.senderName} <${emailTemplate.senderEmail}>`,
+          subject,
+          html,
+          text: html.replace(/<[^>]*>/g, '') // Simple HTML to text conversion
+        });
+        
+        if (result) {
+          console.log(`Templated email (${options.templateType}) sent to ${options.to}`);
+          return { success: true };
+        } else {
+          throw new Error(`Failed to send templated email for ${options.templateType}`);
+        }
+      } catch (error) {
+        console.error(`Error sending templated email (${options.templateType}):`, error);
+        return { success: false };
+      }
+    }
+    
     // Log the email content in development mode for debugging
     if (isDevelopment) {
       console.log('\n===== DEVELOPMENT MODE: EMAIL CONTENT =====');
@@ -216,6 +262,7 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
     
     if (result) {
       console.log(`SendGrid: Email sent to ${options.to}`);
+      return { success: true };
     } else {
       throw new Error('Failed to send email via SendGrid');
     }
@@ -226,7 +273,7 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
       // In development, still log but don't throw
       console.log('Email sending failed, but continuing in development mode');
       console.error(error);
-      return;
+      return { success: false };
     }
     
     // In production, log error but don't crash the application
@@ -235,6 +282,7 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
     
     // Don't rethrow the error in production as this could interrupt important flows
     // such as payment processing or user registration just because an email failed
+    return { success: false };
   }
 }
 
@@ -245,7 +293,7 @@ export async function sendTemplatedEmail(
   to: string,
   templateType: string,
   context: TemplateContext
-): Promise<void> {
+): Promise<{ success: boolean }> {
   const isDevelopment = process.env.NODE_ENV !== 'production';
   
   try {
@@ -269,17 +317,24 @@ export async function sendTemplatedEmail(
         html = '<p>You have received a notification from MatchPro. Please check your account for more information.</p>';
       }
       
-      await sendEmail({
+      // For template-based emails, we bypass the templateType check by passing basic params
+      const result = await sendgridService.sendEmail({
         to,
+        from: `${emailTemplate.senderName} <${emailTemplate.senderEmail}>`,
         subject,
         html,
-        from: `${emailTemplate.senderName} <${emailTemplate.senderEmail}>`
+        text: html.replace(/<[^>]*>/g, '') // Simple HTML to text conversion
       });
       
-      console.log(`Templated email (${templateType}) sent to ${to}`);
+      if (result) {
+        console.log(`Templated email (${templateType}) sent to ${to}`);
+        return { success: true };
+      } else {
+        throw new Error(`Failed to send templated email for ${templateType}`);
+      }
     } catch (renderError) {
       console.error(`Error rendering or sending email (${templateType}):`, renderError);
-      // Don't throw here, even in development, to prevent API failures
+      return { success: false };
     }
   } catch (error) {
     console.error(`Unexpected error in sendTemplatedEmail (${templateType}):`, error);
@@ -287,6 +342,7 @@ export async function sendTemplatedEmail(
     // Always log but never throw to keep API endpoints working
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error(`Failed to send templated email to ${to}: ${errorMessage}`);
+    return { success: false };
   }
 }
 
