@@ -101,7 +101,7 @@ export default function DevDebugPage() {
   const handleTestLogin = async () => {
     try {
       loginMutation.mutate(
-        { username: 'bperdomo@zoho.com', password: 'Matchpro123!' },
+        { email: 'bperdomo@zoho.com', password: 'Matchpro123!' },
         {
           onSuccess: () => {
             toast({

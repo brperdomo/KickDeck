@@ -13,7 +13,7 @@ import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DebugErrorBoundary } from "@/components/DebugErrorBoundary";
 import DevAdminBypass from "@/components/dev/DevAdminBypass";
-// Import the DevDebugPage lazily in the route definition
+import DevDebugPage from "@/pages/dev-debug";
 import { useAuth } from "@/hooks/use-auth";
 import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
@@ -137,6 +137,9 @@ function Router() {
     <Switch>
       {/* Dedicated logout route that will forcibly clear all app state */}
       <Route path="/logout" component={LogoutHandler} />
+
+      {/* Development routes - only available in development environment */}
+      <Route path="/dev-debug" component={DevDebugPage} />
 
       {/* Public routes that don't require authentication */}
       
