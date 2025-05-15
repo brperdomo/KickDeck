@@ -5,73 +5,69 @@
  * It provides a simple way to bypass authentication for testing purposes.
  */
 
-import express, { Request, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import { db } from '@db';
 import { users } from '@db/schema';
 import { eq } from 'drizzle-orm';
 
-const router = express.Router();
+const router = Router();
 
-// Development-only route to bypass authentication
+// A development-only route to automatically log in as an admin
+// for testing and development purposes
 router.get('/dev-login-bypass', async (req: Request, res: Response) => {
-  // Only allow this in development
-  if (process.env.NODE_ENV === 'production') {
-    return res.status(404).json({ message: 'Not found' });
+  // Check if we're in a development environment
+  // This is a safety check to prevent this route from working in production
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  
+  if (!isDevelopment) {
+    console.warn('Attempted to use dev login bypass in production environment');
+    return res.status(403).send('Dev login bypass is disabled in production environments');
   }
-
+  
   try {
-    console.log('Dev login bypass called');
+    // Look up the admin user to use for bypass
+    // This is a fixed credential only for development testing
+    const adminEmail = 'bperdomo@zoho.com';
     
-    // Find the admin user
     const [adminUser] = await db
       .select()
       .from(users)
-      .where(eq(users.isAdmin, true))
+      .where(eq(users.email, adminEmail))
       .limit(1);
-
+    
     if (!adminUser) {
-      console.log('No admin user found');
-      return res.status(404).json({ message: 'No admin user found' });
+      console.error('Dev login bypass failed: Admin user not found');
+      return res.status(404).send('Admin user not found for dev bypass');
     }
-
-    console.log(`Found admin user: ${adminUser.username} (${adminUser.email})`);
-
-    // Log the user in using the passport method
+    
+    if (!adminUser.isAdmin) {
+      console.error('Dev login bypass failed: User is not an admin');
+      return res.status(403).send('The selected user does not have admin privileges');
+    }
+    
+    // Set up the session for this admin user
     req.login(adminUser, (err) => {
       if (err) {
-        console.error('Login passport error:', err);
-        return res.status(500).json({ message: 'Login failed', error: err.message });
+        console.error('Dev login bypass session error:', err);
+        return res.status(500).send('Error creating session');
       }
-
-      // Ensure the session is saved before responding
-      req.session.save((saveErr) => {
-        if (saveErr) {
-          console.error('Session save error:', saveErr);
-          return res.status(500).json({ message: 'Session save failed', error: saveErr.message });
+      
+      console.log(`Dev login bypass: Successfully authenticated as admin (${adminUser.email})`);
+      
+      return res.status(200).json({
+        message: 'Development authentication bypass successful',
+        user: {
+          id: adminUser.id,
+          email: adminUser.email,
+          firstName: adminUser.firstName,
+          lastName: adminUser.lastName,
+          isAdmin: adminUser.isAdmin
         }
-
-        console.log('Dev login successful, session saved');
-
-        // After session is saved, send success response with user info
-        return res.status(200).json({ 
-          message: 'Successfully logged in as admin for development',
-          user: {
-            id: adminUser.id,
-            username: adminUser.username,
-            email: adminUser.email,
-            isAdmin: adminUser.isAdmin
-          },
-          // Add session details for debugging
-          sessionId: req.sessionID
-        });
       });
     });
   } catch (error) {
     console.error('Dev login bypass error:', error);
-    return res.status(500).json({ 
-      message: 'Failed to bypass authentication',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    return res.status(500).send('Internal server error during dev authentication bypass');
   }
 });
 
