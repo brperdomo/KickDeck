@@ -140,6 +140,15 @@ function Router() {
 
       {/* Development routes - only available in development environment */}
       <Route path="/dev-debug" component={DevDebugPage} />
+      
+      {/* Admin direct dashboard for development-only authentication bypass */}
+      <Route path="/admin-direct">
+        {() => (
+          <DebugErrorBoundary>
+            <AdminDirectDashboard />
+          </DebugErrorBoundary>
+        )}
+      </Route>
 
       {/* Public routes that don't require authentication */}
       
@@ -366,14 +375,8 @@ function Router() {
             )}
           </Route>
           
-          {/* Admin direct dashboard for development-only authentication bypass */}
-          <Route path="/admin-direct">
-            {() => (
-              <DebugErrorBoundary>
-                <AdminDirectDashboard />
-              </DebugErrorBoundary>
-            )}
-          </Route>
+          {/* Admin direct dashboard for development-only authentication bypass 
+              moved to the unrestricted routes section above */}
 
           {/* User routes - using ProtectedRoute for member-specific routes */}
           <ProtectedRoute path="/household" requiredRole="member" component={
