@@ -44,6 +44,7 @@ import reportsRouter from "./routes/reports";
 import stripeConnectRouter from "./routes/stripe-connect";
 import eventStripeConnectRouter from "./routes/event-stripe-connect";
 import devAuthBypassRouter from "./routes/dev-auth-bypass";
+import devDebugRouter from "./routes/dev-debug";
 import { getNewRegistrationsCount, acknowledgeNewRegistrations } from "./routes/admin/registrations";
 import { getTinyMCEConfig } from "./services/configService";
 import { requestPasswordReset, verifyResetToken, completePasswordReset } from "./routes/auth";
@@ -214,6 +215,9 @@ export function registerRoutes(app: Express): Server {
     
     // Development auth bypass (only active in development)
     app.use('/api', devAuthBypassRouter);
+    
+    // Register development debugging routes (only available in development)
+    app.use('/api', devDebugRouter);
     
     // Email check endpoint for contextual authentication flow
     app.get("/api/auth/check-email", async (req: Request, res: Response) => {

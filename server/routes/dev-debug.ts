@@ -4,6 +4,7 @@
  */
 import { Router } from 'express';
 import { isDevelopment } from '../utils/env';
+import type { Session } from 'express-session';
 
 const router = Router();
 
@@ -19,7 +20,7 @@ router.use((req, res, next) => {
 router.get('/api/dev/session-debug', (req, res) => {
   try {
     // Sanitize session data (remove any sensitive information)
-    const sanitizedSession = { ...req.session };
+    const sanitizedSession = { ...req.session } as any;
     
     // Remove any sensitive fields
     if (sanitizedSession.passport && sanitizedSession.passport.user) {
