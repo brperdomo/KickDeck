@@ -1,28 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
+/**
+ * Development Debug Page
+ * Only available in development environment
+ * Provides tools for debugging authentication state, routing, and other development issues
+ */
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { useLocation, Link } from 'wouter';
-import { BookOpen, AlertTriangle, Bug, LucideIcon, Users, UserCheck, Key, Database, Terminal, LayoutDashboard, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import RouteDebugger from '@/components/dev/RouteDebugger';
+import { LucideIcon, LogIn, LogOut, RefreshCw, Info, AlertCircle, AlertTriangle, User, Key, Network } from 'lucide-react';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useQuery } from '@tanstack/react-query';
 
 interface SessionInfoProps {
   title: string;
   value: any;
 }
 
-const SessionInfo: React.FC<SessionInfoProps> = ({ title, value }) => (
-  <div className="mb-2">
-    <span className="font-medium">{title}:</span>{' '}
-    <code className="bg-muted px-1 py-0.5 rounded text-sm">
-      {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-    </code>
-  </div>
-);
+const SessionInfo = ({ title, value }: SessionInfoProps) => {
+  return (
+    <div className="flex flex-col gap-1 mb-4">
+      <div className="text-sm font-medium text-muted-foreground">{title}</div>
+      <div className="p-2 bg-muted rounded-md">
+        <pre className="text-xs whitespace-pre-wrap overflow-auto max-h-40">
+          {typeof value === 'object' ? JSON.stringify(value, null, 2) : value}
+        </pre>
+      </div>
+    </div>
+  );
+};
 
 interface AuthDebugCardProps {
   title: string;
@@ -31,281 +38,202 @@ interface AuthDebugCardProps {
   children: React.ReactNode;
 }
 
-const AuthDebugCard: React.FC<AuthDebugCardProps> = ({ title, description, icon: Icon, children }) => (
-  <Card className="mb-5">
-    <CardHeader className="pb-3">
-      <div className="flex items-center gap-2">
-        <Icon className="h-5 w-5 text-primary" />
-        <CardTitle className="text-lg">{title}</CardTitle>
-      </div>
-      <CardDescription>{description}</CardDescription>
-    </CardHeader>
-    <CardContent>{children}</CardContent>
-  </Card>
-);
+const AuthDebugCard = ({ title, description, icon: Icon, children }: AuthDebugCardProps) => {
+  return (
+    <Card className="mb-4">
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <Icon className="h-5 w-5 text-primary" />
+          <CardTitle>{title}</CardTitle>
+        </div>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
+  );
+};
 
 export default function DevDebugPage() {
-  const [location] = useLocation();
   const { toast } = useToast();
-  const { user, isLoading, error } = useAuth();
   const [sessionData, setSessionData] = useState<any>(null);
-  const [sessionLoading, setSessionLoading] = useState(false);
-  const [sessionError, setSessionError] = useState<string | null>(null);
+  const { user, loginMutation, logoutMutation } = useAuth();
 
-  // Fetch session data
-  const fetchSessionData = async () => {
-    setSessionLoading(true);
-    setSessionError(null);
-
-    try {
-      const response = await fetch('/api/dev/session-debug');
-      if (!response.ok) {
-        throw new Error('Failed to fetch session data');
+  // Get session data from server (development only)
+  const sessionQuery = useQuery({
+    queryKey: ['/api/dev/session-debug'],
+    queryFn: async () => {
+      try {
+        const response = await apiRequest('GET', '/api/dev/session-debug');
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error('Error fetching session data:', error);
+        toast({
+          title: 'Error fetching session data',
+          description: 'This endpoint only works in development mode',
+          variant: 'destructive',
+        });
+        return null;
       }
-      const data = await response.json();
-      setSessionData(data);
-    } catch (error) {
-      console.error('Session data fetch error:', error);
-      setSessionError((error as Error).message);
-    } finally {
-      setSessionLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSessionData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    },
+    enabled: true,
+  });
 
   const handleClearSession = async () => {
     try {
-      const response = await fetch('/api/dev/clear-session', {
-        method: 'POST',
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to clear session');
-      }
-      
+      await apiRequest('POST', '/api/dev/clear-session');
       toast({
         title: 'Session cleared',
-        description: 'The session has been cleared successfully.',
+        description: 'Your session has been cleared successfully',
       });
-      
-      // Refresh session data
-      fetchSessionData();
+      // Invalidate all queries to refresh data
+      queryClient.invalidateQueries();
     } catch (error) {
-      console.error('Clear session error:', error);
+      console.error('Error clearing session:', error);
       toast({
         title: 'Error clearing session',
-        description: (error as Error).message,
+        description: 'There was an error clearing your session',
         variant: 'destructive',
       });
     }
   };
 
+  const handleTestLogin = async () => {
+    try {
+      loginMutation.mutate(
+        { username: 'bperdomo@zoho.com', password: 'Matchpro123!' },
+        {
+          onSuccess: () => {
+            toast({
+              title: 'Login successful',
+              description: 'You have been logged in as the admin user',
+            });
+            // Refresh session data
+            sessionQuery.refetch();
+          },
+          onError: (error) => {
+            toast({
+              title: 'Login failed',
+              description: error.message,
+              variant: 'destructive',
+            });
+          },
+        }
+      );
+    } catch (error) {
+      console.error('Error during test login:', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      logoutMutation.mutate(undefined, {
+        onSuccess: () => {
+          toast({
+            title: 'Logout successful',
+            description: 'You have been logged out',
+          });
+          // Refresh session data
+          sessionQuery.refetch();
+        },
+        onError: (error: Error) => {
+          toast({
+            title: 'Logout failed',
+            description: error.message,
+            variant: 'destructive',
+          });
+        },
+      });
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+  };
+
   return (
     <div className="container py-8">
-      <div className="flex flex-col items-start justify-between mb-6 gap-4 md:flex-row md:items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Developer Debug Tools</h1>
-          <p className="text-muted-foreground mt-1">
-            Tools to help with debugging application state and auth issues
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button asChild size="sm" variant="outline">
-            <Link href="/dev-auth">
-              <Key className="mr-2 h-4 w-4" /> Auth Bypass
-            </Link>
-          </Button>
-          <Button asChild size="sm" variant="outline">
-            <Link href="/admin-direct">
-              <LayoutDashboard className="mr-2 h-4 w-4" /> Admin Direct
-            </Link>
-          </Button>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Development Debug Tools</h1>
+        <p className="text-muted-foreground">
+          This page provides tools to help debug the application in development mode. These tools are only available in
+          the development environment.
+        </p>
       </div>
 
-      <Tabs defaultValue="auth-debug">
-        <TabsList className="mb-4">
-          <TabsTrigger value="auth-debug">
-            <UserCheck className="mr-2 h-4 w-4" />
-            Auth Debug
-          </TabsTrigger>
-          <TabsTrigger value="route-debug">
-            <ArrowRight className="mr-2 h-4 w-4" />
-            Route Debug
-          </TabsTrigger>
-          <TabsTrigger value="session-debug">
-            <Database className="mr-2 h-4 w-4" />
-            Session Debug
-          </TabsTrigger>
-          <TabsTrigger value="docs">
-            <BookOpen className="mr-2 h-4 w-4" />
-            Docs
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="auth-debug">
-          <Alert className="mb-5">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Auth Debugging Information</AlertTitle>
-            <AlertDescription>
-              This panel provides real-time authentication state information to help debug auth issues.
-            </AlertDescription>
-          </Alert>
-
-          <AuthDebugCard 
-            title="Authentication State" 
-            description="Current user authentication state from useAuth() hook"
-            icon={UserCheck}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <AuthDebugCard
+            title="Authentication Status"
+            description="Current authentication status and user information"
+            icon={User}
           >
-            <div className="space-y-2">
-              <SessionInfo title="Is Authenticated" value={!!user} />
-              <SessionInfo title="Is Loading" value={isLoading} />
-              <SessionInfo title="Has Error" value={!!error} />
-              {error && <SessionInfo title="Error Message" value={error.message} />}
-              <Separator className="my-3" />
-              <SessionInfo title="User Object" value={user || 'null'} />
+            <SessionInfo
+              title="Authentication State"
+              value={user ? 'Authenticated' : 'Not Authenticated'}
+            />
+            {user && <SessionInfo title="Current User" value={user} />}
+            <div className="flex gap-2">
+              <Button onClick={handleTestLogin} disabled={!!user}>
+                <LogIn className="mr-2 h-4 w-4" />
+                Test Login
+              </Button>
+              <Button onClick={handleLogout} disabled={!user} variant="outline">
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
             </div>
           </AuthDebugCard>
 
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => window.location.reload()}>
-              <Terminal className="mr-2 h-4 w-4" />
-              Refresh Page
-            </Button>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="route-debug">
-          <Alert className="mb-5">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Route Debugging Information</AlertTitle>
-            <AlertDescription>
-              Current route and navigation state to help debug routing issues.
-            </AlertDescription>
-          </Alert>
-
-          <Card>
-            <CardContent className="pt-6">
-              <RouteDebugger />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="session-debug">
-          <Alert className="mb-5">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Session Debugging Information</AlertTitle>
-            <AlertDescription>
-              Raw session data from the server to help debug session-related issues.
-            </AlertDescription>
-          </Alert>
-
-          <AuthDebugCard 
-            title="Server Session Data" 
-            description="Raw session data from the server"
-            icon={Database}
+          <AuthDebugCard
+            title="Session Management"
+            description="View and manipulate the current session"
+            icon={Key}
           >
-            {sessionLoading ? (
-              <div className="flex justify-center py-4">
-                <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+            {sessionQuery.isLoading ? (
+              <div className="flex justify-center p-4">
+                <RefreshCw className="animate-spin h-6 w-6 text-muted-foreground" />
               </div>
-            ) : sessionError ? (
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{sessionError}</AlertDescription>
-              </Alert>
+            ) : sessionQuery.data ? (
+              <>
+                <SessionInfo title="Session ID" value={sessionQuery.data.id} />
+                <SessionInfo title="Session Data" value={sessionQuery.data.session} />
+                <SessionInfo title="Cookies" value={sessionQuery.data.cookies} />
+                <Button onClick={handleClearSession} variant="destructive">
+                  <AlertCircle className="mr-2 h-4 w-4" />
+                  Clear Session
+                </Button>
+              </>
             ) : (
-              <div className="overflow-auto max-h-96">
-                <pre className="text-xs whitespace-pre-wrap bg-muted p-4 rounded">
-                  {JSON.stringify(sessionData, null, 2)}
-                </pre>
+              <div className="p-4 border rounded-md bg-muted/50 text-muted-foreground text-sm">
+                <AlertTriangle className="inline-block mr-2 h-4 w-4" />
+                Session data is not available. This endpoint only works in development mode.
               </div>
             )}
           </AuthDebugCard>
+        </div>
 
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={fetchSessionData}>
-              <Terminal className="mr-2 h-4 w-4" />
-              Refresh Session Data
-            </Button>
-            <Button variant="destructive" onClick={handleClearSession}>
-              <AlertTriangle className="mr-2 h-4 w-4" />
-              Clear Session
-            </Button>
-          </div>
-        </TabsContent>
+        <div>
+          <AuthDebugCard
+            title="Route Debugging"
+            description="Analyze and debug current route and location information"
+            icon={Network}
+          >
+            <RouteDebugger />
+          </AuthDebugCard>
 
-        <TabsContent value="docs">
-          <Alert className="mb-5">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Developer Tools Documentation</AlertTitle>
-            <AlertDescription>
-              Information about the available developer tools and how to use them.
-            </AlertDescription>
-          </Alert>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Developer Tools Overview</CardTitle>
-              <CardDescription>
-                These tools are available only in development mode and should be used for debugging.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">Auth Bypass</h3>
-                  <p className="text-muted-foreground">
-                    Located at <code className="bg-muted px-1 py-0.5 rounded text-sm">/dev-auth</code>, allows you to bypass the normal authentication flow and login as any user for testing.
-                  </p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">Admin Direct Dashboard</h3>
-                  <p className="text-muted-foreground">
-                    Located at <code className="bg-muted px-1 py-0.5 rounded text-sm">/admin-direct</code>, provides access to the admin dashboard in a way that bypasses the normal authentication flow.
-                  </p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">Auth Debug Panel</h3>
-                  <p className="text-muted-foreground">
-                    Shows the current authentication state from the useAuth hook, including user data, loading state, and errors.
-                  </p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">Route Debug Panel</h3>
-                  <p className="text-muted-foreground">
-                    Shows information about the current route, pathname, search parameters, etc. Helps with debugging routing issues.
-                  </p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">Session Debug Panel</h3>
-                  <p className="text-muted-foreground">
-                    Shows raw session data from the server. Can be used to debug session-related issues, identify session corruption, or verify session contents.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Alert variant="default" className="bg-primary/10 border-primary/50 w-full">
-                <Bug className="h-4 w-4" />
-                <AlertTitle>Development Mode Only</AlertTitle>
-                <AlertDescription>
-                  These tools are designed for development only and will not be available in production.
-                </AlertDescription>
-              </Alert>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          <AuthDebugCard
+            title="Development Information"
+            description="Environment and configuration details"
+            icon={Info}
+          >
+            <SessionInfo title="Environment" value={import.meta.env.MODE} />
+            <SessionInfo
+              title="Base URL"
+              value={`${window.location.protocol}//${window.location.host}`}
+            />
+            <SessionInfo title="User Agent" value={navigator.userAgent} />
+          </AuthDebugCard>
+        </div>
+      </div>
     </div>
   );
 }
