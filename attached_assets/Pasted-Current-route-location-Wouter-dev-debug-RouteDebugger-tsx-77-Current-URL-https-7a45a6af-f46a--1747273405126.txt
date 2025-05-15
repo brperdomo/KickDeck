@@ -1,0 +1,54 @@
+Current route location (Wouter): /dev-debug
+RouteDebugger.tsx:77 Current URL: https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/dev-debug
+RouteDebugger.tsx:78 Current pathname: /dev-debug
+RouteDebugger.tsx:79 Current search: 
+RouteDebugger.tsx:76 Current route location (Wouter): /dev-debug
+RouteDebugger.tsx:77 Current URL: https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/dev-debug
+RouteDebugger.tsx:78 Current pathname: /dev-debug
+RouteDebugger.tsx:79 Current search: 
+background.js:78 💫 Looking for desktop app com.1password.1password
+background.js:78 📤 Sending <NmRequestAccounts> message to native core <2983729456>
+background.js:78 Desktop app port disconnected. Error: Specified native messaging host not found.
+background.js:78 💫 Looking for desktop app com.1password.1password7
+background.js:78 📤 Sending <NmRequestAccounts> message to native core <54244825>
+dev-debug.tsx:70 Error fetching session data: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+queryFn @ dev-debug.tsx:70
+await in queryFn
+fetchFn @ @tanstack_react-query.js?v=e7b2193e:839
+run @ @tanstack_react-query.js?v=e7b2193e:493
+start @ @tanstack_react-query.js?v=e7b2193e:535
+fetch @ @tanstack_react-query.js?v=e7b2193e:925
+executeFetch_fn @ @tanstack_react-query.js?v=e7b2193e:2237
+onSubscribe @ @tanstack_react-query.js?v=e7b2193e:1924
+subscribe @ @tanstack_react-query.js?v=e7b2193e:24
+(anonymous) @ @tanstack_react-query.js?v=e7b2193e:3047
+subscribeToStore @ chunk-RPCDYKBN.js?v=e7b2193e:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e7b2193e:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e7b2193e:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e7b2193e:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e7b2193e:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e7b2193e:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e7b2193e:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e7b2193e:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=e7b2193e:19416
+commitRoot @ chunk-RPCDYKBN.js?v=e7b2193e:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e7b2193e:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e7b2193e:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=e7b2193e:18627Understand this error
+background.js:78 Received <BrowserVerificationFailed> from the native core
+background.js:78 💫 Looking for desktop app com.1password.1password
+background.js:78 📤 Sending <NmRequestAccounts> message to native core <3843637121>
+background.js:78 Desktop app port disconnected. Error: Specified native messaging host not found.
+background.js:78 💫 Looking for desktop app com.1password.1password7
+background.js:78 📤 Sending <NmRequestAccounts> message to native core <3411594585>
+background.js:78 Received <BrowserVerificationFailed> from the native core
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.Understand this warning
+background.js:78 ⏳ Timeout waiting for response to <NmRequestAccounts> from native core <3750227240>
+(anonymous) @ background.js:78
+(anonymous) @ background.js:104Understand this warning
+background.js:78 ⏳ Timeout waiting for response to <NmRequestAcc

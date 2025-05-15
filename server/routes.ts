@@ -217,7 +217,7 @@ export function registerRoutes(app: Express): Server {
     app.use('/api', devAuthBypassRouter);
     
     // Register development debugging routes (only available in development)
-    app.use('/api', devDebugRouter);
+    app.use('/', devDebugRouter);
     
     // Email check endpoint for contextual authentication flow
     app.get("/api/auth/check-email", async (req: Request, res: Response) => {
