@@ -7,7 +7,8 @@ import { Loader2 } from "lucide-react";
 import React, { lazy, Suspense, useEffect } from 'react';
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
-import { RouteDebugger } from "@/components/RouteDebugger";
+// We're using our custom RouteDebugger instead
+// import { RouteDebugger } from "@/components/RouteDebugger";
 import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DebugErrorBoundary } from "@/components/DebugErrorBoundary";
