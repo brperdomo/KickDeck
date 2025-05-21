@@ -27,7 +27,7 @@ type View = 'events' | 'teams' | 'administrators' | 'settings' | 'households' | 
 /**
  * Enhanced AdminDashboard component with animations
  */
-function AdminDashboard() {
+export function AdminDashboard() {
   const { user, isLoading: isUserLoading } = useUser();
   const { hasPermission } = usePermissions();
   const [, setLocation] = useLocation();
@@ -367,6 +367,3 @@ function AdminDashboard() {
     </div>
   );
 }
-
-// Export as default for dynamic imports to work
-export default AdminDashboard;

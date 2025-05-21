@@ -8,11 +8,9 @@ import * as sendgridService from './sendgridService';
 interface EmailOptions {
   to: string;
   subject: string;
-  html?: string;
+  html: string;
   text?: string;
   from?: string;
-  templateType?: string;
-  variables?: Record<string, string>;
 }
 
 interface TemplateContext {
@@ -186,54 +184,10 @@ function renderTemplate(template: string, context: TemplateContext): string {
 /**
  * Sends an email using the SendGrid API
  */
-export async function sendEmail(options: EmailOptions): Promise<{ success: boolean }> {
+export async function sendEmail(options: EmailOptions): Promise<void> {
   const isDevelopment = process.env.NODE_ENV !== 'production';
   
   try {
-    // If a template type was provided, use the template system
-    if (options.templateType) {
-      // Handle templated emails directly to bypass circular reference
-      try {
-        const template = await getEmailTemplate(options.templateType, false);
-        const context = options.variables || {};
-        const isDevelopment = process.env.NODE_ENV !== 'production';
-        
-        // If no template found, use a fallback
-        const emailTemplate = template || createFallbackTemplate(options.templateType, context, isDevelopment);
-        
-        if (!emailTemplate || !emailTemplate.subject || !emailTemplate.content) {
-          throw new Error(`Failed to generate a valid email template for ${options.templateType}`);
-        }
-        
-        const subject = renderTemplate(emailTemplate.subject, context) || 'Notification';
-        let html = renderTemplate(emailTemplate.content, context);
-        
-        // Ensure html is never empty or undefined
-        if (!html || html.trim() === '') {
-          html = '<p>You have received a notification from MatchPro. Please check your account for more information.</p>';
-        }
-        
-        // Send directly via SendGrid service
-        const result = await sendgridService.sendEmail({
-          to: options.to,
-          from: options.from || `${emailTemplate.senderName} <${emailTemplate.senderEmail}>`,
-          subject,
-          html,
-          text: html.replace(/<[^>]*>/g, '') // Simple HTML to text conversion
-        });
-        
-        if (result) {
-          console.log(`Templated email (${options.templateType}) sent to ${options.to}`);
-          return { success: true };
-        } else {
-          throw new Error(`Failed to send templated email for ${options.templateType}`);
-        }
-      } catch (error) {
-        console.error(`Error sending templated email (${options.templateType}):`, error);
-        return { success: false };
-      }
-    }
-    
     // Log the email content in development mode for debugging
     if (isDevelopment) {
       console.log('\n===== DEVELOPMENT MODE: EMAIL CONTENT =====');
@@ -262,7 +216,6 @@ export async function sendEmail(options: EmailOptions): Promise<{ success: boole
     
     if (result) {
       console.log(`SendGrid: Email sent to ${options.to}`);
-      return { success: true };
     } else {
       throw new Error('Failed to send email via SendGrid');
     }
@@ -273,7 +226,7 @@ export async function sendEmail(options: EmailOptions): Promise<{ success: boole
       // In development, still log but don't throw
       console.log('Email sending failed, but continuing in development mode');
       console.error(error);
-      return { success: false };
+      return;
     }
     
     // In production, log error but don't crash the application
@@ -282,18 +235,19 @@ export async function sendEmail(options: EmailOptions): Promise<{ success: boole
     
     // Don't rethrow the error in production as this could interrupt important flows
     // such as payment processing or user registration just because an email failed
-    return { success: false };
   }
 }
 
 /**
  * Sends a templated email using a specific template type
+ * If the template has a SendGrid template ID, it will use SendGrid dynamic templates.
+ * Otherwise, it will render the template locally and send it as a regular email.
  */
 export async function sendTemplatedEmail(
   to: string,
   templateType: string,
   context: TemplateContext
-): Promise<{ success: boolean }> {
+): Promise<void> {
   const isDevelopment = process.env.NODE_ENV !== 'production';
   
   try {
@@ -309,32 +263,47 @@ export async function sendTemplatedEmail(
     }
     
     try {
-      const subject = renderTemplate(emailTemplate.subject, context) || 'Notification';
-      let html = renderTemplate(emailTemplate.content, context);
-      
-      // Ensure html is never empty or undefined
-      if (!html || html.trim() === '') {
-        html = '<p>You have received a notification from MatchPro. Please check your account for more information.</p>';
-      }
-      
-      // For template-based emails, we bypass the templateType check by passing basic params
-      const result = await sendgridService.sendEmail({
-        to,
-        from: `${emailTemplate.senderName} <${emailTemplate.senderEmail}>`,
-        subject,
-        html,
-        text: html.replace(/<[^>]*>/g, '') // Simple HTML to text conversion
-      });
-      
-      if (result) {
-        console.log(`Templated email (${templateType}) sent to ${to}`);
-        return { success: true };
+      // Check if we should use SendGrid Dynamic Templates
+      if (emailTemplate.sendgridTemplateId) {
+        console.log(`Using SendGrid dynamic template for ${templateType} (ID: ${emailTemplate.sendgridTemplateId})`);
+        
+        const fromEmail = `${emailTemplate.senderName} <${emailTemplate.senderEmail}>`;
+        
+        // Use SendGrid dynamic template
+        const result = await sendgridService.sendDynamicTemplateEmail({
+          to,
+          from: fromEmail,
+          templateId: emailTemplate.sendgridTemplateId,
+          dynamicTemplateData: context
+        });
+        
+        if (result) {
+          console.log(`SendGrid dynamic template email (${templateType}) sent to ${to}`);
+        } else {
+          throw new Error(`Failed to send SendGrid dynamic template email to ${to}`);
+        }
       } else {
-        throw new Error(`Failed to send templated email for ${templateType}`);
+        // Use regular template rendering
+        const subject = renderTemplate(emailTemplate.subject, context) || 'Notification';
+        let html = renderTemplate(emailTemplate.content, context);
+        
+        // Ensure html is never empty or undefined
+        if (!html || html.trim() === '') {
+          html = '<p>You have received a notification from MatchPro. Please check your account for more information.</p>';
+        }
+        
+        await sendEmail({
+          to,
+          subject,
+          html,
+          from: `${emailTemplate.senderName} <${emailTemplate.senderEmail}>`
+        });
+        
+        console.log(`Templated email (${templateType}) sent to ${to}`);
       }
     } catch (renderError) {
       console.error(`Error rendering or sending email (${templateType}):`, renderError);
-      return { success: false };
+      // Don't throw here, even in development, to prevent API failures
     }
   } catch (error) {
     console.error(`Unexpected error in sendTemplatedEmail (${templateType}):`, error);
@@ -342,7 +311,6 @@ export async function sendTemplatedEmail(
     // Always log but never throw to keep API endpoints working
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error(`Failed to send templated email to ${to}: ${errorMessage}`);
-    return { success: false };
   }
 }
 
@@ -368,7 +336,8 @@ function createFallbackTemplate(templateType: string, context: TemplateContext, 
       senderEmail: "support@matchpro.ai",
       isActive: true,
       type: templateType,
-      providerId: null
+      providerId: null,
+      sendgridTemplateId: null
     };
   } else {
     // In production, use a generic professional template
@@ -387,55 +356,9 @@ function createFallbackTemplate(templateType: string, context: TemplateContext, 
       senderEmail: "support@matchpro.ai",
       isActive: true,
       type: templateType,
-      providerId: null
+      providerId: null,
+      sendgridTemplateId: null
     };
-  }
-}
-
-/**
- * Sends a password reset email
- */
-export async function sendPasswordResetEmail(
-  to: string,
-  resetToken: string,
-  username: string
-): Promise<void> {
-  const isDevelopment = process.env.NODE_ENV !== 'production';
-  
-  try {
-    // In production, always use the PRODUCTION_URL env var or the fallback production domain
-    // In development, use APP_URL or Replit domain
-    let appUrl: string;
-    
-    if (isDevelopment) {
-      // Development environment - use local domain
-      appUrl = process.env.APP_URL || `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
-      console.log(`Using development URL for password reset: ${appUrl}`);
-    } else {
-      // Production environment - use production domain
-      appUrl = process.env.PRODUCTION_URL || process.env.APP_URL || 'https://matchpro.ai';
-      console.log(`Using production URL for password reset: ${appUrl}`);
-    }
-    
-    const resetUrl = `${appUrl}/reset-password?token=${resetToken}`;
-    
-    await sendTemplatedEmail(to, 'password_reset', {
-      username,
-      resetUrl,
-      token: resetToken,
-      expiryHours: 24, // Token validity period
-    });
-  } catch (error) {
-    console.error('Error sending password reset email:', error);
-    
-    if (isDevelopment) {
-      // Rethrow errors in development mode for easier debugging
-      throw error;
-    }
-    
-    // In production, log error but don't crash the application
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`Failed to send password reset email to ${to}: ${errorMessage}`);
   }
 }
 
@@ -533,4 +456,38 @@ export async function sendRegistrationReceiptEmail(
   }
 }
 
-// Password reset email function is defined above
+/**
+ * Sends a password reset email
+ */
+export async function sendPasswordResetEmail(
+  to: string,
+  resetToken: string,
+  username: string
+): Promise<void> {
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  
+  try {
+    const appUrl = getAppUrl(isDevelopment);
+    console.log(`Using URL for password reset: ${appUrl}`);
+    
+    const resetUrl = `${appUrl}/reset-password?token=${resetToken}`;
+    
+    await sendTemplatedEmail(to, 'password_reset', {
+      username,
+      resetUrl,
+      token: resetToken,
+      expiryHours: 24, // Token validity period
+    });
+  } catch (error) {
+    console.error('Error sending password reset email:', error);
+    
+    if (isDevelopment) {
+      // Rethrow errors in development mode for easier debugging
+      throw error;
+    }
+    
+    // In production, log error but don't crash the application
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`Failed to send password reset email to ${to}: ${errorMessage}`);
+  }
+}

@@ -35,16 +35,10 @@ import adminClubsRouter from "./routes/admin/clubs";
 import eventClubsRouter from "./routes/admin/event-clubs";
 import emailConfigRouter from "./routes/admin/update-email-config";
 import productUpdatesRouter from "./routes/product-updates.js";
-import magicLinkRouter from "./routes/magicLinks";
-import testHelpersRouter from "./routes/test-helpers";
 import { createCoupon, getCoupons, updateCoupon, deleteCoupon } from "./routes/coupons";
 import { getFeeAssignments, updateFeeAssignments } from "./routes/fee-assignments";
 import paymentsRouter from "./routes/payments";
 import reportsRouter from "./routes/reports";
-import stripeConnectRouter from "./routes/stripe-connect";
-import eventStripeConnectRouter from "./routes/event-stripe-connect";
-import devAuthBypassRouter from "./routes/dev-auth-bypass";
-import devDebugRouter from "./routes/dev-debug";
 import { getNewRegistrationsCount, acknowledgeNewRegistrations } from "./routes/admin/registrations";
 import { getTinyMCEConfig } from "./services/configService";
 import { requestPasswordReset, verifyResetToken, completePasswordReset } from "./routes/auth";
@@ -210,15 +204,6 @@ export function registerRoutes(app: Express): Server {
     // Authentication is already set up in index.ts, no need to call setupAuth again
     log("Using existing authentication middleware");
     
-    // Register magic link authentication routes
-    app.use('/api/auth', magicLinkRouter);
-    
-    // Development auth bypass (only active in development)
-    app.use('/api', devAuthBypassRouter);
-    
-    // Register development debugging routes (only available in development)
-    app.use('/', devDebugRouter);
-    
     // Email check endpoint for contextual authentication flow
     app.get("/api/auth/check-email", async (req: Request, res: Response) => {
       try {
@@ -322,10 +307,6 @@ export function registerRoutes(app: Express): Server {
     
     // Get all SendGrid templates endpoint
     // SendGrid routes have been moved to use dynamic imports - they are defined at the end of the file
-    
-    // Register Stripe Connect routes for clubs (requires admin access)
-    app.use('/api/clubs', isAdmin, stripeConnectRouter);
-    app.use('/api/events', isAdmin, eventStripeConnectRouter);
     
     // Role permissions management endpoints
     app.get('/api/admin/roles', isAdmin, getRolesWithPermissions);
@@ -1492,10 +1473,6 @@ export function registerRoutes(app: Express): Server {
       }).catch(err => {
         log(`Error loading test payment routes: ${err}`, 'express');
       });
-      
-      // Register test helper routes
-      app.use('/api/test', testHelpersRouter);
-      log('Test helper endpoints registered (development only)', 'express');
       
       // Test endpoint for event filtering
       import('./routes/test-event-filtering.js').then(({ testFinanceAdminEventFiltering }) => {

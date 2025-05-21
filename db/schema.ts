@@ -3,18 +3,10 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { relations } from "drizzle-orm";
 import { z } from "zod";
 
-// Just import the modules directly where needed, no circular references
-import { magicLinkTokens } from './schema/magicLink';
-
 export const clubs = pgTable("clubs", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
   logoUrl: text("logo_url"),
-  email: text("email"),
-  stripeConnectAccountId: text("stripe_connect_account_id"),
-  stripeConnectStatus: text("stripe_connect_status"),
-  stripeConnectEnabled: boolean("stripe_connect_enabled").default(false),
-  stripeConnectDetailsSubmitted: boolean("stripe_connect_details_submitted").default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -37,8 +29,6 @@ export const organizationSettings = pgTable("organization_settings", {
   primaryColor: text("primary_color").notNull(),
   secondaryColor: text("secondary_color"),
   logoUrl: text("logo_url"),
-  stripeConnectFeePercent: text("stripe_connect_fee_percent").default("5.0"),
-  stripeConnectEnabled: boolean("stripe_connect_enabled").default(false),
   createdAt: text("created_at").notNull().default(new Date().toISOString()),
   updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
 });
@@ -186,10 +176,6 @@ export const events = pgTable("events", {
   agreement: text("agreement"),
   refundPolicy: text("refund_policy"),
   isArchived: boolean("is_archived").default(false).notNull(),
-  stripeConnectAccountId: text("stripe_connect_account_id"),
-  stripeConnectStatus: text("stripe_connect_status"),
-  stripeConnectEnabled: boolean("stripe_connect_enabled").default(false),
-  stripeConnectDetailsSubmitted: boolean("stripe_connect_details_submitted").default(false),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -361,13 +347,9 @@ export const paymentTransactions = pgTable("payment_transactions", {
   teamId: integer("team_id").references(() => teams.id),
   eventId: bigint("event_id", { mode: "number" }).references(() => events.id),
   userId: integer("user_id").references(() => users.id),
-  clubId: integer("club_id").references(() => clubs.id), // For Stripe Connect payments to clubs
   paymentIntentId: text("payment_intent_id"), // For payment intents
   setupIntentId: text("setup_intent_id"), // For setup intents (when just saving payment method)
-  stripeConnectAccountId: text("stripe_connect_account_id"), // Connected account ID for Stripe Connect
-  stripeConnectPayoutId: text("stripe_connect_payout_id"), // Payout ID for Stripe Connect
-  platformFeeAmount: integer("platform_fee_amount").default(0), // Amount in cents for platform fee
-  transactionType: text("transaction_type").notNull(), // payment, refund, chargeback, payment_info_collected, connect_payout, etc.
+  transactionType: text("transaction_type").notNull(), // payment, refund, chargeback, payment_info_collected, etc.
   amount: integer("amount").notNull(), // Amount in cents, positive for payments, negative for refunds
   status: text("status").notNull(), // succeeded, failed, pending, etc.
   cardBrand: text("card_brand"), // Visa, Mastercard, etc.
@@ -393,10 +375,6 @@ export const paymentTransactionsRelations = relations(paymentTransactions, ({ on
   user: one(users, {
     fields: [paymentTransactions.userId],
     references: [users.id]
-  }),
-  club: one(clubs, {
-    fields: [paymentTransactions.clubId],
-    references: [clubs.id]
   })
 }));
 

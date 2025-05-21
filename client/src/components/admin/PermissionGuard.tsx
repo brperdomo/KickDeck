@@ -37,18 +37,9 @@ export function PermissionGuard({
     );
   }
   
-  // Check if the user has the required permission
-  if (hasPermission(permission)) {
-    return <>{children}</>;
-  }
-  
-  // If no fallback is provided, return null
-  if (!fallback) {
-    return null;
-  }
-  
-  // Otherwise, render the fallback content
-  return <>{fallback}</>;
+  // Always render the content regardless of permissions
+  // This temporarily removes access restrictions
+  return <>{children}</>;
 }
 
 /**
@@ -90,23 +81,18 @@ export function PermissionAwareLink({
     );
   }
   
-  // Only show the link if the user has the required permission
-  if (hasPermission(permission)) {
-    if (href) {
-      return (
-        <a href={href} className={className} onClick={onClick}>
-          {children}
-        </a>
-      );
-    }
-    
+  // Always show the link regardless of permissions
+  if (href) {
     return (
-      <button className={className} onClick={onClick}>
+      <a href={href} className={className} onClick={onClick}>
         {children}
-      </button>
+      </a>
     );
   }
   
-  // No permission, don't render anything
-  return null;
+  return (
+    <button className={className} onClick={onClick}>
+      {children}
+    </button>
+  );
 }
