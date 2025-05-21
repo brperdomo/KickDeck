@@ -11,8 +11,7 @@ export function useUser() {
     loginMutation,
     logoutMutation,
     registerMutation,
-    authState,
-    setAuthState
+    authState
   } = useAuth();
 
   // Create a wrapper that provides the same interface as before
@@ -24,8 +23,6 @@ export function useUser() {
     logout: logoutMutation.mutateAsync,
     register: registerMutation.mutateAsync,
     // Also expose the authState for components that need it
-    authState,
-    // Expose setAuthState to components that need it
-    setAuthState
+    authState
   };
 }

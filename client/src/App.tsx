@@ -7,21 +7,16 @@ import { Loader2 } from "lucide-react";
 import React, { lazy, Suspense, useEffect } from 'react';
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
-// We're using our custom RouteDebugger instead
-// import { RouteDebugger } from "@/components/RouteDebugger";
+import { RouteDebugger } from "@/components/RouteDebugger";
 import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DebugErrorBoundary } from "@/components/DebugErrorBoundary";
-import DevAdminBypass from "@/components/dev/DevAdminBypass";
-import DevDebugPage from "@/pages/dev-debug";
-import AdminRoutes from "@/pages/admin-routes";
 import { useAuth } from "@/hooks/use-auth";
 import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import AuthLoggedOut from "@/pages/auth-logged-out";
 import AdminDashboard from "@/pages/admin-dashboard";
-import AdminDirectDashboard from "@/pages/admin-direct-dashboard";
 import CreateEvent from "@/pages/create-event";
 import CouponManagement from "@/pages/coupon-management";
 import AccountingCodeManagement from "@/pages/accounting-code-management";
@@ -113,7 +108,6 @@ function Router() {
           }}
         </Route>
         <Route path="/auth-logged-out" component={AuthLoggedOut} />
-        <Route path="/auth/verify-magic-link" component={AuthPage} />
         <Route path="/register" component={Register} />
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/reset-password" component={ResetPassword} />
@@ -138,9 +132,6 @@ function Router() {
     <Switch>
       {/* Dedicated logout route that will forcibly clear all app state */}
       <Route path="/logout" component={LogoutHandler} />
-
-      {/* Development routes - only available in development environment */}
-      <Route path="/dev-debug" component={DevDebugPage} />
 
       {/* Public routes that don't require authentication */}
       
@@ -170,7 +161,6 @@ function Router() {
         <>
           {/* Create a separate route for auth-logged-out to handle the redirect */}
           <Route path="/auth-logged-out" component={AuthLoggedOut} />
-          <Route path="/auth/verify-magic-link" component={AuthPage} />
 
           {/* Regular auth route */}
           <Route path="/auth">
@@ -233,30 +223,30 @@ function Router() {
           {/* Add the RoleBasedRedirect component to handle role-based navigation */}
           <RoleBasedRedirect />
           
-          {/* Admin routes - using centralized import with development bypass functionality */}
-          <AdminRoutes />
-          
-          {/* Development tools routes */}
-          <Route path="/dev-auth">
+          {/* Admin routes */}
+          <ProtectedRoute path="/admin/events/create" requiredRole="admin" component={<CreateEvent />} />
+          {/* Admin routes - using ProtectedRoute for better protection */}
+          <ProtectedRoute path="/admin/events/:id/edit" requiredRole="admin" component={<EditEvent />} />
+          <ProtectedRoute path="/admin/events/:id/application-form" requiredRole="admin" component={<FormEditorPage />} />
+          <ProtectedRoute path="/admin/events/:id/fees" requiredRole="admin" component={<FeeManagementPage />} />
+          <ProtectedRoute path="/admin/events/:id/coupons" requiredRole="admin" component={<CouponManagerPage />} />
+          <ProtectedRoute path="/admin/events/:id/clubs" requiredRole="admin" component={<EventClubsPage />} />
+          <ProtectedRoute path="/admin/events/:id/preview-registration" requiredRole="admin" component={<RegistrationPreview />} />
+          <ProtectedRoute path="/admin/events/preview" requiredRole="admin" component={<EventPreviewSelector />} />
+          <ProtectedRoute path="/admin/events/:id" requiredRole="admin" component={<EditEvent />} />
+          <ProtectedRoute path="/admin/accounting-codes" requiredRole="admin" component={<AccountingCodeManagement />} />
+          <ProtectedRoute path="/admin/email-templates/create" requiredRole="admin" component={<EmailTemplateEdit />} />
+          <ProtectedRoute path="/admin/email-templates/:id" requiredRole="admin" component={<EmailTemplateEdit />} />
+          <ProtectedRoute path="/admin/email-templates" requiredRole="admin" component={<EmailTemplatesPage />} />
+          <ProtectedRoute path="/sendgrid-settings" requiredRole="admin" component={<SendGridSettingsPage />} />
+          <ProtectedRoute path="/admin/form-templates/create" requiredRole="admin" component={<FormTemplateCreatePage />} />
+          <ProtectedRoute path="/admin/form-templates/:id/edit" requiredRole="admin" component={<FormTemplateEditPage />} />
+          <ProtectedRoute path="/admin/form-templates" requiredRole="admin" component={
             <DebugErrorBoundary>
-              <DevAdminBypass />
+              <AdminDashboard initialView="formTemplates" />
             </DebugErrorBoundary>
-          </Route>
-          
-          <Route path="/dev-debug">
-            <DebugErrorBoundary>
-              <Suspense fallback={
-                <div className="flex items-center justify-center min-h-screen">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              }>
-                {(() => {
-                  const DevDebugPage = lazy(() => import('@/pages/dev-debug'));
-                  return <DevDebugPage />;
-                })()}
-              </Suspense>
-            </DebugErrorBoundary>
-          </Route>
+          } />
+          <ProtectedRoute path="/admin/team-status-test" requiredRole="admin" component={<TeamStatusTest />} />
           <ProtectedRoute path="/admin/file-manager" requiredRole="admin" component={
             <DebugErrorBoundary>
               <AdminDashboard initialView="files" />
@@ -317,36 +307,12 @@ function Router() {
               <AdminDashboard initialView="settings" />
             </DebugErrorBoundary>
           } />
-          {/* Use the fixed admin dashboard for the main admin route */}
+          {/* We'll enhance the main dashboard with animations directly */}
           <ProtectedRoute path="/admin" requiredRole="admin" component={
             <DebugErrorBoundary>
-              {/* Import and use the fixed admin dashboard that's known to work with auth */}
-              {(() => {
-                const FixedAdminDashboard = lazy(() => import('@/pages/fixed-admin-dashboard'));
-                return (
-                  <Suspense fallback={
-                    <div className="flex items-center justify-center min-h-screen">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                  }>
-                    <FixedAdminDashboard />
-                  </Suspense>
-                );
-              })()}
+              <AdminDashboard />
             </DebugErrorBoundary>
           } />
-          
-          {/* Legacy admin route for compatibility */}
-          <Route path="/admin-legacy">
-            {() => (
-              <DebugErrorBoundary>
-                <AdminDashboard />
-              </DebugErrorBoundary>
-            )}
-          </Route>
-          
-          {/* Admin direct dashboard for development-only authentication bypass 
-              moved to the unrestricted routes section above */}
 
           {/* User routes - using ProtectedRoute for member-specific routes */}
           <ProtectedRoute path="/household" requiredRole="member" component={
@@ -425,17 +391,6 @@ function Router() {
               <UserDashboard />
             </DebugErrorBoundary>
           } />
-          
-          {/* Add a direct route to handle edge cases */}
-          <Route path="/dashboard-direct">
-            {() => (
-              <DebugErrorBoundary>
-                <UserDashboard />
-              </DebugErrorBoundary>
-            )}
-          </Route>
-          
-
           
           {/* Preview routes */}
 
@@ -532,10 +487,8 @@ function App() {
       <AuthProvider>
         <TooltipProvider>
           <MainLayout>
-            {/* Debug tools moved to /dev-debug page */}
+            <RouteDebugger />
             <Router />
-            {/* Development authentication bypass - only appears in dev mode */}
-            <DevAdminBypass />
             <Toaster />
           </MainLayout>
         </TooltipProvider>
