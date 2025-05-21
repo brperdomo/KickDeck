@@ -77,76 +77,20 @@ export type Role = 'super_admin' | 'tournament_admin' | 'score_admin' | 'finance
 export function usePermissions() {
   const { user } = useAuth();
   
-  // Check for emulation token
-  const emulationToken = typeof window !== 'undefined' ? localStorage.getItem('emulationToken') : null;
+  // User emulation is disabled
+  const emulationToken = null;
   
-  // Fetch user permissions from the API
-  // Force refresh emulation status whenever hook is called
+  // Cleanup any existing emulation data
   useEffect(() => {
-    const refreshEmulationToken = async () => {
-      // Only check if we're logged in and admin
-      if (!user?.isAdmin) return;
+    if (typeof window !== 'undefined') {
+      // Clear any emulation data from storage
+      localStorage.removeItem('emulationToken');
+      sessionStorage.removeItem('emulationActive');
+      sessionStorage.removeItem('emulatedAdminName');
+      sessionStorage.removeItem('emulatedRoles');
       
-      try {
-        // Check if we have a saved token in localStorage
-        const existingToken = localStorage.getItem('emulationToken');
-        const isEmulationActive = sessionStorage.getItem('emulationActive') === 'true';
-        
-        if (existingToken) {
-          console.log('Checking saved emulation token validity');
-          // Send the token to verify it's valid
-          const response = await fetch('/api/admin/emulation/status', {
-            headers: {
-              'X-Emulation-Token': existingToken,
-              'Cache-Control': 'no-cache, no-store',
-              'Pragma': 'no-cache'
-            }
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            console.log('Emulation status check response:', data);
-            
-            if (data.emulating === true) {
-              // Valid token, ensure localStorage is set
-              localStorage.setItem('emulationToken', existingToken);
-              sessionStorage.setItem('emulationActive', 'true');
-              
-              // Store emulated user name if available
-              if (data.emulatedAdmin && data.emulatedAdmin.firstName && data.emulatedAdmin.lastName) {
-                sessionStorage.setItem('emulatedAdminName', 
-                  `${data.emulatedAdmin.firstName} ${data.emulatedAdmin.lastName}`);
-              }
-            } else {
-              // Invalid token, clean up storage
-              console.log('Emulation token is invalid or expired, clearing');
-              localStorage.removeItem('emulationToken');
-              sessionStorage.removeItem('emulationActive');
-              sessionStorage.removeItem('emulatedAdminName');
-            }
-          } else {
-            // API error, be cautious and keep token
-            console.log('Error checking emulation status, keeping token');
-          }
-        } else if (isEmulationActive) {
-          // Session says we're emulating but token is missing, clear session
-          console.log('Emulation session flag exists but token is missing, clearing session');
-          sessionStorage.removeItem('emulationActive');
-          sessionStorage.removeItem('emulatedAdminName');
-        }
-      } catch (error) {
-        console.error('Error checking emulation status:', error);
-      }
-    };
-    
-    refreshEmulationToken();
-    
-    // Set up interval to refresh token status every 30 seconds
-    const intervalId = setInterval(refreshEmulationToken, 30000);
-    
-    return () => {
-      clearInterval(intervalId);
-    };
+      console.log('User emulation has been disabled');
+    }
   }, [user]);
   
   const { data: userPermissions, isLoading, refetch } = useQuery({
@@ -154,17 +98,13 @@ export function usePermissions() {
     queryFn: async () => {
       if (!user || !user.isAdmin) return null;
       
-      const emulToken = localStorage.getItem('emulationToken');
-      const headers: HeadersInit = {};
+      // No emulation token is used anymore
+      const headers: HeadersInit = {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      };
       
-      if (emulToken) {
-        console.log('Using emulation token for permissions request:', emulToken);
-        headers['x-emulation-token'] = emulToken;
-        headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
-        headers['Pragma'] = 'no-cache';
-      }
-      
-      console.log('Fetching permissions, emulation token:', emulToken ? 'present' : 'not present');
+      console.log('Fetching permissions - emulation disabled');
       
       const response = await fetch('/api/admin/permissions/me', {
         headers,

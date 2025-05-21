@@ -1,19 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { UserCog, Users, LogOut } from "lucide-react";
+import { Users, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useOrganizationSettings } from "@/hooks/use-organization-settings";
 import { ViewToggle } from "@/components/ViewToggle";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 /**
  * AdminBanner component displays a navigation bar at the top of admin pages
@@ -25,86 +20,13 @@ export function AdminBanner() {
   const { settings } = useOrganizationSettings();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [emulationMenuOpen, setEmulationMenuOpen] = useState(false);
   
-  // Check if we're emulating directly from sessionStorage for initial render
-  const isEmulating = typeof window !== 'undefined' && sessionStorage.getItem('emulationActive') === 'true';
-  const emulatedName = typeof window !== 'undefined' ? sessionStorage.getItem('emulatedAdminName') : null;
+  // User emulation is disabled completely
+  const isEmulating = false;
+  const emulatedName = null;
   
-  // Fetch available administrators that can be emulated
-  const { data: adminsData } = useQuery({
-    queryKey: ['emulatable-admins'],
-    queryFn: async () => {
-      const response = await fetch('/api/admin/emulation/admins');
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to fetch emulatable administrators');
-      }
-      return response.json();
-    },
-    enabled: emulationMenuOpen, // Only fetch when menu is opened
-  });
-
-  // Start emulation mutation
-  const startEmulationMutation = useMutation({
-    mutationFn: async (adminId: number) => {
-      const response = await fetch(`/api/admin/emulation/start/${adminId}`, {
-        method: 'POST'
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to start emulation');
-      }
-      
-      return response.json();
-    },
-    onSuccess: (data) => {
-      try {
-        // Set emulation token in localStorage
-        if (data && data.token) {
-          localStorage.setItem('emulationToken', data.token);
-          
-          // Set a session storage flag to prevent state loss on reload
-          sessionStorage.setItem('emulationActive', 'true');
-          sessionStorage.setItem('emulatedAdminName', `${data.emulatedAdmin.firstName} ${data.emulatedAdmin.lastName}`);
-          
-          // Store roles if available
-          if (data.emulatedAdmin.roles) {
-            sessionStorage.setItem('emulatedRoles', JSON.stringify(data.emulatedAdmin.roles));
-          }
-        }
-        
-        // First show toast before reload
-        toast({
-          title: 'Emulation Started',
-          description: `You are now viewing the system as ${data.emulatedAdmin.firstName} ${data.emulatedAdmin.lastName}`,
-        });
-        
-        // Wait a bit longer to ensure the token is properly saved
-        setTimeout(() => {
-          // Invalidate all queries to force refetch with new token
-          queryClient.invalidateQueries();
-          
-          // Force refresh key queries
-          queryClient.invalidateQueries({ queryKey: ['user'] });
-          queryClient.invalidateQueries({ queryKey: ['user-permissions'] });
-          
-          // Reload the page to ensure all components update properly
-          window.location.href = '/admin';
-        }, 1000);
-      } catch (error) {
-        console.error('Error in emulation success handler:', error);
-      }
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Emulation Failed',
-        description: error.message,
-        variant: 'destructive'
-      });
-    }
-  });
+  // No emulation functionality is available
+  const adminsData = null;
 
   // Handle stopping emulation
   const handleStopEmulation = async () => {
