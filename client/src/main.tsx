@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import App from './App';
 import { initGoogleMapsApi } from "./lib/env";
+import "./lib/clear-emulation"; // Import the clear emulation utility
 import "./index.css";
 import "./styles/dashboard-enhancements.css";
 import "./styles/member-dashboard.css";
