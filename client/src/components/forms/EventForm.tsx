@@ -455,9 +455,12 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
       await onSubmit(submitData);
       toast({
         title: "Success",
-        description: mode === 'edit' ? "Event updated successfully" : "Event created successfully",
+        description: mode === 'edit' ? "Event updated successfully. You can continue editing." : "Event created successfully",
       });
-      setLocation("/admin");
+      // Only redirect to admin dashboard if creating a new event, not when editing
+      if (mode === 'create') {
+        setLocation("/admin");
+      }
     } catch (error) {
       console.error('Submit error:', error);
       toast({
