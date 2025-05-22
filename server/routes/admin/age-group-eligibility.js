@@ -16,12 +16,17 @@ router.put('/:ageGroupId', async (req, res) => {
     if (isEligible === undefined) {
       return res.status(400).json({ error: 'isEligible field is required' });
     }
+    
+    // Convert to boolean to ensure consistent data type
+    const eligibilityValue = Boolean(isEligible);
 
     // Update the age group's eligibility
     await db
       .update(eventAgeGroups)
-      .set({ isEligible: isEligible })
+      .set({ isEligible: eligibilityValue })
       .where(eq(eventAgeGroups.id, parseInt(ageGroupId)));
+      
+    console.log(`Successfully updated age group ${ageGroupId} eligibility to ${eligibilityValue}`);
     
     return res.json({ success: true, message: 'Age group eligibility updated successfully' });
   } catch (error) {
@@ -44,10 +49,15 @@ router.put('/', async (req, res) => {
     // Update each age group's eligibility
     for (const ag of ageGroups) {
       if (ag.id && ag.isEligible !== undefined) {
+        // Convert to boolean to ensure consistent data type
+        const eligibilityValue = Boolean(ag.isEligible);
+        
         await db
           .update(eventAgeGroups)
-          .set({ isEligible: ag.isEligible })
+          .set({ isEligible: eligibilityValue })
           .where(eq(eventAgeGroups.id, parseInt(ag.id)));
+          
+        console.log(`Updated age group ${ag.id} eligibility to ${eligibilityValue}`);
       }
     }
     

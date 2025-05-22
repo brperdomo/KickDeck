@@ -1476,8 +1476,25 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                       Enable or disable registration for specific age groups. Disabled age groups will not be available for team registration.
                     </p>
                     <AgeGroupEligibilityManager 
-                      ageGroups={ageGroups}
-                      onAgeGroupsChange={setAgeGroups}
+                      ageGroups={ageGroups.map(ag => ({
+                        id: Number(ag.id), // Convert string id to number
+                        eventId: defaultValues?.id || 0,
+                        ageGroup: ag.ageGroup,
+                        gender: ag.gender,
+                        divisionCode: ag.divisionCode,
+                        birthYear: ag.birthYear,
+                        fieldSize: ag.fieldSize,
+                        projectedTeams: ag.projectedTeams,
+                        isEligible: ag.isEligible === undefined ? true : Boolean(ag.isEligible)
+                      }))}
+                      onAgeGroupsChange={(updatedGroups) => {
+                        // Convert the API age group format back to form age group format
+                        const formattedGroups = updatedGroups.map(ag => ({
+                          ...ageGroups.find(group => Number(group.id) === ag.id) || {},
+                          isEligible: ag.isEligible
+                        }));
+                        setAgeGroups(formattedGroups);
+                      }}
                       eventId={defaultValues?.id || 0}
                     />
                   </div>
