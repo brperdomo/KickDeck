@@ -255,10 +255,51 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
 
   useEffect(() => {
     if (ageGroupsQuery.data) {
-      setAgeGroups(ageGroupsQuery.data);
-      form.setValue('ageGroups', ageGroupsQuery.data);
+      // Format and update age groups from query
+      const formattedGroups = ageGroupsQuery.data.map((group: any) => ({
+        id: `${group.gender}-${group.birthYear}-${group.ageGroup}`,
+        ageGroup: group.ageGroup,
+        birthYear: group.birthYear,
+        gender: group.gender,
+        divisionCode: group.divisionCode,
+        isEligible: true, // Default to eligible
+        fieldSize: group.ageGroup.startsWith('U') ?
+          (parseInt(group.ageGroup.substring(1)) <= 7 ? '4v4' :
+            parseInt(group.ageGroup.substring(1)) <= 10 ? '7v7' :
+              parseInt(group.ageGroup.substring(1)) <= 12 ? '9v9' : '11v11') : '11v11',
+        selected: true
+      }));
+      
+      setAgeGroups(formattedGroups);
+      form.setValue('ageGroups', formattedGroups);
+      
+      // Apply eligibility settings if available
+      if (eligibilitySettingsQuery.data?.length > 0) {
+        console.log('Applying eligibility settings to age groups', {
+          formattedGroups,
+          eligibilitySettings: eligibilitySettingsQuery.data
+        });
+        
+        // Create a map of age group IDs to eligibility status
+        const eligibilityMap = new Map();
+        eligibilitySettingsQuery.data.forEach((setting: any) => {
+          eligibilityMap.set(setting.ageGroupId, setting.isEligible);
+        });
+        
+        // Update the age groups with eligibility settings
+        const updatedGroups = formattedGroups.map(group => {
+          if (eligibilityMap.has(group.id)) {
+            return { ...group, isEligible: eligibilityMap.get(group.id) };
+          }
+          return group;
+        });
+        
+        console.log('Updated age groups with eligibility settings', updatedGroups);
+        setAgeGroups(updatedGroups);
+        form.setValue('ageGroups', updatedGroups);
+      }
     }
-  }, [ageGroupsQuery.data, form.setValue]);
+  }, [ageGroupsQuery.data, eligibilitySettingsQuery.data, form]);
 
   const handleSeasonalScopeChange = async (scopeId: number) => {
     setSelectedSeasonalScopeId(scopeId);
@@ -726,7 +767,9 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                                 }
                                 
                                 // Invalidate the eligibility settings query to refresh the data
-                                queryClient.invalidateQueries(['ageGroupEligibilitySettings', eventId]);
+                                queryClient.invalidateQueries({
+                                  queryKey: ['ageGroupEligibilitySettings', eventId]
+                                });
                                 
                                 console.log(`Successfully updated eligibility for age group ${group.id}`);
                                 
