@@ -121,8 +121,9 @@ async function testDbConnection() {
     setupAuth(app);
     log("Authentication middleware set up successfully");
     
-    // Emulation middleware has been disabled
-    log("User emulation functionality has been disabled");
+    // Apply emulation middleware after authentication but before routes
+    app.use(emulationMiddleware);
+    log("User emulation middleware set up successfully");
     
     // Add permission logging middleware to catch and debug 403 errors
     app.use(logPermissionDetails);
