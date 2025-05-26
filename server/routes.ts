@@ -4656,7 +4656,8 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           }
 
           // Handle age groups from seasonal scope if it was changed
-          if (eventData.seasonalScopeId) {
+          // TEMPORARILY DISABLED to prevent constraint violations with existing brackets
+          if (false && eventData.seasonalScopeId) {
             const seasonalScopeId = parseInt(eventData.seasonalScopeId.toString());
             console.log(`Event update is using seasonal scope: ${seasonalScopeId}`);
             
