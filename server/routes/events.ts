@@ -482,7 +482,7 @@ router.get('/api/admin/events/:eventId/age-groups', async (req, res) => {
     const eligibilityResult = await db.execute(sql`
       SELECT age_group_id, is_eligible 
       FROM event_age_group_eligibility 
-      WHERE event_id = ${eventId}
+      WHERE event_id = ${eventId}::text
     `);
 
     const eligibilitySettings = eligibilityResult.rows || [];
