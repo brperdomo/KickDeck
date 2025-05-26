@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db } from '../../db';
 import { events, eventAgeGroups, eventSettings, teams, tournamentGroups, eventAdministrators, eventFees, eventComplexes, eventAgeGroupFees } from '@db/schema';
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { sortAgeGroups } from '../lib/ageGroupSorter';
 
@@ -479,12 +479,13 @@ router.get('/api/admin/events/:eventId/age-groups', async (req, res) => {
     ];
 
     // Fetch eligibility settings for this event using direct SQL query
-    const eligibilitySettings = await db.execute(sql`
+    const eligibilityResult = await db.execute(sql`
       SELECT age_group_id, is_eligible 
       FROM event_age_group_eligibility 
       WHERE event_id = ${eventId}
     `);
 
+    const eligibilitySettings = eligibilityResult.rows || [];
     console.log(`Found ${eligibilitySettings.length} eligibility settings for event ${eventId}`);
 
     // Create eligibility map for quick lookup
@@ -527,7 +528,7 @@ router.get('/api/admin/events/:eventId/age-groups', async (req, res) => {
             projectedTeams: 0,
             createdAt: new Date().toISOString(),
             selected: false,
-            isEligible: true
+            isEligible: isEligible
           });
           console.log(`✓ Added eligible standard age group: ${stdGroup.ageGroup} ${stdGroup.gender}`);
         } else {
