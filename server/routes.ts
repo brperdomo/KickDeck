@@ -679,10 +679,13 @@ export function registerRoutes(app: Express): Server {
           .from(ageGroupEligibilitySettings)
           .where(eq(ageGroupEligibilitySettings.eventId, parsedEventId));
 
+        console.log(`Found ${eligibilitySettings.length} eligibility settings for event ${parsedEventId}:`, eligibilitySettings);
+
         // Create a map for quick eligibility lookup
         const eligibilityMap = new Map();
         eligibilitySettings.forEach(setting => {
           eligibilityMap.set(setting.ageGroupId, setting.isEligible);
+          console.log(`Eligibility setting: age group ${setting.ageGroupId} = ${setting.isEligible}`);
         });
           
         // Deduplicate age groups based on division code and filter for eligibility
@@ -696,6 +699,8 @@ export function registerRoutes(app: Express): Server {
             ? eligibilityMap.get(group.id) 
             : (group.isEligible === undefined ? true : Boolean(group.isEligible));
           
+          console.log(`Age group ${group.ageGroup} ${group.gender} (ID: ${group.id}): isEligible = ${isEligible}`);
+          
           // Only include eligible age groups for public registration
           if (isEligible !== false) {
             // Use division code or create one from gender and age group if not available
@@ -705,47 +710,16 @@ export function registerRoutes(app: Express): Server {
             if (!uniqueMap.has(key)) {
               uniqueMap.set(key, {...group});
               uniqueAgeGroups.push(group);
+              console.log(`✓ Including eligible age group: ${group.ageGroup} ${group.gender}`);
             }
+          } else {
+            console.log(`✗ Excluding ineligible age group: ${group.ageGroup} ${group.gender}`);
           }
         }
         
-        // Define standard age groups to ensure none are missing (especially B2018, B2019)
-        const STANDARD_AGE_GROUPS = [
-          { ageGroup: 'U7', birthYear: 2018, gender: 'Boys', divisionCode: 'B2018' },
-          { ageGroup: 'U7', birthYear: 2018, gender: 'Girls', divisionCode: 'G2018' },
-          { ageGroup: 'U6', birthYear: 2019, gender: 'Boys', divisionCode: 'B2019' },
-          { ageGroup: 'U6', birthYear: 2019, gender: 'Girls', divisionCode: 'G2019' }
-        ];
-        
-        // Check for missing standard age groups but don't try to insert them directly in this endpoint
-        for (const standardGroup of STANDARD_AGE_GROUPS) {
-          if (!uniqueMap.has(standardGroup.divisionCode)) {
-            console.log(`Adding missing standard age group: ${standardGroup.divisionCode} to the response`);
-            
-            // Instead of trying to insert with null ID, just add it to the response
-            // We won't persist this to the database here - it will be properly created later if needed
-            const dummyAgeGroup = {
-              id: 0, // Use a dummy ID for the response; this won't be persisted
-              eventId: parsedEventId.toString(),
-              ageGroup: standardGroup.ageGroup,
-              gender: standardGroup.gender,
-              birthYear: standardGroup.birthYear,
-              divisionCode: standardGroup.divisionCode,
-              fieldSize: standardGroup.ageGroup.startsWith('U') ?
-                  (parseInt(standardGroup.ageGroup.substring(1)) <= 7 ? '4v4' :
-                  parseInt(standardGroup.ageGroup.substring(1)) <= 10 ? '7v7' :
-                  parseInt(standardGroup.ageGroup.substring(1)) <= 12 ? '9v9' : '11v11') : '11v11',
-              projectedTeams: 0,
-              createdAt: new Date().toISOString(),
-              birthDateStart: new Date(standardGroup.birthYear, 0, 1).toISOString().split('T')[0],
-              birthDateEnd: new Date(standardGroup.birthYear, 11, 31).toISOString().split('T')[0]
-            };
-            
-            // Include in the response without writing to database directly
-            uniqueAgeGroups.push(dummyAgeGroup);
-            uniqueMap.set(standardGroup.divisionCode, true);
-          }
-        }
+        // For public registration, we should ONLY show age groups that exist in the database
+        // and are marked as eligible. We don't add any missing standard age groups here
+        // since those would bypass the eligibility filtering.
         
         console.log(`Deduplicated age groups: ${uniqueAgeGroups.length} unique groups from ${rawAgeGroups.length} total`);
           
