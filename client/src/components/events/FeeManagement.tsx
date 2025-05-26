@@ -182,17 +182,25 @@ export function FeeManagement() {
       const uniqueAgeGroups = data;
       
       // Sort age groups properly to fix display order issue
+      console.log('Sample age group data:', uniqueAgeGroups[0]);
       const sortedAgeGroups = uniqueAgeGroups.sort((a, b) => {
         // First sort by age group number (U4, U5, U6, etc.)
-        const getAgeNumber = (ageGroup) => {
-          if (ageGroup.startsWith('U')) {
-            return parseInt(ageGroup.substring(1));
+        // Use the correct field name - check both ageGroup and name fields
+        const getAgeNumber = (ageGroupName) => {
+          if (ageGroupName && ageGroupName.startsWith('U')) {
+            return parseInt(ageGroupName.substring(1));
           }
           return 999; // Put non-U groups at the end
         };
         
-        const ageA = getAgeNumber(a.ageGroup);
-        const ageB = getAgeNumber(b.ageGroup);
+        // Use whichever field contains the age group (U7, U15, etc.)
+        const ageGroupA = a.ageGroup || a.name || '';
+        const ageGroupB = b.ageGroup || b.name || '';
+        
+        console.log(`Comparing: ${ageGroupA} (${getAgeNumber(ageGroupA)}) vs ${ageGroupB} (${getAgeNumber(ageGroupB)})`);
+        
+        const ageA = getAgeNumber(ageGroupA);
+        const ageB = getAgeNumber(ageGroupB);
         
         if (ageA !== ageB) {
           return ageA - ageB;
