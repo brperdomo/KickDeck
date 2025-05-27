@@ -706,7 +706,7 @@ export function registerRoutes(app: Express): Server {
           console.log(`Age group ${group.ageGroup} ${group.gender} (ID: ${group.id}): isEligible = ${isEligible}`);
           
           // Only include eligible age groups for public registration
-          if (isEligible !== false) {
+          if (isEligible === true) {
             // Use division code or create one from gender and age group if not available
             const divisionCode = group.divisionCode || `${group.gender.charAt(0)}${group.ageGroup.replace(/\D/g, '')}`;
             const key = divisionCode;
