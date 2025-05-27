@@ -699,6 +699,7 @@ export function registerRoutes(app: Express): Server {
         
         for (const group of rawAgeGroups) {
           // Check if this age group is eligible for registration
+          // Priority: eligibility_setting_is_eligible > age_group_is_eligible > default true
           const isEligible = eligibilityMap.has(group.id) 
             ? eligibilityMap.get(group.id) 
             : (group.isEligible === undefined ? true : Boolean(group.isEligible));
