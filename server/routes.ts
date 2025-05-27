@@ -4548,66 +4548,9 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             throw new Error("Event not found");
           }
 
-          // Get existing agegroups
-          const existingAgeGroups = await tx
-            .select()
-            .from(eventAgeGroups)
-            .where(eq(eventAgeGroups.eventId, eventId));
-
-          // Get age groups that have teams
-          const ageGroupsWithTeams = await tx
-            .select({
-              ageGroupId: teams.ageGroupId,
-              teamCount: sql<number>`count(*)`.mapWith(Number)
-            })
-            .from(teams)
-            .where(eq(teams.eventId, eventId))
-            .groupBy(teams.ageGroupId);
-
-          const ageGroupsWithTeamsMap = new Map(
-            ageGroupsWithTeams.map(({ ageGroupId, teamCount }) => [ageGroupId, teamCount])
-          );
-
-          // Map of existing age groups by their properties for comparison
-          const existingAgeGroupsMap = new Map(
-            existingAgeGroups.map(group => [
-              `${group.gender}-${group.ageGroup}-${group.fieldSize}`,
-              group
-            ])
-          );
-
-          // Define standard age groups directly rather than importing from client
-          const PREDEFINED_AGE_GROUPS = [
-            { ageGroup: 'U8', gender: 'Boys', birthYear: 2017, divisionCode: 'B2017' },
-            { ageGroup: 'U8', gender: 'Girls', birthYear: 2017, divisionCode: 'G2017' },
-            { ageGroup: 'U9', gender: 'Boys', birthYear: 2016, divisionCode: 'B2016' },
-            { ageGroup: 'U9', gender: 'Girls', birthYear: 2016, divisionCode: 'G2016' },
-            { ageGroup: 'U10', gender: 'Boys', birthYear: 2015, divisionCode: 'B2015' },
-            { ageGroup: 'U10', gender: 'Girls', birthYear: 2015, divisionCode: 'G2015' },
-            { ageGroup: 'U11', gender: 'Boys', birthYear: 2014, divisionCode: 'B2014' },
-            { ageGroup: 'U11', gender: 'Girls', birthYear: 2014, divisionCode: 'G2014' },
-            { ageGroup: 'U12', gender: 'Boys', birthYear: 2013, divisionCode: 'B2013' },
-            { ageGroup: 'U12', gender: 'Girls', birthYear: 2013, divisionCode: 'G2013' },
-            { ageGroup: 'U13', gender: 'Boys', birthYear: 2012, divisionCode: 'B2012' },
-            { ageGroup: 'U13', gender: 'Girls', birthYear: 2012, divisionCode: 'G2012' },
-            { ageGroup: 'U14', gender: 'Boys', birthYear: 2011, divisionCode: 'B2011' },
-            { ageGroup: 'U14', gender: 'Girls', birthYear: 2011, divisionCode: 'G2011' },
-            { ageGroup: 'U15', gender: 'Boys', birthYear: 2010, divisionCode: 'B2010' },
-            { ageGroup: 'U15', gender: 'Girls', birthYear: 2010, divisionCode: 'G2010' },
-            { ageGroup: 'U16', gender: 'Boys', birthYear: 2009, divisionCode: 'B2009' },
-            { ageGroup: 'U16', gender: 'Girls', birthYear: 2009, divisionCode: 'G2009' },
-            { ageGroup: 'U17', gender: 'Boys', birthYear: 2008, divisionCode: 'B2008' },
-            { ageGroup: 'U17', gender: 'Girls', birthYear: 2008, divisionCode: 'G2008' },
-            { ageGroup: 'U18', gender: 'Boys', birthYear: 2007, divisionCode: 'B2007' },
-            { ageGroup: 'U18', gender: 'Girls', birthYear: 2007, divisionCode: 'G2007' },
-            { ageGroup: 'U19', gender: 'Boys', birthYear: 2006, divisionCode: 'B2006' },
-            { ageGroup: 'U19', gender: 'Girls', birthYear: 2006, divisionCode: 'G2006' }
-          ];
-
-          // CONSTRAINT SAFE: Skip age group management during event updates
-          // Age groups are managed separately to prevent foreign key violations
-          // Eligibility is handled through the separate eligibility table
-          console.log('Skipping age group management during event update to prevent constraint violations');
+          // COMPLETELY DISABLED: All age group processing during event updates
+          // This prevents ANY database constraint violations
+          console.log('All age group processing completely disabled during event updates to prevent constraint violations');
 
           // COMPLETELY DISABLED: All age group management during event updates
           // This prevents ALL foreign key constraint violations
@@ -4634,47 +4577,10 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
                 }
               }
               
-              // Check for age groups with brackets before attempting deletion
-              const ageGroupsWithBrackets = await tx
-                .select({ ageGroupId: sql`DISTINCT age_group_id` })
-                .from(sql`event_brackets`)
-                .where(sql`age_group_id IN (SELECT id FROM event_age_groups WHERE event_id = ${eventId})`);
+              // COMPLETELY REMOVED: All age group processing logic to prevent constraint violations
+              console.log('All age group processing disabled during event updates to prevent foreign key violations');
               
-              const bracketAgeGroupIds = ageGroupsWithBrackets.map(row => row.ageGroupId);
-              
-              // Preserve age groups that have teams OR brackets
-              const idsToKeep = Array.from(ageGroupsToPreserve.keys()).concat(bracketAgeGroupIds);
-              const uniqueIdsToKeep = [...new Set(idsToKeep)];
-              
-              if (uniqueIdsToKeep.length > 0) {
-                console.log(`Preserving ${uniqueIdsToKeep.length} age groups that have teams or brackets`);
-                // Only delete age groups that don't have teams or brackets
-                const ageGroupsToDelete = existingAgeGroups.filter(ag => !uniqueIdsToKeep.includes(ag.id));
-                
-                // DISABLED: Never delete age groups when updating eligibility
-                // This prevents foreign key constraint violations
-                console.log(`Found ${ageGroupsToDelete.length} age groups that could be deleted, but deletion is disabled to prevent constraint violations`);
-                console.log('Age group eligibility is managed through the separate eligibility table only');
-              } else {
-                console.log('No age groups to preserve, but checking for brackets before deletion');
-                // DISABLED: Never delete age groups when updating eligibility
-                // This prevents foreign key constraint violations
-                console.log('Age group deletion disabled - eligibility is managed through separate table only');
-              }
-              
-              // Create a map of existing age groups after deletion (only ones with teams)
-              const existingAgeGroupMap = new Map();
-              for (const group of Array.from(ageGroupsToPreserve.values())) {
-                const key = `${group.gender}-${group.ageGroup}`;
-                existingAgeGroupMap.set(key, group);
-              }
-              
-              // Add all age groups from the seasonal scope
-              for (const scopeGroup of scopeAgeGroups) {
-                const key = `${scopeGroup.gender}-${scopeGroup.ageGroup}`;
-                const existingGroup = existingAgeGroupMap.get(key);
-                
-                if (!existingGroup) {
+              // Skip all age group processing entirely
                   // Calculate field size based on age group
                   const ageNum = scopeGroup.ageGroup.startsWith('U') ? 
                     parseInt(scopeGroup.ageGroup.substring(1)) : 18;
