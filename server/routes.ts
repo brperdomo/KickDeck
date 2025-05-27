@@ -4604,62 +4604,15 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             { ageGroup: 'U19', gender: 'Girls', birthYear: 2006, divisionCode: 'G2006' }
           ];
 
-          // Always ensure all standard age groups exist for every event
-          for (const group of PREDEFINED_AGE_GROUPS) {
-            const groupKey = group.divisionCode;
-            const existingGroup = existingAgeGroupsMap.get(groupKey);
+          // CONSTRAINT SAFE: Skip age group management during event updates
+          // Age groups are managed separately to prevent foreign key violations
+          // Eligibility is handled through the separate eligibility table
+          console.log('Skipping age group management during event update to prevent constraint violations');
 
-            // Calculate appropriate field size based on age group
-            const ageNum = group.ageGroup.startsWith('U') ? 
-              parseInt(group.ageGroup.substring(1)) : 18;
-
-            const fieldSize = ageNum <= 7 ? '4v4' : 
-                              ageNum <= 10 ? '7v7' : 
-                              ageNum <= 12 ? '9v9' : '11v11';
-
-            if (existingGroup) {
-              // Update existing group - just maintain the basic info
-              await tx
-                .update(eventAgeGroups)
-                .set({
-                  ageGroup: group.ageGroup,
-                  gender: group.gender,
-                  divisionCode: group.divisionCode,
-                  birthDateStart: existingGroup.birthDateStart,
-                  birthDateEnd: existingGroup.birthDateEnd,
-                  fieldSize: fieldSize,
-                  // Keep existing values for these fields
-                  projectedTeams: existingGroup.projectedTeams,
-                  amountDue: existingGroup.amountDue,
-                  scoringRule: existingGroup.scoringRule,
-                })
-                .where(eq(eventAgeGroups.id, existingGroup.id));
-
-              // Remove from map since we've processed it
-              existingAgeGroupsMap.delete(groupKey);
-            } else {
-              // Create new standard group
-              await tx
-                .insert(eventAgeGroups)
-                .values({
-                  eventId,
-                  gender: group.gender,
-                  ageGroup: group.ageGroup,
-                  divisionCode: group.divisionCode,
-                  projectedTeams: 0,
-                  birthDateStart: null,
-                  birthDateEnd: null,
-                  scoringRule: null,
-                  fieldSize: fieldSize,
-                  amountDue: null,
-                  createdAt: new Date().toISOString(),
-                });
-            }
-          }
-
-          // DISABLED: Skip age group reorganization to prevent constraint violations
-          // The eligibility system should work independently of age group management
-          if (false && eventData.seasonalScopeId) {
+          // COMPLETELY DISABLED: All age group management during event updates
+          // This prevents ALL foreign key constraint violations
+          // Eligibility is managed through the separate eligibility table only
+          if (false) {
             const seasonalScopeId = parseInt(eventData.seasonalScopeId.toString());
             console.log(`Event update is using seasonal scope: ${seasonalScopeId}`);
             
@@ -4782,11 +4735,10 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             }
           }
           
-          // Handle age groups that were removed
-          const remainingGroups = Array.from(existingAgeGroupsMap.entries());
-          // DISABLED: Never delete age groups to prevent constraint violations
-          // Age group eligibility is managed through the separate eligibility table
-          console.log(`Found ${remainingGroups.size} age groups that could be cleaned up, but deletion is disabled to prevent constraint violations`);
+          // CONSTRAINT SAFE: Age group management completely disabled during event updates
+          // All age group eligibility is handled through the separate eligibility table only
+          // This prevents ANY foreign key constraint violations
+          console.log('Age group management during event update is disabled - eligibility handled separately');
 
           // Update complex assignments
           await tx.execute(sql`DELETE FROM event_complexes WHERE event_id = ${eventId}`);
