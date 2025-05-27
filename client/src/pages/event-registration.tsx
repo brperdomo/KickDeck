@@ -6,7 +6,6 @@ import { BracketSelector } from "@/components/registration/BracketSelector";
 import { useToast } from "@/hooks/use-toast";
 import { useSavedRegistration } from "@/hooks/use-saved-registration";
 import { SavedRegistrationNotice } from "@/components/registration/SavedRegistrationNotice";
-import { SaveForLaterButton } from "@/components/registration/SaveForLaterButton";
 import { 
   Loader2, 
   CheckCircle2, 
@@ -994,8 +993,8 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
   // Track if we've shown the saved registration alert
   const [showSavedRegistrationAlert, setShowSavedRegistrationAlert] = useState(false);
   
-  // Flag to track auto-saving
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  // Flag to track auto-saving (disabled since we removed save functionality)
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(false);
   
   // We'll move this effect after the form is initialized
   
@@ -3128,13 +3127,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                     </div>
                   )}
 
-                  <div className="flex justify-between pt-6">
-                    <SaveForLaterButton 
-                      onSave={saveCurrentState} 
-                      variant="ghost"
-                      className="transition-all hover:bg-primary/5"
-                    />
-                    
+                  <div className="flex justify-end pt-6">
                     <div className="flex space-x-4">
                       <Button
                         type="button"
@@ -3903,12 +3896,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                     )}
                   </div>
                   
-                  <div className="flex justify-between pt-6">
-                    <SaveForLaterButton 
-                      onSave={saveCurrentState} 
-                      variant="ghost"
-                    />
-                    
+                  <div className="flex justify-end pt-6">
                     <div className="flex space-x-4">
                       <Button
                         type="button"
@@ -4417,12 +4405,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                   </div>
                 )}
                 
-                <div className="flex justify-between pt-6">
-                  <SaveForLaterButton 
-                    onSave={saveCurrentState} 
-                    variant="ghost"
-                  />
-                  
+                <div className="flex justify-end pt-6">
                   <Button
                     type="button"
                     variant="outline"
