@@ -2985,7 +2985,19 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setCurrentStep('auth')}
+                        onClick={() => {
+                          // When going back, reset authentication state for clarity
+                          setEmailExists(false);
+                          setRedactedUserData(null);
+                          setAuthError(null);
+                          setIsVerifyingPassword(false);
+                          form.setValue('password', '');
+                          form.setValue('emailChecked', false);
+                          form.setValue('emailExists', false);
+                          form.setValue('authenticated', false);
+                          console.log('Cleared authentication state when going back');
+                          setCurrentStep('auth');
+                        }}
                         className="border-gray-300 hover:border-gray-400 transition-all hover:bg-gray-50"
                       >
                         Back
