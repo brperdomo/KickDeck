@@ -1013,9 +1013,9 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
   
   // We'll move this effect after the form is initialized
   
-  // Setup auto-saving
+  // Auto-save functionality removed for cleaner flow
   useEffect(() => {
-    if (!autoSaveEnabled || isPreview) return;
+    if (isPreview) return;
     
     // Save the state every 30 seconds if enabled
     const autoSaveTimer = setInterval(() => {
@@ -1030,7 +1030,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
     return () => {
       clearInterval(autoSaveTimer);
     };
-  }, [autoSaveEnabled, isPreview, currentStep]);
+  }, [isPreview, currentStep]);
   
   // Function to save the current registration state
   const saveCurrentState = (silent = false) => {
@@ -1304,32 +1304,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
     }
   }, [user, form, household, householdLoading, applyHouseholdData, toast]);
   
-  // Check for saved data on component mount and automatically load it
-  useEffect(() => {
-    // Only try to load saved data when the form is initialized
-    if (hasSavedData && !isPreview && form) {
-      console.log('Found saved registration data from:', new Date(lastSaved || 0).toLocaleString());
-      // Automatically load saved data without asking user
-      if (savedData) {
-        const success = loadSavedState(); // Use the existing loadSavedState function
-        if (success) {
-          toast({
-            title: "Registration Restored",
-            description: "Your saved registration has been loaded automatically.",
-          });
-        }
-      }
-      // Show the notice to inform the user (will automatically dismiss after 5 seconds)
-      setShowSavedRegistrationAlert(true);
-      
-      // Automatically hide the notice after 5 seconds
-      const timer = setTimeout(() => {
-        setShowSavedRegistrationAlert(false);
-      }, 5000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [hasSavedData, lastSaved, savedData, isPreview, form, toast, loadSavedState]);
+
   
 
   
