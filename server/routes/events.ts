@@ -101,12 +101,14 @@ router.patch('/:id', async (req, res) => {
     const eventId = parseInt(id);
     const eventData = req.body;
 
-    console.log('Updating event with data:', eventData);
+    console.log('Updating event with data:', JSON.stringify(eventData, null, 2));
 
     // Convert seasonalScopeId to number or null
     const seasonalScopeId = eventData.seasonalScopeId ?
       Number(eventData.seasonalScopeId) : null;
     console.log('Using seasonalScopeId:', seasonalScopeId);
+    console.log('seasonalScopeId type:', typeof seasonalScopeId);
+    console.log('seasonalScopeId truthy check:', !!seasonalScopeId);
 
     // Update the event in the database first
     const event = await db.query.events.findFirst({
@@ -135,33 +137,26 @@ router.patch('/:id', async (req, res) => {
     if (seasonalScopeId) {
       console.log(`Setting seasonalScopeId ${seasonalScopeId} for event ${eventId}`);
 
-      // Check if seasonal scope setting already exists
-      const existingScopeSetting = await db.query.eventSettings.findFirst({
-        where: and(
-          eq(eventSettings.eventId, eventId.toString()),
-          eq(eventSettings.settingKey, 'seasonalScopeId')
-        )
-      });
-
-      if (existingScopeSetting) {
-        // Update existing setting
-        await db.update(eventSettings)
-          .set({
-            settingValue: seasonalScopeId.toString(),
-            updatedAt: new Date().toISOString()
-          })
-          .where(eq(eventSettings.id, existingScopeSetting.id));
-        console.log(`Updated existing seasonalScopeId setting for event ${eventId}`);
-      } else {
-        // Insert new setting
-        await db.insert(eventSettings).values({
-          eventId: eventId.toString(),
-          settingKey: 'seasonalScopeId',
-          settingValue: seasonalScopeId.toString(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
-        console.log(`Created new seasonalScopeId setting for event ${eventId}`);
+      try {
+        // Use direct SQL to handle the seasonal scope setting
+        const eventIdStr = eventId.toString();
+        
+        // First, delete any existing seasonal scope setting
+        await db.execute(sql`
+          DELETE FROM event_settings 
+          WHERE event_id = ${eventIdStr} AND setting_key = 'seasonalScopeId'
+        `);
+        
+        // Then insert the new setting
+        await db.execute(sql`
+          INSERT INTO event_settings (event_id, setting_key, setting_value, created_at, updated_at)
+          VALUES (${eventIdStr}, 'seasonalScopeId', ${seasonalScopeId.toString()}, ${new Date().toISOString()}, ${new Date().toISOString()})
+        `);
+        
+        console.log(`✅ Successfully saved seasonalScopeId ${seasonalScopeId} for event ${eventId}`);
+      } catch (error) {
+        console.error('Error saving seasonal scope setting:', error);
+        throw error;
       }
 
       // DISABLED: Never delete age groups to prevent constraint violations
