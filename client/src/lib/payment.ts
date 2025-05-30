@@ -54,7 +54,7 @@ export async function createPaymentIntent(amount: number, teamId: number, metada
  * @param teamId The ID of the team being registered
  * @param metadata Additional metadata to include with the setup intent
  */
-export async function createSetupIntent(teamId: number, metadata: Record<string, string> = {}) {
+export async function createSetupIntent(teamId: number | string, metadata: Record<string, string> = {}) {
   try {
     const response = await fetch('/api/payments/create-setup-intent', {
       method: 'POST',

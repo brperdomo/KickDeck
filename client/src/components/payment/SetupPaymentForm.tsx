@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { createSetupIntent, confirmSetup } from '@/lib/payment';
 
 interface SetupPaymentFormProps {
-  teamId: number;
+  teamId: number | string;
   expectedAmount: number;
   onSuccess: (setupIntentId: string, paymentMethodId: string) => void;
   onError?: (error: Error) => void;
