@@ -78,8 +78,8 @@ export function SetupPaymentForm({
 
     try {
       // Confirm setup intent without redirect to keep user on the form
-      const stripe = await import('@/lib/payment').then(m => m.getStripe());
-      const stripeInstance = await stripe();
+      const { getStripe } = await import('@/lib/payment');
+      const stripeInstance = await getStripe();
       
       if (!stripeInstance) {
         throw new Error('Stripe failed to load');
