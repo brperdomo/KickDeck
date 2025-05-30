@@ -150,7 +150,7 @@ export default function PaymentSetupConfirmation() {
         </CardHeader>
         <CardContent className="pt-6">
           <div className="space-y-6">
-            <Alert variant="success" className="bg-green-50 text-green-800 border-green-200">
+            <Alert className="bg-green-50 text-green-800 border-green-200">
               <CheckCircle className="h-4 w-4" />
               <AlertTitle>Payment setup successful</AlertTitle>
               <AlertDescription>
