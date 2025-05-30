@@ -2764,10 +2764,13 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                                 <FormControl>
                                   <Input 
                                     type="password" 
-                                    placeholder="Create a password (min 8 characters)" 
+                                    placeholder="8+ characters, include number & special character" 
                                     {...field} 
                                   />
                                 </FormControl>
+                                <FormDescription className="text-sm text-muted-foreground">
+                                  Password must be at least 8 characters and include a number and special character (e.g., !@#$%)
+                                </FormDescription>
                                 <FormMessage />
                               </FormItem>
                             )}
