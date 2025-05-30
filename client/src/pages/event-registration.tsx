@@ -4709,10 +4709,127 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                 >
                   Registration Complete
                 </h3>
+                
                 <div className="bg-green-50 border border-green-200 rounded-md p-4">
                   <div className="flex items-center">
                     <CheckCircle className="h-6 w-6 text-green-500 mr-2" />
                     <p className="text-green-700 font-medium">Your team has been successfully registered for this event.</p>
+                  </div>
+                </div>
+
+                {/* Payment Status Notice */}
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                  <div className="flex items-start">
+                    <Info className="h-5 w-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-medium text-blue-800 mb-2">Payment Setup Complete</h4>
+                      <p className="text-sm text-blue-700 mb-2">
+                        Your payment method has been securely stored and verified. You will be charged when your team is approved for the event.
+                      </p>
+                      <p className="text-sm text-blue-600 font-medium">
+                        This is not your final receipt. You will receive a payment confirmation email once the charge is processed.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Registration Summary */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Registration Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Contact Information */}
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-3">Contact Information</h4>
+                      <div className="grid gap-2 md:grid-cols-2 text-sm">
+                        <div>
+                          <span className="text-gray-500">Name:</span>
+                          <span className="ml-2 font-medium">{form.getValues().firstName} {form.getValues().lastName}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Email:</span>
+                          <span className="ml-2 font-medium">{form.getValues().email}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Phone:</span>
+                          <span className="ml-2 font-medium">{form.getValues().phone}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Team Information */}
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-3">Team Information</h4>
+                      <div className="grid gap-2 text-sm">
+                        <div>
+                          <span className="text-gray-500">Team Name:</span>
+                          <span className="ml-2 font-medium">{teamForm.getValues().name}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Age Group:</span>
+                          <span className="ml-2 font-medium">
+                            {selectedAgeGroup ? `${selectedAgeGroup.ageGroup} ${selectedAgeGroup.gender}` : 'Not selected'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Club:</span>
+                          <span className="ml-2 font-medium">{teamForm.getValues().clubName}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Head Coach:</span>
+                          <span className="ml-2 font-medium">{teamForm.getValues().headCoachName}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Team Manager:</span>
+                          <span className="ml-2 font-medium">{teamForm.getValues().managerName}</span>
+                        </div>
+                        {addRosterLater && (
+                          <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mt-2">
+                            <span className="text-sm text-yellow-800">
+                              <strong>Note:</strong> You chose to add your team roster later. You can complete this in your dashboard.
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Financial Summary */}
+                    {(requiredFees.length > 0 || selectedFee) && (
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-3">Expected Charges</h4>
+                        <div className="space-y-2 text-sm">
+                          {selectedFee && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">{selectedFee.name}</span>
+                              <span className="font-medium">${(selectedFee.amount / 100).toFixed(2)}</span>
+                            </div>
+                          )}
+                          {requiredFees.map((fee) => (
+                            <div key={fee.id} className="flex justify-between">
+                              <span className="text-gray-600">{fee.name}</span>
+                              <span className="font-medium">${(fee.amount / 100).toFixed(2)}</span>
+                            </div>
+                          ))}
+                          <hr className="my-2" />
+                          <div className="flex justify-between font-semibold">
+                            <span>Total Expected Charge:</span>
+                            <span>${calculateTotalAmount()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Next Steps */}
+                <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+                  <h4 className="font-medium text-gray-900 mb-2">What Happens Next?</h4>
+                  <div className="text-sm text-gray-700 space-y-1">
+                    <p>• Event organizers will review your registration</p>
+                    <p>• You will receive an email notification when your team is approved</p>
+                    <p>• Payment will be processed automatically upon approval</p>
+                    <p>• You can track your registration status in your dashboard</p>
                   </div>
                 </div>
                 
@@ -4720,7 +4837,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                   onClick={() => {
                     window.location.href = '/dashboard';
                   }}
-                  className="text-white"
+                  className="text-white w-full md:w-auto"
                   style={{ backgroundColor: event?.branding?.primaryColor || '#2C5282' }}
                 >
                   Go to Dashboard
