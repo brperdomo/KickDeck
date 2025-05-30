@@ -1926,6 +1926,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
               firstName: data.firstName,
               lastName: data.lastName,
               email: data.email,
+              phone: data.phone,
             }),
             credentials: 'include',
           });
