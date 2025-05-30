@@ -4264,7 +4264,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                             
                             <SetupPaymentProvider clientSecret={null}>
                               <SetupPaymentForm 
-                                teamId={0} // This will be replaced by the real team ID after registration
+                                teamId={`temp-${Date.now()}`} // Use temporary ID that won't conflict with database
                                 expectedAmount={parseFloat(calculateTotalAmount()) * 100} // Convert back to cents for payment processing
                                 teamName={teamForm.getValues().name}
                                 eventName={event?.name || 'tournament'}
