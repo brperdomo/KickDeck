@@ -2270,7 +2270,7 @@ export function registerRoutes(app: Express): Server {
           return res.status(400).send("First name and last name are required");
         }
 
-        // Update user
+        // Update user in database
         await db
           .update(users)
           .set({
@@ -2281,25 +2281,26 @@ export function registerRoutes(app: Express): Server {
           })
           .where(eq(users.id, userId));
 
-        // Get updated user
+        // Get updated user data
         const [updatedUser] = await db
           .select()
           .from(users)
           .where(eq(users.id, userId))
           .limit(1);
 
+        if (!updatedUser) {
+          return res.status(404).send("User not found");
+        }
+
+        // Update the session with new user data
+        req.user = updatedUser;
+
+        // Remove sensitive data before returning
+        const { password, ...userData } = updatedUser;
+
         res.json({
           message: "Account updated successfully",
-          user: {
-            id: updatedUser.id,
-            email: updatedUser.email,
-            firstName: updatedUser.firstName,
-            lastName: updatedUser.lastName,
-            phone: updatedUser.phone,
-            isAdmin: updatedUser.isAdmin,
-            isParent: updatedUser.isParent,
-            householdId: updatedUser.householdId
-          }
+          user: userData
         });
       } catch (error) {
         console.error('Error updating user account:', error);
@@ -4005,50 +4006,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
     });
 
     // User account management endpoints
-    app.put('/api/user/account', async (req, res) => {
-      if (!req.isAuthenticated()) {
-        return res.status(401).send("Not authenticated");
-      }
 
-      try {
-        const userId = req.user.id;
-        const { firstName, lastName, phone } = req.body;
-
-        // Validate input
-        if (!firstName || !lastName) {
-          return res.status(400).send("First name and last name are required");
-        }
-
-        // Update user data
-        await db
-          .update(users)
-          .set({
-            firstName,
-            lastName,
-            phone: phone || null,
-            // Explicitly cast to partial user to help TypeScript
-          } as Partial<typeof users.$inferInsert>)
-          .where(eq(users.id, userId));
-
-        // Get updated user
-        const [updatedUser] = await db
-          .select()
-          .from(users)
-          .where(eq(users.id, userId))
-          .limit(1);
-
-        // Remove sensitive data before returning
-        const { password, ...userData } = updatedUser;
-        
-        res.json({
-          message: "Account updated successfully",
-          user: userData
-        });
-      } catch (error) {
-        console.error('Error updating account:', error);
-        res.status(500).send("Failed to update account information");
-      }
-    });
 
     // Password update endpoint
     app.put('/api/user/password', async (req, res) => {
