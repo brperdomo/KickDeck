@@ -1,0 +1,320 @@
+use-user.ts:61 
+            
+            
+           GET https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/api/user 401 (Unauthorized)
+fetchUser @ use-user.ts:61
+fetchFn @ @tanstack_react-query.js?v=e7b2193e:839
+run @ @tanstack_react-query.js?v=e7b2193e:493
+start @ @tanstack_react-query.js?v=e7b2193e:535
+fetch @ @tanstack_react-query.js?v=e7b2193e:925
+executeFetch_fn @ @tanstack_react-query.js?v=e7b2193e:2237
+onSubscribe @ @tanstack_react-query.js?v=e7b2193e:1924
+subscribe @ @tanstack_react-query.js?v=e7b2193e:24
+(anonymous) @ @tanstack_react-query.js?v=e7b2193e:3047
+subscribeToStore @ chunk-RPCDYKBN.js?v=e7b2193e:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e7b2193e:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e7b2193e:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e7b2193e:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e7b2193e:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e7b2193e:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e7b2193e:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e7b2193e:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e7b2193e:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e7b2193e:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e7b2193e:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e7b2193e:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e7b2193e:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e7b2193e:18718
+workLoop @ chunk-RPCDYKBN.js?v=e7b2193e:197
+flushWork @ chunk-RPCDYKBN.js?v=e7b2193e:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e7b2193e:384Understand this error
+AnimatedBackground.tsx:30 AnimatedBackground initialized with type: particles
+AnimatedBackground.tsx:30 AnimatedBackground initialized with type: particles
+use-user.ts:61 Fetch failed loading: GET "https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/api/user".
+fetchUser @ use-user.ts:61
+fetchFn @ @tanstack_react-query.js?v=e7b2193e:839
+run @ @tanstack_react-query.js?v=e7b2193e:493
+start @ @tanstack_react-query.js?v=e7b2193e:535
+fetch @ @tanstack_react-query.js?v=e7b2193e:925
+executeFetch_fn @ @tanstack_react-query.js?v=e7b2193e:2237
+onSubscribe @ @tanstack_react-query.js?v=e7b2193e:1924
+subscribe @ @tanstack_react-query.js?v=e7b2193e:24
+(anonymous) @ @tanstack_react-query.js?v=e7b2193e:3047
+subscribeToStore @ chunk-RPCDYKBN.js?v=e7b2193e:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e7b2193e:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e7b2193e:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e7b2193e:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e7b2193e:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e7b2193e:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e7b2193e:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e7b2193e:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e7b2193e:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e7b2193e:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e7b2193e:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e7b2193e:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e7b2193e:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e7b2193e:18718
+workLoop @ chunk-RPCDYKBN.js?v=e7b2193e:197
+flushWork @ chunk-RPCDYKBN.js?v=e7b2193e:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e7b2193e:384
+use-auth.tsx:85 
+            
+            
+           GET https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/api/user 401 (Unauthorized)
+queryFn @ use-auth.tsx:85
+fetchFn @ @tanstack_react-query.js?v=e7b2193e:839
+run @ @tanstack_react-query.js?v=e7b2193e:493
+start @ @tanstack_react-query.js?v=e7b2193e:535
+fetch @ @tanstack_react-query.js?v=e7b2193e:925
+executeFetch_fn @ @tanstack_react-query.js?v=e7b2193e:2237
+onSubscribe @ @tanstack_react-query.js?v=e7b2193e:1924
+subscribe @ @tanstack_react-query.js?v=e7b2193e:24
+(anonymous) @ @tanstack_react-query.js?v=e7b2193e:3047
+subscribeToStore @ chunk-RPCDYKBN.js?v=e7b2193e:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e7b2193e:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e7b2193e:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e7b2193e:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e7b2193e:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e7b2193e:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e7b2193e:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e7b2193e:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e7b2193e:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e7b2193e:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e7b2193e:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e7b2193e:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e7b2193e:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e7b2193e:18718
+workLoop @ chunk-RPCDYKBN.js?v=e7b2193e:197
+flushWork @ chunk-RPCDYKBN.js?v=e7b2193e:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e7b2193e:384Understand this error
+use-auth.tsx:85 Fetch failed loading: GET "https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/api/user".
+queryFn @ use-auth.tsx:85
+fetchFn @ @tanstack_react-query.js?v=e7b2193e:839
+run @ @tanstack_react-query.js?v=e7b2193e:493
+start @ @tanstack_react-query.js?v=e7b2193e:535
+fetch @ @tanstack_react-query.js?v=e7b2193e:925
+executeFetch_fn @ @tanstack_react-query.js?v=e7b2193e:2237
+onSubscribe @ @tanstack_react-query.js?v=e7b2193e:1924
+subscribe @ @tanstack_react-query.js?v=e7b2193e:24
+(anonymous) @ @tanstack_react-query.js?v=e7b2193e:3047
+subscribeToStore @ chunk-RPCDYKBN.js?v=e7b2193e:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=e7b2193e:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=e7b2193e:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=e7b2193e:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=e7b2193e:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=e7b2193e:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=e7b2193e:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=e7b2193e:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=e7b2193e:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=e7b2193e:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=e7b2193e:19432
+commitRoot @ chunk-RPCDYKBN.js?v=e7b2193e:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=e7b2193e:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=e7b2193e:18718
+workLoop @ chunk-RPCDYKBN.js?v=e7b2193e:197
+flushWork @ chunk-RPCDYKBN.js?v=e7b2193e:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=e7b2193e:384
+shared-9c66f09742a1b62420ed92836f2d871c.js:1 Fetch finished loading: POST "https://r.stripe.com/b".
+(anonymous) @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+e @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+l @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+(anonymous) @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+setTimeout
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+(anonymous) @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+(anonymous) @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+Promise.then
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+e @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+value @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+e @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+73027 @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+e @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+(anonymous) @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+e.O @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+(anonymous) @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+(anonymous) @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+shared-9c66f09742a1b62420ed92836f2d871c.js:1 Fetch finished loading: POST "https://r.stripe.com/b".
+(anonymous) @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+e @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+l @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+(anonymous) @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+setTimeout
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+(anonymous) @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+(anonymous) @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+Promise.then
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+log @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+log @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+e @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+73027 @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+e @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+(anonymous) @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+e.O @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+(anonymous) @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+(anonymous) @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+out-4.5.44.js:1 XHR finished loading: POST "https://m.stripe.com/6".
+(anonymous) @ out-4.5.44.js:1
+i @ out-4.5.44.js:1
+s @ out-4.5.44.js:1
+(anonymous) @ out-4.5.44.js:1
+(anonymous) @ out-4.5.44.js:1
+Promise.then
+S @ out-4.5.44.js:1
+y @ out-4.5.44.js:1
+E @ out-4.5.44.js:1
+e.onload @ inner.html:1
+script
+(anonymous) @ inner.html:1
+(anonymous) @ inner.html:1
+shared-9c66f09742a1b62420ed92836f2d871c.js:1 Fetch finished loading: POST "https://r.stripe.com/b".
+(anonymous) @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+e @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+l @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+(anonymous) @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+setTimeout
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+(anonymous) @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+value @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+log @ shared-9c66f09742a1b62420ed92836f2d871c.js:1
+log @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+value @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+value @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+(anonymous) @ controller-with-preconnect-6b5d284fcdeb35700600f74383175a83.js:1
+out-4.5.44.js:1 XHR finished loading: POST "https://m.stripe.com/6".
+(anonymous) @ out-4.5.44.js:1
+i @ out-4.5.44.js:1
+s @ out-4.5.44.js:1
+h @ out-4.5.44.js:1
+e @ inner.html:1
+auth-page.tsx:188 Submitting login with email: nahsondotcom+222@gmail.com
+use-auth.tsx:127 Login mutation called with: nahsondotcom+222@gmail.com
+use-auth.tsx:135 Sending login request with data: {email: 'nahsondotcom+222@gmail.com', passwordLength: 10}
+use-auth.tsx:150 Login response status: 200
+use-auth.tsx:166 Login successful, received user data: Yes
+use-auth.tsx:170 Fetching current user after login
+use-auth.tsx:139 Fetch finished loading: POST "https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/api/login?t=1748797856373".
+mutationFn @ use-auth.tsx:139
+fn @ @tanstack_react-query.js?v=e7b2193e:1188
+run @ @tanstack_react-query.js?v=e7b2193e:493
+start @ @tanstack_react-query.js?v=e7b2193e:535
+execute @ @tanstack_react-query.js?v=e7b2193e:1224
+await in execute
+mutate @ @tanstack_react-query.js?v=e7b2193e:2649
+onSubmit @ auth-page.tsx:192
+(anonymous) @ chunk-YABUFNLM.js?v=e7b2193e:1675
+await in (anonymous)
+callCallback2 @ chunk-RPCDYKBN.js?v=e7b2193e:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=e7b2193e:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=e7b2193e:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=e7b2193e:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=e7b2193e:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=e7b2193e:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=e7b2193e:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=e7b2193e:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=e7b2193e:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=e7b2193e:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=e7b2193e:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=e7b2193e:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=e7b2193e:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=e7b2193e:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=e7b2193e:5449
+use-auth.tsx:171 Fetch finished loading: GET "https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/api/user".
+mutationFn @ use-auth.tsx:171
+await in mutationFn
+fn @ @tanstack_react-query.js?v=e7b2193e:1188
+run @ @tanstack_react-query.js?v=e7b2193e:493
+start @ @tanstack_react-query.js?v=e7b2193e:535
+execute @ @tanstack_react-query.js?v=e7b2193e:1224
+await in execute
+mutate @ @tanstack_react-query.js?v=e7b2193e:2649
+onSubmit @ auth-page.tsx:192
+(anonymous) @ chunk-YABUFNLM.js?v=e7b2193e:1675
+await in (anonymous)
+callCallback2 @ chunk-RPCDYKBN.js?v=e7b2193e:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=e7b2193e:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=e7b2193e:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=e7b2193e:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=e7b2193e:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=e7b2193e:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=e7b2193e:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=e7b2193e:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=e7b2193e:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=e7b2193e:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=e7b2193e:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=e7b2193e:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=e7b2193e:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=e7b2193e:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=e7b2193e:5449
+use-auth.tsx:182 User data fetched after login: success
+auth-page.tsx:194 Login mutation completed successfully
+auth-page.tsx:198 Performing explicit user data fetch after login
+auth-page.tsx:93 AUTH REDIRECT - SIMPLIFIED: User logged in, handling redirect
+auth-page.tsx:139 Current path: /dashboard isAuthPage: false
+auth-page.tsx:174 On a non-auth page while logged in, not redirecting
+use-auth.tsx:85 Fetch finished loading: GET "https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/api/user".
+queryFn @ use-auth.tsx:85
+fetchFn @ @tanstack_react-query.js?v=e7b2193e:839
+run @ @tanstack_react-query.js?v=e7b2193e:493
+start @ @tanstack_react-query.js?v=e7b2193e:535
+fetch @ @tanstack_react-query.js?v=e7b2193e:925
+(anonymous) @ @tanstack_react-query.js?v=e7b2193e:1752
+(anonymous) @ @tanstack_react-query.js?v=e7b2193e:1751
+batch @ @tanstack_react-query.js?v=e7b2193e:582
+refetchQueries @ @tanstack_react-query.js?v=e7b2193e:1750
+(anonymous) @ @tanstack_react-query.js?v=e7b2193e:1742
+batch @ @tanstack_react-query.js?v=e7b2193e:582
+invalidateQueries @ @tanstack_react-query.js?v=e7b2193e:1731
+onSuccess @ use-auth.tsx:202
+execute @ @tanstack_react-query.js?v=e7b2193e:1232
+await in execute
+mutate @ @tanstack_react-query.js?v=e7b2193e:2649
+onSubmit @ auth-page.tsx:192
+(anonymous) @ chunk-YABUFNLM.js?v=e7b2193e:1675
+await in (anonymous)
+callCallback2 @ chunk-RPCDYKBN.js?v=e7b2193e:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=e7b2193e:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=e7b2193e:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=e7b2193e:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=e7b2193e:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=e7b2193e:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=e7b2193e:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=e7b2193e:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=e7b2193e:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=e7b2193e:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=e7b2193e:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=e7b2193e:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=e7b2193e:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=e7b2193e:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=e7b2193e:5449
+auth-page.tsx:210 User data retrieved after login: success
+auth-page.tsx:199 Fetch finished loading: GET "

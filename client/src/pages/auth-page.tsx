@@ -85,94 +85,69 @@ export default function AuthPage() {
     }
   }, []);
 
-  // ULTRA SIMPLIFIED APPROACH
+  // AUTH REDIRECT WITH PROPER TIMING
   useEffect(() => {
     // Only process if we have user data
     if (!user) return;
     
-    console.log("AUTH REDIRECT - SIMPLIFIED: User logged in, handling redirect");
+    console.log("AUTH REDIRECT: User logged in, handling redirect");
     
-    // Check for redirectAfterAuth in session storage
-    const redirectPath = sessionStorage.getItem('redirectAfterAuth');
-    
-    // Check if we're in the middle of an event registration flow
-    const isDirectEventRegistration = window.location.pathname.includes('/register/event/') || 
-                                      window.location.pathname.includes('/event/') && 
-                                      window.location.pathname.includes('/register');
-                                      
-    // If we're already on a registration page, don't redirect anywhere
-    if (isDirectEventRegistration) {
-      console.log("Already on event registration page - not redirecting to dashboard");
-      return;
-    }
-    
-    if (redirectPath) {
-      console.log("Found redirect path:", redirectPath);
+    // Add a small delay to ensure authentication state is fully established
+    const timer = setTimeout(() => {
+      // Check for redirectAfterAuth in session storage
+      const redirectPath = sessionStorage.getItem('redirectAfterAuth');
       
-      // Set a simple flag to indicate auth is complete
-      sessionStorage.setItem('authRedirectCompleted', 'true');
-      
-      // Set a timestamp to ensure we can track when this redirect happened
-      sessionStorage.setItem('authRedirectTime', Date.now().toString());
-      
-      // Clear the redirect path
-      sessionStorage.removeItem('redirectAfterAuth');
-      
-      // Use client-side navigation instead of full page reload
-      if (redirectPath.includes('/register/event/')) {
-        // Special handling for event registration to ensure step advancement
-        const eventPath = redirectPath + (redirectPath.includes('?') ? '&' : '?') + 'auth_complete=true';
-        console.log("Enhanced event registration redirect path:", eventPath);
-        setLocation(eventPath);
-      } else {
-        // Standard redirect for other paths
-        console.log("Redirecting to:", redirectPath);
-        setLocation(redirectPath);
+      // Check if we're in the middle of an event registration flow
+      const isDirectEventRegistration = window.location.pathname.includes('/register/event/') || 
+                                        window.location.pathname.includes('/event/') && 
+                                        window.location.pathname.includes('/register');
+                                        
+      // If we're already on a registration page, don't redirect anywhere
+      if (isDirectEventRegistration) {
+        console.log("Already on event registration page - not redirecting to dashboard");
+        return;
       }
-      return;
-    }
-    
-    // No redirect path found, go to default location
-    // Check if we're on the login page (could be /auth or /)
-    // Use more robust detection for the auth page
-    const isAuthPage = window.location.pathname === '/auth' || window.location.pathname === '/';
-    console.log("Current path:", window.location.pathname, "isAuthPage:", isAuthPage);
-    
-    // Check all possible flags that indicate we're in a registration flow
-    const inRegistrationFlow = sessionStorage.getItem('inRegistrationFlow') === 'true';
-    
-    // Also check the registrationData object which may contain more detailed state
-    let registrationData = null;
-    try {
-      registrationData = JSON.parse(sessionStorage.getItem('registrationData') || '{}');
-    } catch (e) {
-      console.error('Failed to parse registrationData:', e);
-    }
-    
-    const preventRedirectFromData = registrationData && registrationData.preventRedirect === true;
-    const hasRegistrationStep = registrationData && registrationData.currentStep;
-    
-    // If any flag indicates we're in registration, don't redirect
-    if (inRegistrationFlow || preventRedirectFromData || hasRegistrationStep) {
-      console.log("AUTH: User is in registration flow, not redirecting to dashboard");
-      console.log("Registration state flags:", { 
-        inRegistrationFlow, 
-        preventRedirectFromData, 
-        currentStep: hasRegistrationStep ? registrationData.currentStep : null,
-        timestamp: sessionStorage.getItem('registrationFlowTimestamp')
-      });
       
-      // DO NOT clear these flags - they need to persist throughout the process
-      return;
-    }
+      if (redirectPath) {
+        console.log("Found redirect path:", redirectPath);
+        
+        // Set a simple flag to indicate auth is complete
+        sessionStorage.setItem('authRedirectCompleted', 'true');
+        
+        // Set a timestamp to ensure we can track when this redirect happened
+        sessionStorage.setItem('authRedirectTime', Date.now().toString());
+        
+        // Clear the redirect path
+        sessionStorage.removeItem('redirectAfterAuth');
+        
+        // Use client-side navigation instead of full page reload
+        if (redirectPath.includes('/register/event/')) {
+          // Special handling for event registration to ensure step advancement
+          const eventPath = redirectPath + (redirectPath.includes('?') ? '&' : '?') + 'auth_complete=true';
+          console.log("Enhanced event registration redirect path:", eventPath);
+          setLocation(eventPath);
+        } else {
+          // Standard redirect for other paths
+          console.log("Redirecting to:", redirectPath);
+          setLocation(redirectPath);
+        }
+        return;
+      }
+      
+      // Check if we should do default redirect logic
+      const isAuthPage = window.location.pathname === '/auth' || window.location.pathname === '/';
+      console.log("Current path:", window.location.pathname, "isAuthPage:", isAuthPage);
+      
+      if (isAuthPage) {
+        const defaultPath = user.isAdmin ? '/admin' : '/dashboard';
+        console.log("On auth page, redirecting to:", defaultPath);
+        setLocation(defaultPath);
+      } else {
+        console.log("On a non-auth page while logged in, not redirecting");
+      }
+    }, 100); // Small delay to ensure state synchronization
     
-    if (isAuthPage) {
-      const defaultPath = user.isAdmin ? '/admin' : '/dashboard';
-      console.log("On auth page, redirecting to:", defaultPath);
-      setLocation(defaultPath);
-    } else {
-      console.log("On a non-auth page while logged in, not redirecting");
-    }
+    return () => clearTimeout(timer);
   }, [user]);
 
   const loginForm = useForm<LoginFormData>({
