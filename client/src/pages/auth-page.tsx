@@ -135,16 +135,16 @@ export default function AuthPage() {
         // Clear the redirect path
         sessionStorage.removeItem('redirectAfterAuth');
         
-        // Use client-side navigation instead of full page reload
+        // Use page refresh for reliable redirect after authentication
         if (redirectPath.includes('/register/event/')) {
           // Special handling for event registration to ensure step advancement
           const eventPath = redirectPath + (redirectPath.includes('?') ? '&' : '?') + 'auth_complete=true';
           console.log("Enhanced event registration redirect path:", eventPath);
-          setLocation(eventPath);
+          window.location.href = eventPath;
         } else {
           // Standard redirect for other paths
           console.log("Redirecting to:", redirectPath);
-          setLocation(redirectPath);
+          window.location.href = redirectPath;
         }
         return;
       }
@@ -155,8 +155,8 @@ export default function AuthPage() {
       
       if (isAuthPage) {
         const defaultPath = user.isAdmin ? '/admin' : '/dashboard';
-        console.log("On auth page, redirecting to:", defaultPath);
-        setLocation(defaultPath);
+        console.log("On auth page, redirecting with page refresh to:", defaultPath);
+        window.location.href = defaultPath;
       } else {
         console.log("On a non-auth page while logged in, not redirecting");
       }
