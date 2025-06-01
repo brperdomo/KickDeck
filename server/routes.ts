@@ -73,7 +73,7 @@ import {
 } from "./routes/admin/event-administrators";
 import userRouter from "./routes/user";
 import { sql, eq, and, or, inArray, notInArray } from "drizzle-orm";
-import { sendTemplatedEmail, sendRegistrationReceiptEmail } from "./services/emailService";
+import { sendTemplatedEmail, sendRegistrationReceiptEmail, sendRegistrationConfirmationEmail } from "./services/emailService";
 import {
   users,
   organizationSettings,
@@ -81,6 +81,7 @@ import {
   fields,
   events,
   eventAgeGroups,
+  eventBrackets,
   seasonalScopes,
   eventScoringRules,
   tournamentGroups,
@@ -1445,41 +1446,72 @@ export function registerRoutes(app: Express): Server {
           totalAmount: result.team.totalAmount
         } : null;
         
-        // Send registration receipt email if submitter email is available
+        // Send appropriate email based on payment workflow
         try {
           if (result.team?.submitterEmail) {
-            // Get the event name for the email
+            // Get event, age group, and bracket information for the email
             const [eventInfo] = await db
               .select({ name: events.name })
               .from(events)
               .where(eq(events.id, eventId));
+
+            const [ageGroupInfo] = await db
+              .select()
+              .from(eventAgeGroups)
+              .where(eq(eventAgeGroups.id, result.team.ageGroupId));
+
+            let bracketInfo = null;
+            if (result.team.bracketId) {
+              const bracketResult = await db
+                .select()
+                .from(eventBrackets)
+                .where(eq(eventBrackets.id, result.team.bracketId));
+              bracketInfo = bracketResult[0] || null;
+            }
             
-            // Create a mock payment data object for the initial receipt
-            // This will be updated when actual payment is processed
-            const initialPaymentData = {
-              status: paymentMethod === 'pay_later' ? 'pending' : 'processing',
-              amount: result.team.totalAmount || result.team.registrationFee,
-              paymentIntentId: result.team.paymentIntentId,
-              paymentMethodType: paymentMethod || 'card'
-            };
+            // Check if this is a setup intent payment workflow
+            const isSetupIntentFlow = result.team.setupIntentId && result.team.paymentStatus === 'payment_info_provided';
             
-            console.log(`Sending registration receipt email to ${result.team.submitterEmail}`);
-            
-            // Send the registration receipt email asynchronously
-            // We don't await this to avoid delaying the response to the client
-            sendRegistrationReceiptEmail(
-              result.team.submitterEmail,
-              result.team,
-              initialPaymentData,
-              eventInfo?.name || 'Event Registration'
-            ).catch(emailError => {
-              // Log email errors but don't fail the registration process
-              console.error('Error sending registration receipt email:', emailError);
-            });
+            if (isSetupIntentFlow) {
+              // For setup intent flow, send registration confirmation email
+              console.log(`Sending registration confirmation email to ${result.team.submitterEmail} (setup intent workflow)`);
+              
+              sendRegistrationConfirmationEmail(
+                result.team.submitterEmail,
+                result.team,
+                eventInfo,
+                ageGroupInfo,
+                bracketInfo
+              ).catch(emailError => {
+                // Log email errors but don't fail the registration process
+                console.error('Error sending registration confirmation email:', emailError);
+              });
+            } else {
+              // For traditional immediate payment flow, send registration receipt email
+              console.log(`Sending registration receipt email to ${result.team.submitterEmail} (traditional payment workflow)`);
+              
+              // Create a mock payment data object for the initial receipt
+              const initialPaymentData = {
+                status: paymentMethod === 'pay_later' ? 'pending' : 'processing',
+                amount: result.team.totalAmount || result.team.registrationFee,
+                paymentIntentId: result.team.paymentIntentId,
+                paymentMethodType: paymentMethod || 'card'
+              };
+              
+              sendRegistrationReceiptEmail(
+                result.team.submitterEmail,
+                result.team,
+                initialPaymentData,
+                eventInfo?.name || 'Event Registration'
+              ).catch(emailError => {
+                // Log email errors but don't fail the registration process
+                console.error('Error sending registration receipt email:', emailError);
+              });
+            }
           }
         } catch (emailError) {
           // Log email errors but don't fail the registration process
-          console.error('Error preparing registration receipt email:', emailError);
+          console.error('Error preparing registration email:', emailError);
         }
         
         res.status(201).json({
