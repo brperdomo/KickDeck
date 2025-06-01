@@ -457,6 +457,107 @@ export async function sendRegistrationReceiptEmail(
 }
 
 /**
+ * Sends a registration confirmation email for setup intent payment workflow
+ * This is sent when a team submits registration with payment method saved but not charged yet
+ */
+export async function sendRegistrationConfirmationEmail(
+  to: string,
+  teamData: any, // Team registration data
+  eventData: any, // Event information
+  ageGroupData?: any, // Age group information
+  bracketData?: any // Bracket information
+): Promise<void> {
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  
+  try {
+    const appUrl = getAppUrl(isDevelopment);
+    const loginLink = `${appUrl}/dashboard`;
+    
+    // Format numbers and dates consistently
+    const formatCurrency = (amount: number) => {
+      if (!amount) return '0.00';
+      return (amount / 100).toFixed(2);
+    };
+    
+    const formatDate = (dateString: string) => {
+      if (!dateString) return '';
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    };
+
+    // Parse coach data if it's a JSON string
+    let headCoachName = '';
+    if (teamData.coach) {
+      try {
+        const coachData = typeof teamData.coach === 'string' ? JSON.parse(teamData.coach) : teamData.coach;
+        headCoachName = coachData.headCoachName || '';
+      } catch (e) {
+        console.log('Could not parse coach data, using as string');
+        headCoachName = teamData.coach;
+      }
+    }
+
+    // Format selected fees if they exist
+    let selectedFees: any[] = [];
+    if (teamData.selectedFeeIds && teamData.selectedFeeIds.length > 0) {
+      // This would normally be populated by a database query to get fee details
+      // For now, we'll create a basic fee entry based on the total amount
+      selectedFees = [{ 
+        name: 'Registration Fee', 
+        amount: formatCurrency(teamData.totalAmount || teamData.registrationFee || 0) 
+      }];
+    }
+    
+    // Prepare template context data
+    const context = {
+      teamName: teamData.name || 'Team Registration',
+      eventName: eventData?.name || 'Event Registration',
+      ageGroup: ageGroupData?.ageGroup || ageGroupData?.name || 'Age Group',
+      bracket: bracketData?.name || '',
+      clubName: teamData.clubName || '',
+      submitterName: teamData.submitterName || teamData.managerName || '',
+      submitterEmail: teamData.submitterEmail || teamData.managerEmail || '',
+      headCoachName: headCoachName,
+      managerName: teamData.managerName || '',
+      managerEmail: teamData.managerEmail || '',
+      managerPhone: teamData.managerPhone || '',
+      registrationDate: formatDate(teamData.createdAt),
+      totalAmount: formatCurrency(teamData.totalAmount || teamData.registrationFee || 0),
+      selectedFees: selectedFees,
+      cardBrand: teamData.cardBrand || 'Card',
+      cardLastFour: teamData.cardLast4 || teamData.cardLastFour || '****',
+      setupIntentId: teamData.setupIntentId || '',
+      addRosterLater: teamData.addRosterLater || false,
+      loginLink: loginLink,
+      supportEmail: 'support@matchpro.ai',
+      organizationName: 'MatchPro',
+      currentYear: new Date().getFullYear()
+    };
+    
+    // Send the email using the registration_confirmation template
+    await sendTemplatedEmail(to, 'registration_confirmation', context);
+    
+    console.log(`Registration confirmation email sent to ${to}`);
+  } catch (error) {
+    console.error('Error sending registration confirmation email:', error);
+    
+    if (isDevelopment) {
+      // Rethrow errors in development mode for easier debugging
+      throw error;
+    }
+    
+    // In production, log error but don't crash the application
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`Failed to send registration confirmation email to ${to}: ${errorMessage}`);
+  }
+}
+
+/**
  * Sends a password reset email
  */
 export async function sendPasswordResetEmail(
