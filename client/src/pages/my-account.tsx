@@ -135,6 +135,9 @@ export default function MyAccount() {
         throw new Error(await response.text());
       }
 
+      // Invalidate the user query to fetch fresh data
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+
       toast({
         title: "Profile Updated",
         description: "Your profile information has been updated successfully.",
