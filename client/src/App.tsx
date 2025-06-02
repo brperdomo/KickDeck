@@ -42,6 +42,7 @@ import FinancialOverviewReport from "@/pages/financial-overview-report";
 import EventFinancialReport from "@/pages/event-financial-report";
 import FeesAnalysisReport from "@/pages/fees-analysis-report";
 import BookkeepingReport from "@/pages/bookkeeping-report";
+import RevenueForecast from "@/pages/revenue-forecast";
 import Checkout from "@/pages/checkout";
 import PaymentConfirmation from "@/pages/payment-confirmation";
 import PaymentSetupConfirmation from "@/pages/payment-setup-confirmation";
@@ -359,6 +360,9 @@ function Router() {
           </Route>
           <Route path="/bookkeeping-report">
             {user.isAdmin ? <BookkeepingReport /> : <NotFound />}
+          </Route>
+          <Route path="/revenue-forecast">
+            {user.isAdmin ? <RevenueForecast /> : <NotFound />}
           </Route>
           <Route path="/checkout">
             <Checkout />
