@@ -1534,6 +1534,17 @@ export function registerRoutes(app: Express): Server {
     // Mount reports router for financial reporting
     app.use('/api/reports', isAdmin, reportsRouter);
     
+    // Revenue forecast endpoint
+    app.get('/api/reports/revenue-forecast', isAdmin, async (req, res) => {
+      try {
+        const { getRevenueForecastReport } = await import('./routes/revenue-forecast');
+        await getRevenueForecastReport(req, res);
+      } catch (error) {
+        console.error('Error fetching revenue forecast:', error);
+        res.status(500).json({ success: false, error: "Failed to fetch revenue forecast" });
+      }
+    });
+    
     // Enhanced financial reporting endpoints with Stripe fee analysis
     app.get('/api/reports/enhanced/event/:eventId/financial', isAdmin, getEnhancedEventFinancialReport);
     app.get('/api/reports/enhanced/organization/summary', isAdmin, getOrganizationFinancialSummary);
