@@ -79,8 +79,9 @@ async function testDbConnection() {
   let server: any; // Fix implicit any error
   
   try {
-    // Use NODE_ENV from environment or default to development
-    const nodeEnv = process.env.NODE_ENV || 'development';
+    // Force production mode for stable operations
+    const nodeEnv = process.env.NODE_ENV || 'production';
+    process.env.NODE_ENV = nodeEnv;
     app.set('env', nodeEnv);
     
     log(`Server starting in ${nodeEnv} mode`);
