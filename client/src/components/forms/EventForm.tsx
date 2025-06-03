@@ -715,37 +715,16 @@ export const EventForm = ({ mode, defaultValues, onSubmit, isSubmitting = false,
                         <Select
                           value={group.fieldSize || "11v11"}
                           onValueChange={async (value) => {
-                            // Update local state immediately with proper sorting
+                            // Update local state immediately without re-sorting
+                            // This preserves the original order while only updating the field size
                             const updatedAgeGroups = ageGroups.map(ag => 
                               ag.id === group.id 
                                 ? { ...ag, fieldSize: value } 
                                 : ag
                             );
                             
-                            // Maintain the original sort order
-                            const sortedAgeGroups = updatedAgeGroups.sort((a, b) => {
-                              // First sort by age group number (U4, U5, U6, etc.)
-                              const getAgeNumber = (ageGroup: string) => {
-                                if (ageGroup.startsWith('U')) {
-                                  return parseInt(ageGroup.substring(1));
-                                }
-                                return 999; // Put non-U groups at the end
-                              };
-                              
-                              const ageA = getAgeNumber(a.ageGroup);
-                              const ageB = getAgeNumber(b.ageGroup);
-                              
-                              if (ageA !== ageB) {
-                                return ageA - ageB;
-                              }
-                              
-                              // Within same age, sort by gender: Boys, Girls, Coed
-                              const genderOrder: { [key: string]: number } = { 'Boys': 0, 'Girls': 1, 'Coed': 2 };
-                              return (genderOrder[a.gender] || 3) - (genderOrder[b.gender] || 3);
-                            });
-                            
-                            setAgeGroups(sortedAgeGroups);
-                            form.setValue('ageGroups', sortedAgeGroups);
+                            setAgeGroups(updatedAgeGroups);
+                            form.setValue('ageGroups', updatedAgeGroups);
                             
                             // Save to database if we're in edit mode and have a valid age group ID
                             if (mode === 'edit' && group.id && defaultValues?.id) {
