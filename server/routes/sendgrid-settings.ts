@@ -17,6 +17,8 @@ import * as sendgridTemplateService from '../services/sendgridTemplateService';
  */
 export async function getSendGridSettings(req: Request, res: Response) {
   try {
+    console.log('Fetching SendGrid settings...');
+    
     // Get the SendGrid provider settings
     const sendGridProviders = await db
       .select()
@@ -29,6 +31,8 @@ export async function getSendGridSettings(req: Request, res: Response) {
     const provider = sendGridProviders.length > 0 
       ? sendGridProviders.find(p => p.isDefault) || sendGridProviders[0]
       : null;
+    
+    console.log(`Found ${sendGridProviders.length} SendGrid providers`);
     
     // Get all templates that have SendGrid template IDs
     const templatesWithSendGrid = await db
@@ -44,7 +48,11 @@ export async function getSendGridSettings(req: Request, res: Response) {
         eq(isNull(emailTemplates.sendgridTemplateId), false)
       );
     
+    console.log(`Found ${templatesWithSendGrid.length} templates with SendGrid mappings`);
+    
     res.json({
+      apiKeySet: !!process.env.SENDGRID_API_KEY,
+      apiKeyValid: true, // We'll validate this in a separate endpoint if needed
       provider: provider ? {
         id: provider.id,
         name: provider.providerName,
@@ -87,11 +95,27 @@ export async function updateSendGridTemplateMapping(req: Request, res: Response)
  */
 export async function getSendGridTemplates(req: Request, res: Response) {
   try {
+    console.log('Fetching SendGrid templates...');
+    
+    // Check if API key is available
+    if (!process.env.SENDGRID_API_KEY) {
+      console.error('SENDGRID_API_KEY not found in environment');
+      return res.status(500).json({ 
+        error: "SendGrid API key not configured",
+        details: "SENDGRID_API_KEY environment variable is missing"
+      });
+    }
+    
     const templates = await sendgridTemplateService.getTemplatesFromSendGrid();
+    console.log(`Successfully fetched ${templates.length} SendGrid templates`);
+    
     res.json(templates);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching SendGrid templates:', error);
-    res.status(500).json({ error: "Failed to fetch SendGrid templates" });
+    res.status(500).json({ 
+      error: "Failed to fetch SendGrid templates",
+      details: error.message || 'Unknown error occurred'
+    });
   }
 }
 
