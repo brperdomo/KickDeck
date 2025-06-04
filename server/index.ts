@@ -126,15 +126,10 @@ async function testDbConnection() {
     log("API routes registered");
 
     // Temporarily bypass vite setup to fix dependency issues
-    log("Bypassing vite setup temporarily to resolve dependency issues");
-    
-    // Simple static file serving as fallback
-    app.use(express.static('client/dist', { fallthrough: true }));
-    
-    // Basic fallback for single page application
-    app.get('*', (req, res) => {
-      res.status(200).send('Application is starting - dependency restoration in progress');
-    });
+    // Set up Vite for frontend serving
+    const { createViteDevServer } = await import('./vite-temp.js');
+    const viteDevServer = await createViteDevServer(app);
+    log("Vite development server configured successfully");
 
     // Error handling middleware
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
