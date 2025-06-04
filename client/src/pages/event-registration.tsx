@@ -1230,10 +1230,14 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
   const [selectedFees, setSelectedFees] = useState<Fee[]>([]);
   const [addRosterLater, setAddRosterLater] = useState<boolean>(false);
   
-  // Registration cart functionality
-  const { cart, saveCart, clearCart, isLoading: cartLoading } = useRegistrationCart(eventId || '');
+  // Registration cart functionality - temporarily disabled for smart save strategy
+  // const { cart, saveCart, clearCart, isLoading: cartLoading } = useRegistrationCart(eventId || '');
   const [showResumeDialog, setShowResumeDialog] = useState(false);
-  const [cartChecked, setCartChecked] = useState(false);
+  const [cartChecked, setCartChecked] = useState(true); // Skip cart checking
+  
+  // Placeholder cart functions for smart save strategy
+  const cart = null;
+  const cartLoading = false;
   
   // Auto-save timer ref
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -2217,7 +2221,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
     setSelectedFees([]);
     setAddRosterLater(false);
     setIsNewClub(false);
-  }, [clearCart, form, teamForm, user, addressData]);
+  }, [form, teamForm, user, addressData]); // Removed clearCart dependency
 
   const addPlayer = () => {
     const newPlayer: PlayerForm = {
@@ -2240,13 +2244,10 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
     teamForm.setValue('players', updatedPlayers);
   };
 
-  // Check for existing cart when component mounts
+  // Cart functionality disabled - smart save strategy implemented
   useEffect(() => {
-    if (!cartLoading && !cartChecked && user && cart && currentStep !== 'success') {
-      setCartChecked(true);
-      setShowResumeDialog(true);
-    }
-  }, [cart, cartLoading, cartChecked, user, currentStep]);
+    setCartChecked(true); // Skip cart checking
+  }, [user, currentStep]);
   
   // Smart save strategy: Save on meaningful user interactions only
   const saveOnInteraction = useCallback(() => {
