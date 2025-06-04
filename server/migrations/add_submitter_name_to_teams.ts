@@ -1,7 +1,7 @@
 import { db } from "../../db";
 import { teams } from "../../db/schema";
 import { sql } from "drizzle-orm";
-import { log } from "../vite-fallback";
+import { log } from "../vite";
 
 /**
  * Migration to add submitterName column to teams table

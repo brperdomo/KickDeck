@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { SelectOrganizationSettings } // from '@db/schema' // Database import disabled for build;
+import type { SelectOrganizationSettings } from '@db/schema';
 
 export function useOrganizationSettings() {
   const queryClient = useQueryClient();

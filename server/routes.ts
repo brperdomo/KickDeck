@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { setupWebSocketServer } from "./websocket";
-import { log } from "./vite-fallback";
+import { log } from "./vite";
 import { crypto } from "./crypto";
 import { db } from "@db";
 import { emailTemplates, insertPlayerSchema } from "@db/schema";
@@ -3139,16 +3139,6 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         console.error('Error fetching organizations:', error);
         res.status(500).send("Failed to fetch organizations");
       }
-    });
-
-    // Health check endpoint
-    app.get('/api/health', (req, res) => {
-      res.json({ 
-        status: 'ok', 
-        timestamp: new Date().toISOString(),
-        backend: true,
-        frontend: false // Will be true once React build completes
-      });
     });
     
     app.post('/api/admin/organizations', isAdmin, async (req, res) => {
