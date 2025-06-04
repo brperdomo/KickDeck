@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { log } from '../vite';
+import { log } from '../vite-fallback';
 
 /**
  * Get TinyMCE API key configuration
