@@ -333,8 +333,8 @@ export function BracketManager({ ageGroupId, eventId }: BracketManagerProps) {
               <TableRow key={bracket.id}>
                 <TableCell className="font-medium">{bracket.name}</TableCell>
                 <TableCell>
-                  <Badge variant="outline" className="capitalize">
-                    {bracket.level}
+                  <Badge variant="outline">
+                    {formatFlightName(bracket.level)}
                   </Badge>
                 </TableCell>
                 <TableCell className="max-w-[300px] truncate">
