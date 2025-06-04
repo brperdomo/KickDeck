@@ -1,74 +1,96 @@
-// Bootstrap server to bypass dependency issues
-import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
+/**
+ * Bootstrap Server Script
+ * 
+ * This script resolves dependency issues and starts the server properly.
+ * It checks for missing packages and installs them before starting.
+ */
+
 import { spawn } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import { createRequire } from 'module';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const require = createRequire(import.meta.url);
 
-console.log('Starting server bootstrap process...');
+function checkPackageExists(packageName) {
+  try {
+    require.resolve(packageName);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
 
-// Start a minimal Express server while resolving dependency issues
-const app = express();
-const port = process.env.PORT || 5000;
-
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: false, limit: '50mb' }));
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
-
-app.get('/_health', (req, res) => {
-  res.status(200).send('OK');
-});
-
-app.get('/api/status', (req, res) => {
-  res.json({ 
-    status: 'starting',
-    message: 'Soccer facility management platform is initializing...',
-    timestamp: new Date().toISOString()
-  });
-});
-
-app.get('*', (req, res) => {
-  res.json({
-    message: 'Server is starting up',
-    note: 'Please wait while the full application loads...'
-  });
-});
-
-const server = app.listen(port, '0.0.0.0', () => {
-  console.log(`Bootstrap server running on port ${port}`);
+function installMissingPackages() {
+  const missingPackages = [];
   
-  // Try to start the real server in the background
-  console.log('Attempting to start main TypeScript server...');
+  // Check critical packages
+  const criticalPackages = ['vite', 'tsx', 'express', 'typescript'];
   
-  // Try with global tsx installation
-  const tsxProcess = spawn('npx', ['--yes', 'tsx@latest', 'server/index.ts'], {
-    stdio: 'pipe',
-    env: { ...process.env, NODE_ENV: 'development' }
-  });
-
-  tsxProcess.stdout.on('data', (data) => {
-    console.log('Server output:', data.toString());
-  });
-
-  tsxProcess.stderr.on('data', (data) => {
-    console.log('Server error:', data.toString());
-  });
-
-  tsxProcess.on('close', (code) => {
-    if (code === 0) {
-      console.log('Main server started successfully, shutting down bootstrap...');
-      server.close();
-    } else {
-      console.log(`Main server failed with code ${code}, keeping bootstrap running`);
+  for (const pkg of criticalPackages) {
+    if (!checkPackageExists(pkg)) {
+      missingPackages.push(pkg);
     }
-  });
-});
+  }
+  
+  if (missingPackages.length > 0) {
+    console.log(`Missing packages detected: ${missingPackages.join(', ')}`);
+    console.log('Installing missing packages...');
+    
+    const installProcess = spawn('npm', ['install', ...missingPackages], {
+      stdio: 'inherit',
+      cwd: process.cwd()
+    });
+    
+    installProcess.on('close', (code) => {
+      if (code === 0) {
+        console.log('Packages installed successfully');
+        startServer();
+      } else {
+        console.error('Package installation failed');
+        process.exit(1);
+      }
+    });
+  } else {
+    startServer();
+  }
+}
 
-// Graceful shutdown
-process.on('SIGINT', () => {
-  console.log('Shutting down bootstrap server...');
-  server.close();
-  process.exit(0);
-});
+function startServer() {
+  console.log('Starting server...');
+  
+  // Try to start with tsx first, fallback to node if needed
+  if (checkPackageExists('tsx')) {
+    const serverProcess = spawn('node', ['--import', 'tsx', 'server/index.ts'], {
+      stdio: 'inherit',
+      cwd: process.cwd(),
+      env: { ...process.env, NODE_OPTIONS: '--import tsx' }
+    });
+    
+    serverProcess.on('error', (err) => {
+      console.error('Server startup failed:', err);
+      // Fallback to minimal server
+      startMinimalServer();
+    });
+  } else {
+    startMinimalServer();
+  }
+}
+
+function startMinimalServer() {
+  console.log('Starting minimal server...');
+  
+  const serverProcess = spawn('node', ['server/minimal-server.js'], {
+    stdio: 'inherit',
+    cwd: process.cwd()
+  });
+  
+  serverProcess.on('error', (err) => {
+    console.error('Minimal server startup failed:', err);
+    process.exit(1);
+  });
+}
+
+// Start the bootstrap process
+console.log('Bootstrapping server...');
+installMissingPackages();
