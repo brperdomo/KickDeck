@@ -8056,6 +8056,86 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
       }
     });
 
+    // Registration Reminder API Endpoints
+    
+    // Get incomplete registrations
+    app.get('/api/admin/incomplete-registrations', isAdmin, async (req, res) => {
+      try {
+        const { getIncompleteRegistrations } = await import('./services/registrationReminderService');
+        const hours = parseInt(req.query.hours as string) || 24;
+        
+        const incompleteRegs = await getIncompleteRegistrations(hours);
+        
+        res.json({
+          success: true,
+          data: incompleteRegs,
+          totalFound: incompleteRegs.length
+        });
+      } catch (error) {
+        console.error('Error fetching incomplete registrations:', error);
+        res.status(500).json({ 
+          success: false, 
+          error: 'Failed to fetch incomplete registrations',
+          message: error.message 
+        });
+      }
+    });
+
+    // Send registration reminder emails
+    app.post('/api/admin/send-registration-reminders', isAdmin, async (req, res) => {
+      try {
+        const { sendAllRegistrationReminders } = await import('./services/registrationReminderService');
+        const { 
+          reminderThresholdHours = 24, 
+          dryRun = false,
+          baseUrl = req.get('host') ? `${req.protocol}://${req.get('host')}` : 'https://your-domain.com'
+        } = req.body;
+        
+        const results = await sendAllRegistrationReminders(
+          reminderThresholdHours,
+          baseUrl,
+          dryRun
+        );
+        
+        res.json({
+          success: true,
+          data: results,
+          message: dryRun 
+            ? `Dry run completed: ${results.totalFound} incomplete registrations found`
+            : `Sent ${results.emailsSent} reminder emails successfully`
+        });
+      } catch (error) {
+        console.error('Error sending registration reminders:', error);
+        res.status(500).json({ 
+          success: false, 
+          error: 'Failed to send registration reminders',
+          message: error.message 
+        });
+      }
+    });
+
+    // Clean up expired registration carts
+    app.post('/api/admin/cleanup-expired-carts', isAdmin, async (req, res) => {
+      try {
+        const { cleanupExpiredCarts } = await import('./services/registrationReminderService');
+        
+        const deletedCount = await cleanupExpiredCarts();
+        
+        res.json({
+          success: true,
+          data: { deletedCount },
+          message: `Cleaned up ${deletedCount} expired registration carts`
+        });
+      } catch (error) {
+        console.error('Error cleaning up expired carts:', error);
+        res.status(500).json({ 
+          success: false, 
+          error: 'Failed to clean up expired carts',
+          message: error.message 
+        });
+      }
+    });
+
     // Preview route moved above to prevent route conflicts
 
     return httpServer;
