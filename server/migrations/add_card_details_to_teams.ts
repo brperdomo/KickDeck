@@ -1,6 +1,6 @@
 import { db } from "@db";
 import { sql } from "drizzle-orm";
-import { log } from "../vite-fallback";
+import { log } from "../vite";
 
 /**
  * Migration to add card details columns to teams table
