@@ -3140,6 +3140,16 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         res.status(500).send("Failed to fetch organizations");
       }
     });
+
+    // Health check endpoint
+    app.get('/api/health', (req, res) => {
+      res.json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        backend: true,
+        frontend: false // Will be true once React build completes
+      });
+    });
     
     app.post('/api/admin/organizations', isAdmin, async (req, res) => {
       try {
