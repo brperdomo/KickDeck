@@ -35,7 +35,9 @@ import { z } from "zod";
 const couponFormSchema = z.object({
   code: z.string().min(1, "Coupon code is required").trim(),
   discountType: z.enum(["fixed", "percentage"]),
-  amount: z.number().min(0, "Amount must be positive"),
+  amount: z.union([z.string(), z.number()]).pipe(
+    z.coerce.number().min(0, "Amount must be positive")
+  ),
   hasExpiration: z.boolean(),
   expirationDate: z.string().optional(),
   description: z.string().optional(),
@@ -69,16 +71,26 @@ export function CouponModal({ open, onOpenChange, eventId, couponToEdit }: Coupo
 
   const form = useForm<CouponFormValues>({
     resolver: zodResolver(couponFormSchema),
-    values: {
-      code: couponToEdit?.code || "",
-      discountType: couponToEdit?.discount_type || "fixed",
-      amount: couponToEdit?.amount || 0,
-      hasExpiration: !!couponToEdit?.expiration_date,
-      expirationDate: couponToEdit?.expiration_date ? new Date(couponToEdit.expiration_date).toISOString().slice(0, 16) : "",
-      description: couponToEdit?.description || "",
-      eventId: couponToEdit?.event_id?.toString() || eventId?.toString() || "",
-      isActive: couponToEdit?.is_active !== undefined ? couponToEdit.is_active : true,
+    defaultValues: {
+      code: "",
+      discountType: "fixed",
+      amount: "",
+      hasExpiration: false,
+      expirationDate: "",
+      description: "",
+      eventId: eventId?.toString() || "",
+      isActive: true,
     },
+    values: couponToEdit ? {
+      code: couponToEdit.code || "",
+      discountType: couponToEdit.discount_type || "fixed",
+      amount: couponToEdit.amount?.toString() || "",
+      hasExpiration: !!couponToEdit.expiration_date,
+      expirationDate: couponToEdit.expiration_date ? new Date(couponToEdit.expiration_date).toISOString().slice(0, 16) : "",
+      description: couponToEdit.description || "",
+      eventId: couponToEdit.event_id?.toString() || eventId?.toString() || "",
+      isActive: couponToEdit.is_active !== undefined ? couponToEdit.is_active : true,
+    } : undefined,
   });
 
   const createCouponMutation = useMutation({
