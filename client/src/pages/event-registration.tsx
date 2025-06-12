@@ -4625,7 +4625,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                       {requiredFees.map((fee) => (
                         <div key={fee.id} className="flex justify-between">
                           <span>{fee.name}</span>
-                          <span className="font-medium">${fee.amount.toFixed(2)}</span>
+                          <span className="font-medium">${(fee.amount / 100).toFixed(2)}</span>
                         </div>
                       ))}
                       
@@ -4633,7 +4633,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                       {selectedFee && (
                         <div className="flex justify-between">
                           <span>{selectedFee.name}</span>
-                          <span className="font-medium">${selectedFee.amount.toFixed(2)}</span>
+                          <span className="font-medium">${(selectedFee.amount / 100).toFixed(2)}</span>
                         </div>
                       )}
                       
@@ -4643,6 +4643,77 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                         </div>
                       )}
                     </div>
+                    
+                    {/* Coupon Section */}
+                    {(requiredFees.length > 0 || selectedFee) && (
+                      <div className="space-y-3 border-t pt-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-medium text-gray-700">Coupon Code</h4>
+                          {appliedCoupon && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={removeCoupon}
+                              className="text-red-600 hover:text-red-700 h-auto p-0"
+                            >
+                              Remove
+                            </Button>
+                          )}
+                        </div>
+                        
+                        {!appliedCoupon ? (
+                          <div className="flex gap-2">
+                            <Input
+                              type="text"
+                              placeholder="Enter coupon code"
+                              value={couponCode}
+                              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                              className="flex-1"
+                              disabled={isValidatingCoupon}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => validateCoupon(couponCode)}
+                              disabled={!couponCode.trim() || isValidatingCoupon}
+                              className="px-4"
+                            >
+                              {isValidatingCoupon ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                'Apply'
+                              )}
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-medium text-green-800">
+                                  Coupon Applied: {appliedCoupon.code}
+                                </p>
+                                {appliedCoupon.description && (
+                                  <p className="text-xs text-green-600 mt-1">
+                                    {appliedCoupon.description}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="text-sm font-medium text-green-800">
+                                -{appliedCoupon.discountType === 'fixed' 
+                                  ? `$${(appliedCoupon.amount / 100).toFixed(2)}`
+                                  : `${appliedCoupon.amount}%`
+                                }
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {couponError && (
+                          <p className="text-sm text-red-600">{couponError}</p>
+                        )}
+                      </div>
+                    )}
                     
                     {(requiredFees.length > 0 || selectedFee) && (
                       <>
@@ -4729,7 +4800,8 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                                   totalAmount: parseFloat(calculateTotalAmount()) * 100,
                                   addRosterLater,
                                   setupIntentId,
-                                  paymentMethodId
+                                  paymentMethodId,
+                                  appliedCoupon: appliedCoupon
                                 });
                               }}
                               onError={(error) => {
@@ -4753,7 +4825,8 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                               ...teamForm.getValues(),
                               selectedFeeIds: [],
                               totalAmount: 0,
-                              addRosterLater
+                              addRosterLater,
+                              appliedCoupon: appliedCoupon
                             });
                           }}
                           disabled={registerTeamMutation.isPending}

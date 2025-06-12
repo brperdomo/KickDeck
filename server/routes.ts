@@ -1078,7 +1078,9 @@ export function registerRoutes(app: Express): Server {
           selectedFeeIds,
           totalAmount,
           // Payment method ('card' or 'pay_later')
-          paymentMethod
+          paymentMethod,
+          // Coupon information
+          appliedCoupon
         } = req.body;
         
         // Validate required fields
@@ -1247,6 +1249,8 @@ export function registerRoutes(app: Express): Server {
               termsAcknowledgedAt: termsAcknowledgedAt ? new Date(termsAcknowledgedAt) : new Date(),  // Use camelCase as defined in the schema
               // Add flag to indicate if roster will be added later
               addRosterLater: addRosterLater || false,
+              // Store applied coupon information
+              appliedCoupon: appliedCoupon ? JSON.stringify(appliedCoupon) : null,
               createdAt: new Date().toISOString() // Use camelCase as defined in the schema
             })
             .returning();
