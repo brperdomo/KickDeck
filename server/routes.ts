@@ -388,69 +388,9 @@ export function registerRoutes(app: Express): Server {
     app.post('/api/admin/events/:eventId/fee-assignments', isAdmin, hasEventAccess, updateFeeAssignments);
 
     // Register coupon routes with event-specific access control
-    // Define the coupon create handler function that includes eventId access control
+    // Define the coupon create handler function that uses the working imported createCoupon function
     const createCouponWithAccessControl = async (req, res) => {
-      try {
-        const {
-          code,
-          discountType,
-          amount,
-          expirationDate,
-          description,
-          eventId,
-          maxUses,
-        } = req.body;
-
-        // Verify if coupon code already exists
-        const [existingCoupon] = await db
-          .select()
-          .from(coupons)
-          .where(eq(coupons.code, code))
-          .limit(1);
-
-        if (existingCoupon) {
-          return res.status(400).json({ message: "Coupon code already exists" });
-        }
-
-        // Convert eventId to number or null
-        const parsedEventId = eventId ? parseInt(eventId) : null;
-
-        // Safely parse expiration date
-        let parsedExpirationDate = null;
-        if (expirationDate && typeof expirationDate === 'string' && expirationDate.trim() !== '') {
-          try {
-            parsedExpirationDate = new Date(expirationDate);
-            // Validate that the date is valid
-            if (isNaN(parsedExpirationDate.getTime())) {
-              parsedExpirationDate = null;
-            }
-          } catch (error) {
-            console.warn('Invalid expiration date provided:', expirationDate);
-            parsedExpirationDate = null;
-          }
-        }
-
-        // Create coupon record
-        const [newCoupon] = await db
-          .insert(coupons)
-          .values({
-            code,
-            discountType,
-            amount: parseFloat(amount),
-            expirationDate: parsedExpirationDate,
-            description,
-            eventId: parsedEventId,
-            maxUses: maxUses ? parseInt(maxUses) : null,
-            usedCount: 0,
-            createdAt: new Date().toISOString(),
-          })
-          .returning();
-
-        res.status(201).json(newCoupon);
-      } catch (error) {
-        console.error('Error creating coupon:', error);
-        res.status(500).json({ message: "Failed to create coupon" });
-      }
+      return createCoupon(req, res);
     };
     
     // Apply middleware chain for coupon creation with event access checks
