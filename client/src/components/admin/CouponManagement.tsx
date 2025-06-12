@@ -38,7 +38,7 @@ export function CouponManagement() {
     }
   });
 
-  const events = eventsQuery.data;
+  const events = eventsQuery.data?.events || [];
 
   const couponsQuery = useQuery({
     queryKey: ['/api/admin/coupons', eventId],
