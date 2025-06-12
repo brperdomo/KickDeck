@@ -4327,6 +4327,119 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                       </div>
                     )}
                     
+                    {/* Discount Code Section - Show if there are fees */}
+                    {(requiredFees.length > 0 || selectedFee) && (
+                      <div className="space-y-3 border-t pt-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-medium text-gray-700">Discount Code (Optional)</h4>
+                          {appliedCoupon && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={removeCoupon}
+                              className="text-red-600 hover:text-red-700 h-auto p-0"
+                            >
+                              Remove
+                            </Button>
+                          )}
+                        </div>
+                        
+                        {!appliedCoupon ? (
+                          <div className="flex gap-2">
+                            <Input
+                              type="text"
+                              placeholder="Enter discount code (e.g., DJSO)"
+                              value={couponCode}
+                              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                              className="flex-1"
+                              disabled={isValidatingCoupon}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => validateCoupon(couponCode)}
+                              disabled={!couponCode.trim() || isValidatingCoupon}
+                              className="px-4"
+                            >
+                              {isValidatingCoupon ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                'Apply'
+                              )}
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-medium text-green-800">
+                                  Discount Applied: {appliedCoupon.code}
+                                </p>
+                                {appliedCoupon.description && (
+                                  <p className="text-xs text-green-600 mt-1">
+                                    {appliedCoupon.description}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="text-sm font-medium text-green-800">
+                                -{appliedCoupon.discountType === 'fixed' 
+                                  ? `$${(appliedCoupon.amount / 100).toFixed(2)}`
+                                  : `${appliedCoupon.amount}%`
+                                }
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {couponError && (
+                          <p className="text-sm text-red-600">{couponError}</p>
+                        )}
+                        
+                        {/* Total amount display with discount applied */}
+                        {(requiredFees.length > 0 || selectedFee) && (
+                          <div className="bg-gray-50 border rounded-md p-3 mt-3">
+                            <div className="space-y-2">
+                              {/* Show fee breakdown */}
+                              {selectedFee && (
+                                <div className="flex justify-between text-sm">
+                                  <span>{selectedFee.name}</span>
+                                  <span>${(selectedFee.amount / 100).toFixed(2)}</span>
+                                </div>
+                              )}
+                              {requiredFees.map((fee) => (
+                                <div key={fee.id} className="flex justify-between text-sm">
+                                  <span>{fee.name}</span>
+                                  <span>${(fee.amount / 100).toFixed(2)}</span>
+                                </div>
+                              ))}
+                              
+                              {/* Show discount if applied */}
+                              {appliedCoupon && (
+                                <div className="flex justify-between text-sm text-green-600">
+                                  <span>Discount ({appliedCoupon.code})</span>
+                                  <span>
+                                    -{appliedCoupon.discountType === 'fixed' 
+                                      ? `$${(appliedCoupon.amount / 100).toFixed(2)}`
+                                      : `${appliedCoupon.amount}%`
+                                    }
+                                  </span>
+                                </div>
+                              )}
+                              
+                              {/* Total amount */}
+                              <div className="border-t pt-2">
+                                <div className="flex justify-between font-bold">
+                                  <span>Total Amount</span>
+                                  <span>${calculateTotalAmount()}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Payment Method Selection - Only show if there are fees */}
                     {registrationFee && isPayLaterShown ? (
                       <div className="space-y-4">
@@ -4644,74 +4757,30 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                       )}
                     </div>
                     
-                    {/* Coupon Section */}
-                    {(requiredFees.length > 0 || selectedFee) && (
+                    {/* Applied Coupon Display Only (for review) */}
+                    {appliedCoupon && (
                       <div className="space-y-3 border-t pt-4">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-medium text-gray-700">Coupon Code</h4>
-                          {appliedCoupon && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={removeCoupon}
-                              className="text-red-600 hover:text-red-700 h-auto p-0"
-                            >
-                              Remove
-                            </Button>
-                          )}
-                        </div>
-                        
-                        {!appliedCoupon ? (
-                          <div className="flex gap-2">
-                            <Input
-                              type="text"
-                              placeholder="Enter coupon code"
-                              value={couponCode}
-                              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                              className="flex-1"
-                              disabled={isValidatingCoupon}
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => validateCoupon(couponCode)}
-                              disabled={!couponCode.trim() || isValidatingCoupon}
-                              className="px-4"
-                            >
-                              {isValidatingCoupon ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                'Apply'
-                              )}
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="bg-green-50 border border-green-200 rounded-md p-3">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="text-sm font-medium text-green-800">
-                                  Coupon Applied: {appliedCoupon.code}
+                        <h4 className="text-sm font-medium text-gray-700">Applied Discount</h4>
+                        <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-green-800">
+                                Discount Code: {appliedCoupon.code}
+                              </p>
+                              {appliedCoupon.description && (
+                                <p className="text-xs text-green-600 mt-1">
+                                  {appliedCoupon.description}
                                 </p>
-                                {appliedCoupon.description && (
-                                  <p className="text-xs text-green-600 mt-1">
-                                    {appliedCoupon.description}
-                                  </p>
-                                )}
-                              </div>
-                              <div className="text-sm font-medium text-green-800">
-                                -{appliedCoupon.discountType === 'fixed' 
-                                  ? `$${(appliedCoupon.amount / 100).toFixed(2)}`
-                                  : `${appliedCoupon.amount}%`
-                                }
-                              </div>
+                              )}
+                            </div>
+                            <div className="text-sm font-medium text-green-800">
+                              -{appliedCoupon.discountType === 'fixed' 
+                                ? `$${(appliedCoupon.amount / 100).toFixed(2)}`
+                                : `${appliedCoupon.amount}%`
+                              }
                             </div>
                           </div>
-                        )}
-                        
-                        {couponError && (
-                          <p className="text-sm text-red-600">{couponError}</p>
-                        )}
+                        </div>
                       </div>
                     )}
                     
