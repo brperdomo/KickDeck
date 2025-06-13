@@ -354,7 +354,7 @@ export function registerRoutes(app: Express): Server {
     app.use('/api/admin/clubs', isAdmin, adminClubsRouter); // Admin club management router
     app.use('/api/admin/events', isAdmin, eventClubsRouter); // Event clubs management router
     app.use('/api/admin/email-config', isAdmin, emailConfigRouter); // Email configuration router
-    app.use('/api/stripe-connect', stripeConnectRouter); // Stripe Connect management router
+    // Stripe Connect routes are registered dynamically at the end of this function
     
     // Register direct SendGrid API routes
     // Since we can't use the helper functions due to import issues, we'll implement the routes directly
