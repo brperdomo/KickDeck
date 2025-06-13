@@ -1396,6 +1396,100 @@ export function registerRoutes(app: Express): Server {
           return { team, playerCount };
         });
         
+        // Process payment with Stripe Connect if payment is required
+        let paymentResult = null;
+        if (totalAmount && totalAmount > 0 && paymentMethod === 'card') {
+          try {
+            // Get event's Stripe Connect account information
+            const [eventConnectInfo] = await db
+              .select({
+                stripeConnectAccountId: events.stripeConnectAccountId,
+                connectAccountStatus: events.connectAccountStatus,
+                connectChargesEnabled: events.connectChargesEnabled
+              })
+              .from(events)
+              .where(eq(events.id, eventId));
+
+            if (eventConnectInfo?.stripeConnectAccountId && 
+                eventConnectInfo.connectAccountStatus === 'active' && 
+                eventConnectInfo.connectChargesEnabled) {
+              
+              // Import Stripe processing from the Connect routes
+              const stripe = (await import('stripe')).default;
+              const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY!, {
+                apiVersion: '2023-10-16',
+              });
+
+              // Create a setup intent with destination charge for the tournament's account
+              const setupIntent = await stripeInstance.setupIntents.create({
+                customer: result.team.stripeCustomerId || undefined,
+                payment_method_types: ['card'],
+                usage: 'off_session',
+                on_behalf_of: eventConnectInfo.stripeConnectAccountId,
+                metadata: {
+                  teamId: result.team.id.toString(),
+                  eventId: eventId,
+                  totalAmount: totalAmount.toString(),
+                  destinationAccount: eventConnectInfo.stripeConnectAccountId
+                }
+              });
+
+              // Update team with setup intent information
+              await db.update(teams)
+                .set({
+                  setupIntentId: setupIntent.id,
+                  paymentStatus: 'payment_info_pending'
+                })
+                .where(eq(teams.id, result.team.id));
+
+              paymentResult = {
+                setupIntentId: setupIntent.id,
+                clientSecret: setupIntent.client_secret,
+                connectAccountId: eventConnectInfo.stripeConnectAccountId
+              };
+
+              console.log(`Created setup intent ${setupIntent.id} for team ${result.team.id} with destination account ${eventConnectInfo.stripeConnectAccountId}`);
+            } else {
+              console.warn(`Event ${eventId} does not have a properly configured Stripe Connect account. Payment will fall back to platform account.`);
+              
+              // Fall back to platform account setup intent
+              const stripe = (await import('stripe')).default;
+              const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY!, {
+                apiVersion: '2023-10-16',
+              });
+
+              const setupIntent = await stripeInstance.setupIntents.create({
+                customer: result.team.stripeCustomerId || undefined,
+                payment_method_types: ['card'],
+                usage: 'off_session',
+                metadata: {
+                  teamId: result.team.id.toString(),
+                  eventId: eventId,
+                  totalAmount: totalAmount.toString(),
+                  fallbackToPlatform: 'true'
+                }
+              });
+
+              await db.update(teams)
+                .set({
+                  setupIntentId: setupIntent.id,
+                  paymentStatus: 'payment_info_pending'
+                })
+                .where(eq(teams.id, result.team.id));
+
+              paymentResult = {
+                setupIntentId: setupIntent.id,
+                clientSecret: setupIntent.client_secret,
+                connectAccountId: null
+              };
+            }
+          } catch (paymentError) {
+            console.error('Error setting up payment processing:', paymentError);
+            // Continue with registration but note payment setup failed
+            paymentResult = { error: 'Payment setup failed' };
+          }
+        }
+
         // Extract only the necessary properties from the team to avoid circular references
         const simplifiedTeam = result.team ? {
           id: result.team.id,
@@ -1406,7 +1500,9 @@ export function registerRoutes(app: Express): Server {
           status: result.team.status,
           registrationFee: result.team.registrationFee,
           selectedFeeIds: result.team.selectedFeeIds,
-          totalAmount: result.team.totalAmount
+          totalAmount: result.team.totalAmount,
+          setupIntentId: result.team.setupIntentId,
+          paymentStatus: result.team.paymentStatus
         } : null;
         
         // Send appropriate email based on payment workflow

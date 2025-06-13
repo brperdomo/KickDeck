@@ -1,0 +1,314 @@
+/**
+ * Stripe Connect Payment Processing for Tournament Revenue Distribution
+ * 
+ * This module handles destination charges that route payments directly to
+ * tournament-specific Connect accounts when teams are approved.
+ */
+
+import type { Express } from "express";
+import Stripe from 'stripe';
+import { db } from "@db";
+import { teams, events, paymentTransactions } from "@db/schema";
+import { eq, and } from "drizzle-orm";
+
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+}
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2023-10-16',
+});
+
+// Application fee percentage (platform takes 3% of each transaction)
+const APPLICATION_FEE_RATE = 0.03;
+
+/**
+ * Processes a destination charge for a team registration
+ * Routes payment to the tournament's Connect account
+ */
+export async function processDestinationCharge(
+  teamId: number,
+  eventId: string,
+  paymentMethodId: string,
+  totalAmountCents: number,
+  connectAccountId: string
+) {
+  try {
+    // Calculate application fee (platform commission)
+    const applicationFeeAmount = Math.round(totalAmountCents * APPLICATION_FEE_RATE);
+    
+    // Create payment intent with destination charge
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: totalAmountCents,
+      currency: 'usd',
+      payment_method: paymentMethodId,
+      confirmation_method: 'manual',
+      confirm: true,
+      on_behalf_of: connectAccountId,
+      transfer_data: {
+        destination: connectAccountId,
+      },
+      application_fee_amount: applicationFeeAmount,
+      metadata: {
+        teamId: teamId.toString(),
+        eventId: eventId,
+        connectAccountId: connectAccountId,
+        type: 'team_registration'
+      }
+    });
+
+    // Record transaction in database
+    await db.insert(paymentTransactions).values({
+      teamId: teamId,
+      eventId: eventId,
+      stripePaymentIntentId: paymentIntent.id,
+      amount: totalAmountCents,
+      currency: 'usd',
+      status: paymentIntent.status,
+      connectAccountId: connectAccountId,
+      applicationFeeAmount: applicationFeeAmount,
+      transferId: paymentIntent.transfer_data?.destination || null,
+      processingFees: applicationFeeAmount,
+      netAmount: totalAmountCents - applicationFeeAmount,
+      transactionType: 'team_registration',
+      createdAt: new Date()
+    });
+
+    // Update team payment status
+    await db.update(teams)
+      .set({
+        paymentIntentId: paymentIntent.id,
+        paymentStatus: paymentIntent.status === 'succeeded' ? 'paid' : 'payment_pending',
+        paidAt: paymentIntent.status === 'succeeded' ? new Date() : null
+      })
+      .where(eq(teams.id, teamId));
+
+    return {
+      success: true,
+      paymentIntent: paymentIntent,
+      applicationFee: applicationFeeAmount,
+      netToTournament: totalAmountCents - applicationFeeAmount
+    };
+
+  } catch (error) {
+    console.error('Error processing destination charge:', error);
+    throw error;
+  }
+}
+
+/**
+ * Processes payment when a team is approved by tournament admin
+ */
+export async function chargeApprovedTeam(teamId: number) {
+  try {
+    // Get team and event information
+    const [teamInfo] = await db
+      .select({
+        team: teams,
+        event: {
+          id: events.id,
+          name: events.name,
+          stripeConnectAccountId: events.stripeConnectAccountId,
+          connectAccountStatus: events.connectAccountStatus,
+          connectChargesEnabled: events.connectChargesEnabled
+        }
+      })
+      .from(teams)
+      .innerJoin(events, eq(teams.eventId, events.id))
+      .where(eq(teams.id, teamId));
+
+    if (!teamInfo) {
+      throw new Error('Team not found');
+    }
+
+    const { team, event } = teamInfo;
+
+    // Validate Connect account is ready for charges
+    if (!event.stripeConnectAccountId || 
+        event.connectAccountStatus !== 'active' || 
+        !event.connectChargesEnabled) {
+      throw new Error('Event does not have a properly configured Stripe Connect account');
+    }
+
+    // Validate team has payment method and amount
+    if (!team.paymentMethodId || !team.totalAmount) {
+      throw new Error('Team does not have payment method or amount configured');
+    }
+
+    // Process the destination charge
+    const result = await processDestinationCharge(
+      team.id,
+      team.eventId,
+      team.paymentMethodId,
+      team.totalAmount,
+      event.stripeConnectAccountId
+    );
+
+    console.log(`Successfully charged team ${teamId} and routed payment to Connect account ${event.stripeConnectAccountId}`);
+    
+    return result;
+
+  } catch (error) {
+    console.error(`Error charging approved team ${teamId}:`, error);
+    
+    // Update team payment status to failed
+    await db.update(teams)
+      .set({
+        paymentStatus: 'payment_failed',
+        paymentFailureReason: error instanceof Error ? error.message : 'Unknown error'
+      })
+      .where(eq(teams.id, teamId));
+
+    throw error;
+  }
+}
+
+/**
+ * Registers Connect payment routes
+ */
+export function registerConnectPaymentRoutes(app: Express) {
+  
+  // Webhook for handling Stripe Connect payment events
+  app.post('/api/stripe/connect-webhook', async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    
+    if (!sig) {
+      return res.status(400).send('Missing Stripe signature');
+    }
+
+    let event;
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.STRIPE_CONNECT_WEBHOOK_SECRET!
+      );
+    } catch (err) {
+      console.log('Webhook signature verification failed.', err);
+      return res.status(400).send('Webhook signature verification failed');
+    }
+
+    try {
+      switch (event.type) {
+        case 'payment_intent.succeeded':
+          const paymentIntent = event.data.object as Stripe.PaymentIntent;
+          
+          if (paymentIntent.metadata?.type === 'team_registration') {
+            const teamId = parseInt(paymentIntent.metadata.teamId);
+            
+            // Update team status to paid
+            await db.update(teams)
+              .set({
+                paymentStatus: 'paid',
+                paidAt: new Date(),
+                status: 'approved'
+              })
+              .where(eq(teams.id, teamId));
+
+            // Update transaction status
+            await db.update(paymentTransactions)
+              .set({
+                status: 'succeeded',
+                updatedAt: new Date()
+              })
+              .where(eq(paymentTransactions.stripePaymentIntentId, paymentIntent.id));
+
+            console.log(`Team ${teamId} payment completed successfully via Connect`);
+          }
+          break;
+
+        case 'payment_intent.payment_failed':
+          const failedPayment = event.data.object as Stripe.PaymentIntent;
+          
+          if (failedPayment.metadata?.type === 'team_registration') {
+            const teamId = parseInt(failedPayment.metadata.teamId);
+            
+            // Update team status to payment failed
+            await db.update(teams)
+              .set({
+                paymentStatus: 'payment_failed',
+                paymentFailureReason: failedPayment.last_payment_error?.message || 'Payment failed'
+              })
+              .where(eq(teams.id, teamId));
+
+            // Update transaction status
+            await db.update(paymentTransactions)
+              .set({
+                status: 'failed',
+                updatedAt: new Date()
+              })
+              .where(eq(paymentTransactions.stripePaymentIntentId, failedPayment.id));
+
+            console.log(`Team ${teamId} payment failed via Connect`);
+          }
+          break;
+
+        default:
+          console.log(`Unhandled Connect webhook event type: ${event.type}`);
+      }
+
+      res.json({ received: true });
+    } catch (error) {
+      console.error('Error handling Connect webhook:', error);
+      res.status(500).json({ error: 'Webhook handling failed' });
+    }
+  });
+
+  // Admin endpoint to manually charge an approved team
+  app.post('/api/admin/teams/:teamId/charge', async (req, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      
+      if (!teamId) {
+        return res.status(400).json({ error: 'Invalid team ID' });
+      }
+
+      const result = await chargeApprovedTeam(teamId);
+      
+      res.json({
+        success: true,
+        message: 'Team charged successfully',
+        paymentIntent: result.paymentIntent.id,
+        applicationFee: result.applicationFee,
+        netToTournament: result.netToTournament
+      });
+
+    } catch (error) {
+      console.error('Error charging team:', error);
+      res.status(500).json({ 
+        error: error instanceof Error ? error.message : 'Failed to charge team' 
+      });
+    }
+  });
+
+  // Get payment analytics for a tournament
+  app.get('/api/admin/events/:eventId/payment-analytics', async (req, res) => {
+    try {
+      const { eventId } = req.params;
+
+      const transactions = await db
+        .select()
+        .from(paymentTransactions)
+        .where(eq(paymentTransactions.eventId, eventId));
+
+      const analytics = {
+        totalTransactions: transactions.length,
+        totalRevenue: transactions.reduce((sum, t) => sum + (t.amount || 0), 0),
+        totalApplicationFees: transactions.reduce((sum, t) => sum + (t.applicationFeeAmount || 0), 0),
+        netToTournament: transactions.reduce((sum, t) => sum + (t.netAmount || 0), 0),
+        successfulPayments: transactions.filter(t => t.status === 'succeeded').length,
+        failedPayments: transactions.filter(t => t.status === 'failed').length,
+        pendingPayments: transactions.filter(t => t.status === 'pending').length
+      };
+
+      res.json({
+        analytics,
+        transactions
+      });
+
+    } catch (error) {
+      console.error('Error fetching payment analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch payment analytics' });
+    }
+  });
+}
