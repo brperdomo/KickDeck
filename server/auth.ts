@@ -174,7 +174,15 @@ export function setupAuth(app: Express) {
     app.set("trust proxy", 1);
     sessionSettings.cookie = {
       ...sessionSettings.cookie,
-      secure: true,
+      secure: false, // Disable secure for Replit environment
+      sameSite: 'lax', // Use lax for better compatibility
+    };
+  } else {
+    // Development environment settings
+    sessionSettings.cookie = {
+      ...sessionSettings.cookie,
+      secure: false,
+      sameSite: 'lax',
     };
   }
 
