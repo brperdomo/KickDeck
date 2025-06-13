@@ -102,9 +102,29 @@ export function registerStripeConnectRoutes(app: Express) {
   });
 
   // Get Connect account status for an event
-  app.get("/api/events/:eventId/connect-account", isAdmin, async (req, res) => {
+  app.get("/api/events/:eventId/connect-account", async (req, res) => {
     try {
+      // Enhanced authentication check with detailed logging
+      if (!req.isAuthenticated()) {
+        console.log('Banking access denied: User not authenticated');
+        return res.status(401).json({ 
+          error: 'Authentication required for banking access',
+          details: 'Please log in to access banking information'
+        });
+      }
+      
+      // Check admin privileges
+      const user = req.user as any;
+      if (!user?.isAdmin) {
+        console.log('Banking access denied: User lacks admin privileges', { userId: user?.id, isAdmin: user?.isAdmin });
+        return res.status(403).json({ 
+          error: 'Admin privileges required for banking access',
+          details: 'Only administrators can access banking information'
+        });
+      }
+      
       const { eventId } = req.params;
+      console.log('Banking access granted for user:', { userId: user.id, eventId });
 
       const event = await db.query.events.findFirst({
         where: eq(events.id, parseInt(eventId))

@@ -63,16 +63,31 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
     },
   });
 
-  // Fetch Connect account status
+  // Fetch Connect account status with enhanced error handling
   const { data: connectStatus, isLoading, error } = useQuery<ConnectAccountStatus>({
     queryKey: ['stripe-connect-account', eventId],
     queryFn: async () => {
       const response = await fetch(`/api/events/${eventId}/connect-account`);
       if (!response.ok) {
-        throw new Error('Failed to fetch Connect account status');
+        if (response.status === 401) {
+          throw new Error('Authentication required. Please refresh the page and log in again.');
+        }
+        if (response.status === 403) {
+          throw new Error('Admin privileges required for banking access.');
+        }
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to load banking information');
       }
       return response.json();
     },
+    retry: (failureCount, error) => {
+      // Don't retry on authentication errors
+      if (error.message.includes('Authentication') || error.message.includes('Admin privileges')) {
+        return false;
+      }
+      return failureCount < 3;
+    },
+    retryDelay: 1000,
   });
 
   // Create Connect account mutation with secure form data
@@ -231,7 +246,17 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          Failed to load banking information. Please try again.
+          <strong>Banking Access Error:</strong> {error.message}
+          {error.message.includes('Authentication') && (
+            <div className="mt-2">
+              <button 
+                onClick={() => window.location.reload()} 
+                className="text-sm underline hover:no-underline"
+              >
+                Click here to refresh and try again
+              </button>
+            </div>
+          )}
         </AlertDescription>
       </Alert>
     );
