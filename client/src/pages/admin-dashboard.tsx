@@ -29,6 +29,7 @@ import { TeamCsvUploader } from "@/components/teams/TeamCsvUploader";
 import { BracketAssignmentModal } from "@/components/BracketAssignmentModal";
 import { ScheduleVisualization } from "@/components/ScheduleVisualization";
 import BracketSelector from "@/components/admin/scheduling/BracketSelector";
+import { SchedulingWorkflow } from "@/components/admin/scheduling/SchedulingWorkflow";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -2484,39 +2485,102 @@ function SchedulingView() {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">AI-Powered Scheduling</h2>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline"
-            onClick={suggestBracketAssignments}
-            disabled={!selectedEvent || isSuggestingBrackets}
-          >
-            {isSuggestingBrackets ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Suggesting...
-              </>
-            ) : (
-              <>
-                <Trophy className="mr-2 h-4 w-4" />
-                Assign Brackets
-              </>
-            )}
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => setAiSchedulingModalOpen(true)}
-            disabled={!selectedEvent}
-          >
-            <Wand2 className="mr-2 h-4 w-4" />
-            Generate AI Schedule
-          </Button>
-          <Button 
-            variant="default"
-            onClick={optimizeSchedule}
-            disabled={!selectedEvent || isOptimizing || !(gamesQuery.data?.games?.length > 0)}
-          >
-            {isOptimizing ? (
+        <h2 className="text-2xl font-bold">Tournament Scheduling</h2>
+      </div>
+      
+      <Tabs defaultValue="workflow" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="workflow">6-Step Workflow</TabsTrigger>
+          <TabsTrigger value="ai">AI Quick Schedule</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="workflow" className="space-y-6">
+          {selectedEvent ? (
+            <SchedulingWorkflow 
+              eventId={selectedEvent}
+              onComplete={(scheduleData) => {
+                toast({
+                  title: "Scheduling Complete",
+                  description: "6-step tournament scheduling workflow completed successfully!",
+                });
+                // Refresh data
+                queryClient.invalidateQueries({ queryKey: ['admin', 'games', selectedEvent] });
+              }}
+            />
+          ) : (
+            <Card>
+              <CardContent className="p-12">
+                <div className="flex flex-col items-center justify-center text-center space-y-4">
+                  <CalendarDays className="h-12 w-12 text-muted-foreground" />
+                  <div>
+                    <h3 className="font-medium text-lg">Select an Event to Start</h3>
+                    <p className="text-muted-foreground">
+                      Choose an event from the dropdown below to begin the 6-step scheduling workflow
+                    </p>
+                  </div>
+                  <div className="w-full max-w-md">
+                    <Select value={selectedEvent || ""} onValueChange={setSelectedEvent}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select an event" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {eventsQuery.isLoading ? (
+                          <SelectItem value="loading" disabled>Loading events...</SelectItem>
+                        ) : eventsQuery.isError ? (
+                          <SelectItem value="error" disabled>Error loading events</SelectItem>
+                        ) : eventsQuery.data && Array.isArray(eventsQuery.data) && eventsQuery.data.length > 0 ? (
+                          eventsQuery.data.map((event: any) => (
+                            <SelectItem key={event.id} value={event.id.toString()}>
+                              {event.name}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="none" disabled>No events available</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="ai" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium">AI-Powered Quick Scheduling</h3>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                onClick={suggestBracketAssignments}
+                disabled={!selectedEvent || isSuggestingBrackets}
+              >
+                {isSuggestingBrackets ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Suggesting...
+                  </>
+                ) : (
+                  <>
+                    <Trophy className="mr-2 h-4 w-4" />
+                    Assign Brackets
+                  </>
+                )}
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setAiSchedulingModalOpen(true)}
+                disabled={!selectedEvent}
+              >
+                <Wand2 className="mr-2 h-4 w-4" />
+                Generate AI Schedule
+              </Button>
+              <Button 
+                variant="default"
+                onClick={optimizeSchedule}
+                disabled={!selectedEvent || isOptimizing || !(gamesQuery.data?.games?.length > 0)}
+              >
+                {isOptimizing ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Optimizing...
