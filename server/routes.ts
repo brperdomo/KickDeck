@@ -2928,29 +2928,38 @@ export function registerRoutes(app: Express): Server {
 
     app.post('/api/admin/complexes', isAdmin, async (req, res) => {
       try {
+        const complexData = {
+          name: req.body.name,
+          address: req.body.address,
+          city: req.body.city,
+          state: req.body.state,
+          country: req.body.country,
+          latitude: req.body.latitude || null,
+          longitude: req.body.longitude || null,
+          openTime: req.body.openTime,
+          closeTime: req.body.closeTime,
+          rules: req.body.rules || null,
+          directions: req.body.directions || null,
+          // Add Mapbox fields
+          mapboxPlaceId: req.body.mapboxPlaceId || null,
+          mapboxFeatureType: req.body.mapboxFeatureType || null,
+          mapboxRelevance: req.body.mapboxRelevance || null,
+          mapboxContext: req.body.mapboxContext || null,
+          globalComplexId: req.body.globalComplexId || null,
+          organizationId: req.body.organizationId || 1, // Default to organization 1
+          addressVerified: req.body.addressVerified || false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
         const [newComplex] = await db
           .insert(complexes)
-          .values({
-            name: req.body.name,
-            address: req.body.address,
-            city: req.body.city,
-            state: req.body.state,
-            country: req.body.country,
-            latitude: req.body.latitude || null,
-            longitude: req.body.longitude || null,
-            openTime: req.body.openTime,
-            closeTime: req.body.closeTime,
-            rules: req.body.rules || null,
-            directions: req.body.directions || null,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          })
+          .values(complexData)
           .returning();
 
         res.json(newComplex);
       } catch (error) {
         console.error('Error creating complex:', error);
-        // Added basic error logging for white screen debugging.
         console.error("Error details:", error);
         res.status(500).send("Failed to create complex");
       }
@@ -2991,6 +3000,90 @@ export function registerRoutes(app: Express): Server {
         // Added basic error logging for white screen debugging.
         console.error("Error details:", error);
         res.status(500).send("Failed to update complex");
+      }
+    });
+
+    // Mapbox multi-tenant API routes
+    app.post('/api/admin/complexes/check-conflicts', isAdmin, async (req, res) => {
+      try {
+        const { globalComplexId, organizationId } = req.body;
+        
+        if (!globalComplexId || !organizationId) {
+          return res.status(400).json({ error: 'globalComplexId and organizationId are required' });
+        }
+
+        const conflicts = await db.execute(sql`
+          SELECT c.id, c.name, c.organization_id, 0 as distance
+          FROM complexes c
+          WHERE c.global_complex_id = ${globalComplexId} 
+          AND c.organization_id != ${organizationId}
+        `);
+
+        res.json(conflicts);
+      } catch (error) {
+        console.error('Error checking complex conflicts:', error);
+        res.status(500).json({ error: 'Failed to check conflicts' });
+      }
+    });
+
+    app.post('/api/admin/complexes/register-global', isAdmin, async (req, res) => {
+      try {
+        const {
+          globalComplexId,
+          canonicalName,
+          canonicalAddress,
+          mapboxPlaceId,
+          latitude,
+          longitude,
+          country,
+          stateProvince,
+          city
+        } = req.body;
+
+        if (!globalComplexId || !canonicalName || !canonicalAddress) {
+          return res.status(400).json({ 
+            error: 'globalComplexId, canonicalName, and canonicalAddress are required' 
+          });
+        }
+
+        const [registryEntry] = await db.execute(sql`
+          INSERT INTO global_complex_registry (
+            global_complex_id, canonical_name, canonical_address,
+            mapbox_place_id, latitude, longitude, country, state_province, city
+          ) VALUES (
+            ${globalComplexId}, ${canonicalName}, ${canonicalAddress},
+            ${mapboxPlaceId}, ${latitude}, ${longitude}, ${country}, ${stateProvince}, ${city}
+          )
+          ON CONFLICT (global_complex_id) DO UPDATE SET
+            usage_count = global_complex_registry.usage_count + 1,
+            updated_at = CURRENT_TIMESTAMP
+          RETURNING *
+        `);
+
+        res.json(registryEntry);
+      } catch (error) {
+        console.error('Error registering complex globally:', error);
+        res.status(500).json({ error: 'Failed to register complex globally' });
+      }
+    });
+
+    app.get('/api/admin/complexes/global-registry/:globalComplexId', isAdmin, async (req, res) => {
+      try {
+        const { globalComplexId } = req.params;
+        
+        const [registryEntry] = await db.execute(sql`
+          SELECT * FROM global_complex_registry 
+          WHERE global_complex_id = ${globalComplexId}
+        `);
+
+        if (!registryEntry) {
+          return res.status(404).json({ error: 'Global complex not found' });
+        }
+
+        res.json(registryEntry);
+      } catch (error) {
+        console.error('Error fetching global registry info:', error);
+        res.status(500).json({ error: 'Failed to fetch global registry info' });
       }
     });
 
