@@ -3,7 +3,19 @@ import { db } from "@db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 
-// Validation schema for coupon creation/update
+// Base validation schema without transforms
+const baseCouponSchema = z.object({
+  code: z.string().min(1, "Code is required"),
+  discountType: z.enum(["percentage", "fixed"]),
+  amount: z.coerce.number().min(0, "Amount must be 0 or greater"),
+  expirationDate: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  eventId: z.union([z.coerce.number().positive(), z.null()]).optional(),
+  maxUses: z.coerce.number().positive("Max uses must be positive").nullable().optional(),
+  isActive: z.boolean().default(true),
+});
+
+// Enhanced schema with transforms and validation for creation
 const couponSchema = z.object({
   code: z.string().min(1, "Code is required"),
   discountType: z.enum(["percentage", "fixed"]),
@@ -13,11 +25,33 @@ const couponSchema = z.object({
   eventId: z.union([z.coerce.number().positive(), z.null()]).optional(),
   maxUses: z.coerce.number().positive("Max uses must be positive").nullable().optional(),
   isActive: z.boolean().default(true),
+}).refine((data) => {
+  // Validate percentage discounts are between 0 and 100
+  if (data.discountType === "percentage" && (data.amount < 0 || data.amount > 100)) {
+    return false;
+  }
+  // Validate fixed discounts are positive
+  if (data.discountType === "fixed" && data.amount < 0) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Percentage discounts must be between 0-100%, fixed discounts must be positive",
+  path: ["amount"]
 });
 
 export async function createCoupon(req: Request, res: Response) {
   try {
+    console.log("Creating coupon with request body:", req.body);
+    
     const validatedData = couponSchema.parse(req.body);
+    
+    console.log("Validated coupon data:", {
+      code: validatedData.code,
+      discountType: validatedData.discountType,
+      amount: validatedData.amount,
+      eventId: validatedData.eventId
+    });
 
     // Allow null eventId for global coupons
     const eventIdToUse = validatedData.eventId || null;
@@ -59,10 +93,12 @@ export async function createCoupon(req: Request, res: Response) {
       ) RETURNING *;
     `);
 
+    console.log("Coupon created successfully:", result.rows[0]);
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error("Error creating coupon:", error);
     if (error instanceof z.ZodError) {
+      console.error("Validation errors:", error.errors);
       return res.status(400).json({ error: error.errors });
     }
     res.status(500).json({ error: "Failed to create coupon" });
@@ -95,7 +131,21 @@ export async function getCoupons(req: Request, res: Response) {
 export async function updateCoupon(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const validatedData = couponSchema.partial().parse(req.body);
+    const validatedData = baseCouponSchema.partial().parse(req.body);
+
+    // Additional validation for percentage discounts
+    if (validatedData.discountType && validatedData.amount !== undefined) {
+      if (validatedData.discountType === "percentage" && (validatedData.amount < 0 || validatedData.amount > 100)) {
+        return res.status(400).json({ 
+          error: "Percentage discounts must be between 0-100%" 
+        });
+      }
+      if (validatedData.discountType === "fixed" && validatedData.amount < 0) {
+        return res.status(400).json({ 
+          error: "Fixed discount amount must be positive" 
+        });
+      }
+    }
 
     const result = await db.execute(sql`
       UPDATE coupons SET 
@@ -116,10 +166,12 @@ export async function updateCoupon(req: Request, res: Response) {
       return res.status(404).json({ error: "Coupon not found" });
     }
 
+    console.log("Coupon updated successfully:", result.rows[0]);
     res.json(result.rows[0]);
   } catch (error) {
     console.error("Error updating coupon:", error);
     if (error instanceof z.ZodError) {
+      console.error("Validation errors:", error.errors);
       return res.status(400).json({ error: error.errors });
     }
     res.status(500).json({ error: "Failed to update coupon" });

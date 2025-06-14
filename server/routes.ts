@@ -3254,55 +3254,6 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
       }
     });
 
-app.post('/api/admin/coupons', isAdmin, async (req, res) => {
-try {
-const {
-code,
-discountType,
-amount,
-expirationDate,
-description,
-eventId,
-maxUses,
-} = req.body;
-
-// Verify if coupon code already exists
-const [existingCoupon] = await db
-.select()
-.from(coupons)
-.where(eq(coupons.code, code))
-.limit(1);
-
-if (existingCoupon) {
-return res.status(400).json({ message: "Coupon code already exists" });
-}
-
-// Convert eventId to number or null
-const numericEventId = eventId ? Number(eventId) : null;
-
-const [newCoupon] = await db
-.insert(coupons)
-.values({
-code,
-discountType,
-amount: Number(amount),
-expirationDate: expirationDate ? new Date(expirationDate) : null,
-description: description || null,
-eventId: numericEventId,
-maxUses: maxUses ? Number(maxUses) : null,
-usageCount: 0,
-isActive: true,
-createdAt: new Date(),
-updatedAt: new Date(),
-})
-.returning();
-
-res.json(newCoupon);
-} catch (error) {
-console.error('Error creating coupon:', error);
-res.status(500).json({ message: "Failed to create coupon" });
-}
-});
 
     app.patch('/api/admin/coupons/:id', isAdmin, async (req, res) => {
       try {
@@ -3386,55 +3337,6 @@ res.status(500).json({ message: "Failed to create coupon" });
       }
     });
 
-app.post('/api/admin/coupons', isAdmin, async (req, res) => {
-try {
-const {
-code,
-discountType,
-amount,
-expirationDate,
-description,
-eventId,
-maxUses,
-} = req.body;
-
-// Verify if coupon code already exists
-const [existingCoupon] = await db
-.select()
-.from(coupons)
-.where(eq(coupons.code, code))
-.limit(1);
-
-if (existingCoupon) {
-return res.status(400).json({ message: "Coupon code already exists" });
-}
-
-// Convert eventId to number or null
-const numericEventId = eventId ? Number(eventId) : null;
-
-const [newCoupon] = await db
-.insert(coupons)
-.values({
-code,
-discountType,
-amount: Number(amount),
-expirationDate: expirationDate ? new Date(expirationDate) : null,
-description: description || null,
-eventId: numericEventId,
-maxUses: maxUses ? Number(maxUses) : null,
-usageCount: 0,
-isActive: true,
-createdAt: new Date(),
-updatedAt: new Date(),
-})
-.returning();
-
-res.json(newCoupon);
-} catch (error) {
-console.error('Error creating coupon:', error);
-res.status(500).json({ message: "Failed to create coupon" });
-}
-});
 
     app.patch('/api/admin/coupons/:id', isAdmin, async (req, res) => {
       try {
