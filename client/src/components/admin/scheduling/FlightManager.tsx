@@ -402,6 +402,26 @@ export function FlightManager({ eventId, teamsData, workflowData, onComplete, on
                 />
               </DialogContent>
             </Dialog>
+            
+            {/* Edit Flight Dialog */}
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit Flight</DialogTitle>
+                </DialogHeader>
+                {editingFlight && (
+                  <EditFlightForm
+                    flight={editingFlight}
+                    ageGroups={Array.from(new Set(teamsData.map(t => t.ageGroup)))}
+                    onSubmit={updateFlight}
+                    onCancel={() => {
+                      setIsEditDialogOpen(false);
+                      setEditingFlight(null);
+                    }}
+                  />
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
         </CardHeader>
         <CardContent>
@@ -554,7 +574,7 @@ function CreateFlightForm({ ageGroups, onSubmit, onCancel }: any) {
   );
 }
 
-function FlightCard({ flight, availableTeams, onAssignTeam, onRemoveTeam }: any) {
+function FlightCard({ flight, availableTeams, onAssignTeam, onRemoveTeam, onEditFlight }: any) {
   const getFlightLevelBadge = (level: string) => {
     const colors = {
       top_flight: 'bg-amber-500 text-white',
@@ -592,7 +612,7 @@ function FlightCard({ flight, availableTeams, onAssignTeam, onRemoveTeam }: any)
           <Button 
             size="sm" 
             variant="ghost"
-            onClick={() => onEditFlight?.(flight)}
+            onClick={() => onEditFlight && onEditFlight(flight)}
           >
             <Edit2 className="h-4 w-4" />
           </Button>
@@ -722,5 +742,105 @@ function FlightValidation({ flights, unassignedTeams, onComplete }: any) {
         </Button>
       </div>
     </div>
+  );
+}
+
+function EditFlightForm({ flight, ageGroups, onSubmit, onCancel }: any) {
+  const [formData, setFormData] = useState({
+    name: flight.name,
+    ageGroup: flight.ageGroup,
+    level: flight.level,
+    description: flight.description || '',
+    minTeams: flight.minTeams,
+    maxTeams: flight.maxTeams
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="editName">Flight Name</Label>
+        <Input 
+          id="editName"
+          value={formData.name}
+          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+          placeholder="e.g., 2014 Boys Flight 1"
+          required
+        />
+      </div>
+      
+      <div>
+        <Label htmlFor="editAgeGroup">Age Group</Label>
+        <Select value={formData.ageGroup} onValueChange={(value) => setFormData(prev => ({ ...prev, ageGroup: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select age group" />
+          </SelectTrigger>
+          <SelectContent>
+            {ageGroups.map((ag: string) => (
+              <SelectItem key={ag} value={ag}>{ag}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="editLevel">Flight Level</Label>
+        <Select value={formData.level} onValueChange={(value) => setFormData(prev => ({ ...prev, level: value }))}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="top_flight">Top Flight</SelectItem>
+            <SelectItem value="middle_flight">Middle Flight</SelectItem>
+            <SelectItem value="bottom_flight">Bottom Flight</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="editDescription">Description (Optional)</Label>
+        <Textarea 
+          id="editDescription"
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+          placeholder="Additional details about this flight"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="editMinTeams">Minimum Teams</Label>
+          <Input 
+            id="editMinTeams"
+            type="number"
+            value={formData.minTeams}
+            onChange={(e) => setFormData(prev => ({ ...prev, minTeams: parseInt(e.target.value) }))}
+            min="2"
+            max="12"
+          />
+        </div>
+        <div>
+          <Label htmlFor="editMaxTeams">Maximum Teams</Label>
+          <Input 
+            id="editMaxTeams"
+            type="number"
+            value={formData.maxTeams}
+            onChange={(e) => setFormData(prev => ({ ...prev, maxTeams: parseInt(e.target.value) }))}
+            min="4"
+            max="16"
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-2 pt-4">
+        <Button type="submit">Update Flight</Button>
+        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+      </div>
+    </form>
   );
 }
