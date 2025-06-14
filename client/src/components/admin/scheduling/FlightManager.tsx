@@ -372,13 +372,18 @@ export function FlightManager({ eventId, teamsData, workflowData, onComplete, on
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Age Group Analysis */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Info className="h-5 w-5" />
-            Age Group Analysis
+      <Card className="border-0 shadow-xl bg-gradient-to-br from-white to-blue-50/30 overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600"></div>
+        <CardHeader className="bg-gradient-to-r from-blue-50/50 to-purple-50/50">
+          <CardTitle className="flex items-center gap-3 text-xl">
+            <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg">
+              <Info className="h-5 w-5 text-white" />
+            </div>
+            <span className="bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent font-bold">
+              Age Group Analysis
+            </span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -387,14 +392,24 @@ export function FlightManager({ eventId, teamsData, workflowData, onComplete, on
               // Enhanced gender detection for clear display
               const genderInfo = genderAwareAgeGroups.find((g) => g.name === group.ageGroup);
               const gender = genderInfo?.gender || 'Mixed';
-              const genderColor = gender === 'Boys' ? 'text-blue-600' : gender === 'Girls' ? 'text-pink-600' : 'text-gray-600';
-              const genderBg = gender === 'Boys' ? 'bg-blue-50 border-blue-200' : gender === 'Girls' ? 'bg-pink-50 border-pink-200' : 'bg-gray-50 border-gray-200';
+              const genderColor = gender === 'Boys' ? 'text-blue-700' : gender === 'Girls' ? 'text-pink-700' : 'text-purple-700';
+              const genderBg = gender === 'Boys' 
+                ? 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-300 shadow-lg shadow-blue-100/50' 
+                : gender === 'Girls' 
+                ? 'bg-gradient-to-br from-pink-50 to-pink-100 border-pink-300 shadow-lg shadow-pink-100/50' 
+                : 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300 shadow-lg shadow-purple-100/50';
               
               return (
                 <div key={group.ageGroup} className={`p-4 border rounded-lg ${genderBg}`}>
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-medium">{group.ageGroup}</h3>
-                    <Badge className={`text-xs ${genderColor} bg-white border`}>
+                    <Badge className={`text-xs font-semibold ${genderColor} ${
+                      gender === 'Boys' 
+                        ? 'bg-gradient-to-r from-blue-100 to-blue-200 border-blue-300' 
+                        : gender === 'Girls' 
+                        ? 'bg-gradient-to-r from-pink-100 to-pink-200 border-pink-300' 
+                        : 'bg-gradient-to-r from-purple-100 to-purple-200 border-purple-300'
+                    } shadow-sm`}>
                       {gender}
                     </Badge>
                   </div>
