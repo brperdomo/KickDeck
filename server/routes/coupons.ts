@@ -93,8 +93,25 @@ export async function createCoupon(req: Request, res: Response) {
       ) RETURNING *;
     `);
 
-    console.log("Coupon created successfully:", result.rows[0]);
-    res.status(201).json(result.rows[0]);
+    // Map database field names to frontend expected format
+    const createdCoupon = result.rows[0];
+    const mappedCoupon = {
+      id: createdCoupon.id,
+      code: createdCoupon.code,
+      discountType: createdCoupon.discount_type,
+      amount: createdCoupon.amount,
+      expirationDate: createdCoupon.expiration_date,
+      description: createdCoupon.description,
+      eventId: createdCoupon.event_id,
+      maxUses: createdCoupon.max_uses,
+      usageCount: createdCoupon.usage_count,
+      isActive: createdCoupon.is_active,
+      createdAt: createdCoupon.created_at,
+      updatedAt: createdCoupon.updated_at
+    };
+
+    console.log("Coupon created successfully:", mappedCoupon);
+    res.status(201).json(mappedCoupon);
   } catch (error) {
     console.error("Error creating coupon:", error);
     if (error instanceof z.ZodError) {
@@ -111,17 +128,35 @@ export async function getCoupons(req: Request, res: Response) {
     let query;
 
     if (!eventId) {
-      query = sql`SELECT * FROM coupons`;
+      query = sql`SELECT * FROM coupons ORDER BY created_at DESC`;
     } else {
       const numericEventId = parseInt(eventId as string, 10);
       if (isNaN(numericEventId)) {
         return res.status(400).json({ error: "Invalid event ID format" });
       }
-      query = sql`SELECT * FROM coupons WHERE event_id = ${numericEventId}`;
+      query = sql`SELECT * FROM coupons WHERE event_id = ${numericEventId} ORDER BY created_at DESC`;
     }
 
     const result = await db.execute(query);
-    res.json(result.rows);
+    
+    // Map database field names to frontend expected format
+    const mappedRows = result.rows.map((row: any) => ({
+      id: row.id,
+      code: row.code,
+      discountType: row.discount_type, // Map snake_case to camelCase
+      amount: row.amount,
+      expirationDate: row.expiration_date,
+      description: row.description,
+      eventId: row.event_id,
+      maxUses: row.max_uses,
+      usageCount: row.usage_count,
+      isActive: row.is_active,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    }));
+
+    console.log("Mapped coupon data for frontend:", mappedRows);
+    res.json(mappedRows);
   } catch (error) {
     console.error("Error fetching coupons:", error);
     res.status(500).json({ error: "Failed to fetch coupons" });
@@ -166,8 +201,25 @@ export async function updateCoupon(req: Request, res: Response) {
       return res.status(404).json({ error: "Coupon not found" });
     }
 
-    console.log("Coupon updated successfully:", result.rows[0]);
-    res.json(result.rows[0]);
+    // Map database field names to frontend expected format
+    const updatedCoupon = result.rows[0];
+    const mappedCoupon = {
+      id: updatedCoupon.id,
+      code: updatedCoupon.code,
+      discountType: updatedCoupon.discount_type,
+      amount: updatedCoupon.amount,
+      expirationDate: updatedCoupon.expiration_date,
+      description: updatedCoupon.description,
+      eventId: updatedCoupon.event_id,
+      maxUses: updatedCoupon.max_uses,
+      usageCount: updatedCoupon.usage_count,
+      isActive: updatedCoupon.is_active,
+      createdAt: updatedCoupon.created_at,
+      updatedAt: updatedCoupon.updated_at
+    };
+
+    console.log("Coupon updated successfully:", mappedCoupon);
+    res.json(mappedCoupon);
   } catch (error) {
     console.error("Error updating coupon:", error);
     if (error instanceof z.ZodError) {

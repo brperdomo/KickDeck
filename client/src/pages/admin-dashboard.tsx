@@ -5979,13 +5979,14 @@ function ThemeEditor() {
 interface SelectCoupon {
   id: number;
   code: string;
-  discountType: 'percentage' | 'amount';
+  discountType: 'percentage' | 'fixed';
   amount: number;
   expirationDate: string;
   usageCount: number;
   maxUses: number | null;
   isActive: boolean;
   description: string;
+  eventId?: number;
 }
 
 function CouponManagement() {
