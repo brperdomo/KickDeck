@@ -33,6 +33,7 @@ interface Complex {
 interface ComplexCardProps {
   complex: Complex;
   onEditComplex: (complex: Complex) => void;
+  onDeleteComplex?: (complexId: number) => void;
   onViewFields: (complexId: number) => void;
   isExpanded?: boolean;
   isViewingFields?: boolean;
@@ -40,18 +41,21 @@ interface ComplexCardProps {
   fields?: any[];
   fieldsLoading?: boolean;
   onEditField?: (field: any) => void;
+  onDeleteField?: (fieldId: number) => void;
 }
 
 export function ComplexCard({ 
   complex, 
   onEditComplex, 
+  onDeleteComplex,
   onViewFields, 
   isExpanded = false,
   isViewingFields = false,
   onAddField,
   fields = [],
   fieldsLoading = false,
-  onEditField
+  onEditField,
+  onDeleteField
 }: ComplexCardProps) {
   const [showMap, setShowMap] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -130,6 +134,15 @@ export function ComplexCard({
                   <DropdownMenuItem onClick={() => setShowMap(!showMap)}>
                     <MapIcon className="mr-2 h-4 w-4 text-indigo-400" />
                     {showMap ? 'Hide Map' : 'Show Map'}
+                  </DropdownMenuItem>
+                )}
+                {onDeleteComplex && (
+                  <DropdownMenuItem 
+                    onClick={() => onDeleteComplex(complex.id)}
+                    className="text-red-400 hover:text-red-300 hover:bg-red-950/20"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Complex
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>

@@ -1920,6 +1920,71 @@ function ComplexesView() {
     setIsFieldModalOpen(true);
   };
 
+  // Delete mutations
+  const deleteComplexMutation = useMutation({
+    mutationFn: async (complexId: number) => {
+      const response = await fetch(`/api/admin/complexes/${complexId}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete complex');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/complexes'] });
+      toast({
+        title: "Success",
+        description: "Complex and all associated fields deleted successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete complex",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const deleteFieldMutation = useMutation({
+    mutationFn: async (fieldId: number) => {
+      const response = await fetch(`/api/admin/fields/${fieldId}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete field');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/fields', viewingComplexId] });
+      toast({
+        title: "Success",
+        description: "Field deleted successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete field",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleDeleteComplex = async (complexId: number) => {
+    if (window.confirm('Are you sure you want to delete this complex? This will also delete all associated fields and cannot be undone.')) {
+      await deleteComplexMutation.mutateAsync(complexId);
+    }
+  };
+
+  const handleDeleteField = async (fieldId: number) => {
+    if (window.confirm('Are you sure you want to delete this field? This cannot be undone.')) {
+      await deleteFieldMutation.mutateAsync(fieldId);
+    }
+  };
+
   if (complexesQuery.isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
@@ -1944,12 +2009,14 @@ function ComplexesView() {
             key={complex.id} 
             complex={complex} 
             onEditComplex={handleEditComplex} 
+            onDeleteComplex={handleDeleteComplex}
             onViewFields={handleViewFields}
             isViewingFields={viewingComplexId === complex.id}
             onAddField={viewingComplexId === complex.id ? handleAddField : undefined}
             fields={viewingComplexId === complex.id ? fieldsQuery.data || [] : []}
             fieldsLoading={fieldsQuery.isLoading && viewingComplexId === complex.id}
             onEditField={handleEditField}
+            onDeleteField={handleDeleteField}
           />
         ))}
       </div>
