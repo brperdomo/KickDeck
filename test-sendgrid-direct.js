@@ -1,57 +1,46 @@
 /**
- * Simple SendGrid Email Test
- * 
- * This script uses SendGrid's mail service directly without
- * relying on the application's email service layer.
- * 
- * Usage:
- *   node test-sendgrid-direct.js recipient@example.com sender@example.com
- * 
- * Note: The sender email must be verified in your SendGrid account.
+ * Direct SendGrid API Test
  */
 
-import { MailService } from '@sendgrid/mail';
+import fetch from 'node-fetch';
 
-async function sendTestEmail() {
+async function testSendGridAPI() {
   try {
-    // Get API key from environment
-    const apiKey = process.env.SENDGRID_API_KEY;
-    if (!apiKey) {
-      console.error('SENDGRID_API_KEY environment variable is not set.');
-      process.exit(1);
+    if (!process.env.SENDGRID_API_KEY) {
+      console.error('SENDGRID_API_KEY not found');
+      return;
     }
-
-    // Get email addresses from command line arguments
-    const recipient = process.argv[2] || 'recipient@example.com';
-    const sender = process.argv[3] || 'support@matchpro.ai';
     
-    console.log(`Sending test email to ${recipient} from ${sender}...`);
-
-    // Initialize SendGrid client
-    const mailService = new MailService();
-    mailService.setApiKey(apiKey);
+    console.log('Testing SendGrid API directly...');
     
-    // Email message
-    const msg = {
-      to: recipient,
-      from: sender,
-      subject: 'SendGrid Direct Test',
-      text: 'This is a test email sent directly through SendGrid.',
-      html: '<strong>This is a test email sent directly through SendGrid.</strong>',
-    };
+    const response = await fetch('https://api.sendgrid.com/v3/templates?generations=dynamic', {
+      headers: {
+        'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
     
-    // Send the email
-    const response = await mailService.send(msg);
-    console.log('Email sent successfully!');
-    console.log('Response:', response);
+    if (!response.ok) {
+      console.error('SendGrid API error:', response.status);
+      const errorText = await response.text();
+      console.error('Error details:', errorText);
+      return;
+    }
+    
+    const data = await response.json();
+    console.log(`Found ${data.templates.length} SendGrid templates:`);
+    
+    data.templates.forEach(template => {
+      console.log(`- ${template.name} (ID: ${template.id})`);
+      if (template.versions && template.versions.length > 0) {
+        console.log(`  Version: ${template.versions[0].name} (ID: ${template.versions[0].id})`);
+      }
+    });
+    
+    return data.templates;
   } catch (error) {
-    console.error('Error sending email:');
-    console.error(error);
-    if (error.response) {
-      console.error('API response:', error.response.body);
-    }
+    console.error('Error testing SendGrid API:', error);
   }
 }
 
-// Run the test
-sendTestEmail();
+testSendGridAPI();
