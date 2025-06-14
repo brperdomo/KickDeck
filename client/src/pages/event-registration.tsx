@@ -350,6 +350,7 @@ interface Event {
   startDate: string;
   endDate: string;
   applicationDeadline: string;
+  timezone: string;
   details: string;
   branding?: {
     logoUrl?: string;
@@ -385,6 +386,26 @@ const fadeInUp = {
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: -20 },
   transition: { duration: 0.3 }
+};
+
+// Timezone-aware date formatting function
+const formatDateInEventTimezone = (dateString: string, timezone: string): string => {
+  try {
+    // Parse the date string and format it in the event's timezone
+    const date = new Date(dateString);
+    
+    // Use Intl.DateTimeFormat to format the date in the event's timezone
+    return new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric'
+    }).format(date);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    // Fallback to basic formatting without timezone conversion
+    return new Date(dateString).toLocaleDateString();
+  }
 };
 
 // Payment component for handling Stripe checkout with Setup Intent
@@ -2721,7 +2742,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
           <CardContent className="p-6 text-center">
             <h2 className="text-xl font-semibold text-amber-600">Registration Closed</h2>
             <p className="mt-2 text-gray-600">
-              The registration deadline for this event ({new Date(event.applicationDeadline).toLocaleDateString()}) has passed. 
+              The registration deadline for this event ({formatDateInEventTimezone(event.applicationDeadline, event.timezone)}) has passed. 
               Registration is no longer available.
             </p>
           </CardContent>
@@ -4975,14 +4996,14 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                       className="font-semibold"
                       style={{ color: event?.branding?.primaryColor || '#2C5282' }}
                     >Event Dates</h3>
-                    <p>{new Date(event.startDate).toLocaleDateString()} - {new Date(event.endDate).toLocaleDateString()}</p>
+                    <p>{formatDateInEventTimezone(event.startDate, event.timezone)} - {formatDateInEventTimezone(event.endDate, event.timezone)}</p>
                   </div>
                   <div className="space-y-2">
                     <h3 
                       className="font-semibold"
                       style={{ color: event?.branding?.primaryColor || '#2C5282' }}
                     >Registration Deadline</h3>
-                    <p>{new Date(event.applicationDeadline).toLocaleDateString()}</p>
+                    <p>{formatDateInEventTimezone(event.applicationDeadline, event.timezone)}</p>
                   </div>
                 </div>
 
