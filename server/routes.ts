@@ -3087,6 +3087,35 @@ export function registerRoutes(app: Express): Server {
       }
     });
 
+    // Delete complex endpoint
+    app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
+      try {
+        const complexId = parseInt(req.params.id);
+
+        if (isNaN(complexId)) {
+          return res.status(400).json({ error: 'Invalid complex ID' });
+        }
+
+        // First delete all fields associated with this complex
+        await db.delete(fields).where(eq(fields.complexId, complexId));
+
+        // Then delete the complex
+        const deletedComplex = await db
+          .delete(complexes)
+          .where(eq(complexes.id, complexId))
+          .returning();
+
+        if (deletedComplex.length === 0) {
+          return res.status(404).json({ error: 'Complex not found' });
+        }
+
+        res.json({ message: 'Complex and associated fields deleted successfully' });
+      } catch (error) {
+        console.error('Error deleting complex:', error);
+        res.status(500).json({ error: 'Failed to delete complex' });
+      }
+    });
+
     // Add complex status update endpoint
     app.patch('/api/admin/complexes/:id/status', isAdmin, async (req, res) => {
       try {
