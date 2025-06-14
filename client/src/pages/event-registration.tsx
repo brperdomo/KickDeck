@@ -391,6 +391,8 @@ const fadeInUp = {
 // Timezone-aware date formatting function
 const formatDateInEventTimezone = (dateString: string, timezone: string): string => {
   try {
+    console.log('Formatting date:', dateString, 'with timezone:', timezone);
+    
     // For date-only strings (YYYY-MM-DD), parse them as local dates to avoid UTC conversion issues
     let date: Date;
     
@@ -398,18 +400,23 @@ const formatDateInEventTimezone = (dateString: string, timezone: string): string
       // Date-only string: parse as local date to avoid timezone shifts
       const [year, month, day] = dateString.split('-').map(Number);
       date = new Date(year, month - 1, day); // month is 0-indexed
+      console.log('Parsed as local date:', date);
     } else {
       // Date with time: parse normally
       date = new Date(dateString);
+      console.log('Parsed as normal date:', date);
     }
     
     // Use Intl.DateTimeFormat to format the date in the event's timezone
-    return new Intl.DateTimeFormat('en-US', {
+    const formatted = new Intl.DateTimeFormat('en-US', {
       timeZone: timezone,
       year: 'numeric',
       month: 'numeric',
       day: 'numeric'
     }).format(date);
+    
+    console.log('Formatted result:', formatted);
+    return formatted;
   } catch (error) {
     console.error('Error formatting date:', error);
     // Fallback to basic formatting without timezone conversion
