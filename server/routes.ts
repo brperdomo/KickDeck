@@ -659,6 +659,7 @@ export function registerRoutes(app: Express): Server {
             startDate: events.startDate,
             endDate: events.endDate,
             applicationDeadline: events.applicationDeadline,
+            timezone: events.timezone,
             details: events.details,
             agreement: events.agreement,
             refundPolicy: events.refundPolicy
