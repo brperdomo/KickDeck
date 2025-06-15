@@ -26,7 +26,7 @@ export async function getTemplatesFromSendGrid() {
 
     console.log('Making request to SendGrid API for templates...');
     
-    const response = await sgMail.request({
+    const response = await (sgMail as any).request({
       url: '/v3/templates',
       method: 'GET'
     });
@@ -96,8 +96,7 @@ export async function mapSendGridTemplateToEmailType(
     await db
       .update(emailTemplates)
       .set({ 
-        sendgridTemplateId: sendgridTemplateId,
-        updatedAt: new Date().toISOString()
+        sendgridTemplateId: sendgridTemplateId
       })
       .where(eq(emailTemplates.id, template.id));
     
