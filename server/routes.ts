@@ -8100,7 +8100,31 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           const errorText = await response.text();
           console.error('SendGrid API error response:', errorText);
           console.error('SendGrid API error status:', response.status);
-          return res.status(500).json({ 
+          
+          if (response.status === 401) {
+            return res.status(401).json({ 
+              error: "SendGrid authorization failed",
+              details: "The SendGrid API key is invalid or has expired. Please check your API key in the SendGrid dashboard.",
+              suggestedActions: [
+                "Verify the API key is correct",
+                "Check if the API key has been revoked", 
+                "Ensure the API key has 'Full Access' or at least 'Templates' permissions"
+              ]
+            });
+          }
+          
+          if (response.status === 403) {
+            return res.status(403).json({
+              error: "SendGrid access forbidden", 
+              details: "The API key does not have permission to access templates. Please check the API key permissions.",
+              suggestedActions: [
+                "Generate a new API key with 'Full Access' permissions",
+                "Or ensure the API key has at least 'Templates' read permissions"
+              ]
+            });
+          }
+          
+          return res.status(response.status).json({ 
             error: "SendGrid API request failed",
             details: `SendGrid API returned ${response.status}: ${errorText}`,
             status: response.status
