@@ -333,7 +333,7 @@ export async function sendTemplatedEmail(
         
         // Generate text version for better deliverability
         let text: string;
-        if (emailTemplate.textContent) {
+        if (emailTemplate && 'textContent' in emailTemplate && emailTemplate.textContent) {
           text = renderTemplate(emailTemplate.textContent, context);
         } else {
           // Auto-generate text from HTML if no text template exists
