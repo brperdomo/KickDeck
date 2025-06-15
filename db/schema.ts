@@ -356,6 +356,11 @@ export const games = pgTable("games", {
   awayTeamId: integer("away_team_id").references(() => teams.id),
   homeScore: integer("home_score"),
   awayScore: integer("away_score"),
+  // Card statistics for performance-based scoring
+  homeYellowCards: integer("home_yellow_cards").notNull().default(0),
+  awayYellowCards: integer("away_yellow_cards").notNull().default(0),
+  homeRedCards: integer("home_red_cards").notNull().default(0),
+  awayRedCards: integer("away_red_cards").notNull().default(0),
   status: text("status").notNull().default('scheduled'),
   round: integer("round").notNull(),
   matchNumber: integer("match_number").notNull(),
@@ -566,26 +571,103 @@ export const eventScoringRules = pgTable("event_scoring_rules", {
   id: serial("id").primaryKey(),
   eventId: text("event_id").notNull().references(() => events.id),
   title: text("title").notNull(),
+  systemType: text("system_type").notNull().default("three_point"), // three_point, ten_point, custom
+  // Basic point values
   win: integer("win").notNull(),
   loss: integer("loss").notNull(),
   tie: integer("tie").notNull(),
-  goalCapped: integer("goal_capped").notNull(),
-  shutout: integer("shutout").notNull(),
-  redCard: integer("red_card").notNull(),
-  tieBreaker: text("tie_breaker").notNull(),
+  // Performance-based scoring (for ten-point system)
+  shutout: integer("shutout").notNull().default(0),
+  goalScored: integer("goal_scored").notNull().default(0), // Points per goal scored
+  goalCap: integer("goal_cap").notNull().default(3), // Maximum goals that count for points
+  redCard: integer("red_card").notNull().default(0), // Penalty points per red card
+  yellowCard: integer("yellow_card").notNull().default(0), // Penalty points per yellow card
+  // Tiebreaker configuration
+  tiebreaker1: text("tiebreaker_1").notNull().default("total_points"),
+  tiebreaker2: text("tiebreaker_2").notNull().default("head_to_head"),
+  tiebreaker3: text("tiebreaker_3").notNull().default("goal_differential"),
+  tiebreaker4: text("tiebreaker_4").notNull().default("goals_scored"),
+  tiebreaker5: text("tiebreaker_5").notNull().default("goals_allowed"),
+  tiebreaker6: text("tiebreaker_6").notNull().default("shutouts"),
+  tiebreaker7: text("tiebreaker_7").notNull().default("fair_play"),
+  tiebreaker8: text("tiebreaker_8").notNull().default("coin_toss"),
+  isActive: boolean("is_active").notNull().default(true),
   createdAt: text("created_at").notNull().default(new Date().toISOString()),
 });
 
 export const insertEventScoringRuleSchema = createInsertSchema(eventScoringRules, {
   title: z.string().min(1, "Title is required"),
+  systemType: z.enum(["three_point", "ten_point", "custom"]).default("three_point"),
   win: z.number().min(0, "Win points must be positive"),
   loss: z.number().min(0, "Loss points must be positive"),
   tie: z.number().min(0, "Tie points must be positive"),
-  goalCapped: z.number().min(0, "Goal cap must be positive"),
   shutout: z.number().min(0, "Shutout points must be positive"),
+  goalScored: z.number().min(0, "Goal scored points must be positive"),
+  goalCap: z.number().min(1, "Goal cap must be at least 1"),
   redCard: z.number().min(-10, "Red card points must be greater than -10"),
-  tieBreaker: z.string().min(1, "Tie breaker is required"),
+  yellowCard: z.number().min(-5, "Yellow card points must be greater than -5"),
+  tiebreaker1: z.enum(["total_points", "head_to_head", "goal_differential", "goals_scored", "goals_allowed", "shutouts", "fair_play", "coin_toss"]),
+  tiebreaker2: z.enum(["total_points", "head_to_head", "goal_differential", "goals_scored", "goals_allowed", "shutouts", "fair_play", "coin_toss"]),
+  tiebreaker3: z.enum(["total_points", "head_to_head", "goal_differential", "goals_scored", "goals_allowed", "shutouts", "fair_play", "coin_toss"]),
+  tiebreaker4: z.enum(["total_points", "head_to_head", "goal_differential", "goals_scored", "goals_allowed", "shutouts", "fair_play", "coin_toss"]),
+  tiebreaker5: z.enum(["total_points", "head_to_head", "goal_differential", "goals_scored", "goals_allowed", "shutouts", "fair_play", "coin_toss"]),
+  tiebreaker6: z.enum(["total_points", "head_to_head", "goal_differential", "goals_scored", "goals_allowed", "shutouts", "fair_play", "coin_toss"]),
+  tiebreaker7: z.enum(["total_points", "head_to_head", "goal_differential", "goals_scored", "goals_allowed", "shutouts", "fair_play", "coin_toss"]),
+  tiebreaker8: z.enum(["total_points", "head_to_head", "goal_differential", "goals_scored", "goals_allowed", "shutouts", "fair_play", "coin_toss"]),
+  isActive: z.boolean().default(true),
 });
+
+// Team standings table for calculated standings and points
+export const teamStandings = pgTable("team_standings", {
+  id: serial("id").primaryKey(),
+  eventId: text("event_id").notNull().references(() => events.id, { onDelete: 'cascade' }),
+  ageGroupId: integer("age_group_id").notNull().references(() => eventAgeGroups.id),
+  bracketId: integer("bracket_id").references(() => eventBrackets.id),
+  teamId: integer("team_id").notNull().references(() => teams.id, { onDelete: 'cascade' }),
+  // Game statistics
+  gamesPlayed: integer("games_played").notNull().default(0),
+  wins: integer("wins").notNull().default(0),
+  losses: integer("losses").notNull().default(0),
+  ties: integer("ties").notNull().default(0),
+  // Goal statistics
+  goalsScored: integer("goals_scored").notNull().default(0),
+  goalsAllowed: integer("goals_allowed").notNull().default(0),
+  goalDifferential: integer("goal_differential").notNull().default(0),
+  shutouts: integer("shutouts").notNull().default(0),
+  // Card statistics
+  yellowCards: integer("yellow_cards").notNull().default(0),
+  redCards: integer("red_cards").notNull().default(0),
+  fairPlayPoints: integer("fair_play_points").notNull().default(0), // Calculated based on card penalties
+  // Point calculations
+  totalPoints: integer("total_points").notNull().default(0),
+  winPoints: integer("win_points").notNull().default(0),
+  tiePoints: integer("tie_points").notNull().default(0),
+  goalPoints: integer("goal_points").notNull().default(0),
+  shutoutPoints: integer("shutout_points").notNull().default(0),
+  cardPenaltyPoints: integer("card_penalty_points").notNull().default(0),
+  // Standings position
+  position: integer("position"),
+  lastUpdated: timestamp("last_updated").notNull().defaultNow(),
+  createdAt: text("created_at").notNull().default(new Date().toISOString()),
+});
+
+export const insertTeamStandingsSchema = createInsertSchema(teamStandings, {
+  gamesPlayed: z.number().min(0, "Games played must be positive"),
+  wins: z.number().min(0, "Wins must be positive"),
+  losses: z.number().min(0, "Losses must be positive"),
+  ties: z.number().min(0, "Ties must be positive"),
+  goalsScored: z.number().min(0, "Goals scored must be positive"),
+  goalsAllowed: z.number().min(0, "Goals allowed must be positive"),
+  goalDifferential: z.number(),
+  shutouts: z.number().min(0, "Shutouts must be positive"),
+  yellowCards: z.number().min(0, "Yellow cards must be positive"),
+  redCards: z.number().min(0, "Red cards must be positive"),
+  totalPoints: z.number().min(0, "Total points must be positive"),
+});
+
+export const selectTeamStandingsSchema = createSelectSchema(teamStandings);
+export type InsertTeamStandings = typeof teamStandings.$inferInsert;
+export type SelectTeamStandings = typeof teamStandings.$inferSelect;
 
 export const selectEventScoringRuleSchema = createSelectSchema(eventScoringRules);
 export type InsertEventScoringRule = typeof eventScoringRules.$inferInsert;
