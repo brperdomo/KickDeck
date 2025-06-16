@@ -344,6 +344,8 @@ function Router() {
             </Suspense>
           </Route>
           <Route path="/chat" component={ChatPage} />
+          
+          <Route path="/member-roster-upload" component={MemberRosterUpload} />
 
           <Route path="/product-updates">
             {user.isAdmin ? <ProductUpdatesPage /> : <NotFound />}
