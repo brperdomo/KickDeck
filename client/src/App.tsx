@@ -55,6 +55,8 @@ import { LogoutHandler } from "@/components/LogoutHandler";
 import EmergencyRegistrationFix from "@/pages/emergency-registration-fix";
 // Safe eligibility demo
 import SafeEligibilityDemo from "@/pages/SafeEligibilityDemo";
+// Member roster upload
+import MemberRosterUpload from "@/pages/member-roster-upload";
 
 // Import landing page components
 import LandingPage from "@/pages/landing-page";

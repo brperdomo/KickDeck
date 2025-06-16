@@ -6,6 +6,7 @@ import { users } from "@db/schema";
 import { createAdmin } from "./create-admin";
 import path from "path";
 import uploadRouter from "./routes/upload";
+import memberRosterUploadRouter from "./routes/member-roster-upload";
 import { createEmailTemplatesTable } from './migrations/create_email_templates';
 import { createEmailTemplateRoutingTable } from './migrations/create_email_template_routing';
 import { createTables } from './create-tables';
@@ -25,6 +26,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Register upload routes
 app.use('/api/files', uploadRouter);
+app.use('/api/member-roster', memberRosterUploadRouter);
 
 // Health check endpoint - moved below other middleware but before Vite setup
 // Only apply to /_health to avoid conflicts with the frontend routes
