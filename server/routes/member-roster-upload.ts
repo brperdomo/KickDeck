@@ -170,14 +170,14 @@ router.post('/teams/:teamId/roster', requireAuth, upload.single('file'), async (
     const mappedRecords = records.map(record => {
       return {
         id: uuidv4(),
-        firstName: record['First Name'],
-        lastName: record['Last Name'],
-        jerseyNumber: record['Jersey Number'] || undefined,
-        dateOfBirth: record['Date of Birth'],
-        medicalNotes: record['Notes'] || undefined,
-        emergencyContactFirstName: record['Emergency Contact First Name'],
-        emergencyContactLastName: record['Emergency Contact Last Name'],
-        emergencyContactPhone: record['Emergency Contact Phone'],
+        firstName: record['firstName'] || record['First Name'],
+        lastName: record['lastName'] || record['Last Name'],
+        jerseyNumber: record['jerseyNumber'] || record['Jersey Number'] || undefined,
+        dateOfBirth: record['dateOfBirth'] || record['Date of Birth'],
+        medicalNotes: record['medicalNotes'] || record['Notes'] || undefined,
+        emergencyContactFirstName: record['emergencyContactFirstName'] || record['Emergency Contact First Name'],
+        emergencyContactLastName: record['emergencyContactLastName'] || record['Emergency Contact Last Name'],
+        emergencyContactPhone: record['emergencyContactPhone'] || record['Emergency Contact Phone'],
       };
     });
 
