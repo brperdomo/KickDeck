@@ -112,9 +112,19 @@ export function MapboxAutocomplete({
         if (context.id.includes('place')) {
           city = context.text;
         } else if (context.id.includes('region')) {
-          state = context.short_code || context.text;
+          // Extract state from short_code (e.g., "US-CA" -> "CA")
+          if (context.short_code && context.short_code.includes('-')) {
+            state = context.short_code.split('-')[1];
+          } else {
+            state = context.short_code || context.text;
+          }
         } else if (context.id.includes('country')) {
-          country = context.short_code || context.text;
+          // Normalize country to standard format
+          if (context.short_code) {
+            country = context.short_code.toUpperCase();
+          } else {
+            country = context.text;
+          }
         }
       });
     }
