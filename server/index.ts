@@ -26,7 +26,6 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Register upload routes
 app.use('/api/files', uploadRouter);
-app.use('/api/member-roster', memberRosterUploadRouter);
 
 // Health check endpoint - moved below other middleware but before Vite setup
 // Only apply to /_health to avoid conflicts with the frontend routes
@@ -131,6 +130,9 @@ async function testDbConnection() {
     
     // Register routes after authentication setup
     const routes = registerRoutes(app);
+    
+    // Register member roster upload routes after authentication is fully configured
+    app.use('/api/member-roster', memberRosterUploadRouter);
     
     log("API routes registered");
 
