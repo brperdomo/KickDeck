@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, ExternalLink, AlertCircle, CheckCircle, Clock, XCircle, Shield } from "lucide-react";
+import { Loader2, ExternalLink, AlertCircle, CheckCircle, Clock, XCircle, Shield, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useForm } from "react-hook-form";
@@ -494,12 +494,18 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    <strong>Action Required:</strong> Complete the following requirements:
+                    <strong>Action Required:</strong> Your banking setup is incomplete. Complete the following requirements:
                     <ul className="mt-2 space-y-1">
                       {connectStatus.requirements.map((req, index) => (
                         <li key={index} className="text-sm">• {req.replace(/_/g, ' ')}</li>
                       ))}
                     </ul>
+                    <div className="mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
+                      <p className="text-sm text-blue-800">
+                        <strong>How to resume:</strong> Click "Continue Setup" below to return to Stripe and complete the missing information. 
+                        Your progress has been saved and you can pick up where you left off.
+                      </p>
+                    </div>
                   </AlertDescription>
                 </Alert>
               )}
@@ -532,15 +538,16 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
                     onClick={() => reauthMutation.mutate()}
                     disabled={reauthMutation.isPending}
                     size="sm"
+                    className="bg-blue-600 hover:bg-blue-700"
                   >
                     {reauthMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Getting Link...
+                        Opening Stripe...
                       </>
                     ) : (
                       <>
-                        Continue Setup
+                        Continue Banking Setup
                         <ExternalLink className="ml-2 h-4 w-4" />
                       </>
                     )}
@@ -572,6 +579,193 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
         </CardContent>
       </Card>
 
+      {connectStatus?.status === 'pending' && (
+        <Card className="border-2 border-yellow-200 bg-yellow-50/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-yellow-800">
+              <Clock className="h-5 w-5" />
+              Banking Setup In Progress
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-white p-4 rounded-md border border-yellow-200">
+              <p className="text-sm text-gray-700 mb-3">
+                <strong>Setup Status:</strong> You've started the banking setup process but haven't completed all required steps.
+              </p>
+              
+              <div className="space-y-2">
+                <h4 className="font-medium text-gray-800">To resume your setup:</h4>
+                <ol className="text-sm text-gray-600 space-y-1 ml-4">
+                  <li>1. Click "Continue Banking Setup" below</li>
+                  <li>2. Complete any missing information in Stripe</li>
+                  <li>3. Submit required verification documents</li>
+                  <li>4. Return here to check your status</li>
+                </ol>
+              </div>
+
+              {connectStatus?.requirements && connectStatus.requirements.length > 0 && (
+                <div className="mt-3 p-3 bg-red-50 rounded-md border border-red-200">
+                  <p className="text-sm text-red-800 font-medium">Still needed:</p>
+                  <ul className="text-sm text-red-700 mt-1 space-y-1">
+                    {connectStatus.requirements.map((req, index) => (
+                      <li key={index}>• {req.replace(/_/g, ' ')}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                onClick={() => reauthMutation.mutate()}
+                disabled={reauthMutation.isPending}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                {reauthMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Opening Stripe...
+                  </>
+                ) : (
+                  <>
+                    Continue Banking Setup
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={refreshStatus}
+                size="default"
+              >
+                Check Status
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {connectStatus?.status === 'restricted' && (
+        <Card className="border-2 border-red-200 bg-red-50/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-800">
+              <XCircle className="h-5 w-5" />
+              Account Restricted
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-white p-4 rounded-md border border-red-200">
+              <p className="text-sm text-gray-700 mb-3">
+                <strong>Status:</strong> Your account has been restricted and requires immediate attention.
+              </p>
+              
+              <div className="space-y-2">
+                <h4 className="font-medium text-gray-800">To resolve restrictions:</h4>
+                <ol className="text-sm text-gray-600 space-y-1 ml-4">
+                  <li>1. Click "View Dashboard" to access your Stripe account</li>
+                  <li>2. Review and address all flagged issues</li>
+                  <li>3. Provide any requested additional information</li>
+                  <li>4. Contact Stripe support if needed</li>
+                </ol>
+              </div>
+
+              {connectStatus?.requirements && connectStatus.requirements.length > 0 && (
+                <div className="mt-3 p-3 bg-red-100 rounded-md border border-red-300">
+                  <p className="text-sm text-red-800 font-medium">Required actions:</p>
+                  <ul className="text-sm text-red-700 mt-1 space-y-1">
+                    {connectStatus.requirements.map((req, index) => (
+                      <li key={index}>• {req.replace(/_/g, ' ')}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                onClick={() => dashboardMutation.mutate()}
+                disabled={dashboardMutation.isPending}
+                className="flex-1 bg-red-600 hover:bg-red-700"
+              >
+                {dashboardMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Opening Dashboard...
+                  </>
+                ) : (
+                  <>
+                    View Dashboard
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={refreshStatus}
+                size="default"
+              >
+                Check Status
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {connectStatus?.status === 'rejected' && (
+        <Card className="border-2 border-red-200 bg-red-50/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-800">
+              <XCircle className="h-5 w-5" />
+              Account Application Rejected
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-white p-4 rounded-md border border-red-200">
+              <p className="text-sm text-gray-700 mb-3">
+                <strong>Status:</strong> Your banking setup application has been rejected.
+              </p>
+              
+              <div className="space-y-2">
+                <h4 className="font-medium text-gray-800">Next steps:</h4>
+                <ol className="text-sm text-gray-600 space-y-1 ml-4">
+                  <li>1. Review the rejection reasons in your Stripe dashboard</li>
+                  <li>2. Address any issues with your business information</li>
+                  <li>3. Contact Stripe support for guidance</li>
+                  <li>4. Start a new application once issues are resolved</li>
+                </ol>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                onClick={() => dashboardMutation.mutate()}
+                disabled={dashboardMutation.isPending}
+                className="flex-1 bg-red-600 hover:bg-red-700"
+              >
+                {dashboardMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Opening Dashboard...
+                  </>
+                ) : (
+                  <>
+                    View Dashboard
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowSetupForm(true)}
+                size="default"
+              >
+                Start New Setup
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {connectStatus?.status === 'active' && (
         <Card>
           <CardHeader>
@@ -586,6 +780,61 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
           </CardContent>
         </Card>
       )}
+
+      {/* Banking Setup Guide */}
+      <Card className="border border-blue-200 bg-blue-50/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-blue-800">
+            <Info className="h-5 w-5" />
+            Banking Setup Guide
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <h4 className="font-medium text-gray-800">Account Status Meanings:</h4>
+                <div className="space-y-1 text-sm">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-3 w-3 text-gray-400" />
+                    <span><strong>Not Connected:</strong> No banking setup started</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-3 w-3 text-yellow-500" />
+                    <span><strong>Pending:</strong> Setup in progress, verification needed</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-3 w-3 text-green-500" />
+                    <span><strong>Active:</strong> Ready to receive payments</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <XCircle className="h-3 w-3 text-red-500" />
+                    <span><strong>Restricted:</strong> Additional information required</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h4 className="font-medium text-gray-800">Typical Setup Timeline:</h4>
+                <div className="space-y-1 text-sm text-gray-600">
+                  <div>• Initial setup: 5-10 minutes</div>
+                  <div>• Document verification: 1-3 business days</div>
+                  <div>• Account activation: 1-7 business days</div>
+                  <div>• First payout: 2-7 business days after first payment</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4 p-3 bg-white rounded-md border border-blue-200">
+              <p className="text-sm text-gray-700">
+                <strong>Note:</strong> You can safely leave and return to this page during setup. 
+                Your progress is automatically saved and you can resume where you left off using the 
+                "Continue Banking Setup" button when your status is pending.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
