@@ -3108,10 +3108,13 @@ export function registerRoutes(app: Express): Server {
           return res.status(400).json({ error: 'Invalid complex ID' });
         }
 
-        // First delete all fields associated with this complex
+        // First remove complex from all events
+        await db.delete(eventComplexes).where(eq(eventComplexes.complexId, complexId));
+
+        // Then delete all fields associated with this complex
         await db.delete(fields).where(eq(fields.complexId, complexId));
 
-        // Then delete the complex
+        // Finally delete the complex
         const deletedComplex = await db
           .delete(complexes)
           .where(eq(complexes.id, complexId))
@@ -3121,7 +3124,7 @@ export function registerRoutes(app: Express): Server {
           return res.status(404).json({ error: 'Complex not found' });
         }
 
-        res.json({ message: 'Complex and associated fields deleted successfully' });
+        res.json({ message: 'Complex and associated data deleted successfully' });
       } catch (error) {
         console.error('Error deleting complex:', error);
         res.status(500).json({ error: 'Failed to delete complex' });
