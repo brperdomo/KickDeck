@@ -160,16 +160,19 @@ export function ComplexLocationMap({
               font-size: 12px;
               font-weight: bold;
               color: white;
-              transition: transform 0.2s;
+              transition: box-shadow 0.2s, border-width 0.2s;
+              position: relative;
             `;
             markerElement.innerHTML = '●';
 
-            // Add hover effect
+            // Add hover effect using box-shadow and border instead of transform
             markerElement.addEventListener('mouseenter', () => {
-              markerElement.style.transform = 'scale(1.2)';
+              markerElement.style.boxShadow = '0 4px 16px rgba(0,0,0,0.4)';
+              markerElement.style.borderWidth = '4px';
             });
             markerElement.addEventListener('mouseleave', () => {
-              markerElement.style.transform = 'scale(1)';
+              markerElement.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+              markerElement.style.borderWidth = '3px';
             });
 
             // Create popup content
