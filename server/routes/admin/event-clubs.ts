@@ -109,8 +109,16 @@ router.get('/:eventId/clubs/clubs', hasEventAccess, async (req, res) => {
       }
     }
 
-    // Count teams per club
-    const clubStats = clubIds.map(clubId => {
+    // Get unique club names from teams without club IDs
+    const clubNamesOnly = [...new Set(teamsWithClubs
+      .filter(team => team.clubId === null && team.clubName && team.clubName.trim() !== '')
+      .map(team => team.clubName))];
+
+    // Count teams per club (both with IDs and name-only)
+    const clubStats = [];
+    
+    // Add clubs with IDs
+    clubIds.forEach(clubId => {
       const teamsForClub = teamsWithClubs.filter(team => team.clubId === clubId);
       const clubData = clubsData.find(club => club.id === clubId) || { 
         id: clubId,
@@ -118,10 +126,22 @@ router.get('/:eventId/clubs/clubs', hasEventAccess, async (req, res) => {
         logoUrl: null,
       };
       
-      return {
+      clubStats.push({
         ...clubData,
         teamCount: teamsForClub.length,
-      };
+      });
+    });
+
+    // Add clubs with names only (no ID in clubs table)
+    clubNamesOnly.forEach(clubName => {
+      const teamsForClub = teamsWithClubs.filter(team => team.clubName === clubName && team.clubId === null);
+      
+      clubStats.push({
+        id: null, // No ID since it's not in the clubs table
+        name: clubName,
+        logoUrl: null,
+        teamCount: teamsForClub.length,
+      });
     });
 
     return res.json(clubStats);
