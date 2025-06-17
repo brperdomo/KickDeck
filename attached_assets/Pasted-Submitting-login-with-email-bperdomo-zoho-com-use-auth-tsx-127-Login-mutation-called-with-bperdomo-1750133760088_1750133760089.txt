@@ -1,0 +1,52 @@
+Submitting login with email: bperdomo@zoho.com
+use-auth.tsx:127 Login mutation called with: bperdomo@zoho.com
+use-auth.tsx:135 Sending login request with data: {email: 'bperdomo@zoho.com', passwordLength: 8}
+use-auth.tsx:150 Login response status: 200
+use-auth.tsx:166 Login successful, received user data: Yes
+use-auth.tsx:170 Fetching current user after login
+use-auth.tsx:182 User data fetched after login: success
+auth-page.tsx:184 Login mutation completed successfully
+auth-page.tsx:188 Performing explicit user data fetch after login
+auth-page.tsx:108 AUTH REDIRECT: User logged in, handling redirect
+auth-page.tsx:127 Found redirect path: /event-financial-report/1825427780
+auth-page.tsx:146 Redirecting to: /event-financial-report/1825427780
+auth-page.tsx:200 User data retrieved after login: success
+Navigated to https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/event-financial-report/1825427780
+js?libraries=places&v=beta&callback=Function.prototype:1438 Google Maps JavaScript API has been loaded directly without loading=async. This can result in suboptimal performance. For best-practice loading patterns please see https://goo.gle/js-api-loading
+vda @ js?libraries=places&v=beta&callback=Function.prototype:1438
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1680
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1680Understand this warning
+client:536 WebSocket connection to 'wss://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/?token=N0VkwPq84eD1' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531Understand this error
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=N0VkwPq84eD1' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555Understand this error
+util.js:41 Google Maps JavaScript API warning: NoApiKeys https://developers.google.com/maps/documentation/javascript/error-messages#no-api-keys
+wya @ util.js:41
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1440
+Promise.then
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1440
+setTimeout
+vda @ js?libraries=places&v=beta&callback=Function.prototype:1440
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1680
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1680Understand this warning
+env.ts:10 Google Maps API key length: 0 characters
+env.ts:11 Mapbox API key length: 93 characters
+env.ts:17 Google Maps API already loaded
+RouteDebugger.tsx:13 Current route location (Wouter): /event-financial-report/1825427780
+RouteDebugger.tsx:14 Current URL: https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/event-financial-report/1825427780
+RouteDebugger.tsx:15 Current pathname: /event-financial-report/1825427780
+RouteDebugger.tsx:16 Current search: 
+use-user.ts:59 Fetching user with emulation token: not present
+1825427780:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swapUnderstand this warning
+1825427780:1 OTS parsing error: invalid sfntVersion: 791289955Understand this warning
+use-user.ts:76 User data fetched: {id: 24, email: 'bperdomo@zoho.com', username: 'bperdomo@zoho.com', password: '$2b$12$d6n1CBWgsWFm0fh77F1OX.YxDZy7/O3aLSuJOuq4QkvOtFmSit7BC', firstName: 'Bryan', …}createdAt: "2025-02-03T03:05:37.209Z"email: "bperdomo@zoho.com"firstName: "Bryan"householdId: 5id: 24isAdmin: trueisParent: falselastLogin: "2025-06-17T04:14:22.544Z"lastName: "Perdomo"lastViewedRegistrations: "2025-06-17T01:29:08.887Z"password: "$2b$12$d6n1CBWgsWFm0fh77F1OX.YxDZy7/O3aLSuJOuq4QkvOtFmSit7BC"phone: "2026956262"username: "bperdomo@zoho.com"[[Prototype]]: Object
+1825427780:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swapUnderstand this warning
+1825427780:1 OTS parsing error: invalid sfntVersion: 791289955
