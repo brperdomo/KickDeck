@@ -301,11 +301,11 @@ export async function getEventFinancialReport(req: Request, res: Response) {
     `;
     const eventResult = await db.execute(eventQuery);
     
-    if (!eventResult.rows || eventResult.rows.length === 0) {
+    if (!eventResult || eventResult.length === 0) {
       return res.status(404).json({ success: false, error: 'Event not found' });
     }
     
-    const event = eventResult.rows[0];
+    const event = eventResult[0];
     
     // Get registration overview with payment collection status
     const registrationOverviewQuery = sql`
@@ -322,7 +322,7 @@ export async function getEventFinancialReport(req: Request, res: Response) {
       WHERE event_id = ${eventId}
     `;
     const registrationResult = await db.execute(registrationOverviewQuery);
-    const registrationOverview = registrationResult.rows[0];
+    const registrationOverview = registrationResult[0];
 
     // Get expected revenue calculation based on team fees
     const revenueCalculationQuery = sql`
@@ -346,7 +346,7 @@ export async function getEventFinancialReport(req: Request, res: Response) {
       ORDER BY t.created_at DESC
     `;
     const revenueResult = await db.execute(revenueCalculationQuery);
-    const teamRegistrations = revenueResult.rows || [];
+    const teamRegistrations = revenueResult || [];
 
     // Calculate expected revenue and fees
     const expectedRevenue = teamRegistrations
@@ -384,7 +384,7 @@ export async function getEventFinancialReport(req: Request, res: Response) {
       AND pt.transaction_type = 'payment'
     `;
     const actualPaymentsResult = await db.execute(actualPaymentsQuery);
-    const actualPayments = actualPaymentsResult.rows[0];
+    const actualPayments = actualPaymentsResult[0];
 
     // Registration breakdown by age group
     const ageGroupBreakdownQuery = sql`
@@ -403,7 +403,7 @@ export async function getEventFinancialReport(req: Request, res: Response) {
       ORDER BY eag.age_group, eag.gender
     `;
     const ageGroupResult = await db.execute(ageGroupBreakdownQuery);
-    const ageGroupBreakdown = ageGroupResult.rows || [];
+    const ageGroupBreakdown = ageGroupResult || [];
 
     // Registration timeline
     const registrationTimelineQuery = sql`
