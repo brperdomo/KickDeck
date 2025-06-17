@@ -91,26 +91,19 @@ router.get('/:teamId/fees', extractEventIdFromTeam, hasEventAccess, async (req, 
     .where(inArray(eventFees.id, feeIdsArray))
     
     // Process fees to ensure correct amount format
-    // This resolves an issue where amounts might be incorrectly multiplied by 100
+    // Fees in the database are stored in cents, so we need to convert to dollars for display
     const processedFees = fees.map(fee => {
       // Make sure we have a valid number to start with
-      let normalizedAmount = typeof fee.amount === 'number' ? fee.amount : 0;
+      let amountInCents = typeof fee.amount === 'number' ? fee.amount : 0;
       
-      // Inspect the fee amount to see if it needs normalization
-      // In our database, fees are stored in cents, but sometimes
-      // we're receiving amounts that are already converted to dollars
-      
-      // Check if the amount looks like it's in cents (e.g., 9500 for $95.00)
-      // and convert to dollars if needed
-      if (normalizedAmount > 1000) { // Typically fees won't be over $1000
-        normalizedAmount = normalizedAmount / 100;
-      }
+      // Convert cents to dollars for display
+      const amountInDollars = amountInCents / 100;
       
       // Apply toFixed to ensure consistent decimal places, then convert back to Number
       // This prevents JavaScript floating point issues
-      const fixedAmount = Number(normalizedAmount.toFixed(2));
+      const fixedAmount = Number(amountInDollars.toFixed(2));
       
-      console.log(`Processing fee: id=${fee.id}, name=${fee.name}, original=${fee.amount}, normalized=${normalizedAmount}, final=${fixedAmount}`);
+      console.log(`Processing fee: id=${fee.id}, name=${fee.name}, original=${fee.amount} cents, converted=${fixedAmount} dollars`);
       
       return {
         ...fee,
