@@ -270,7 +270,7 @@ export function registerStripeConnectRoutes(app: Express) {
     }
   });
 
-  // Get Stripe Express dashboard link
+  // Get Stripe dashboard link
   app.get("/api/events/:eventId/connect-account/dashboard", isAdmin, async (req, res) => {
     try {
       const { eventId } = req.params;
@@ -283,20 +283,38 @@ export function registerStripeConnectRoutes(app: Express) {
         return res.status(404).json({ error: "Connect account not found" });
       }
 
-      // Create login link to Stripe Express dashboard
-      const loginLink = await stripe.accounts.createLoginLink(event.stripeConnectAccountId);
+      // Get account details to check type
+      const account = await stripe.accounts.retrieve(event.stripeConnectAccountId);
+      
+      let dashboardUrl;
+      
+      try {
+        // Try to create Express dashboard login link first
+        const loginLink = await stripe.accounts.createLoginLink(event.stripeConnectAccountId);
+        dashboardUrl = loginLink.url;
+      } catch (expressError: any) {
+        // If Express dashboard fails, fall back to regular Stripe dashboard
+        if (expressError.message?.includes('Express Dashboard')) {
+          console.log(`Account ${event.stripeConnectAccountId} doesn't have Express Dashboard access, using standard dashboard`);
+          dashboardUrl = `https://dashboard.stripe.com/${event.stripeConnectAccountId}`;
+        } else {
+          throw expressError;
+        }
+      }
 
       // Update dashboard URL
       await db.update(events)
         .set({
-          connectDashboardUrl: loginLink.url,
+          connectDashboardUrl: dashboardUrl,
           connectLastUpdated: new Date(),
           updatedAt: new Date().toISOString(),
         })
         .where(eq(events.id, parseInt(eventId)));
 
       res.json({
-        dashboardUrl: loginLink.url
+        dashboardUrl: dashboardUrl,
+        accountType: account.type,
+        hasExpressDashboard: !dashboardUrl.includes('dashboard.stripe.com')
       });
 
     } catch (error: any) {

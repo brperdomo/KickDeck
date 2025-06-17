@@ -208,10 +208,23 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
     },
     onSuccess: (data) => {
       window.open(data.dashboardUrl, '_blank');
+      
+      // Show different messages based on dashboard type
+      if (data.hasExpressDashboard) {
+        toast({
+          title: "Express Dashboard Opened",
+          description: "You can manage your account settings and view payouts in the new window.",
+        });
+      } else {
+        toast({
+          title: "Stripe Dashboard Opened",
+          description: "Access your Connect account through the main Stripe dashboard in the new window.",
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
+        title: "Dashboard Access Error",
         description: error.message,
         variant: "destructive",
       });
