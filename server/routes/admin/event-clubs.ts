@@ -74,7 +74,7 @@ router.get('/:eventId/clubs/clubs', hasEventAccess, async (req, res) => {
   try {
     const eventId = parseInt(req.params.eventId);
 
-    // Get teams for this event that have club information
+    // Get teams for this event that have club information (either club_id or club_name)
     const teamsWithClubs = await db
       .select({
         teamId: teams.id,
@@ -85,10 +85,10 @@ router.get('/:eventId/clubs/clubs', hasEventAccess, async (req, res) => {
       .from(teams)
       .where(and(
         eq(teams.eventId, eventId),
-        isNotNull(teams.clubId)
+        sql`(${teams.clubId} IS NOT NULL OR (${teams.clubName} IS NOT NULL AND ${teams.clubName} != ''))`
       ));
 
-    // Get unique club IDs from teams
+    // Get unique club IDs from teams that have them
     const clubIds = [...new Set(teamsWithClubs
       .filter(team => team.clubId !== null)
       .map(team => team.clubId))];
