@@ -179,7 +179,7 @@ router.post('/:eventId/clubs/merge', hasEventAccess, async (req, res) => {
         .set({
           name: validatedData.targetClubName,
           logoUrl: validatedData.logoUrl,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date(),
         })
         .where(eq(clubs.id, existingTargetClub[0].id))
         .returning();
@@ -190,8 +190,8 @@ router.post('/:eventId/clubs/merge', hasEventAccess, async (req, res) => {
         .values({
           name: validatedData.targetClubName,
           logoUrl: validatedData.logoUrl || null,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
         })
         .returning();
     }
@@ -252,7 +252,7 @@ router.patch('/:eventId/clubs/:clubId', hasEventAccess, async (req, res) => {
         .set({
           name: validatedData.name,
           logoUrl: validatedData.logoUrl,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date(),
         })
         .where(eq(clubs.id, clubId))
         .returning();
@@ -264,7 +264,8 @@ router.patch('/:eventId/clubs/:clubId', hasEventAccess, async (req, res) => {
           id: clubId,
           name: validatedData.name,
           logoUrl: validatedData.logoUrl || null,
-          createdAt: new Date().toISOString(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
         })
         .returning();
     }
