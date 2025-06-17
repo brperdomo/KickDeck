@@ -40,6 +40,7 @@ import EventClubsPage from "@/pages/event-clubs";
 import RegistrationOrdersReport from "@/pages/registration-orders-report";
 import FinancialOverviewReport from "@/pages/financial-overview-report";
 import EventFinancialReport from "@/pages/event-financial-report";
+import EventRegistrationReport from "@/pages/event-registration-report";
 import FeesAnalysisReport from "@/pages/fees-analysis-report";
 import BookkeepingReport from "@/pages/bookkeeping-report";
 import RevenueForecast from "@/pages/revenue-forecast";
@@ -366,6 +367,9 @@ function Router() {
           </Route>
           <Route path="/event-financial-report/:eventId">
             {(params) => user.isAdmin ? <EventFinancialReport eventId={params.eventId} /> : <NotFound />}
+          </Route>
+          <Route path="/event-registration-report/:eventId">
+            {(params) => user.isAdmin ? <EventRegistrationReport eventId={params.eventId} /> : <NotFound />}
           </Route>
           <Route path="/fees-analysis-report">
             {user.isAdmin ? <FeesAnalysisReport /> : <NotFound />}
