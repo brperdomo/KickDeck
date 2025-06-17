@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'wouter';
 import { ComplexLocationMap } from '@/components/ComplexLocationMap';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, Search, Filter, Building, Clock } from 'lucide-react';
+import { MapPin, Search, Filter, Building, Clock, ArrowLeft } from 'lucide-react';
 import { formatAddress } from '@/lib/format-address';
 
 interface Complex {
@@ -120,9 +121,17 @@ export default function ComplexLocationsMapPage() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Complex Locations</h1>
-          <p className="text-gray-600 mt-1">Interactive map of all complex locations</p>
+        <div className="flex items-center gap-4">
+          <Link href="/admin">
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Complex Locations</h1>
+            <p className="text-gray-600 mt-1">Interactive map of all complex locations</p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline">
