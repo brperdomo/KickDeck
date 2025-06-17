@@ -1,66 +1,52 @@
-# Production Deployment Guide
+# Production Authentication Fix Deployment Guide
 
-This guide will fix the "[vite] server connection lost" issues you're experiencing at app.matchpro.ai.
+## Issue Summary
+The SendGrid settings page at app.matchpro.ai shows "Authentication required. Please log in as an admin" even when logged in as an admin user.
 
-## The Problem
-Your production server is incorrectly running Vite's development mode with WebSocket connections, causing connection drops that disrupt operations.
+## Root Cause
+The authentication middleware in production is not properly checking both the `isAdmin` flag and role-based permissions for user bperdomo@zoho.com.
 
-## Solution Steps
+## Fix Applied
+Updated `server/middleware/auth.ts` to:
+1. First check the `isAdmin` flag on the user object
+2. If not set, query the database for admin roles
+3. Allow access if user has `super_admin`, `tournament_admin`, `finance_admin`, or `score_admin` roles
 
-### 1. Prepare the Production Build
+## Deployment Steps
 
-Run this command in your development environment:
-```bash
-chmod +x deploy-production.sh
-./deploy-production.sh
-```
+### Option 1: Replit Deployment (Recommended)
+1. Click the "Deploy" button in the Replit interface
+2. Select your production deployment target
+3. The updated authentication middleware will be automatically deployed
+4. Wait for deployment to complete (usually 2-3 minutes)
 
-This will:
-- Build optimized static files
-- Create production configuration
-- Verify build completion
+### Option 2: Manual File Transfer
+If using a different hosting provider:
+1. Copy the updated `server/middleware/auth.ts` file to your production server
+2. Restart your production Node.js application
+3. Verify the changes are applied
 
-### 2. Upload Files to Production Server
+## Verification Steps
+1. Navigate to https://app.matchpro.ai
+2. Log in with your admin account (bperdomo@zoho.com)
+3. Go to Admin Dashboard
+4. Click on "SendGrid Settings"
+5. Should now show the SendGrid template interface instead of authentication error
 
-Copy these files to your production server:
-- All files in `dist/public/` directory
-- Updated `server/` directory with the fixed code
-- The `.env.production` file
+## User Account Verification
+Your account has been verified with the following privileges:
+- Email: bperdomo@zoho.com
+- User ID: 24
+- isAdmin flag: true
+- Role: super_admin
+- Database permissions: Confirmed
 
-### 3. Set Environment Variables in Production
+## Troubleshooting
+If the issue persists after deployment:
+1. Check browser console for any JavaScript errors
+2. Clear browser cache and cookies
+3. Verify you're accessing the correct production URL
+4. Try logging out and logging back in
 
-In your production environment (wherever you deploy app.matchpro.ai), set:
-```
-NODE_ENV=production
-```
-
-This is typically done in:
-- **Heroku**: Settings → Config Vars
-- **Vercel**: Settings → Environment Variables  
-- **AWS/DigitalOcean**: Server configuration or .env file
-- **Docker**: Environment variables in docker-compose.yml
-
-### 4. Deploy the Updated Code
-
-Deploy the updated server code that includes:
-- Fixed production/development mode handling
-- Proper static file serving
-- Elimination of Vite WebSocket connections in production
-
-### 5. Verify the Fix
-
-After deployment, your production app should:
-- ✅ No longer show "[vite] server connection lost" messages
-- ✅ Maintain stable connections without interruptions
-- ✅ Preserve your work progress without losing track
-
-## Key Changes Made
-
-1. **Server Configuration**: Fixed to properly detect production mode
-2. **Static File Serving**: Production uses built files instead of development server
-3. **WebSocket Elimination**: Removed unstable Vite connections in production
-4. **Environment Handling**: Clear separation between development and production modes
-
-## After Deployment
-
-The connection stability issues that were disrupting your operations will be resolved. Your production application will run on static files without any WebSocket connections that can drop.
+## Technical Details
+The middleware now uses async/await to properly query the database for user roles when the session-stored user object doesn't include complete role information.
