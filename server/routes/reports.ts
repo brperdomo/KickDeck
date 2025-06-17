@@ -293,176 +293,81 @@ export async function getEventFinancialReport(req: Request, res: Response) {
       return res.status(400).json({ success: false, error: 'Event ID is required' });
     }
 
-    // Simple test response first
-    const simplifiedData = {
-      success: true,
-      data: {
-        event: {
-          id: eventId,
-          name: "Test Event",
-          startDate: "2025-06-17",
-          endDate: "2025-06-18"
-        },
-        registrationSummary: {
-          totalTeams: 0,
-          approvedTeams: 0,
-          pendingTeams: 0,
-          rejectedTeams: 0,
-          waitlistedTeams: 0,
-          teamsWithPaymentMethod: 0,
-          paymentCollectionRate: 0
-        },
-        financialSummary: {
-          expectedRevenue: 0,
-          actualRevenue: 0,
-          totalStripeFees: 0,
-          netRevenue: 0
-        },
-        teamRegistrations: [],
-        ageGroupBreakdown: [],
-        registrationTimeline: []
-      }
-    };
+    // Get event basic info
+    const eventQuery = sql`
+      SELECT id, name, start_date, end_date
+      FROM events
+      WHERE id = ${eventId}
+    `;
+    const eventResult = await db.execute(eventQuery);
+    const event = eventResult[0];
 
-    return res.json(simplifiedData);
-    
-    // Get registration overview with payment collection status
-    const registrationOverviewQuery = sql`
+    if (!event) {
+      return res.status(404).json({ success: false, error: 'Event not found' });
+    }
+
+    // Get team registration summary
+    const registrationSummaryQuery = sql`
       SELECT 
-        COUNT(*) as total_registrations,
-        COUNT(CASE WHEN setup_intent_id IS NOT NULL OR payment_method_id IS NOT NULL THEN 1 END) as with_payment_info,
-        COUNT(CASE WHEN setup_intent_id IS NULL AND payment_method_id IS NULL THEN 1 END) as without_payment_info,
-        COUNT(CASE WHEN payment_status = 'paid' THEN 1 END) as already_paid,
+        COUNT(*) as total_teams,
         COUNT(CASE WHEN approval_status = 'approved' THEN 1 END) as approved_teams,
-        COUNT(CASE WHEN approval_status = 'pending' THEN 1 END) as pending_approval,
+        COUNT(CASE WHEN approval_status = 'pending' THEN 1 END) as pending_teams,
         COUNT(CASE WHEN approval_status = 'rejected' THEN 1 END) as rejected_teams,
-        COUNT(CASE WHEN approval_status = 'waitlisted' THEN 1 END) as waitlisted_teams
+        COUNT(CASE WHEN approval_status = 'waitlisted' THEN 1 END) as waitlisted_teams,
+        COUNT(CASE WHEN setup_intent_id IS NOT NULL OR payment_method_id IS NOT NULL THEN 1 END) as teams_with_payment_method
       FROM teams
       WHERE event_id = ${eventId}
     `;
-    const registrationResult = await db.execute(registrationOverviewQuery);
-    const registrationOverview = registrationResult[0];
+    const registrationResult = await db.execute(registrationSummaryQuery);
+    const regSummary = registrationResult[0];
 
-    // Get expected revenue calculation based on team fees
-    const revenueCalculationQuery = sql`
+    // Calculate payment collection rate
+    const paymentCollectionRate = regSummary.total_teams > 0 
+      ? (regSummary.teams_with_payment_method / regSummary.total_teams) * 100 
+      : 0;
+
+    // Get financial summary
+    const financialSummaryQuery = sql`
       SELECT 
-        t.id as team_id,
-        t.name as team_name,
-        t.total_amount as registration_fee,
-        t.approval_status,
-        t.payment_status,
-        t.setup_intent_id,
-        t.payment_method_id,
-        eag.age_group,
-        eag.gender,
-        CASE 
-          WHEN t.setup_intent_id IS NOT NULL OR t.payment_method_id IS NOT NULL THEN 'Ready to charge'
-          ELSE 'No payment method'
-        END as payment_collection_status
+        COALESCE(SUM(CASE WHEN pt.status = 'succeeded' THEN pt.amount ELSE 0 END), 0) as actual_revenue,
+        COALESCE(SUM(t.total_amount), 0) as expected_revenue,
+        COUNT(CASE WHEN pt.status = 'succeeded' THEN 1 END) as successful_payments
       FROM teams t
-      LEFT JOIN event_age_groups eag ON t.age_group_id = eag.id
+      LEFT JOIN payment_transactions pt ON pt.team_id = t.id
       WHERE t.event_id = ${eventId}
-      ORDER BY t.created_at DESC
     `;
-    const revenueResult = await db.execute(revenueCalculationQuery);
-    const teamRegistrations = revenueResult || [];
+    const financialResult = await db.execute(financialSummaryQuery);
+    const financial = financialResult[0];
 
-    // Calculate expected revenue and fees
-    const expectedRevenue = teamRegistrations
-      .filter(team => team.approval_status !== 'rejected')
-      .reduce((sum, team) => sum + (parseInt(team.registration_fee) || 0), 0);
-    
-    const chargeableRevenue = teamRegistrations
-      .filter(team => 
-        team.approval_status === 'approved' && 
-        (team.setup_intent_id || team.payment_method_id) &&
-        team.payment_status !== 'paid'
-      )
-      .reduce((sum, team) => sum + (parseInt(team.registration_fee) || 0), 0);
+    // Estimate Stripe fees (2.9% + 30 cents per transaction)
+    const totalStripeFees = financial.successful_payments * 30 + (financial.actual_revenue * 0.029);
+    const netRevenue = financial.actual_revenue - totalStripeFees;
 
-    // Stripe fee calculation (2.9% + 30¢ per transaction)
-    const estimatedStripeFees = teamRegistrations
-      .filter(team => team.approval_status !== 'rejected')
-      .reduce((sum, team) => {
-        const amount = parseInt(team.registration_fee) || 0;
-        return sum + Math.round(amount * 0.029 + 30);
-      }, 0);
-
-    const netPayout = expectedRevenue - estimatedStripeFees;
-
-    // Get actual payments already processed
-    const actualPaymentsQuery = sql`
-      SELECT 
-        SUM(pt.amount) as total_collected,
-        COUNT(pt.id) as payment_count,
-        SUM(pt.stripe_fee) as actual_stripe_fees
-      FROM payment_transactions pt
-      JOIN teams t ON pt.team_id = t.id
-      WHERE t.event_id = ${eventId}
-      AND pt.status = 'succeeded'
-      AND pt.transaction_type = 'payment'
-    `;
-    const actualPaymentsResult = await db.execute(actualPaymentsQuery);
-    const actualPayments = actualPaymentsResult[0];
-
-    // Registration breakdown by age group
-    const ageGroupBreakdownQuery = sql`
-      SELECT 
-        eag.age_group,
-        eag.gender,
-        COUNT(t.id) as team_count,
-        COUNT(CASE WHEN t.setup_intent_id IS NOT NULL OR t.payment_method_id IS NOT NULL THEN 1 END) as with_payment_method,
-        SUM(t.total_amount) as age_group_revenue,
-        COUNT(CASE WHEN t.approval_status = 'approved' THEN 1 END) as approved_count,
-        COUNT(CASE WHEN t.approval_status = 'pending' THEN 1 END) as pending_count
-      FROM event_age_groups eag
-      LEFT JOIN teams t ON eag.id = t.age_group_id AND t.event_id = ${eventId}
-      WHERE eag.event_id = ${eventId}
-      GROUP BY eag.id, eag.age_group, eag.gender
-      ORDER BY eag.age_group, eag.gender
-    `;
-    const ageGroupResult = await db.execute(ageGroupBreakdownQuery);
-    const ageGroupBreakdown = ageGroupResult || [];
-
-    // Registration timeline
-    const registrationTimelineQuery = sql`
-      SELECT 
-        DATE_TRUNC('day', created_at) as registration_date,
-        COUNT(*) as daily_registrations,
-        COUNT(CASE WHEN setup_intent_id IS NOT NULL OR payment_method_id IS NOT NULL THEN 1 END) as with_payment_info
-      FROM teams
-      WHERE event_id = ${eventId}
-      GROUP BY DATE_TRUNC('day', created_at)
-      ORDER BY registration_date ASC
-    `;
-    const timelineResult = await db.execute(registrationTimelineQuery);
-    const registrationTimeline = timelineResult || [];
-
-    // Prepare comprehensive tournament organizer data
     const data = {
-      event,
+      event: {
+        id: eventId,
+        name: event.name,
+        startDate: event.start_date,
+        endDate: event.end_date
+      },
       registrationSummary: {
-        totalRegistrations: parseInt(registrationOverview.total_registrations) || 0,
-        withPaymentInfo: parseInt(registrationOverview.with_payment_info) || 0,
-        withoutPaymentInfo: parseInt(registrationOverview.without_payment_info) || 0,
-        alreadyPaid: parseInt(registrationOverview.already_paid) || 0,
-        approvedTeams: parseInt(registrationOverview.approved_teams) || 0,
-        pendingApproval: parseInt(registrationOverview.pending_approval) || 0,
-        rejectedTeams: parseInt(registrationOverview.rejected_teams) || 0,
-        waitlistedTeams: parseInt(registrationOverview.waitlisted_teams) || 0
+        totalTeams: parseInt(regSummary.total_teams) || 0,
+        approvedTeams: parseInt(regSummary.approved_teams) || 0,
+        pendingTeams: parseInt(regSummary.pending_teams) || 0,
+        rejectedTeams: parseInt(regSummary.rejected_teams) || 0,
+        waitlistedTeams: parseInt(regSummary.waitlisted_teams) || 0,
+        teamsWithPaymentMethod: parseInt(regSummary.teams_with_payment_method) || 0,
+        paymentCollectionRate: Math.round(paymentCollectionRate * 100) / 100
       },
-      financialProjection: {
-        expectedRevenue: expectedRevenue,
-        chargeableRevenue: chargeableRevenue,
-        estimatedStripeFees: estimatedStripeFees,
-        estimatedNetPayout: netPayout,
-        actualCollected: parseInt(actualPayments?.total_collected) || 0,
-        actualStripeFees: parseInt(actualPayments?.actual_stripe_fees) || 0,
-        paymentsProcessed: parseInt(actualPayments?.payment_count) || 0
+      financialSummary: {
+        expectedRevenue: parseFloat(financial.expected_revenue) || 0,
+        actualRevenue: parseFloat(financial.actual_revenue) || 0,
+        totalStripeFees: Math.round(totalStripeFees),
+        netRevenue: Math.round(netRevenue)
       },
-      teamRegistrations,
-      ageGroupBreakdown,
-      registrationTimeline
+      teamRegistrations: [],
+      ageGroupBreakdown: [],
+      registrationTimeline: []
     };
 
     return res.json({
