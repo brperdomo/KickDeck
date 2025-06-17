@@ -417,7 +417,7 @@ export async function getEventFinancialReport(req: Request, res: Response) {
       ORDER BY registration_date ASC
     `;
     const timelineResult = await db.execute(registrationTimelineQuery);
-    const registrationTimeline = timelineResult.rows || [];
+    const registrationTimeline = timelineResult || [];
 
     // Prepare comprehensive tournament organizer data
     const data = {
