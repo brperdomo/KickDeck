@@ -272,8 +272,8 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error(`Failed to send email to ${options.to}: ${errorMessage}`);
     
-    // Don't rethrow the error in production as this could interrupt important flows
-    // such as payment processing or user registration just because an email failed
+    // TEMPORARY: Throw errors in production to debug password reset issue
+    throw error;
   }
 }
 
@@ -665,8 +665,9 @@ export async function sendPasswordResetEmail(
       throw error;
     }
     
-    // In production, log error but don't crash the application
+    // TEMPORARY: Also throw errors in production to debug password reset issue
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error(`Failed to send password reset email to ${to}: ${errorMessage}`);
+    throw error;
   }
 }
