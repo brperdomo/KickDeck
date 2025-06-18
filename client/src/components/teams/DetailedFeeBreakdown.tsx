@@ -30,9 +30,11 @@ interface Fee {
 interface DetailedFeeBreakdownProps {
   teamId: number;
   selectedFeeIds?: string | null;
+  totalAmount?: number;
+  appliedCoupon?: string | null;
 }
 
-export function DetailedFeeBreakdown({ teamId, selectedFeeIds }: DetailedFeeBreakdownProps) {
+export function DetailedFeeBreakdown({ teamId, selectedFeeIds, totalAmount, appliedCoupon }: DetailedFeeBreakdownProps) {
   // Fetch detailed fee information for the selected team
   const feesQuery = useQuery({
     queryKey: ['/api/admin/teams', teamId, 'fees', selectedFeeIds],
