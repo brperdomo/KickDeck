@@ -1263,6 +1263,23 @@ export function registerRoutes(app: Express): Server {
           const team = insertedTeam[0];
             
           console.log('Team created with ID:', team?.id);
+          
+          // If a coupon was applied, increment its usage count
+          if (appliedCoupon && appliedCoupon.id) {
+            try {
+              await tx.update(coupons)
+                .set({ 
+                  usageCount: sql`${coupons.usageCount} + 1`,
+                  updatedAt: new Date()
+                })
+                .where(eq(coupons.id, appliedCoupon.id));
+              
+              console.log(`Incremented usage count for coupon: ${appliedCoupon.code} (ID: ${appliedCoupon.id})`);
+            } catch (couponError) {
+              console.error('Error updating coupon usage count:', couponError);
+              // Don't fail the registration if coupon update fails
+            }
+          }
             
           // Track player count for the response
           let playerCount = 0;
