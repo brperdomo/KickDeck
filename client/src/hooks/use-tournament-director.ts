@@ -37,7 +37,7 @@ export function useTournamentDirector(): TournamentDirectorAccess {
     enabled: !!user,
   });
 
-  const isTournamentDirector = userRoles.includes('tournament_director');
+  const isTournamentDirector = userRoles.includes('tournament_admin');
   const isSuperAdmin = userRoles.includes('super_admin');
 
   return {
