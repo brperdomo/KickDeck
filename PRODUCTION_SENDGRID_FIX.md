@@ -1,37 +1,54 @@
+# Production SendGrid Fix - Exact Development Mirror
 
-# SendGrid Production Deployment Fix
-
-## Issue Identified
-Production environment at app.matchpro.ai has invalid SendGrid API key, while development environment is working correctly.
+## Issue
+Production at app.matchpro.ai returns "SendGrid authorization failed" while development works perfectly with the same API key.
 
 ## Root Cause
-Environment variables are managed separately between development and production environments.
+Production deployment uses Google Cloud Run environment variables that differ from local development configuration.
 
-## Solution Steps
+## Solution: Mirror Development Configuration
 
-### For Replit Deployments:
-1. Access your Replit project
-2. Go to the "Deployments" tab
-3. Click on your active deployment
-4. Navigate to "Environment Variables"
-5. Add or update: SENDGRID_API_KEY = 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
-6. Click "Update" and redeploy
+### Step 1: Verify Working Development Setup
+Development environment that works:
+- SENDGRID_API_KEY: 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
+- DEFAULT_FROM_EMAIL: support@matchpro.ai
+- NODE_ENV: production
 
-### For Other Hosting Platforms:
-1. Access your hosting platform's environment variable settings
-2. Set SENDGRID_API_KEY to your valid SendGrid API key
-3. Restart/redeploy your application
+### Step 2: Apply Exact Configuration to Production
 
-### Verification:
-After deployment, test by:
-1. Logging into app.matchpro.ai as admin
-2. Navigate to SendGrid Settings
-3. Verify templates load without authorization errors
+**For Replit Deployments:**
+1. Open your Replit project
+2. Click "Secrets" in the left sidebar
+3. Add these exact secrets (delete existing ones first):
 
-## SendGrid API Key Requirements:
-- Must start with "SG."
-- Should be 69 characters long
-- Must have "Templates" permissions at minimum
-- Recommended: "Full Access" permissions
+```
+SENDGRID_API_KEY = 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
+DEFAULT_FROM_EMAIL = support@matchpro.ai
+NODE_ENV = production
+```
 
-Generated: 2025-06-18T15:17:05.644Z
+4. Go to "Deployments" tab
+5. Click "Deploy" (create new deployment)
+6. Wait for deployment to complete
+
+**For Google Cloud Run Direct:**
+1. Go to Google Cloud Console
+2. Navigate to Cloud Run
+3. Find your matchpro service
+4. Click "Edit & Deploy New Revision"
+5. Under "Environment Variables", set:
+   - SENDGRID_API_KEY = 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
+   - DEFAULT_FROM_EMAIL = support@matchpro.ai
+   - NODE_ENV = production
+
+### Step 3: Verification
+1. Visit app.matchpro.ai
+2. Login as administrator
+3. Navigate to SendGrid Settings
+4. Confirm templates load without "Authentication required" or "SendGrid authorization failed" errors
+
+## Why This Works
+The development environment successfully loads 8 SendGrid templates with this exact API key. By mirroring the same configuration to production, we eliminate environment variable discrepancies.
+
+## Expected Result
+After deployment, app.matchpro.ai should have identical SendGrid functionality to your development environment.
