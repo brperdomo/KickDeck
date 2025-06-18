@@ -3667,7 +3667,15 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                           <FormItem>
                             <FormLabel>Head Coach Phone</FormLabel>
                             <FormControl>
-                              <Input {...field} type="tel" />
+                              <Input 
+                                {...field} 
+                                type="tel" 
+                                onChange={(e) => {
+                                  const formatted = formatPhoneNumber(e.target.value);
+                                  field.onChange(formatted);
+                                }}
+                                placeholder="(555) 123-4567"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -3751,7 +3759,15 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                           <FormItem>
                             <FormLabel>Manager Phone</FormLabel>
                             <FormControl>
-                              <Input {...field} type="tel" />
+                              <Input 
+                                {...field} 
+                                type="tel" 
+                                onChange={(e) => {
+                                  const formatted = formatPhoneNumber(e.target.value);
+                                  field.onChange(formatted);
+                                }}
+                                placeholder="(555) 123-4567"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
