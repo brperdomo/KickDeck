@@ -74,21 +74,8 @@ type ProfileFormData = z.infer<typeof profileFormSchema>;
 type PasswordFormData = z.infer<typeof passwordFormSchema>;
 type CommunicationValues = z.infer<typeof communicationSchema>;
 
-// Phone number formatter
-const formatPhoneNumber = (value: string) => {
-  if (!value) return '';
-
-  // Strip all non-numeric characters
-  const cleaned = value.replace(/\D/g, '');
-
-  // Format only if we have exactly 10 digits
-  if (cleaned.length === 10) {
-    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
-  }
-
-  // Return the cleaned number if not 10 digits
-  return cleaned;
-};
+// Import the standardized phone formatter
+import { formatPhoneNumber } from "@/utils/phone-formatter";
 
 export default function MyAccount() {
   const { user } = useUser();
