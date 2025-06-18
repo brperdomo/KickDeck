@@ -11,6 +11,7 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BracketSelector } from "../registration/BracketSelector";
+import { formatPhoneNumber } from "@/utils/phone-formatter";
 
 // Define a proper schema to handle coach data structure
 const teamSchema = z.object({
@@ -311,7 +312,15 @@ export function TeamModal({ isOpen, onClose, team }: TeamModalProps) {
                     <FormItem>
                       <FormLabel>Manager Phone</FormLabel>
                       <FormControl>
-                        <Input {...field} type="tel" />
+                        <Input 
+                          {...field} 
+                          type="tel" 
+                          onChange={(e) => {
+                            const formatted = formatPhoneNumber(e.target.value);
+                            field.onChange(formatted);
+                          }}
+                          placeholder="(555) 123-4567"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -354,7 +363,15 @@ export function TeamModal({ isOpen, onClose, team }: TeamModalProps) {
                     <FormItem>
                       <FormLabel>Head Coach Phone</FormLabel>
                       <FormControl>
-                        <Input {...field} type="tel" />
+                        <Input 
+                          {...field} 
+                          type="tel" 
+                          onChange={(e) => {
+                            const formatted = formatPhoneNumber(e.target.value);
+                            field.onChange(formatted);
+                          }}
+                          placeholder="(555) 123-4567"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -399,7 +416,15 @@ export function TeamModal({ isOpen, onClose, team }: TeamModalProps) {
                     <FormItem>
                       <FormLabel>Assistant Coach Phone</FormLabel>
                       <FormControl>
-                        <Input {...field} type="tel" />
+                        <Input 
+                          {...field} 
+                          type="tel" 
+                          onChange={(e) => {
+                            const formatted = formatPhoneNumber(e.target.value);
+                            field.onChange(formatted);
+                          }}
+                          placeholder="(555) 123-4567"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
