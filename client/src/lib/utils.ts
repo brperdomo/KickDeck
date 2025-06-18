@@ -49,24 +49,12 @@ export function formatBytes(bytes: number, decimals: number = 2): string {
 export function formatCurrency(amount: number): string {
   // Check if amount is a valid number
   if (amount === null || amount === undefined || isNaN(amount)) {
-    console.warn("Invalid amount provided to formatCurrency:", amount);
     return "$0.00";
   }
-
-  // Debug log to track currency values
-  console.debug(`Formatting currency amount: ${amount} (type: ${typeof amount})`);
   
   try {
     // Convert to a number explicitly to handle string inputs
-    let numericAmount = Number(amount);
-    
-    // If amount seems very large (potentially a value stored in cents)
-    // convert to dollars. This is a safeguard in case our normalization
-    // in the API didn't catch everything
-    if (numericAmount > 10000) { // Assuming normal fees don't exceed $10,000
-      console.debug(`Large amount detected (${numericAmount}), normalizing by dividing by 100`);
-      numericAmount = numericAmount / 100;
-    }
+    const numericAmount = Number(amount);
     
     // Ensure amount has at most 2 decimal places
     const fixedAmount = Number(numericAmount.toFixed(2));
