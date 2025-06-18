@@ -48,6 +48,7 @@ import Checkout from "@/pages/checkout";
 import PaymentConfirmation from "@/pages/payment-confirmation";
 import PaymentSetupConfirmation from "@/pages/payment-setup-confirmation";
 import SendGridSettingsPage from "@/pages/sendgrid-settings";
+import AdminSendGridSetup from "@/pages/admin-sendgrid-setup";
 import { AuthProvider } from "@/hooks/use-auth";
 // Account page import
 import AccountPage from "./pages/account";
@@ -273,6 +274,9 @@ function Router() {
           </Route>
           <Route path="/sendgrid-settings">
             {user.isAdmin ? <SendGridSettingsPage /> : <NotFound />}
+          </Route>
+          <Route path="/admin/sendgrid-setup">
+            {user.isAdmin ? <AdminSendGridSetup /> : <NotFound />}
           </Route>
           <Route path="/admin/form-templates/create">
             {user.isAdmin ? <FormTemplateCreatePage /> : <NotFound />}

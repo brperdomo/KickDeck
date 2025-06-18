@@ -8603,6 +8603,210 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
     // Fix card details endpoint for teams with missing card information
     app.post('/api/admin/fix-card-details', isAdmin, fixCardDetails);
 
+    // SendGrid Configuration API endpoints
+    app.get('/api/admin/email-providers', isAdmin, async (req, res) => {
+      try {
+        const providers = await db
+          .select()
+          .from(emailProviderSettings)
+          .orderBy(desc(emailProviderSettings.isDefault), desc(emailProviderSettings.createdAt));
+        
+        res.json(providers);
+      } catch (error) {
+        console.error('Error fetching email providers:', error);
+        res.status(500).json({ error: 'Failed to fetch email providers' });
+      }
+    });
+
+    app.post('/api/admin/email-providers', isAdmin, async (req, res) => {
+      try {
+        const { providerType, providerName, settings, isActive, isDefault } = req.body;
+
+        // If this is set as default, remove default from other providers
+        if (isDefault) {
+          await db
+            .update(emailProviderSettings)
+            .set({ isDefault: false })
+            .where(eq(emailProviderSettings.providerType, providerType));
+        }
+
+        const [provider] = await db
+          .insert(emailProviderSettings)
+          .values({
+            providerType,
+            providerName,
+            settings,
+            isActive,
+            isDefault,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          })
+          .returning();
+
+        res.json(provider);
+      } catch (error) {
+        console.error('Error saving email provider:', error);
+        res.status(500).json({ error: 'Failed to save email provider' });
+      }
+    });
+
+    app.post('/api/admin/sendgrid/test-config', isAdmin, async (req, res) => {
+      try {
+        const { apiKey, fromEmail } = req.body;
+
+        if (!apiKey) {
+          return res.status(400).json({ success: false, message: 'API key is required' });
+        }
+
+        // Test the SendGrid API key by fetching templates
+        const response = await fetch('https://api.sendgrid.com/v3/templates', {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          return res.json({ 
+            success: false, 
+            message: `SendGrid API error: ${response.status} ${response.statusText}`,
+            error: errorText
+          });
+        }
+
+        const data = await response.json();
+        res.json({ 
+          success: true, 
+          message: 'Configuration is valid',
+          templates: data.templates || []
+        });
+      } catch (error) {
+        console.error('Error testing SendGrid config:', error);
+        res.status(500).json({ 
+          success: false, 
+          message: 'Failed to test configuration',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    });
+
+    app.get('/api/admin/sendgrid/templates', isAdmin, async (req, res) => {
+      try {
+        // Get the active SendGrid provider
+        const [provider] = await db
+          .select()
+          .from(emailProviderSettings)
+          .where(and(
+            eq(emailProviderSettings.providerType, 'sendgrid'),
+            eq(emailProviderSettings.isActive, true)
+          ))
+          .limit(1);
+
+        if (!provider) {
+          return res.status(400).json({ error: 'SendGrid not configured' });
+        }
+
+        const apiKey = (provider.settings as any)?.apiKey;
+        if (!apiKey) {
+          return res.status(400).json({ error: 'SendGrid API key not found' });
+        }
+
+        const response = await fetch('https://api.sendgrid.com/v3/templates', {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`SendGrid API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        res.json(data.templates || []);
+      } catch (error) {
+        console.error('Error fetching SendGrid templates:', error);
+        res.status(500).json({ error: 'Failed to fetch templates' });
+      }
+    });
+
+    app.post('/api/admin/sendgrid/send-test-email', isAdmin, async (req, res) => {
+      try {
+        const { email } = req.body;
+
+        if (!email) {
+          return res.status(400).json({ success: false, message: 'Email address is required' });
+        }
+
+        // Get the active SendGrid provider
+        const [provider] = await db
+          .select()
+          .from(emailProviderSettings)
+          .where(and(
+            eq(emailProviderSettings.providerType, 'sendgrid'),
+            eq(emailProviderSettings.isActive, true)
+          ))
+          .limit(1);
+
+        if (!provider) {
+          return res.status(400).json({ success: false, message: 'SendGrid not configured' });
+        }
+
+        const apiKey = (provider.settings as any)?.apiKey;
+        const fromEmail = (provider.settings as any)?.from || 'support@matchpro.ai';
+
+        if (!apiKey) {
+          return res.status(400).json({ success: false, message: 'SendGrid API key not found' });
+        }
+
+        // Send a simple test email
+        const emailData = {
+          personalizations: [{
+            to: [{ email }],
+            subject: 'SendGrid Test Email'
+          }],
+          from: { email: fromEmail, name: 'MatchPro Test' },
+          content: [{
+            type: 'text/html',
+            value: `
+              <h2>SendGrid Configuration Test</h2>
+              <p>This is a test email to verify your SendGrid configuration is working correctly.</p>
+              <p>If you received this email, your SendGrid setup is functioning properly!</p>
+              <p>Best regards,<br>MatchPro Team</p>
+            `
+          }]
+        };
+
+        const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(emailData)
+        });
+
+        if (response.ok) {
+          res.json({ success: true, message: 'Test email sent successfully' });
+        } else {
+          const errorText = await response.text();
+          res.json({ 
+            success: false, 
+            message: `Failed to send test email: ${response.status}`,
+            error: errorText
+          });
+        }
+      } catch (error) {
+        console.error('Error sending test email:', error);
+        res.status(500).json({ 
+          success: false, 
+          message: 'Failed to send test email',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    });
+
     // Preview route moved above to prevent route conflicts
 
     return httpServer;
