@@ -119,7 +119,10 @@ export async function getTeams(req: Request, res: Response) {
         return {
           team: {
             ...team,
-            playerCount: playerCount
+            playerCount: playerCount,
+            // Convert amounts from cents to dollars for display
+            totalAmount: team.totalAmount ? team.totalAmount / 100 : null,
+            registrationFee: team.registrationFee ? team.registrationFee / 100 : null
           },
           event,
           user
