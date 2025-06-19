@@ -2586,6 +2586,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
           termsAcknowledged: termsAgreed,
           registrationFee: registrationFee,
           selectedFeeIds: selectedFeeIds, // Include all selected fee IDs
+          appliedCoupon: appliedCoupon, // Include coupon data for usage tracking
           termsAcknowledgedAt: new Date() // Send as Date object, server will handle proper formatting
         }),
       });
