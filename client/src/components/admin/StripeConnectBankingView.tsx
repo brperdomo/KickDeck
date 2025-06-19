@@ -296,6 +296,35 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
     queryClient.invalidateQueries({ queryKey: ['stripe-connect-account', eventId] });
   };
 
+  // Reset banking verification mutation
+  const resetBankingMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/events/${eventId}/connect-account`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to reset banking verification');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Banking Reset Complete",
+        description: "Banking verification has been reset. You can now set up banking with correct information.",
+        variant: "default",
+      });
+      queryClient.invalidateQueries({ queryKey: ['stripe-connect-account', eventId] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Reset Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -586,6 +615,16 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
                   size="sm"
                 >
                   Refresh Status
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => resetBankingMutation.mutate()}
+                  disabled={resetBankingMutation.isPending}
+                  size="sm"
+                  className="text-orange-600 border-orange-200 hover:bg-orange-50"
+                >
+                  {resetBankingMutation.isPending ? 'Resetting...' : 'Reset Banking Setup'}
                 </Button>
 
                 {connectStatus?.status === 'pending' && (
