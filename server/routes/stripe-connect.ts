@@ -17,6 +17,57 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
  * Registers Stripe Connect routes for tournament banking
  */
 export function registerStripeConnectRoutes(app: Express) {
+  // Reset Connect account for an event (remove association)
+  app.delete("/api/events/:eventId/connect-account", isAdmin, async (req, res) => {
+    try {
+      const { eventId } = req.params;
+      const user = req.user as any;
+      
+      const event = await db.query.events.findFirst({
+        where: eq(events.id, parseInt(eventId))
+      });
+
+      if (!event) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+
+      // Create backup record before reset
+      const backupData = {
+        eventId: eventId,
+        eventName: event.name,
+        resetDate: new Date().toISOString(),
+        oldAccountId: event.stripeConnectAccountId,
+        oldAccountStatus: event.connectAccountStatus,
+        resetBy: user.email
+      };
+
+      console.log('Banking verification reset requested:', backupData);
+
+      // Remove Connect account association from event
+      await db.update(events)
+        .set({
+          stripeConnectAccountId: null,
+          connectAccountStatus: null,
+          connectChargesEnabled: false,
+          connectPayoutsEnabled: false,
+          connectOnboardingUrl: null,
+          connectAccountVerified: false,
+          connectLastUpdated: new Date()
+        })
+        .where(eq(events.id, parseInt(eventId)));
+
+      res.json({ 
+        success: true, 
+        message: "Banking verification reset successfully. You can now set up banking with correct information.",
+        backup: backupData
+      });
+
+    } catch (error) {
+      console.error('Error resetting banking verification:', error);
+      res.status(500).json({ error: "Failed to reset banking verification" });
+    }
+  });
+
   // Create Stripe Connect account for an event
   app.post("/api/events/:eventId/connect-account", isAdmin, async (req, res) => {
     try {
