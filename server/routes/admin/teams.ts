@@ -345,7 +345,13 @@ export async function updateTeamStatus(req: Request, res: Response) {
     // Process payment if team is being approved
     let paymentStatus = 'not_applicable';
     if (status === 'approved' && currentTeam.totalAmount && currentTeam.totalAmount > 0) {
-      paymentStatus = await processTeamApprovalPayment(currentTeam, teamId);
+      try {
+        paymentStatus = await processTeamApprovalPayment(currentTeam, teamId);
+        log(`Payment processing result for team ${teamId}: ${paymentStatus}`, 'admin');
+      } catch (paymentError) {
+        log(`Payment processing error for team ${teamId}: ${paymentError}`, 'admin');
+        paymentStatus = 'payment_error';
+      }
     }
     
     // Handle email notifications in a separate try/catch to prevent errors from affecting the response
