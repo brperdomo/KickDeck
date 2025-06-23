@@ -1304,12 +1304,18 @@ export function registerRoutes(app: Express): Server {
               submitterEmail: req.user?.email || managerEmail,
               submitterName: req.user ? `${req.user.firstName} ${req.user.lastName}` : managerName,
               // Add new registration fields
-              // Set team status based on payment method
-              status: paymentMethod === "pay_later" ? "pending_payment" : "registered", // Possible values: 'registered', 'approved', 'rejected', 'pending_payment'
+              // Set team status to "registered" for card payments (payment method collected)
+              // Set to "pending_payment" only for legitimate pay_later scenarios
+              status: paymentMethod === "pay_later" ? "pending_payment" : "registered",
               registrationFee: registrationFee || null,  // Use camelCase as defined in the schema
               // Add the new multiple fee tracking fields
               selectedFeeIds: selectedFeeIds || null, // Store as comma-separated list
               totalAmount: totalAmount || null, // Total amount in cents including all fees
+              // Store payment information for "Collect Now, Charge Later" workflow
+              setupIntentId: paymentMethod === 'card' ? req.body.setupIntentId : null,
+              paymentMethodId: paymentMethod === 'card' ? req.body.paymentMethodId : null,
+              paymentStatus: paymentMethod === 'card' ? 'payment_info_provided' : 
+                            paymentMethod === 'pay_later' ? 'pending' : 'pending',
               termsAcknowledged: termsAcknowledged || false,  // Use camelCase as defined in the schema
               termsAcknowledgedAt: termsAcknowledgedAt ? new Date(termsAcknowledgedAt) : new Date(),  // Use camelCase as defined in the schema
               // Add flag to indicate if roster will be added later
@@ -1476,17 +1482,64 @@ export function registerRoutes(app: Express): Server {
           return { team, playerCount };
         });
         
-        // PAYMENT ENFORCEMENT: Validate payment setup for teams with fees
-        if (totalAmount > 0 && (!paymentMethod || paymentMethod === 'pay_later')) {
-          // For teams with registration fees, require immediate payment setup
-          // No more "pay later" option for new registrations
-          console.log('Registration blocked: Payment required for teams with fees');
-          return res.status(400).json({
-            error: 'Payment setup required',
-            message: 'Teams with registration fees must complete payment setup during registration',
-            totalAmount: totalAmount,
-            requiresPayment: true
-          });
+        // PAYMENT ENFORCEMENT: For "Collect Now, Charge Later" workflow
+        // Verify Setup Intent is completed when paymentMethod is 'card'
+        if (totalAmount > 0 && paymentMethod === 'card') {
+          const { setupIntentId, paymentMethodId } = req.body;
+          
+          if (!setupIntentId || !paymentMethodId) {
+            console.log('Registration blocked: Setup Intent and Payment Method required for card payments');
+            return res.status(400).json({
+              error: 'Payment method setup incomplete',
+              message: 'Please complete payment method setup before submitting registration',
+              totalAmount: totalAmount,
+              requiresPayment: true,
+              paymentWorkflow: 'setup_intent_required'
+            });
+          }
+          
+          // Verify Setup Intent is actually completed in Stripe
+          try {
+            const stripe = (await import('stripe')).default;
+            const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY!, {
+              apiVersion: '2023-10-16',
+            });
+            
+            const setupIntent = await stripeInstance.setupIntents.retrieve(setupIntentId);
+            
+            if (setupIntent.status !== 'succeeded' || !setupIntent.payment_method) {
+              console.log(`Registration blocked: Setup Intent ${setupIntentId} not completed - status: ${setupIntent.status}`);
+              return res.status(400).json({
+                error: 'Payment method setup not completed',
+                message: 'Your payment method setup was not completed. Please try again.',
+                totalAmount: totalAmount,
+                requiresPayment: true,
+                setupIntentStatus: setupIntent.status
+              });
+            }
+            
+            // Ensure the payment method matches
+            if (setupIntent.payment_method !== paymentMethodId) {
+              console.log(`Payment method mismatch: Setup Intent has ${setupIntent.payment_method}, but registration has ${paymentMethodId}`);
+              return res.status(400).json({
+                error: 'Payment method mismatch',
+                message: 'Payment method verification failed. Please try again.',
+                totalAmount: totalAmount,
+                requiresPayment: true
+              });
+            }
+            
+            console.log(`✅ Setup Intent ${setupIntentId} verified successfully with payment method ${paymentMethodId}`);
+            
+          } catch (stripeError) {
+            console.error('Error verifying Setup Intent:', stripeError);
+            return res.status(400).json({
+              error: 'Payment verification failed',
+              message: 'Unable to verify payment method. Please try again.',
+              totalAmount: totalAmount,
+              requiresPayment: true
+            });
+          }
         }
 
         // Process payment with Stripe Connect if payment is required
