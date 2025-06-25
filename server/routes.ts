@@ -1487,8 +1487,10 @@ export function registerRoutes(app: Express): Server {
         if (totalAmount > 0 && paymentMethod === 'card') {
           const { setupIntentId, paymentMethodId } = req.body;
           
+          console.log(`PAYMENT VALIDATION: Amount=${totalAmount}, Method=${paymentMethod}, SetupIntent=${setupIntentId}, PaymentMethod=${paymentMethodId}`);
+          
           if (!setupIntentId || !paymentMethodId) {
-            console.log('Registration blocked: Setup Intent and Payment Method required for card payments');
+            console.log('❌ REGISTRATION BLOCKED: Setup Intent and Payment Method required for card payments');
             return res.status(400).json({
               error: 'Payment method setup incomplete',
               message: 'Please complete payment method setup before submitting registration',
@@ -1508,7 +1510,12 @@ export function registerRoutes(app: Express): Server {
             const setupIntent = await stripeInstance.setupIntents.retrieve(setupIntentId);
             
             if (setupIntent.status !== 'succeeded' || !setupIntent.payment_method) {
-              console.log(`Registration blocked: Setup Intent ${setupIntentId} not completed - status: ${setupIntent.status}, payment_method: ${setupIntent.payment_method}`);
+              console.log(`❌ REGISTRATION BLOCKED: Setup Intent ${setupIntentId} not completed`);
+              console.log(`   Status: ${setupIntent.status} (required: succeeded)`);
+              console.log(`   Payment Method: ${setupIntent.payment_method ? 'Present' : 'Missing'}`);
+              console.log(`   Team: ${req.body.name}`);
+              console.log(`   Email: ${req.body.email}`);
+              
               return res.status(400).json({
                 error: 'Payment method setup not completed',
                 message: 'Your payment method setup was not completed. Please complete the payment form and try again.',
@@ -1518,7 +1525,8 @@ export function registerRoutes(app: Express): Server {
                 debug: {
                   setupIntentId: setupIntentId,
                   hasPaymentMethod: !!setupIntent.payment_method,
-                  status: setupIntent.status
+                  status: setupIntent.status,
+                  teamName: req.body.name
                 }
               });
             }
@@ -1534,7 +1542,11 @@ export function registerRoutes(app: Express): Server {
               });
             }
             
-            console.log(`✅ Setup Intent ${setupIntentId} verified successfully with payment method ${paymentMethodId}`);
+            console.log(`✅ PAYMENT VALIDATION PASSED:`);
+            console.log(`   Setup Intent: ${setupIntentId}`);
+            console.log(`   Payment Method: ${paymentMethodId}`);
+            console.log(`   Status: ${setupIntent.status}`);
+            console.log(`   Team: ${req.body.name}`);
             
           } catch (stripeError) {
             console.error('Error verifying Setup Intent:', stripeError);
