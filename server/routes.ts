@@ -1508,13 +1508,18 @@ export function registerRoutes(app: Express): Server {
             const setupIntent = await stripeInstance.setupIntents.retrieve(setupIntentId);
             
             if (setupIntent.status !== 'succeeded' || !setupIntent.payment_method) {
-              console.log(`Registration blocked: Setup Intent ${setupIntentId} not completed - status: ${setupIntent.status}`);
+              console.log(`Registration blocked: Setup Intent ${setupIntentId} not completed - status: ${setupIntent.status}, payment_method: ${setupIntent.payment_method}`);
               return res.status(400).json({
                 error: 'Payment method setup not completed',
-                message: 'Your payment method setup was not completed. Please try again.',
+                message: 'Your payment method setup was not completed. Please complete the payment form and try again.',
                 totalAmount: totalAmount,
                 requiresPayment: true,
-                setupIntentStatus: setupIntent.status
+                setupIntentStatus: setupIntent.status,
+                debug: {
+                  setupIntentId: setupIntentId,
+                  hasPaymentMethod: !!setupIntent.payment_method,
+                  status: setupIntent.status
+                }
               });
             }
             
