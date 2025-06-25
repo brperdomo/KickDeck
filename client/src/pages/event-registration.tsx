@@ -956,7 +956,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
   // Manager validation mutation
   const validateManagerMutation = useMutation({
     mutationFn: async (email: string) => {
-      const response = await fetch('/api/coaches/check-email', {
+      const response = await fetch('/api/managers/check-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
