@@ -105,6 +105,12 @@ export function SetupPaymentForm({
           return;
         }
         
+        console.log('✅ PAYMENT SETUP SUCCESS:', {
+          setupIntentId: result.setupIntent.id,
+          paymentMethodId: result.setupIntent.payment_method,
+          status: result.setupIntent.status
+        });
+        
         // Handle success - setupIntent is available on the result object
         toast({
           title: 'Payment Method Saved',
@@ -114,6 +120,11 @@ export function SetupPaymentForm({
       } else {
         // Handle other statuses or missing setupIntent
         const status = result.setupIntent?.status || 'unknown';
+        console.log('❌ PAYMENT SETUP FAILED:', {
+          status: status,
+          hasSetupIntent: !!result.setupIntent,
+          hasPaymentMethod: !!result.setupIntent?.payment_method
+        });
         setErrorMessage(`Payment setup incomplete. Please ensure your card information is complete and try again. Status: ${status}`);
         if (onError) onError(new Error(`Payment setup not completed. Status: ${status}`));
       }
