@@ -62,9 +62,7 @@ export function SetupPaymentProvider({
     wallets: {
       amazonPay: 'never'
     },
-    fields: {
-      billingDetails: 'auto'
-    }
+
   };
 
   if (isLoading || !stripePromise) {

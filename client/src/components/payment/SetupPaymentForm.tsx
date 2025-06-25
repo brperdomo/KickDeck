@@ -96,12 +96,7 @@ export function SetupPaymentForm({
         elements,
         confirmParams: {
           return_url: returnUrl,
-          payment_method_data: {
-            billing_details: {
-              name: teamName || 'Team Registration',
-              email: teamForm?.getValues('headCoachEmail') || teamForm?.getValues('managerEmail') || undefined
-            }
-          }
+
         },
         redirect: 'if_required'
       });
