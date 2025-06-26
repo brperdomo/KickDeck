@@ -6,6 +6,7 @@ import { log } from "./vite";
 import { crypto } from "./crypto";
 import { db } from "@db";
 import { emailTemplates, insertPlayerSchema } from "@db/schema";
+import Stripe from 'stripe';
 import { isAdmin, hasEventAccess } from "./middleware";
 import { authenticateTournamentDirector } from "./middleware/tournament-director-auth";
 // Removed problematic middleware import to fix server startup
@@ -84,7 +85,7 @@ import {
 import userRouter from "./routes/user";
 import sendgridWebhookRouter from "./routes/sendgrid-webhook";
 import { fixCardDetails } from "./routes/fix-card-details";
-import { sql, eq, and, or, inArray, notInArray, isNull } from "drizzle-orm";
+import { desc, asc, ilike, isNotNull } from "drizzle-orm";
 import { sendTemplatedEmail, sendRegistrationReceiptEmail, sendRegistrationConfirmationEmail } from "./services/emailService";
 import {
   users,
@@ -209,6 +210,11 @@ export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
   
   try {
+    // Initialize Stripe
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: '2025-02-24.acacia',
+    });
+    
     // Authentication is already set up in index.ts, no need to call setupAuth again
     log("Using existing authentication middleware");
     
