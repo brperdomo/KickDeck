@@ -13,7 +13,7 @@ interface URLParams {
   team_id: string;
 }
 
-function PaymentCompletionForm({ clientSecret, teamId }: { clientSecret: string; teamId: string }) {
+function PaymentCompletionForm({ clientSecret, teamId, teamInfo }: { clientSecret: string; teamId: string; teamInfo: any }) {
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
@@ -130,6 +130,29 @@ function PaymentCompletionForm({ clientSecret, teamId }: { clientSecret: string;
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Payment Amount Information */}
+        {teamInfo && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h3 className="font-semibold text-blue-900 mb-2">Payment Summary</h3>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-blue-700">Team:</span>
+                <span className="font-medium text-blue-900">{teamInfo.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-blue-700">Event:</span>
+                <span className="font-medium text-blue-900">{teamInfo.eventName}</span>
+              </div>
+              <div className="flex justify-between items-center pt-2 mt-2 border-t border-blue-200">
+                <span className="text-blue-700 font-medium">Amount Due:</span>
+                <span className="text-lg font-bold text-blue-900">
+                  ${(teamInfo.totalAmount / 100).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {error && (
           <Alert variant="destructive" className="mb-4">
             <AlertDescription>{error}</AlertDescription>
@@ -152,7 +175,9 @@ function PaymentCompletionForm({ clientSecret, teamId }: { clientSecret: string;
                 Processing...
               </>
             ) : (
-              'Complete Payment Setup'
+              teamInfo 
+                ? `Setup Payment Method ($${(teamInfo.totalAmount / 100).toFixed(2)})`
+                : 'Complete Payment Setup'
             )}
           </Button>
         </form>
@@ -291,6 +316,7 @@ export default function CompletePayment() {
           <PaymentCompletionForm 
             clientSecret={params.setup_intent} 
             teamId={params.team_id}
+            teamInfo={teamInfo}
           />
         </Elements>
       </div>
