@@ -32,8 +32,9 @@ export async function processDestinationCharge(
   teamId: number,
   eventId: string,
   paymentMethodId: string,
-  tournamentCostCents: number,
-  connectAccountId: string
+  totalAmountCents: number,
+  connectAccountId: string,
+  isPreCalculated: boolean = false
 ) {
   try {
     // Get team information for receipt email
@@ -41,24 +42,44 @@ export async function processDestinationCharge(
       where: eq(teams.id, teamId)
     });
 
-    // Calculate comprehensive fee breakdown using the enhanced calculator
-    const feeCalculation = await calculateEventFees(eventId, tournamentCostCents);
+    let feeCalculation;
     
-    console.log('Fee calculation for team registration:', {
-      teamId,
-      eventId,
-      tournamentCost: `$${(tournamentCostCents / 100).toFixed(2)}`,
-      breakdown: formatFeeCalculation(feeCalculation)
-    });
+    if (isPreCalculated) {
+      // Amount already includes platform fees, reverse-calculate the tournament cost
+      // This handles the case where we're called from chargeApprovedTeam with pre-calculated totals
+      const baseTournamentCost = team?.totalAmount || 0;
+      feeCalculation = await calculateEventFees(eventId, baseTournamentCost);
+      
+      console.log('Using pre-calculated fee structure:', {
+        teamId,
+        eventId,
+        totalAmountProvided: `$${(totalAmountCents / 100).toFixed(2)}`,
+        baseTournamentCost: `$${(baseTournamentCost / 100).toFixed(2)}`,
+        calculatedTotal: `$${(feeCalculation.totalChargedAmount / 100).toFixed(2)}`
+      });
+    } else {
+      // Calculate comprehensive fee breakdown using the enhanced calculator
+      feeCalculation = await calculateEventFees(eventId, totalAmountCents);
+      
+      console.log('Fee calculation for team registration:', {
+        teamId,
+        eventId,
+        tournamentCost: `$${(totalAmountCents / 100).toFixed(2)}`,
+        breakdown: formatFeeCalculation(feeCalculation)
+      });
+    }
     
     // Validate calculation is balanced
     if (!feeCalculation.isBalanced) {
       throw new Error(`Fee calculation is not balanced: ${feeCalculation.totalAccounted} vs ${feeCalculation.totalChargedAmount}`);
     }
     
+    // For pre-calculated amounts, use the provided total; otherwise use calculated total
+    const chargeAmount = isPreCalculated ? totalAmountCents : feeCalculation.totalChargedAmount;
+    
     // Create payment intent with destination charge
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: feeCalculation.totalChargedAmount, // Total amount including platform fee
+      amount: chargeAmount, // Use the correct total amount
       currency: 'usd',
       payment_method: paymentMethodId,
       confirmation_method: 'manual',
@@ -87,7 +108,7 @@ export async function processDestinationCharge(
       eventId: eventId,
       paymentIntentId: paymentIntent.id,
       transactionType: 'payment',
-      amount: feeCalculation.totalChargedAmount,
+      amount: chargeAmount, // Use the actual amount charged
       stripeFee: feeCalculation.stripeFeeAmount,
       netAmount: feeCalculation.tournamentReceives,
       status: paymentIntent.status,
@@ -168,13 +189,24 @@ export async function chargeApprovedTeam(teamId: number) {
       throw new Error('Team does not have payment method or amount configured');
     }
 
-    // Process the destination charge
+    // Calculate the total amount that should be charged to the customer (including platform fees)
+    const feeCalculation = await calculateEventFees(team.eventId, team.totalAmount);
+    
+    console.log(`Fee calculation for team ${teamId}:`, {
+      tournamentCost: `$${(team.totalAmount / 100).toFixed(2)}`,
+      totalToCharge: `$${(feeCalculation.totalChargedAmount / 100).toFixed(2)}`,
+      platformFee: `$${(feeCalculation.platformFeeAmount / 100).toFixed(2)}`,
+      feeRate: `${(feeCalculation.platformFeeRate * 100).toFixed(1)}%`
+    });
+
+    // Process the destination charge using the calculated total amount
     const result = await processDestinationCharge(
       team.id,
       team.eventId,
       team.paymentMethodId,
-      team.totalAmount,
-      event.stripeConnectAccountId
+      feeCalculation.totalChargedAmount, // Use the total amount including platform fees
+      event.stripeConnectAccountId,
+      true // Mark as pre-calculated to avoid double fee calculation
     );
 
     console.log(`Successfully charged team ${teamId} and routed payment to Connect account ${event.stripeConnectAccountId}`);
