@@ -123,6 +123,7 @@ import {
   coupons,
   eventAdministrators,
   emailProviderSettings,
+  paymentTransactions,
 } from "@db/schema";
 import fs from "fs/promises";
 import path from "path";
@@ -311,6 +312,8 @@ export function registerRoutes(app: Express): Server {
           totalAmount: team.totalAmount,
           setupIntentId: team.setupIntentId,
           paymentStatus: team.paymentStatus,
+          paymentIntentId: team.paymentIntentId,
+          paidAt: paidAt,
           feeBreakdown: feeBreakdown
         });
         
