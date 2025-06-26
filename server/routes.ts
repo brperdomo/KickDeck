@@ -227,7 +227,7 @@ export function registerRoutes(app: Express): Server {
           return res.status(400).json({ error: 'Team ID is required' });
         }
         
-        // Get basic team information for payment completion
+        // Get team information with fee breakdown for payment completion
         const teamResult = await db
           .select({
             id: teams.id,
@@ -254,13 +254,44 @@ export function registerRoutes(app: Express): Server {
         
         const eventName = eventResult.length > 0 ? eventResult[0].name : 'Unknown Event';
         
+        // Calculate fee breakdown for transparency
+        let feeBreakdown = null;
+        if (team.totalAmount && team.totalAmount > 0) {
+          try {
+            // Import fee calculator
+            const { calculateEventFees, formatFeeCalculation } = await import('./services/fee-calculator.js');
+            
+            // Calculate the fees based on tournament cost (totalAmount includes all fees)
+            // We need to work backwards to get the base tournament cost
+            const estimatedTournamentCost = Math.round(team.totalAmount * 0.85); // Rough estimate
+            const feeCalculation = await calculateEventFees(team.eventId, estimatedTournamentCost);
+            
+            feeBreakdown = {
+              tournamentCost: estimatedTournamentCost,
+              tournamentCostFormatted: `$${(estimatedTournamentCost / 100).toFixed(2)}`,
+              platformFee: feeCalculation.platformFeeAmount,
+              platformFeeFormatted: `$${(feeCalculation.platformFeeAmount / 100).toFixed(2)}`,
+              stripeFee: feeCalculation.stripeFeeAmount,
+              stripeFeeFormatted: `$${(feeCalculation.stripeFeeAmount / 100).toFixed(2)}`,
+              totalAmount: team.totalAmount,
+              totalAmountFormatted: `$${(team.totalAmount / 100).toFixed(2)}`,
+              platformFeeRate: feeCalculation.platformFeeRate,
+              breakdown: formatFeeCalculation(feeCalculation)
+            };
+          } catch (feeError) {
+            console.warn(`Could not calculate fee breakdown for team ${teamId}:`, feeError);
+            // Continue without fee breakdown if calculation fails
+          }
+        }
+        
         res.json({
           teamId: team.id,
           teamName: team.name,
           eventName: eventName,
           totalAmount: team.totalAmount,
           setupIntentId: team.setupIntentId,
-          paymentStatus: team.paymentStatus
+          paymentStatus: team.paymentStatus,
+          feeBreakdown: feeBreakdown
         });
         
       } catch (error) {

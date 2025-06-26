@@ -130,11 +130,11 @@ function PaymentCompletionForm({ clientSecret, teamId, teamInfo }: { clientSecre
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Payment Amount Information */}
+        {/* Payment Amount Information with Fee Breakdown */}
         {teamInfo && (
           <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h3 className="font-semibold text-blue-900 mb-2">Payment Summary</h3>
-            <div className="space-y-1 text-sm">
+            <h3 className="font-semibold text-blue-900 mb-3">Payment Summary</h3>
+            <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-blue-700">Team:</span>
                 <span className="font-medium text-blue-900">{teamInfo.name}</span>
@@ -143,8 +143,30 @@ function PaymentCompletionForm({ clientSecret, teamId, teamInfo }: { clientSecre
                 <span className="text-blue-700">Event:</span>
                 <span className="font-medium text-blue-900">{teamInfo.eventName}</span>
               </div>
-              <div className="flex justify-between items-center pt-2 mt-2 border-t border-blue-200">
-                <span className="text-blue-700 font-medium">Amount Due:</span>
+              
+              {/* Fee Breakdown */}
+              {teamInfo.feeBreakdown ? (
+                <div className="mt-3 pt-3 border-t border-blue-200">
+                  <div className="text-xs text-blue-600 mb-2 font-medium">Payment Breakdown:</div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Tournament Cost:</span>
+                      <span className="text-blue-900">{teamInfo.feeBreakdown.tournamentCostFormatted}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Platform Fee:</span>
+                      <span className="text-blue-900">{teamInfo.feeBreakdown.platformFeeFormatted}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Processing Fee:</span>
+                      <span className="text-blue-900">{teamInfo.feeBreakdown.stripeFeeFormatted}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+              
+              <div className="flex justify-between items-center pt-2 mt-3 border-t border-blue-200">
+                <span className="text-blue-700 font-medium">Total Amount:</span>
                 <span className="text-lg font-bold text-blue-900">
                   ${(teamInfo.totalAmount / 100).toFixed(2)}
                 </span>
@@ -189,7 +211,25 @@ function PaymentCompletionForm({ clientSecret, teamId, teamInfo }: { clientSecre
 export default function CompletePayment() {
   const [location] = useLocation();
   const [params, setParams] = useState<URLParams | null>(null);
-  const [teamInfo, setTeamInfo] = useState<any>(null);
+  const [teamInfo, setTeamInfo] = useState<{
+    id: number;
+    name: string;
+    eventName: string;
+    totalAmount: number;
+    paymentStatus: string;
+    feeBreakdown?: {
+      tournamentCost: number;
+      tournamentCostFormatted: string;
+      platformFee: number;
+      platformFeeFormatted: string;
+      stripeFee: number;
+      stripeFeeFormatted: string;
+      totalAmount: number;
+      totalAmountFormatted: string;
+      platformFeeRate: number;
+      breakdown: any;
+    };
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -230,7 +270,8 @@ export default function CompletePayment() {
           name: data.teamName,
           eventName: data.eventName,
           totalAmount: data.totalAmount,
-          paymentStatus: data.paymentStatus
+          paymentStatus: data.paymentStatus,
+          feeBreakdown: data.feeBreakdown
         });
         setLoading(false);
       })
