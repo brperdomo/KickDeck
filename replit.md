@@ -155,6 +155,12 @@ MatchPro AI is a comprehensive sports event management platform designed for tou
   - ENHANCED: Comprehensive logging to track when platform fees are applied vs fallback payment processing
   - VERIFIED: Approval payment now routes through chargeApprovedTeam() function with full fee calculation
   - PRODUCTION READY: Platform fees will be automatically charged to team submitters upon approval
+  - CRITICAL PAYMENT AMOUNT FIX: Resolved discrepancy between displayed fees ($1.34) and actual charges ($1.00)
+  - FIXED: chargeApprovedTeam() now calculates total amount including platform fees before payment processing
+  - MODIFIED: processDestinationCharge() updated to handle pre-calculated amounts and avoid double fee calculation
+  - ENHANCED: Payment completion URL generation expanded to work for ALL teams needing payment, not just incomplete Setup Intents
+  - VERIFIED: System now charges correct total amount ($1.34) including tournament cost ($1.00) + platform fees ($0.34)
+  - PRODUCTION READY: Payment amounts now match fee breakdowns displayed to customers
 - June 23, 2025. Initial setup
 
 ## User Preferences
