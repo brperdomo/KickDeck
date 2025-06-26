@@ -911,39 +911,73 @@ async function generatePaymentCompletionUrl(req: Request, res: Response) {
     
     const team = teamResult[0];
     
-    // Check if team has incomplete Setup Intent
-    if (!team.setupIntentId || team.paymentStatus !== 'payment_required') {
+    // Check if team needs payment setup
+    // Allow URL generation for teams with:
+    // 1. payment_required status (incomplete setup)
+    // 2. approved status but no payment (payment failed during approval)
+    // 3. any team with total amount > 0 but no successful payment
+    const needsPayment = (
+      team.paymentStatus === 'payment_required' ||
+      (team.status === 'approved' && team.paymentStatus !== 'paid') ||
+      (team.totalAmount && team.totalAmount > 0 && team.paymentStatus !== 'paid')
+    );
+    
+    if (!needsPayment) {
       return res.status(400).json({ 
-        error: 'Team does not have incomplete payment setup',
-        currentStatus: team.paymentStatus
+        error: 'Team does not need payment setup',
+        currentStatus: team.paymentStatus,
+        teamStatus: team.status
       });
     }
     
-    // Check the current Setup Intent status in Stripe
+    // Check the current Setup Intent status in Stripe (if exists)
     let setupIntentStatus = 'unknown';
-    try {
-      const setupIntent = await stripe.setupIntents.retrieve(team.setupIntentId);
-      setupIntentStatus = setupIntent.status;
-      
-      if (setupIntent.status === 'succeeded' && setupIntent.payment_method) {
-        // Setup Intent is actually complete - update team record
-        await db
-          .update(teams)
-          .set({
-            paymentMethodId: setupIntent.payment_method.toString(),
-            stripeCustomerId: setupIntent.customer?.toString() || null,
-            paymentStatus: 'payment_info_provided'
-          })
-          .where(eq(teams.id, parseInt(teamId, 10)));
+    let existingSetupIntent = null;
+    
+    if (team.setupIntentId) {
+      try {
+        existingSetupIntent = await stripe.setupIntents.retrieve(team.setupIntentId);
+        setupIntentStatus = existingSetupIntent.status;
         
-        return res.json({
-          message: 'Team payment setup is already complete',
-          status: 'complete',
-          paymentMethodId: setupIntent.payment_method
-        });
+        if (existingSetupIntent.status === 'succeeded' && existingSetupIntent.payment_method) {
+          // Setup Intent is actually complete - update team record
+          await db
+            .update(teams)
+            .set({
+              paymentMethodId: existingSetupIntent.payment_method.toString(),
+              stripeCustomerId: existingSetupIntent.customer?.toString() || null,
+              paymentStatus: 'payment_info_provided'
+            })
+            .where(eq(teams.id, parseInt(teamId, 10)));
+          
+          return res.json({
+            message: 'Team payment setup is already complete',
+            status: 'complete',
+            paymentMethodId: existingSetupIntent.payment_method
+          });
+        }
+        
+        if (existingSetupIntent.status === 'requires_payment_method' && existingSetupIntent.client_secret) {
+          // Use the existing Setup Intent that's still pending
+          const completionUrl = `${frontendUrl}/complete-payment?setup_intent=${existingSetupIntent.client_secret}&team_id=${teamId}`;
+          
+          log(`Payment completion URL generated for team ${teamId} using existing Setup Intent: ${completionUrl}`, 'admin');
+          
+          return res.json({
+            success: true,
+            completionUrl: completionUrl,
+            setupIntentId: existingSetupIntent.id,
+            teamId: teamId,
+            teamName: team.name,
+            managerEmail: team.managerEmail,
+            originalSetupIntentStatus: setupIntentStatus,
+            message: 'Payment completion URL generated successfully'
+          });
+        }
+      } catch (stripeError) {
+        log(`Error checking Setup Intent ${team.setupIntentId}: ${stripeError}`, 'admin');
+        // Continue to create a new Setup Intent below
       }
-    } catch (stripeError) {
-      log(`Error checking Setup Intent ${team.setupIntentId}: ${stripeError}`, 'admin');
     }
     
     // Create new Setup Intent for completion

@@ -4845,14 +4845,16 @@ function TeamsView() {
                       </div>
                     )}
                     
-                    {/* Payment Completion URL for teams with incomplete Setup Intents */}
-                    {selectedTeam.paymentStatus === 'payment_required' && selectedTeam.setupIntentId && (
+                    {/* Payment Completion URL for teams that need payment */}
+                    {(selectedTeam.paymentStatus === 'payment_required' || 
+                      (selectedTeam.status === 'approved' && selectedTeam.paymentStatus !== 'paid') ||
+                      (selectedTeam.totalAmount && selectedTeam.totalAmount > 0 && selectedTeam.paymentStatus !== 'paid')) && (
                       <div className="grid grid-cols-3 gap-1">
                         <div className="font-medium">Payment Setup:</div>
                         <div className="col-span-2">
                           <div className="flex items-center gap-2">
                             <AlertTriangle className="h-4 w-4 text-amber-500" />
-                            <span className="text-sm text-amber-700">Incomplete payment setup</span>
+                            <span className="text-sm text-amber-700">Payment required</span>
                           </div>
                           <Button
                             variant="outline"
