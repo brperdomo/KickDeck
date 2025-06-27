@@ -996,9 +996,13 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
   } | null>(null);
   
   // Skip auth step completely - if user is not logged in, we'll handle auth within personal step
-  // This ensures we start at the personal step every time - simpler and more reliable flow
-  const initialStep = 'personal';
-  console.log('Enhanced registration flow: Always starting at personal step with integrated auth');
+  // CRITICAL FIX: Persist step across component re-mounts to prevent payment form from disappearing
+  const getInitialStep = (): RegistrationStep => {
+    const savedStep = sessionStorage.getItem(`registration-step-${eventId}`) as RegistrationStep;
+    return savedStep && ['personal', 'team', 'payment', 'review'].includes(savedStep) ? savedStep : 'personal';
+  };
+  const initialStep = getInitialStep();
+  console.log('Enhanced registration flow: Starting at step:', initialStep);
   
   console.log('🔍 AUTH DEBUG 🔍', {
     user: user ? { id: user.id, email: user.email } : null,
@@ -1273,7 +1277,14 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
       setIsCreatingAccount(false);
     }
   };
-  const [currentStep, setCurrentStep] = useState<RegistrationStep>(initialStep);
+  const [currentStep, setCurrentStepState] = useState<RegistrationStep>(initialStep);
+  
+  // Wrapper to persist step changes to sessionStorage
+  const setCurrentStep = (step: RegistrationStep) => {
+    console.log(`🔄 Step change: ${currentStep} → ${step}`);
+    setCurrentStepState(step);
+    sessionStorage.setItem(`registration-step-${eventId}`, step);
+  };
   
   // Simplified registration flow without save functionality
   
