@@ -1826,7 +1826,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
       // Move to personal step since we're already logged in
       setCurrentStep('personal');
     }
-  }, [user, currentStep]);
+  }, [user]); // Removed currentStep from dependencies to prevent infinite loop
   
   // Fetch clubs for the current event
   useEffect(() => {
