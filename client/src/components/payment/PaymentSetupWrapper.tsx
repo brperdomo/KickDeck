@@ -6,14 +6,55 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 
-// Global cache to store setup intents by team ID to prevent duplicates
-const setupIntentCache = new Map<string, { clientSecret: string; setupIntentId: string }>();
+// Persistent cache to store setup intents by team ID to prevent duplicates
+const CACHE_PREFIX = 'matchpro_setup_intent_';
+
+function getCacheKey(teamId: string | number, expectedAmount: number): string {
+  return `${CACHE_PREFIX}${teamId}-${expectedAmount}`;
+}
+
+function getCachedSetupIntent(teamId: string | number, expectedAmount: number) {
+  try {
+    const cacheKey = getCacheKey(teamId, expectedAmount);
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      const data = JSON.parse(cached);
+      // Check if cache is still valid (less than 1 hour old)
+      if (Date.now() - data.timestamp < 60 * 60 * 1000) {
+        return { clientSecret: data.clientSecret, setupIntentId: data.setupIntentId };
+      } else {
+        localStorage.removeItem(cacheKey);
+      }
+    }
+  } catch (error) {
+    console.log('Error reading setup intent cache:', error);
+  }
+  return null;
+}
+
+function setCachedSetupIntent(teamId: string | number, expectedAmount: number, clientSecret: string, setupIntentId: string) {
+  try {
+    const cacheKey = getCacheKey(teamId, expectedAmount);
+    const data = {
+      clientSecret,
+      setupIntentId,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(cacheKey, JSON.stringify(data));
+  } catch (error) {
+    console.log('Error caching setup intent:', error);
+  }
+}
 
 // Function to clear completed setup intents from cache
 export function clearSetupIntentCache(teamId: string | number, expectedAmount: number) {
-  const cacheKey = `${teamId}-${expectedAmount}`;
-  setupIntentCache.delete(cacheKey);
-  console.log(`🧹 Cleared setup intent cache for team ${teamId}`);
+  try {
+    const cacheKey = getCacheKey(teamId, expectedAmount);
+    localStorage.removeItem(cacheKey);
+    console.log(`🧹 Cleared setup intent cache for team ${teamId}`);
+  } catch (error) {
+    console.log('Error clearing setup intent cache:', error);
+  }
 }
 
 interface PaymentSetupWrapperProps {
@@ -45,13 +86,10 @@ export function PaymentSetupWrapper({
     const createOrReuseSetupIntent = async () => {
       setIsCreatingSetupIntent(true);
       
-      // Create a unique cache key for this team/amount combination
-      const cacheKey = `${teamId}-${expectedAmount}`;
-      
-      // Check if we already have a setup intent for this team
-      const cached = setupIntentCache.get(cacheKey);
+      // Check if we already have a setup intent cached for this team
+      const cached = getCachedSetupIntent(teamId, expectedAmount);
       if (cached) {
-        console.log(`🔄 Reusing existing setup intent for team ${teamId}: ${cached.setupIntentId}`);
+        console.log(`🔄 Reusing cached setup intent for team ${teamId}: ${cached.setupIntentId}`);
         setClientSecret(cached.clientSecret);
         setIsCreatingSetupIntent(false);
         return;
@@ -82,10 +120,7 @@ export function PaymentSetupWrapper({
         const data = await response.json();
         
         // Cache the setup intent for reuse
-        setupIntentCache.set(cacheKey, {
-          clientSecret: data.clientSecret,
-          setupIntentId: data.setupIntentId
-        });
+        setCachedSetupIntent(teamId, expectedAmount, data.clientSecret, data.setupIntentId);
         
         console.log(`🎯 Setup intent created successfully: ${data.setupIntentId}`);
         console.log(`🎯 Client secret received, length: ${data.clientSecret?.length || 0}`);
