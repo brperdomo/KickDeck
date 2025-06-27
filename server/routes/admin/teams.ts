@@ -132,38 +132,33 @@ async function processTeamApprovalPaymentFallback(team: any, teamId: string): Pr
     if (paymentMethod.type === 'link') {
       log(`Fallback payment: Detected Link payment method ${setupIntent.payment_method}`, 'admin');
       
-      // Link payment methods require customer attachment to be reused
-      let customerId = setupIntent.customer;
+      // Check if the Link payment method is attached to a customer
+      const currentPaymentMethod = await stripe.paymentMethods.retrieve(setupIntent.payment_method as string);
       
-      if (!customerId) {
-        // Create a customer for the Link payment method
-        log(`Creating customer for Link payment method attachment`, 'admin');
-        const customer = await stripe.customers.create({
-          email: team.submitterEmail || 'noemail@example.com',
-          metadata: {
-            teamId: teamId,
-            teamName: team.name,
-            createdFor: 'link_payment_method_reuse'
-          }
-        });
-        customerId = customer.id;
-        log(`Created customer ${customerId} for Link payment method`, 'admin');
+      if (!currentPaymentMethod.customer) {
+        log(`Link payment method ${setupIntent.payment_method} is detached and cannot be reused`, 'admin');
+        log(`ERROR: Detached Link payment methods cannot be reattached due to Stripe limitations`, 'admin');
         
-        // Update team with customer ID
+        // Update team status to indicate payment method needs to be replaced
         await db.update(teams)
-          .set({ stripeCustomerId: customerId })
+          .set({
+            paymentStatus: 'payment_required',
+            notes: `Link payment method is detached and cannot be reused. Team needs to provide a new payment method. Contact team to complete payment setup with a new card.`
+          })
           .where(eq(teams.id, parseInt(teamId, 10)));
+        
+        log(`Team ${teamId} requires new payment method due to detached Link payment`, 'admin');
+        return 'detached_link_payment_unusable';
       }
       
-      // Ensure payment method is attached to customer
-      try {
-        await stripe.paymentMethods.attach(setupIntent.payment_method as string, {
-          customer: customerId
-        });
-        log(`Attached Link payment method to customer ${customerId}`, 'admin');
-      } catch (attachError) {
-        // Payment method might already be attached
-        log(`Payment method might already be attached: ${attachError.message}`, 'admin');
+      log(`Link payment method is properly attached to customer ${currentPaymentMethod.customer}`, 'admin');
+      
+      // Ensure team database has the correct customer ID
+      if (team.stripeCustomerId !== currentPaymentMethod.customer) {
+        await db.update(teams)
+          .set({ stripeCustomerId: currentPaymentMethod.customer })
+          .where(eq(teams.id, parseInt(teamId, 10)));
+        log(`Updated team ${teamId} customer ID to ${currentPaymentMethod.customer}`, 'admin');
       }
     }
     

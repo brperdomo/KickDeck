@@ -1,0 +1,147 @@
+Fetching fees for team 199 with fee IDs {"34"}
+index-CpMXYn0I.js:835 Fetch finished loading: GET "https://app.matchpro.ai/api/admin/teams/199/players".
+queryFn @ index-CpMXYn0I.js:835
+i @ index-CpMXYn0I.js:40
+h @ index-CpMXYn0I.js:40
+start @ index-CpMXYn0I.js:40
+fetch @ index-CpMXYn0I.js:40
+$g @ index-CpMXYn0I.js:40
+setOptions @ index-CpMXYn0I.js:40
+(anonymous) @ index-CpMXYn0I.js:40
+o1 @ index-CpMXYn0I.js:40
+Rf @ index-CpMXYn0I.js:40
+Qme @ index-CpMXYn0I.js:40
+cu @ index-CpMXYn0I.js:40
+EF @ index-CpMXYn0I.js:40
+Ld @ index-CpMXYn0I.js:38
+(anonymous) @ index-CpMXYn0I.js:40
+index-CpMXYn0I.js:835 Players data received: []
+index-CpMXYn0I.js:812 Fetch finished loading: GET "https://app.matchpro.ai/api/admin/teams/199/fees?selectedFeeIds={%2234%22}".
+queryFn @ index-CpMXYn0I.js:812
+i @ index-CpMXYn0I.js:40
+h @ index-CpMXYn0I.js:40
+start @ index-CpMXYn0I.js:40
+fetch @ index-CpMXYn0I.js:40
+$g @ index-CpMXYn0I.js:40
+onSubscribe @ index-CpMXYn0I.js:40
+subscribe @ index-CpMXYn0I.js:40
+(anonymous) @ index-CpMXYn0I.js:40
+Wq @ index-CpMXYn0I.js:38
+o1 @ index-CpMXYn0I.js:40
+Rf @ index-CpMXYn0I.js:40
+Qme @ index-CpMXYn0I.js:40
+cu @ index-CpMXYn0I.js:40
+EF @ index-CpMXYn0I.js:40
+Ld @ index-CpMXYn0I.js:38
+(anonymous) @ index-CpMXYn0I.js:40
+index-CpMXYn0I.js:812 Received fee data from server: [{…}]
+index-CpMXYn0I.js:638 Formatting currency amount: 1 (type: number)
+index-CpMXYn0I.js:638 Formatted currency result: $1.00
+index-CpMXYn0I.js:638 Formatting currency amount: 1 (type: number)
+index-CpMXYn0I.js:638 Formatted currency result: $1.00
+index-CpMXYn0I.js:638 Formatting currency amount: 1 (type: number)
+index-CpMXYn0I.js:638 Formatted currency result: $1.00
+index-CpMXYn0I.js:638 Formatting currency amount: 1 (type: number)
+index-CpMXYn0I.js:638 Formatted currency result: $1.00
+chunk-RODKCX5K.js:3 [Violation] 'setTimeout' handler took 61ms
+index-CpMXYn0I.js:638 Formatting currency amount: 1 (type: number)
+index-CpMXYn0I.js:638 Formatted currency result: $1.00
+index-CpMXYn0I.js:638 Formatting currency amount: 1 (type: number)
+index-CpMXYn0I.js:638 Formatted currency result: $1.00
+index-CpMXYn0I.js:835 Sending status update with data: {teamId: 199, status: 'approved', notes: 'Approval attempted but payment failed (payment_err…eam has completed payment setup before approving.'}
+index-CpMXYn0I.js:835 
+            
+            
+           PUT https://app.matchpro.ai/api/admin/teams/199/status 400 (Bad Request)
+mutationFn @ index-CpMXYn0I.js:835
+fn @ index-CpMXYn0I.js:40
+h @ index-CpMXYn0I.js:40
+start @ index-CpMXYn0I.js:40
+execute @ index-CpMXYn0I.js:40
+await in execute
+mutate @ index-CpMXYn0I.js:40
+(anonymous) @ index-CpMXYn0I.js:40
+fe @ index-CpMXYn0I.js:835
+onClick @ index-CpMXYn0I.js:835
+pue @ index-CpMXYn0I.js:37
+xue @ index-CpMXYn0I.js:37
+vue @ index-CpMXYn0I.js:37
+QM @ index-CpMXYn0I.js:37
+Tq @ index-CpMXYn0I.js:37
+(anonymous) @ index-CpMXYn0I.js:37
+iO @ index-CpMXYn0I.js:40
+eq @ index-CpMXYn0I.js:37
+d2 @ index-CpMXYn0I.js:37
+I4 @ index-CpMXYn0I.js:37
+Iue @ index-CpMXYn0I.js:37Understand this error
+index-CpMXYn0I.js:835 Raw response text: {"status":"error","error":"Payment processing failed","message":"Payment processing failed. Please check team payment details.","paymentStatus":"payment_error","teamStatus":"registered"}
+index-CpMXYn0I.js:835 Error response: {status: 'error', error: 'Payment processing failed', message: 'Payment processing failed. Please check team payment details.', paymentStatus: 'payment_error', teamStatus: 'registered'}error: "Payment processing failed"message: "Payment processing failed. Please check team payment details."paymentStatus: "payment_error"status: "error"teamStatus: "registered"[[Prototype]]: Object
+mutationFn @ index-CpMXYn0I.js:835
+await in mutationFn
+fn @ index-CpMXYn0I.js:40
+h @ index-CpMXYn0I.js:40
+start @ index-CpMXYn0I.js:40
+execute @ index-CpMXYn0I.js:40
+await in execute
+mutate @ index-CpMXYn0I.js:40
+(anonymous) @ index-CpMXYn0I.js:40
+fe @ index-CpMXYn0I.js:835
+onClick @ index-CpMXYn0I.js:835
+pue @ index-CpMXYn0I.js:37
+xue @ index-CpMXYn0I.js:37
+vue @ index-CpMXYn0I.js:37
+QM @ index-CpMXYn0I.js:37
+Tq @ index-CpMXYn0I.js:37
+(anonymous) @ index-CpMXYn0I.js:37
+iO @ index-CpMXYn0I.js:40
+eq @ index-CpMXYn0I.js:37
+d2 @ index-CpMXYn0I.js:37
+I4 @ index-CpMXYn0I.js:37
+Iue @ index-CpMXYn0I.js:37Understand this error
+index-CpMXYn0I.js:835 Error in updateTeamStatus mutation: Error: Payment processing failed
+    at Object.mutationFn (index-CpMXYn0I.js:835:82164)
+mutationFn @ index-CpMXYn0I.js:835
+await in mutationFn
+fn @ index-CpMXYn0I.js:40
+h @ index-CpMXYn0I.js:40
+start @ index-CpMXYn0I.js:40
+execute @ index-CpMXYn0I.js:40
+await in execute
+mutate @ index-CpMXYn0I.js:40
+(anonymous) @ index-CpMXYn0I.js:40
+fe @ index-CpMXYn0I.js:835
+onClick @ index-CpMXYn0I.js:835
+pue @ index-CpMXYn0I.js:37
+xue @ index-CpMXYn0I.js:37
+vue @ index-CpMXYn0I.js:37
+QM @ index-CpMXYn0I.js:37
+Tq @ index-CpMXYn0I.js:37
+(anonymous) @ index-CpMXYn0I.js:37
+iO @ index-CpMXYn0I.js:40
+eq @ index-CpMXYn0I.js:37
+d2 @ index-CpMXYn0I.js:37
+I4 @ index-CpMXYn0I.js:37
+Iue @ index-CpMXYn0I.js:37Understand this error
+index-CpMXYn0I.js:835 Fetch failed loading: PUT "https://app.matchpro.ai/api/admin/teams/199/status".
+mutationFn @ index-CpMXYn0I.js:835
+fn @ index-CpMXYn0I.js:40
+h @ index-CpMXYn0I.js:40
+start @ index-CpMXYn0I.js:40
+execute @ index-CpMXYn0I.js:40
+await in execute
+mutate @ index-CpMXYn0I.js:40
+(anonymous) @ index-CpMXYn0I.js:40
+fe @ index-CpMXYn0I.js:835
+onClick @ index-CpMXYn0I.js:835
+pue @ index-CpMXYn0I.js:37
+xue @ index-CpMXYn0I.js:37
+vue @ index-CpMXYn0I.js:37
+QM @ index-CpMXYn0I.js:37
+Tq @ index-CpMXYn0I.js:37
+(anonymous) @ index-CpMXYn0I.js:37
+iO @ index-CpMXYn0I.js:40
+eq @ index-CpMXYn0I.js:37
+d2 @ index-CpMXYn0I.js:37
+I4 @ index-CpMXYn0I.js:37
+Iue @ index-CpMXYn0I.js:37
+chunk-RODKCX5K.js:3 [Violation] 'setTimeout' handler took 56ms
