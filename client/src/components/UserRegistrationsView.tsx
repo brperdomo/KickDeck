@@ -374,9 +374,24 @@ export default function UserRegistrationsView() {
                 <h3 className="text-sm font-medium text-muted-foreground">Payment Information</h3>
                 <div className="bg-muted rounded-md p-3 space-y-2">
                   <div className="flex justify-between">
-                    <span>Registration Fee:</span>
+                    <span>Total Charged:</span>
                     <span className="font-semibold">${(selectedRegistration.amount / 100).toFixed(2)}</span>
                   </div>
+                  
+                  {/* Fee Breakdown for paid registrations */}
+                  {selectedRegistration.paymentStatus === 'paid' && selectedRegistration.amount > 0 && (
+                    <div className="border-t pt-2 mt-2 space-y-1 text-sm">
+                      <div className="font-medium text-muted-foreground mb-1">Fee Breakdown:</div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground pl-2">Tournament Cost:</span>
+                        <span>${(calculateTournamentCost(selectedRegistration.amount) / 100).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground pl-2">Platform Fee (4%):</span>
+                        <span>${(calculatePlatformFee(selectedRegistration.amount) / 100).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  )}
                   
                   {selectedRegistration.paymentStatus && (
                     <div className="flex justify-between">
