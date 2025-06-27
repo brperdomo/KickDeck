@@ -81,10 +81,11 @@ export async function processDestinationCharge(
     const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
     let customerId = paymentMethod.customer as string | null;
 
-    // Handle Link payment methods which fundamentally cannot be attached to customers
-    if (!customerId && paymentMethod.type === 'link') {
-      console.log(`Link payment method ${paymentMethodId} detected - Link payments cannot be attached to customers`);
-      // For Link payments, we'll process without a customer to avoid attachment errors
+    // Handle Link payment methods which fundamentally cannot be used with customers
+    if (paymentMethod.type === 'link') {
+      console.log(`Link payment method ${paymentMethodId} detected - Link payments cannot be used with customers in payment intents`);
+      // For Link payments, we MUST process without a customer to avoid attachment errors
+      // This is true regardless of whether the payment method has an associated customer
       customerId = null;
     }
 
