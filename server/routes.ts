@@ -4915,6 +4915,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           let transactionData = null;
           
           if (reg.team.status === 'approved' && reg.team.paymentIntentId) {
+            console.log(`Looking up payment for team ${reg.team.id} with payment intent: ${reg.team.paymentIntentId}`);
             try {
               const [paymentTransaction] = await db
                 .select()
@@ -4922,12 +4923,15 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
                 .where(eq(paymentTransactions.paymentIntentId, reg.team.paymentIntentId))
                 .limit(1);
               
+              console.log(`Payment transaction found for team ${reg.team.id}:`, paymentTransaction ? paymentTransaction.amount : 'none');
+              
               if (paymentTransaction && paymentTransaction.amount) {
+                console.log(`Updated amount for team ${reg.team.id}: ${actualAmountCharged} -> ${paymentTransaction.amount}`);
                 actualAmountCharged = paymentTransaction.amount;
                 transactionData = paymentTransaction;
               }
             } catch (error) {
-              console.log('Could not fetch payment transaction for team', reg.team.id);
+              console.log('Could not fetch payment transaction for team', reg.team.id, error);
             }
           }
           
