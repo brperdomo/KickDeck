@@ -69,6 +69,29 @@ router.get('/status/:paymentIntentId', async (req, res) => {
   }
 });
 
+// Check for existing setup intent
+router.get('/check-existing-setup-intent', async (req, res) => {
+  try {
+    const { teamId, expectedAmount } = req.query;
+    
+    if (!teamId || !expectedAmount) {
+      return res.status(400).json({ error: 'Team ID and expected amount are required' });
+    }
+    
+    // For temporary team IDs, they don't exist in database so return null
+    if (typeof teamId === 'string' && teamId.startsWith('temp-')) {
+      return res.json({ setupIntentId: null, clientSecret: null });
+    }
+    
+    // For actual team IDs, check the database (placeholder for now)
+    // Since we're dealing with temp IDs during registration, this will mostly return null
+    return res.json({ setupIntentId: null, clientSecret: null });
+  } catch (error) {
+    console.error('Error checking existing setup intent:', error);
+    res.status(500).json({ error: 'Failed to check existing setup intent' });
+  }
+});
+
 // Create a setup intent (collect payment info without charging)
 router.post('/create-setup-intent', async (req, res) => {
   try {
