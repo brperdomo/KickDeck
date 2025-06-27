@@ -1,0 +1,89 @@
+index-idZ1tlBg.js:886 🚨 COMPONENT RE-MOUNT DEBUG: {mountId: 'qd8iai21o', timestamp: '2025-06-27T01:49:57.548Z', isPreview: false, eventIdOverride: undefined, currentLocation: 'https://app.matchpro.ai/register/event/1755746106/form', …}
+index-idZ1tlBg.js:886 Enhanced registration flow: Always starting at personal step with integrated auth
+index-idZ1tlBg.js:886 🔍 AUTH DEBUG 🔍 {user: {…}, isLoggedIn: true, urlParams: '', currentStep: 'personal', isPreview: false}
+index-idZ1tlBg.js:886 Deadline check: 2025-07-25T23:59:59 vs current time 2025-06-27T01:49:57.550Z
+index-idZ1tlBg.js:886 Event timezone: America/New_York
+index-idZ1tlBg.js:886 Deadline passed: false
+index-idZ1tlBg.js:48 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap
+Q0 @ index-idZ1tlBg.js:48
+(anonymous) @ index-idZ1tlBg.js:48
+i1 @ index-idZ1tlBg.js:40
+If @ index-idZ1tlBg.js:40
+CF @ index-idZ1tlBg.js:40
+zd @ index-idZ1tlBg.js:38
+Kme @ index-idZ1tlBg.js:40
+du @ index-idZ1tlBg.js:40
+NW @ index-idZ1tlBg.js:40
+N @ index-idZ1tlBg.js:25
+O @ index-idZ1tlBg.js:25Understand this warning
+index-idZ1tlBg.js:48 OTS parsing error: invalid sfntVersion: 791289955
+Q0 @ index-idZ1tlBg.js:48
+(anonymous) @ index-idZ1tlBg.js:48
+i1 @ index-idZ1tlBg.js:40
+If @ index-idZ1tlBg.js:40
+CF @ index-idZ1tlBg.js:40
+zd @ index-idZ1tlBg.js:38
+Kme @ index-idZ1tlBg.js:40
+du @ index-idZ1tlBg.js:40
+NW @ index-idZ1tlBg.js:40
+N @ index-idZ1tlBg.js:25
+O @ index-idZ1tlBg.js:25Understand this warning
+index-idZ1tlBg.js:886 Team form submission attempted with data: {name: 'NewCharger', ageGroupId: 10006, bracketId: null, headCoachName: 'Bryan Perdomo', headCoachEmail: 'bperdomo@zoho.com', …}
+index-idZ1tlBg.js:886 Form errors: {}
+index-idZ1tlBg.js:886 Form validation passed, proceeding to payment step
+index-idZ1tlBg.js:886 🚨 COMPONENT RE-MOUNT DEBUG: {mountId: 'qd8iai21o', timestamp: '2025-06-27T01:49:59.270Z', isPreview: false, eventIdOverride: undefined, currentLocation: 'https://app.matchpro.ai/register/event/1755746106/form', …}
+index-idZ1tlBg.js:886 Enhanced registration flow: Always starting at personal step with integrated auth
+index-idZ1tlBg.js:886 🔍 AUTH DEBUG 🔍 {user: {…}, isLoggedIn: true, urlParams: '', currentStep: 'personal', isPreview: false}
+index-idZ1tlBg.js:886 Deadline check: 2025-07-25T23:59:59 vs current time 2025-06-27T01:49:59.271Z
+index-idZ1tlBg.js:886 Event timezone: America/New_York
+index-idZ1tlBg.js:886 Deadline passed: false
+index-idZ1tlBg.js:886 🚨 COMPONENT RE-MOUNT DEBUG: {mountId: 'qd8iai21o', timestamp: '2025-06-27T01:49:59.274Z', isPreview: false, eventIdOverride: undefined, currentLocation: 'https://app.matchpro.ai/register/event/1755746106/form', …}
+index-idZ1tlBg.js:886 Enhanced registration flow: Always starting at personal step with integrated auth
+index-idZ1tlBg.js:886 🔍 AUTH DEBUG 🔍 {user: {…}, isLoggedIn: true, urlParams: '', currentStep: 'personal', isPreview: false}
+index-idZ1tlBg.js:886 Deadline check: 2025-07-25T23:59:59 vs current time 2025-06-27T01:49:59.274Z
+index-idZ1tlBg.js:886 Event timezone: America/New_York
+index-idZ1tlBg.js:886 Deadline passed: false
+index-idZ1tlBg.js:886 🎯 Creating setup intent for payment form initialization
+index-idZ1tlBg.js:886 🎯 Team ID: temp-1750988943376-nma3hrqo9 Amount: 100 Team Name: NewCharger
+index-idZ1tlBg.js:886 🎯 Setup intent created successfully: seti_1ReRQ1P4BpmZARxtN3IWOHey
+index-idZ1tlBg.js:886 Fetch finished loading: POST "https://app.matchpro.ai/api/payments/create-setup-intent".
+$5e @ index-idZ1tlBg.js:886
+(anonymous) @ index-idZ1tlBg.js:886
+(anonymous) @ index-idZ1tlBg.js:886
+i1 @ index-idZ1tlBg.js:40
+If @ index-idZ1tlBg.js:40
+CF @ index-idZ1tlBg.js:40
+zd @ index-idZ1tlBg.js:38
+Kme @ index-idZ1tlBg.js:40
+du @ index-idZ1tlBg.js:40
+NW @ index-idZ1tlBg.js:40
+N @ index-idZ1tlBg.js:25
+O @ index-idZ1tlBg.js:25
+index-idZ1tlBg.js:886 🎯 Client secret received, length: 68
+index-idZ1tlBg.js:886 🚨 COMPONENT RE-MOUNT DEBUG: {mountId: 'qd8iai21o', timestamp: '2025-06-27T01:50:06.198Z', isPreview: false, eventIdOverride: undefined, currentLocation: 'https://app.matchpro.ai/register/event/1755746106/form', …}
+index-idZ1tlBg.js:886 Enhanced registration flow: Always starting at personal step with integrated auth
+index-idZ1tlBg.js:886 🔍 AUTH DEBUG 🔍 {user: {…}, isLoggedIn: true, urlParams: '', currentStep: 'personal', isPreview: false}
+index-idZ1tlBg.js:886 Deadline check: 2025-07-25T23:59:59 vs current time 2025-06-27T01:50:06.198Z
+index-idZ1tlBg.js:886 Event timezone: America/New_York
+index-idZ1tlBg.js:886 Deadline passed: false
+index-idZ1tlBg.js:886 🚨 COMPONENT RE-MOUNT DEBUG: {mountId: 'qd8iai21o', timestamp: '2025-06-27T01:50:07.699Z', isPreview: false, eventIdOverride: undefined, currentLocation: 'https://app.matchpro.ai/register/event/1755746106/form', …}
+index-idZ1tlBg.js:886 Enhanced registration flow: Always starting at personal step with integrated auth
+index-idZ1tlBg.js:886 🔍 AUTH DEBUG 🔍 {user: {…}, isLoggedIn: true, urlParams: '', currentStep: 'personal', isPreview: false}
+index-idZ1tlBg.js:886 Deadline check: 2025-07-25T23:59:59 vs current time 2025-06-27T01:50:07.700Z
+index-idZ1tlBg.js:886 Event timezone: America/New_York
+index-idZ1tlBg.js:886 Deadline passed: false
+index-idZ1tlBg.js:886 🎯 Creating setup intent for payment form initialization
+index-idZ1tlBg.js:886 🎯 Team ID: temp-1750988943376-nma3hrqo9 Amount: 100 Team Name: NewCharger
+index-idZ1tlBg.js:886 🎯 Setup intent created successfully: seti_1ReRQ1P4BpmZARxtN3IWOHey
+index-idZ1tlBg.js:886 🎯 Client secret received, length: 68
+index-idZ1tlBg.js:886 Fetch finished loading: POST "https://app.matchpro.ai/api/payments/create-setup-intent".
+$5e @ index-idZ1tlBg.js:886
+(anonymous) @ index-idZ1tlBg.js:886
+(anonymous) @ index-idZ1tlBg.js:886
+i1 @ index-idZ1tlBg.js:40
+If @ index-idZ1tlBg.js:40
+Kme @ index-idZ1tlBg.js:40
+du @ index-idZ1tlBg.js:40
+CF @ index-idZ1tlBg.js:40
+zd @ index-idZ1tlBg.js:38
+(anonymous) @ index-idZ1tlBg.js:40
