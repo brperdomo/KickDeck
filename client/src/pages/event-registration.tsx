@@ -757,9 +757,14 @@ interface EventRegistrationProps {
 // We'll use the types defined below
 
 export default function EventRegistration({ isPreview = false, eventIdOverride }: EventRegistrationProps) {
-  // AUTH FIX: Add detailed logging to verify our authentication fix is working
-  console.log("AUTH FIX: EventRegistration component starting - user should now see event details without immediate redirect");
-  console.log("AUTH FIX: RegistrationAuthChecker allowUnauthenticated is now set to TRUE by default");
+  // CRITICAL DEBUG: Track what's causing component re-mounting
+  console.log("🚨 COMPONENT RE-MOUNT DEBUG:", {
+    timestamp: new Date().toISOString(),
+    isPreview,
+    eventIdOverride,
+    currentLocation: window.location.href,
+    stackTrace: new Error().stack?.split('\n').slice(0, 5)
+  });
   const params = useParams();
   const { toast } = useToast();
   
