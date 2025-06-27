@@ -125,23 +125,10 @@ async function processTeamApprovalPaymentFallback(team: any, teamId: string): Pr
       return 'payment_method_incomplete';
     }
     
-    // Create basic payment intent (without platform fees)
-    const paymentIntentData: any = {
-      amount: team.totalAmount,
-      currency: 'usd',
-      payment_method: setupIntent.payment_method,
-      confirm: true,
-      off_session: true,
-      metadata: {
-        teamId: teamId,
-        teamName: team.name,
-        eventType: 'team_approval_payment_fallback'
-      }
-    };
-    
-    // Check if this is a Link payment method and handle it properly
+    // Use proper Stripe Connect platform fee structure for fallback payments
     const paymentMethod = await stripe.paymentMethods.retrieve(setupIntent.payment_method as string);
     
+    // Handle Link payment method customer attachment before processing
     if (paymentMethod.type === 'link') {
       log(`Fallback payment: Detected Link payment method ${setupIntent.payment_method}`, 'admin');
       
@@ -178,37 +165,103 @@ async function processTeamApprovalPaymentFallback(team: any, teamId: string): Pr
         // Payment method might already be attached
         log(`Payment method might already be attached: ${attachError.message}`, 'admin');
       }
+    }
+    
+    // Import the Stripe Connect payment processing function
+    const { processDestinationCharge } = await import('../stripe-connect-payments.js');
+    
+    // Get event information for Connect account
+    const [eventInfo] = await db
+      .select({
+        stripeConnectAccountId: events.stripeConnectAccountId,
+        connectAccountStatus: events.connectAccountStatus,
+        connectChargesEnabled: events.connectChargesEnabled
+      })
+      .from(events)
+      .where(eq(events.id, team.eventId));
+    
+    if (!eventInfo || !eventInfo.stripeConnectAccountId || 
+        eventInfo.connectAccountStatus !== 'active' || 
+        !eventInfo.connectChargesEnabled) {
+      log(`Event ${team.eventId} does not have proper Connect account - using basic payment`, 'admin');
       
-      paymentIntentData.customer = customerId;
-      log(`Using customer ${customerId} for Link payment method`, 'admin');
+      // Fallback to basic payment if Connect account not available
+      const basicPaymentIntent = await stripe.paymentIntents.create({
+        amount: team.totalAmount,
+        currency: 'usd',
+        payment_method: setupIntent.payment_method,
+        customer: setupIntent.customer || undefined,
+        confirm: true,
+        off_session: true,
+        metadata: {
+          teamId: teamId,
+          teamName: team.name,
+          eventType: 'team_approval_payment_fallback_basic'
+        }
+      });
       
-    } else {
-      // For non-Link payment methods, use customer if available
-      if (setupIntent.customer) {
-        paymentIntentData.customer = setupIntent.customer;
-        log(`Fallback payment: Using customer ${setupIntent.customer} for ${paymentMethod.type} payment method`, 'admin');
-      } else {
-        log(`Fallback payment: No customer needed for ${paymentMethod.type} payment method`, 'admin');
+      if (basicPaymentIntent.status === 'succeeded') {
+        await db.update(teams)
+          .set({
+            paymentIntentId: basicPaymentIntent.id,
+            paymentStatus: 'paid',
+            paymentMethodId: setupIntent.payment_method
+          })
+          .where(eq(teams.id, parseInt(teamId, 10)));
+        
+        log(`Basic fallback payment successful for team ${teamId}: ${basicPaymentIntent.id} (NO PLATFORM FEES)`, 'admin');
+        return 'payment_successful';
+      }
+      
+      log(`Basic fallback payment failed for team ${teamId}: ${basicPaymentIntent.status}`, 'admin');
+      return 'payment_failed';
+    }
+    
+    // Use proper Stripe Connect processing with platform fees
+    log(`Processing fallback payment with Stripe Connect platform fees for team ${teamId}`, 'admin');
+    
+    // Determine the correct customer ID - if Link payment, use the one we created/attached
+    let customerIdForPayment = setupIntent.customer as string;
+    if (paymentMethod.type === 'link') {
+      // For Link payments, get the current customer ID from the team record
+      const [updatedTeam] = await db
+        .select({ stripeCustomerId: teams.stripeCustomerId })
+        .from(teams)
+        .where(eq(teams.id, parseInt(teamId, 10)));
+      
+      if (updatedTeam?.stripeCustomerId) {
+        customerIdForPayment = updatedTeam.stripeCustomerId;
+        log(`Using Link payment customer ID: ${customerIdForPayment}`, 'admin');
       }
     }
     
-    const paymentIntent = await stripe.paymentIntents.create(paymentIntentData);
+    const paymentResult = await processDestinationCharge({
+      amount: team.totalAmount,
+      paymentMethodId: setupIntent.payment_method as string,
+      customerId: customerIdForPayment,
+      destinationAccountId: eventInfo.stripeConnectAccountId,
+      metadata: {
+        teamId: teamId.toString(),
+        teamName: team.name || 'Unknown Team',
+        eventType: 'team_approval_payment_fallback_connect'
+      }
+    });
     
-    if (paymentIntent.status === 'succeeded') {
+    if (paymentResult.success) {
       // Update team with payment details
       await db.update(teams)
         .set({
-          paymentIntentId: paymentIntent.id,
+          paymentIntentId: paymentResult.paymentIntent.id,
           paymentStatus: 'paid',
           paymentMethodId: setupIntent.payment_method
         })
         .where(eq(teams.id, parseInt(teamId, 10)));
       
-      log(`Fallback payment successful for team ${teamId}: ${paymentIntent.id} (NO PLATFORM FEES APPLIED)`, 'admin');
+      log(`Fallback Connect payment successful for team ${teamId}: ${paymentResult.paymentIntent.id} with platform fees`, 'admin');
       return 'payment_successful';
     }
     
-    log(`Fallback payment failed for team ${teamId}: ${paymentIntent.status}`, 'admin');
+    log(`Fallback Connect payment failed for team ${teamId}: ${paymentResult.error || 'Unknown error'}`, 'admin');
     return 'payment_failed';
     
   } catch (error) {
