@@ -4811,6 +4811,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                                 ];
                                 
                                 // Submit registration with completed payment setup
+                                // CRITICAL FIX: Use the callback parameters (correct values) instead of state variables
                                 const registrationPayload = {
                                   ...teamForm.getValues(),
                                   players: players, // Explicitly include players array
@@ -4818,8 +4819,8 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                                   totalAmount: parseFloat(calculateTotalAmount()) * 100,
                                   paymentMethod: 'card',
                                   addRosterLater: addRosterLater, // Explicitly include addRosterLater flag
-                                  setupIntentId,
-                                  paymentMethodId
+                                  setupIntentId: setupIntentId, // Use callback parameter (correct value)
+                                  paymentMethodId: paymentMethodId // Use callback parameter (correct value)
                                 };
                                 
                                 // Validate setup intent and payment method before submission
