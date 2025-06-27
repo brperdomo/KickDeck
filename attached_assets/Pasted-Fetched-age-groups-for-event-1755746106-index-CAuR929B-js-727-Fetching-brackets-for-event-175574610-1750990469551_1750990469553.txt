@@ -1,0 +1,164 @@
+Fetched age groups for event: 1755746106
+index-CAuR929B.js:727 Fetching brackets for event 1755746106 and age group 10006
+index-CAuR929B.js:812 Fetching fees for team 172 with fee IDs {"34"}
+5Fetch finished loading: GET "<URL>".
+index-CAuR929B.js:835 Players data received: []
+index-CAuR929B.js:812 Fetch finished loading: GET "https://app.matchpro.ai/api/admin/teams/172/fees?selectedFeeIds={%2234%22}".
+queryFn @ index-CAuR929B.js:812
+i @ index-CAuR929B.js:40
+h @ index-CAuR929B.js:40
+start @ index-CAuR929B.js:40
+fetch @ index-CAuR929B.js:40
+$g @ index-CAuR929B.js:40
+onSubscribe @ index-CAuR929B.js:40
+subscribe @ index-CAuR929B.js:40
+(anonymous) @ index-CAuR929B.js:40
+Wq @ index-CAuR929B.js:38
+o1 @ index-CAuR929B.js:40
+Rf @ index-CAuR929B.js:40
+Qme @ index-CAuR929B.js:40
+cu @ index-CAuR929B.js:40
+EF @ index-CAuR929B.js:40
+Ld @ index-CAuR929B.js:38
+(anonymous) @ index-CAuR929B.js:40
+index-CAuR929B.js:812 Received fee data from server: [{…}]
+index-CAuR929B.js:638 Formatting currency amount: 1 (type: number)
+index-CAuR929B.js:638 Formatted currency result: $1.00
+index-CAuR929B.js:638 Formatting currency amount: 1 (type: number)
+index-CAuR929B.js:638 Formatted currency result: $1.00
+chunk-RODKCX5K.js:3 [Violation] 'setTimeout' handler took 65ms
+index-CAuR929B.js:638 Formatting currency amount: 1 (type: number)
+index-CAuR929B.js:638 Formatted currency result: $1.00
+index-CAuR929B.js:638 Formatting currency amount: 1 (type: number)
+index-CAuR929B.js:638 Formatted currency result: $1.00
+index-CAuR929B.js:835 Sending status update with data: {teamId: 172, status: 'approved', notes: null}
+index-CAuR929B.js:835 
+            
+            
+           PUT https://app.matchpro.ai/api/admin/teams/172/status 500 (Internal Server Error)
+mutationFn @ index-CAuR929B.js:835
+fn @ index-CAuR929B.js:40
+h @ index-CAuR929B.js:40
+start @ index-CAuR929B.js:40
+execute @ index-CAuR929B.js:40
+await in execute
+mutate @ index-CAuR929B.js:40
+(anonymous) @ index-CAuR929B.js:40
+fe @ index-CAuR929B.js:835
+onClick @ index-CAuR929B.js:835
+pue @ index-CAuR929B.js:37
+xue @ index-CAuR929B.js:37
+vue @ index-CAuR929B.js:37
+QM @ index-CAuR929B.js:37
+Tq @ index-CAuR929B.js:37
+(anonymous) @ index-CAuR929B.js:37
+iO @ index-CAuR929B.js:40
+eq @ index-CAuR929B.js:37
+d2 @ index-CAuR929B.js:37
+I4 @ index-CAuR929B.js:37
+Iue @ index-CAuR929B.js:37Understand this error
+index-CAuR929B.js:835 Raw response text: Internal Server Error
+index-CAuR929B.js:835 Error parsing JSON response: SyntaxError: Unexpected token 'I', "Internal S"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Object.mutationFn (index-CAuR929B.js:835:81931) Response text: Internal Server Error
+mutationFn @ index-CAuR929B.js:835
+await in mutationFn
+fn @ index-CAuR929B.js:40
+h @ index-CAuR929B.js:40
+start @ index-CAuR929B.js:40
+execute @ index-CAuR929B.js:40
+await in execute
+mutate @ index-CAuR929B.js:40
+(anonymous) @ index-CAuR929B.js:40
+fe @ index-CAuR929B.js:835
+onClick @ index-CAuR929B.js:835
+pue @ index-CAuR929B.js:37
+xue @ index-CAuR929B.js:37
+vue @ index-CAuR929B.js:37
+QM @ index-CAuR929B.js:37
+Tq @ index-CAuR929B.js:37
+(anonymous) @ index-CAuR929B.js:37
+iO @ index-CAuR929B.js:40
+eq @ index-CAuR929B.js:37
+d2 @ index-CAuR929B.js:37
+I4 @ index-CAuR929B.js:37
+Iue @ index-CAuR929B.js:37Understand this error
+index-CAuR929B.js:835 Error in updateTeamStatus mutation: Error: Server returned invalid JSON response. Please try again.
+    at Object.mutationFn (index-CAuR929B.js:835:82029)
+mutationFn @ index-CAuR929B.js:835
+await in mutationFn
+fn @ index-CAuR929B.js:40
+h @ index-CAuR929B.js:40
+start @ index-CAuR929B.js:40
+execute @ index-CAuR929B.js:40
+await in execute
+mutate @ index-CAuR929B.js:40
+(anonymous) @ index-CAuR929B.js:40
+fe @ index-CAuR929B.js:835
+onClick @ index-CAuR929B.js:835
+pue @ index-CAuR929B.js:37
+xue @ index-CAuR929B.js:37
+vue @ index-CAuR929B.js:37
+QM @ index-CAuR929B.js:37
+Tq @ index-CAuR929B.js:37
+(anonymous) @ index-CAuR929B.js:37
+iO @ index-CAuR929B.js:40
+eq @ index-CAuR929B.js:37
+d2 @ index-CAuR929B.js:37
+I4 @ index-CAuR929B.js:37
+Iue @ index-CAuR929B.js:37Understand this error
+index-CAuR929B.js:835 Fetch failed loading: PUT "https://app.matchpro.ai/api/admin/teams/172/status".
+mutationFn @ index-CAuR929B.js:835
+fn @ index-CAuR929B.js:40
+h @ index-CAuR929B.js:40
+start @ index-CAuR929B.js:40
+execute @ index-CAuR929B.js:40
+await in execute
+mutate @ index-CAuR929B.js:40
+(anonymous) @ index-CAuR929B.js:40
+fe @ index-CAuR929B.js:835
+onClick @ index-CAuR929B.js:835
+pue @ index-CAuR929B.js:37
+xue @ index-CAuR929B.js:37
+vue @ index-CAuR929B.js:37
+QM @ index-CAuR929B.js:37
+Tq @ index-CAuR929B.js:37
+(anonymous) @ index-CAuR929B.js:37
+iO @ index-CAuR929B.js:40
+eq @ index-CAuR929B.js:37
+d2 @ index-CAuR929B.js:37
+I4 @ index-CAuR929B.js:37
+Iue @ index-CAuR929B.js:37
+chunk-RODKCX5K.js:3 [Violation] 'setTimeout' handler took 61ms
+teams:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swapUnderstand this warning
+teams:1 OTS parsing error: invalid sfntVersion: 791289955Understand this warning
+index-CAuR929B.js:835 Sending status update with data: {teamId: 172, status: 'approved', notes: null}
+chunk-RODKCX5K.js:3 [Violation] 'setTimeout' handler took 53ms
+index-CAuR929B.js:835 Fetch finished loading: PUT "https://app.matchpro.ai/api/admin/teams/172/status".
+mutationFn @ index-CAuR929B.js:835
+fn @ index-CAuR929B.js:40
+h @ index-CAuR929B.js:40
+start @ index-CAuR929B.js:40
+execute @ index-CAuR929B.js:40
+await in execute
+mutate @ index-CAuR929B.js:40
+(anonymous) @ index-CAuR929B.js:40
+fe @ index-CAuR929B.js:835
+onClick @ index-CAuR929B.js:835
+pue @ index-CAuR929B.js:37
+xue @ index-CAuR929B.js:37
+vue @ index-CAuR929B.js:37
+QM @ index-CAuR929B.js:37
+Tq @ index-CAuR929B.js:37
+(anonymous) @ index-CAuR929B.js:37
+iO @ index-CAuR929B.js:40
+eq @ index-CAuR929B.js:37
+d2 @ index-CAuR929B.js:37
+I4 @ index-CAuR929B.js:37
+Iue @ index-CAuR929B.js:37
+index-CAuR929B.js:835 Raw response text: {"status":"success","team":{"id":172,"eventId":1755746106,"ageGroupId":10006,"groupId":null,"bracketId":null,"clubId":null,"clubName":null,"name":"TeamZoho","coach":"{\"headCoachName\":\"Bryan Perdomo\",\"headCoachEmail\":\"bperdomo@zoho.com\",\"headCoachPhone\":\"(202) 695-6262\",\"accountCreated\":false}","managerName":"Bryan Perdomo","managerPhone":"(202) 695-6262","managerEmail":"bperdomo@zoho.com","submitterName":"Bryan Perdomo","submitterEmail":"bperdomo@zoho.com","seedRanking":null,"createdAt":"2025-06-27T02:13:02.650Z","status":"approved","registrationFee":null,"selectedFeeIds":"{\"34\"}","totalAmount":100,"paymentStatus":"payment_info_pending","paymentDate":null,"paymentIntentId":null,"setupIntentId":"seti_1ReRmkP4BpmZARxtq1Thiyr9","paymentMethodId":null,"cardBrand":null,"cardLast4":null,"paymentMethodType":null,"paymentErrorCode":null,"paymentErrorMessage":null,"refundDate":null,"stripeCustomerId":null,"termsAcknowledged":true,"termsAcknowledgedAt":"2025-06-27T02:13:02.270Z","termsAcknowledgementRecord":null,"addRosterLater":true,"rosterUploadedAt":null,"rosterUploadMethod":null,"initialRosterComplete":false,"appliedCoupon":null,"notes":null},"notification":{"status":"sent","recipients":["bperdomo@zoho.com"],"message":"Email notification sent successfully"}}
+teams:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swapUnderstand this warning
+teams:1 OTS parsing error: invalid sfntVersion: 791289955Understand this warning
+index-CAuR929B.js:835 Teams data received: (145) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, …]
+index-CAuR929B.js:835 Teams data from API: (145) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, …]
+index-CAuR929B.js:835 Normalized teams data: (145) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, …]
