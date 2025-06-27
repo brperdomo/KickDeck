@@ -113,6 +113,13 @@ MatchPro AI is a comprehensive sports event management platform designed for tou
 - **Security**: Role-based access control and secure payment processing
 
 ## Changelog
+- June 27, 2025: CRITICAL STRIPE RECEIPT FIX - Resolved payment receipts coming from MatchPro account instead of tournament organizer accounts
+  - IDENTIFIED: Receipt emails were being sent from main MatchPro Stripe account instead of individual tournament Connect accounts
+  - ROOT CAUSE: `receipt_email` parameter set on platform PaymentIntent overrides Connect account receipt handling
+  - TECHNICAL FIX: Removed `receipt_email` from platform PaymentIntents for both regular and Link payment flows
+  - RESULT: Connect accounts can now handle their own receipt delivery with proper tournament organizer branding
+  - IMPROVED: Tournament organizers now have full control over payment receipt delivery and branding
+  - PRODUCTION READY: All future payments will allow Connect accounts to send branded receipts to team submitters
 - June 27, 2025: CRITICAL PRODUCTION EMAIL FIX - Resolved registration confirmation emails not being sent to team submitters
   - IDENTIFIED: Email trigger condition checked for 'payment_info_provided' status but actual teams had 'setup_intent_completed' status
   - ROOT CAUSE: Payment status mismatch in conditional logic preventing email system activation during registration
