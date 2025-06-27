@@ -112,10 +112,8 @@ export default function UserRegistrationsView() {
   
   // Function to show registration details
   const showRegistrationDetails = (registration: Registration) => {
-    console.log('Show details clicked for registration:', registration);
     setSelectedRegistration(registration);
     setDetailsDialogOpen(true);
-    console.log('Dialog should be open now, detailsDialogOpen:', true);
   };
 
   if (isLoading) {
