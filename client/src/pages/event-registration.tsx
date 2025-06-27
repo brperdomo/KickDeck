@@ -2334,6 +2334,24 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
     return (total / 100).toFixed(2);
   };
 
+  // Calculate the total charge amount including platform fees (what customer will actually be charged)
+  const calculateTotalChargeAmount = () => {
+    const tournamentCostCents = parseFloat(calculateTotalAmount()) * 100;
+    
+    if (tournamentCostCents <= 0) return 0;
+    
+    // Platform fee calculation (matches server logic)
+    const DEFAULT_PLATFORM_FEE_RATE = 0.04; // 4%
+    const STRIPE_PERCENTAGE_FEE = 0.029; // 2.9%
+    const STRIPE_FIXED_FEE = 30; // $0.30 in cents
+
+    // Calculate the total amount needed to cover tournament cost + fees
+    const matchproTargetMargin = Math.round(tournamentCostCents * DEFAULT_PLATFORM_FEE_RATE);
+    const totalChargedAmount = Math.round((tournamentCostCents + matchproTargetMargin + STRIPE_FIXED_FEE) / (1 - STRIPE_PERCENTAGE_FEE));
+    
+    return totalChargedAmount; // Return in cents
+  };
+
   // Function to validate coupon code
   const validateCoupon = async (code: string) => {
     if (!code.trim() || !eventId) return;
@@ -5081,7 +5099,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                           <StripeProvider>
                             <PaymentSetupWrapper 
                               teamId={stableTeamId}
-                              expectedAmount={parseFloat(calculateTotalAmount()) * 100}
+                              expectedAmount={calculateTotalChargeAmount()}
                               teamName={teamForm.getValues().name}
                               eventName={event?.name || 'tournament'}
                               onSuccess={(setupIntentId, paymentMethodId) => {
