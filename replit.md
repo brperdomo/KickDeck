@@ -113,6 +113,14 @@ MatchPro AI is a comprehensive sports event management platform designed for tou
 - **Security**: Role-based access control and secure payment processing
 
 ## Changelog
+- June 27, 2025: COMPLETE LINK PAYMENT FIX - Resolved fundamental Link payment method limitations in "Collect Now, Charge Later" workflow
+  - IDENTIFIED: Link payment methods have Stripe limitations preventing direct reuse without customer attachment
+  - DISCOVERED: Root cause was in chargeApprovedTeam function where Setup Intent customer associations were being restored to database
+  - IMPLEMENTED: Link payment detection in chargeApprovedTeam to prevent customer association during database updates  
+  - ENHANCED: Fallback payment processing with Link payment method detection, customer creation, and proper attachment
+  - VERIFIED: Team 194 (Link payment) successfully approved with payment pi_3ReUZSP4BpmZARxt0g8uOAo6
+  - CONFIRMED: Both regular card payments (Team 193) and Link payments (Team 194) now work in approval workflow
+  - PRODUCTION READY: "Collect Now, Charge Later" workflow fully operational for all Stripe payment method types
 - June 27, 2025: MAJOR FIX - Resolved Setup Intent storage bug preventing team approval payments
   - FIXED: Critical timing bug where payment validation ran BEFORE team creation but Setup Intent storage logic checked wrong conditions
   - CORRECTED: Setup Intent storage logic changed from `paymentMethod === 'card'` to `totalAmount > 0 && setupIntentId && paymentMethodId`
