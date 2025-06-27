@@ -4807,10 +4807,8 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                                 console.log(`🎯 Players count: ${players.length}`);
                                 console.log(`🎯 Total amount: ${parseFloat(calculateTotalAmount()) * 100}`);
                                 
-                                // Clear setup intent cache since payment is completed
-                                import('@/components/payment/PaymentSetupWrapper').then(({ clearSetupIntentCache }) => {
-                                  clearSetupIntentCache(stableTeamId, parseFloat(calculateTotalAmount()) * 100);
-                                });
+                                // Don't clear cache after successful payment - this causes form re-mounting
+                                // and makes the payment form appear wiped for direct card payments
                                 
                                 // Make sure to sync the latest players array with form data
                                 teamForm.setValue('players', players);
@@ -5084,10 +5082,8 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                                   return;
                                 }
                                 
-                                // Clear setup intent cache since payment is completed
-                                import('@/components/payment/PaymentSetupWrapper').then(({ clearSetupIntentCache }) => {
-                                  clearSetupIntentCache(stableTeamId, parseFloat(calculateTotalAmount()) * 100);
-                                });
+                                // Don't clear cache after successful payment - this causes form re-mounting
+                                // and makes the payment form appear wiped for direct card payments
                                 
                                 console.log(`Setup intent created successfully: ${setupIntentId}, Payment method: ${paymentMethodId}`);
                                 
