@@ -98,7 +98,7 @@ const setupIntentCache = new Map<string, { setupIntentId: string, clientSecret: 
 // Create a setup intent (collect payment info without charging)
 router.post('/create-setup-intent', async (req, res) => {
   try {
-    const { teamId, metadata } = req.body;
+    const { teamId, metadata = {} } = req.body;
     
     if (!teamId) {
       return res.status(400).json({ error: 'TeamId is required' });
@@ -115,7 +115,15 @@ router.post('/create-setup-intent', async (req, res) => {
       });
     }
     
-    const result = await createSetupIntent(teamId, metadata);
+    // For temp teams during registration, include current user info for customer creation
+    let enhancedMetadata = { ...metadata };
+    if (teamId.toString().startsWith('temp-') && req.user) {
+      enhancedMetadata.userEmail = req.user.email;
+      enhancedMetadata.userName = req.user.name || req.user.email;
+      console.log(`Adding user info to Setup Intent metadata: ${req.user.email}`);
+    }
+    
+    const result = await createSetupIntent(teamId, enhancedMetadata);
     
     // Cache the result on server side
     setupIntentCache.set(cacheKey, {

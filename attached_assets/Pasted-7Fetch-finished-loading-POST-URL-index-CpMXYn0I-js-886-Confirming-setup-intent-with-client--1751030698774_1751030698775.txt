@@ -1,0 +1,93 @@
+7Fetch finished loading: POST "<URL>".
+index-CpMXYn0I.js:886 🎯 Confirming setup intent with client secret: seti_1RecDYP4BpmZARxtdXXqHLIE_secret_SZllPNkROg8ylAKajBTXMcgk2vJn1nl
+index-CpMXYn0I.js:886 🎯 Setup intent confirmation result: {error: undefined, setupIntentStatus: 'succeeded', setupIntentId: 'seti_1RecDYP4BpmZARxtdXXqHLIE', paymentMethodId: 'pm_1RecFZP4BpmZARxtryWmFNRe'}
+index-CpMXYn0I.js:886 🎯 Payment setup completed successfully
+index-CpMXYn0I.js:886 🎯 Stored Setup Intent ID: seti_1RecDYP4BpmZARxtdXXqHLIE
+index-CpMXYn0I.js:886 🎯 Stored Payment Method ID: pm_1RecFZP4BpmZARxtryWmFNRe
+index-CpMXYn0I.js:886 ✅ Payment setup callback received
+index-CpMXYn0I.js:886 ✅ Setup Intent ID: seti_1RecDYP4BpmZARxtdXXqHLIE
+index-CpMXYn0I.js:886 ✅ Payment Method ID: pm_1RecFZP4BpmZARxtryWmFNRe
+index-CpMXYn0I.js:886 🚨 COMPONENT RE-MOUNT DEBUG: {mountId: 'dtgs8ly4l', timestamp: '2025-06-27T13:23:31.510Z', isPreview: false, eventIdOverride: undefined, currentLocation: 'https://app.matchpro.ai/register/event/1755746106/form', …}
+index-CpMXYn0I.js:886 Enhanced registration flow: Starting at step: payment
+index-CpMXYn0I.js:886 🔍 AUTH DEBUG 🔍 {user: {…}, isLoggedIn: true, urlParams: '', currentStep: 'payment', isPreview: false}
+index-CpMXYn0I.js:886 Deadline check: 2025-07-25T23:59:59 vs current time 2025-06-27T13:23:31.511Z
+index-CpMXYn0I.js:886 Event timezone: America/New_York
+index-CpMXYn0I.js:886 Deadline passed: false
+index-CpMXYn0I.js:886 🔄 Reusing existing Setup Intent for team temp-1751030432539-uhk055f3a : seti_1RecDYP4BpmZARxtdXXqHLIE
+index-CpMXYn0I.js:886 🔄 Client secret length: 68
+index-CpMXYn0I.js:886 🚨 COMPONENT RE-MOUNT DEBUG: {mountId: 'dtgs8ly4l', timestamp: '2025-06-27T13:23:36.517Z', isPreview: false, eventIdOverride: undefined, currentLocation: 'https://app.matchpro.ai/register/event/1755746106/form', …}
+index-CpMXYn0I.js:886 Enhanced registration flow: Starting at step: payment
+index-CpMXYn0I.js:886 🔍 AUTH DEBUG 🔍 {user: {…}, isLoggedIn: true, urlParams: '', currentStep: 'payment', isPreview: false}
+index-CpMXYn0I.js:886 Deadline check: 2025-07-25T23:59:59 vs current time 2025-06-27T13:23:36.517Z
+index-CpMXYn0I.js:886 Event timezone: America/New_York
+index-CpMXYn0I.js:886 Deadline passed: false
+index-CpMXYn0I.js:886 🔄 Reusing existing Setup Intent for team temp-1751030432539-uhk055f3a : seti_1RecDYP4BpmZARxtdXXqHLIE
+index-CpMXYn0I.js:886 🔄 Client secret length: 68
+index-CpMXYn0I.js:886 🚨 COMPONENT RE-MOUNT DEBUG: {mountId: 'dtgs8ly4l', timestamp: '2025-06-27T13:23:38.519Z', isPreview: false, eventIdOverride: undefined, currentLocation: 'https://app.matchpro.ai/register/event/1755746106/form', …}
+index-CpMXYn0I.js:886 Enhanced registration flow: Starting at step: payment
+index-CpMXYn0I.js:886 🔍 AUTH DEBUG 🔍 {user: {…}, isLoggedIn: true, urlParams: '', currentStep: 'payment', isPreview: false}
+index-CpMXYn0I.js:886 Deadline check: 2025-07-25T23:59:59 vs current time 2025-06-27T13:23:38.520Z
+index-CpMXYn0I.js:886 Event timezone: America/New_York
+index-CpMXYn0I.js:886 Deadline passed: false
+index-CpMXYn0I.js:886 🔄 Reusing existing Setup Intent for team temp-1751030432539-uhk055f3a : seti_1RecDYP4BpmZARxtdXXqHLIE
+index-CpMXYn0I.js:886 🔄 Client secret length: 68
+index-CpMXYn0I.js:886 📝 Submitting registration with Setup Intent: seti_1RecDYP4BpmZARxtdXXqHLIE and Payment Method: pm_1RecFZP4BpmZARxtryWmFNRe
+index-CpMXYn0I.js:889 🎯 Payment setup completed: seti_1RecDYP4BpmZARxtdXXqHLIE, Payment method: pm_1RecFZP4BpmZARxtryWmFNRe
+index-CpMXYn0I.js:889 🎯 addRosterLater value: true
+index-CpMXYn0I.js:889 🎯 Players count: 0
+index-CpMXYn0I.js:889 🎯 Total amount: 100
+index-CpMXYn0I.js:889 🎯 Final registration payload: {name: 'Payment Card', ageGroupId: 10006, bracketId: null, headCoachName: 'Bryan Perdomo', headCoachEmail: 'bperdomo@zoho.com', …}
+index-CpMXYn0I.js:889 🎯 Payload validation: SetupIntent: seti_1RecDYP4BpmZARxtdXXqHLIE PaymentMethod: pm_1RecFZP4BpmZARxtryWmFNRe
+index-CpMXYn0I.js:886 🎯 Sending registration payload: {name: 'Payment Card', ageGroupId: 10006, bracketId: null, headCoachName: 'Bryan Perdomo', headCoachEmail: 'bperdomo@zoho.com', …}
+index-CpMXYn0I.js:886 🧹 Cleared setup intent cache for team temp-1751030432539-uhk055f3a
+index-CpMXYn0I.js:886 🚨 COMPONENT RE-MOUNT DEBUG: {mountId: 'dtgs8ly4l', timestamp: '2025-06-27T13:23:41.479Z', isPreview: false, eventIdOverride: undefined, currentLocation: 'https://app.matchpro.ai/register/event/1755746106/form', …}
+index-CpMXYn0I.js:886 Enhanced registration flow: Starting at step: payment
+index-CpMXYn0I.js:886 🔍 AUTH DEBUG 🔍 {user: {…}, isLoggedIn: true, urlParams: '', currentStep: 'payment', isPreview: false}
+index-CpMXYn0I.js:886 Deadline check: 2025-07-25T23:59:59 vs current time 2025-06-27T13:23:41.479Z
+index-CpMXYn0I.js:886 Event timezone: America/New_York
+index-CpMXYn0I.js:886 Deadline passed: false
+index-CpMXYn0I.js:886 🔄 Reusing existing Setup Intent for team temp-1751030432539-uhk055f3a : seti_1RecDYP4BpmZARxtdXXqHLIE
+index-CpMXYn0I.js:886 🔄 Client secret length: 68
+index-CpMXYn0I.js:886 🔄 Step change: payment → success
+index-CpMXYn0I.js:886 🚨 COMPONENT RE-MOUNT DEBUG: {mountId: 'dtgs8ly4l', timestamp: '2025-06-27T13:23:42.320Z', isPreview: false, eventIdOverride: undefined, currentLocation: 'https://app.matchpro.ai/register/event/1755746106/form', …}
+index-CpMXYn0I.js:886 Enhanced registration flow: Starting at step: personal
+index-CpMXYn0I.js:886 🔍 AUTH DEBUG 🔍 {user: {…}, isLoggedIn: true, urlParams: '', currentStep: 'personal', isPreview: false}
+index-CpMXYn0I.js:886 Deadline check: 2025-07-25T23:59:59 vs current time 2025-06-27T13:23:42.320Z
+index-CpMXYn0I.js:886 Fetch finished loading: POST "https://app.matchpro.ai/api/events/1755746106/register-team".
+mutationFn @ index-CpMXYn0I.js:886
+fn @ index-CpMXYn0I.js:40
+h @ index-CpMXYn0I.js:40
+start @ index-CpMXYn0I.js:40
+execute @ index-CpMXYn0I.js:40
+await in execute
+mutate @ index-CpMXYn0I.js:40
+(anonymous) @ index-CpMXYn0I.js:40
+onPaymentComplete @ index-CpMXYn0I.js:889
+h @ index-CpMXYn0I.js:886
+pue @ index-CpMXYn0I.js:37
+xue @ index-CpMXYn0I.js:37
+vue @ index-CpMXYn0I.js:37
+QM @ index-CpMXYn0I.js:37
+Tq @ index-CpMXYn0I.js:37
+(anonymous) @ index-CpMXYn0I.js:37
+iO @ index-CpMXYn0I.js:40
+eq @ index-CpMXYn0I.js:37
+d2 @ index-CpMXYn0I.js:37
+I4 @ index-CpMXYn0I.js:37
+Iue @ index-CpMXYn0I.js:37
+index-CpMXYn0I.js:886 Event timezone: America/New_York
+index-CpMXYn0I.js:886 Deadline passed: false
+form:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swapUnderstand this warning
+form:1 OTS parsing error: invalid sfntVersion: 791289955Understand this warning
+index-CpMXYn0I.js:886 🚨 COMPONENT RE-MOUNT DEBUG: {mountId: 'dtgs8ly4l', timestamp: '2025-06-27T13:23:47.325Z', isPreview: false, eventIdOverride: undefined, currentLocation: 'https://app.matchpro.ai/register/event/1755746106/form', …}
+index-CpMXYn0I.js:886 Enhanced registration flow: Starting at step: personal
+index-CpMXYn0I.js:886 🔍 AUTH DEBUG 🔍 {user: {…}, isLoggedIn: true, urlParams: '', currentStep: 'personal', isPreview: false}
+index-CpMXYn0I.js:886 Deadline check: 2025-07-25T23:59:59 vs current time 2025-06-27T13:23:47.326Z
+index-CpMXYn0I.js:886 Event timezone: America/New_York
+index-CpMXYn0I.js:886 Deadline passed: false
+index-CpMXYn0I.js:886 🚨 COMPONENT RE-MOUNT DEBUG: {mountId: 'dtgs8ly4l', timestamp: '2025-06-27T13:23:49.325Z', isPreview: false, eventIdOverride: undefined, currentLocation: 'https://app.matchpro.ai/register/event/1755746106/form', …}
+index-CpMXYn0I.js:886 Enhanced registration flow: Starting at step: personal
+index-CpMXYn0I.js:886 🔍 AUTH DEBUG 🔍 {user: {…}, isLoggedIn: true, urlParams: '', currentStep: 'personal', isPreview: false}
+index-CpMXYn0I.js:886 Deadline check: 2025-07-25T23:59:59 vs current time 2025-06-27T13:23:49.326Z
+index-CpMXYn0I.js:886 Event timezone: America/New_York
+index-CpMXYn0I.js:886 Deadline passed: false
