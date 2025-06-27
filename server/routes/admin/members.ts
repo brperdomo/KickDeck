@@ -433,6 +433,19 @@ export async function getCurrentUserRegistrations(req: Request, res: Response) {
         paymentMethodId: reg.team.paymentMethodId || undefined,
         stripeCustomerId: reg.team.stripeCustomerId || undefined,
         
+        // Enhanced team information
+        headCoachName: reg.team.headCoachName || undefined,
+        headCoachEmail: reg.team.headCoachEmail || undefined,
+        headCoachPhone: reg.team.headCoachPhone || undefined,
+        managerName: reg.team.managerName || undefined,
+        managerEmail: reg.team.managerEmail || undefined,
+        managerPhone: reg.team.managerPhone || undefined,
+        clubName: reg.team.clubName || undefined,
+        bracketName: reg.team.bracketName || undefined,
+        playerCount: reg.team.playerCount || undefined,
+        initialRosterComplete: reg.team.initialRosterComplete || false,
+        rosterUploadedAt: reg.team.rosterUploadedAt || undefined,
+        
         // Card details from database if available
         cardDetails: {
           brand: reg.team.cardBrand || undefined,
@@ -442,35 +455,22 @@ export async function getCurrentUserRegistrations(req: Request, res: Response) {
         }
       };
 
-      // Try to extract submitter information
-      try {
-        if (reg.team.coach) {
-          let coachData = {};
-          try {
-            coachData = JSON.parse(reg.team.coach);
-          } catch (e) {
-            console.log('Could not parse coach data');
-          }
-          
-          if (coachData && typeof coachData === 'object') {
-            registration.submitter = {
-              name: coachData.headCoachName || 'Unknown',
-              email: coachData.headCoachEmail || reg.team.managerEmail || reg.team.submitterEmail || 'Unknown'
-            };
-          }
-        } else if (reg.team.managerEmail) {
-          registration.submitter = {
-            name: reg.team.managerName || 'Team Manager',
-            email: reg.team.managerEmail
-          };
-        } else if (reg.team.submitterEmail) {
-          registration.submitter = {
-            name: reg.team.submitterName || 'Submitter',
-            email: reg.team.submitterEmail
-          };
-        }
-      } catch (e) {
-        console.log('Error extracting submitter info', e);
+      // Add submitter information
+      if (reg.team.submitterEmail || reg.team.submitterName) {
+        registration.submitter = {
+          name: reg.team.submitterName || 'Registration Submitter',
+          email: reg.team.submitterEmail || 'Unknown'
+        };
+      } else if (reg.team.managerEmail || reg.team.managerName) {
+        registration.submitter = {
+          name: reg.team.managerName || 'Team Manager',
+          email: reg.team.managerEmail || 'Unknown'
+        };
+      } else if (reg.team.headCoachEmail || reg.team.headCoachName) {
+        registration.submitter = {
+          name: reg.team.headCoachName || 'Head Coach',
+          email: reg.team.headCoachEmail || 'Unknown'
+        };
       }
 
       return registration;

@@ -147,8 +147,8 @@ export default function MemberRosterUpload() {
     );
   }
 
-  const teamsNeedingRoster = teams?.filter((team: Team) => !team.initialRosterComplete) || [];
-  const teamsWithRoster = teams?.filter((team: Team) => team.initialRosterComplete) || [];
+  const teamsNeedingRoster = Array.isArray(teams) ? teams.filter((team: Team) => !team.initialRosterComplete) : [];
+  const teamsWithRoster = Array.isArray(teams) ? teams.filter((team: Team) => team.initialRosterComplete) : [];
 
   return (
     <div className="container mx-auto py-8 space-y-8">
