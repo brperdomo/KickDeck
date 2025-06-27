@@ -1616,6 +1616,84 @@ export function registerRoutes(app: Express): Server {
           return res.status(404).json({ error: 'Selected age group not found for this event' });
         }
         
+        // BULLETPROOF PAYMENT ENFORCEMENT: Validate Setup Intent BEFORE creating team
+        // ANY registration with amount > 0 MUST have completed Setup Intent
+        if (totalAmount > 0) {
+          const { setupIntentId, paymentMethodId } = req.body;
+          
+          console.log(`🔒 PRE-REGISTRATION PAYMENT VALIDATION: Amount=${totalAmount}, Method=${paymentMethod}, SetupIntent=${setupIntentId}, PaymentMethod=${paymentMethodId}`);
+          
+          if (!setupIntentId || !paymentMethodId) {
+            console.log('❌ REGISTRATION BLOCKED: Setup Intent and Payment Method required for card payments');
+            return res.status(400).json({
+              error: 'Payment method setup incomplete',
+              message: 'Please complete payment method setup before submitting registration',
+              totalAmount: totalAmount,
+              requiresPayment: true,
+              paymentWorkflow: 'setup_intent_required'
+            });
+          }
+          
+          // Verify Setup Intent is actually completed in Stripe
+          try {
+            const stripe = (await import('stripe')).default;
+            const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY!, {
+              apiVersion: '2023-10-16',
+            });
+            
+            const setupIntent = await stripeInstance.setupIntents.retrieve(setupIntentId);
+            
+            if (setupIntent.status !== 'succeeded' || !setupIntent.payment_method) {
+              console.log(`❌ REGISTRATION BLOCKED: Setup Intent ${setupIntentId} not completed`);
+              console.log(`   Status: ${setupIntent.status} (required: succeeded)`);
+              console.log(`   Payment Method: ${setupIntent.payment_method ? 'Present' : 'Missing'}`);
+              console.log(`   Team: ${req.body.name}`);
+              
+              return res.status(400).json({
+                error: 'Payment method setup not completed',
+                message: 'Your payment method setup was not completed. Please complete the payment form and try again.',
+                totalAmount: totalAmount,
+                requiresPayment: true,
+                setupIntentStatus: setupIntent.status,
+                debug: {
+                  setupIntentId: setupIntentId,
+                  hasPaymentMethod: !!setupIntent.payment_method,
+                  status: setupIntent.status,
+                  teamName: req.body.name
+                }
+              });
+            }
+            
+            // Ensure the payment method matches
+            if (setupIntent.payment_method !== paymentMethodId) {
+              console.log(`❌ REGISTRATION BLOCKED: Payment method mismatch`);
+              console.log(`   Setup Intent has: ${setupIntent.payment_method}`);
+              console.log(`   Registration claims: ${paymentMethodId}`);
+              
+              return res.status(400).json({
+                error: 'Payment method mismatch', 
+                message: 'Payment method verification failed. Please try again.',
+                totalAmount: totalAmount,
+                requiresPayment: true
+              });
+            }
+            
+            console.log(`✅ PRE-REGISTRATION PAYMENT VALIDATION PASSED: Setup Intent ${setupIntentId} is properly completed`);
+            console.log(`   Status: ${setupIntent.status}`);
+            console.log(`   Payment Method: ${setupIntent.payment_method}`);
+            console.log(`   Team: ${req.body.name}`);
+            
+          } catch (error) {
+            console.error('Error verifying Setup Intent:', error);
+            return res.status(400).json({
+              error: 'Payment verification failed',
+              message: 'Unable to verify payment method. Please try again.',
+              totalAmount: totalAmount,
+              requiresPayment: true
+            });
+          }
+        }
+        
         // Create the team in a transaction to ensure all operations succeed or fail together
         const result = await db.transaction(async (tx) => {
           // Check if coach exists and create an account if it doesn't
@@ -1889,104 +1967,7 @@ export function registerRoutes(app: Express): Server {
           
           return { team, playerCount };
         });
-        
-        // BULLETPROOF PAYMENT ENFORCEMENT: For "Collect Now, Charge Later" workflow
-        // ANY registration with amount > 0 MUST have completed Setup Intent
-        if (totalAmount > 0) {
-          const { setupIntentId, paymentMethodId } = req.body;
-          
-          console.log(`PAYMENT VALIDATION: Amount=${totalAmount}, Method=${paymentMethod}, SetupIntent=${setupIntentId}, PaymentMethod=${paymentMethodId}`);
-          
-          if (!setupIntentId || !paymentMethodId) {
-            console.log('❌ REGISTRATION BLOCKED: Setup Intent and Payment Method required for card payments');
-            return res.status(400).json({
-              error: 'Payment method setup incomplete',
-              message: 'Please complete payment method setup before submitting registration',
-              totalAmount: totalAmount,
-              requiresPayment: true,
-              paymentWorkflow: 'setup_intent_required'
-            });
-          }
-          
-          // Verify Setup Intent is actually completed in Stripe
-          try {
-            const stripe = (await import('stripe')).default;
-            const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY!, {
-              apiVersion: '2023-10-16',
-            });
-            
-            const setupIntent = await stripeInstance.setupIntents.retrieve(setupIntentId);
-            
-            if (setupIntent.status !== 'succeeded' || !setupIntent.payment_method) {
-              console.log(`❌ REGISTRATION BLOCKED: Setup Intent ${setupIntentId} not completed`);
-              console.log(`   Status: ${setupIntent.status} (required: succeeded)`);
-              console.log(`   Payment Method: ${setupIntent.payment_method ? 'Present' : 'Missing'}`);
-              console.log(`   Team: ${req.body.name}`);
-              console.log(`   Email: ${req.body.email}`);
-              
-              return res.status(400).json({
-                error: 'Payment method setup not completed',
-                message: 'Your payment method setup was not completed. Please complete the payment form and try again.',
-                totalAmount: totalAmount,
-                requiresPayment: true,
-                setupIntentStatus: setupIntent.status,
-                debug: {
-                  setupIntentId: setupIntentId,
-                  hasPaymentMethod: !!setupIntent.payment_method,
-                  status: setupIntent.status,
-                  teamName: req.body.name
-                }
-              });
-            }
-            
-            // Ensure the payment method matches
-            if (setupIntent.payment_method !== paymentMethodId) {
-              console.log(`Payment method mismatch: Setup Intent has ${setupIntent.payment_method}, but registration has ${paymentMethodId}`);
-              return res.status(400).json({
-                error: 'Payment method mismatch',
-                message: 'Payment method verification failed. Please try again.',
-                totalAmount: totalAmount,
-                requiresPayment: true
-              });
-            }
-            
-            // ADDITIONAL ENFORCEMENT: Double-check payment method is actually attached and usable
-            if (!setupIntent.payment_method || typeof setupIntent.payment_method !== 'string') {
-              console.log(`❌ REGISTRATION BLOCKED: Setup Intent ${setupIntentId} has no valid payment method`);
-              console.log(`   Payment Method Value: ${setupIntent.payment_method} (type: ${typeof setupIntent.payment_method})`);
-              console.log(`   Team: ${req.body.name}`);
-              
-              return res.status(400).json({
-                error: 'Payment method not properly attached',
-                message: 'Your payment method was not properly saved to your setup intent. Please complete payment setup again.',
-                totalAmount: totalAmount,
-                requiresPayment: true,
-                setupIntentStatus: setupIntent.status,
-                debug: {
-                  setupIntentId: setupIntentId,
-                  hasPaymentMethod: !!setupIntent.payment_method,
-                  paymentMethodType: typeof setupIntent.payment_method,
-                  status: setupIntent.status
-                }
-              });
-            }
-            
-            console.log(`✅ PAYMENT VALIDATION PASSED:`);
-            console.log(`   Setup Intent: ${setupIntentId}`);
-            console.log(`   Payment Method: ${paymentMethodId} (Stripe: ${setupIntent.payment_method})`);
-            console.log(`   Status: ${setupIntent.status}`);
-            console.log(`   Team: ${req.body.name}`);
-            
-          } catch (stripeError) {
-            console.error('Error verifying Setup Intent:', stripeError);
-            return res.status(400).json({
-              error: 'Payment verification failed',
-              message: 'Unable to verify payment method. Please try again.',
-              totalAmount: totalAmount,
-              requiresPayment: true
-            });
-          }
-        }
+
 
         // CRITICAL FIX: For card payments, Setup Intent validation must have already passed
         // Do NOT create new Setup Intents here - they should be provided from frontend
