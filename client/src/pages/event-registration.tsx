@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { BracketSelector } from "@/components/registration/BracketSelector";
+import { FeeBreakdown } from "@/components/registration/FeeBreakdown";
 import { useToast } from "@/hooks/use-toast";
 import { formatPhoneNumber } from "@/utils/phone-formatter";
 
@@ -4385,6 +4386,16 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                     )}
                   </div>
                 </div>
+                
+                {/* Fee Breakdown Display - Shows platform fees and total charge amount */}
+                {(selectedFee || requiredFees.length > 0) && (
+                  <FeeBreakdown
+                    tournamentCost={parseFloat(calculateTotalAmount()) * 100}
+                    selectedFeeName={selectedFee?.name}
+                    requiredFees={requiredFees.map(fee => ({ name: fee.name, amount: fee.amount }))}
+                    appliedCoupon={appliedCoupon}
+                  />
+                )}
                 
                 {/* Agreement Section */}
                 <div className="border rounded-lg p-4 space-y-4">
