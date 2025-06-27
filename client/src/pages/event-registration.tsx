@@ -2793,7 +2793,24 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
     );
   }
 
-  const isDeadlinePassed = new Date(event.applicationDeadline) < new Date();
+  // Check if deadline has passed - treat deadline as end of day in event timezone
+  const isDeadlinePassed = (() => {
+    if (!event.applicationDeadline) return false;
+    
+    // Create deadline date at end of day (23:59:59) in event timezone
+    const deadlineStr = event.applicationDeadline.includes('T') 
+      ? event.applicationDeadline 
+      : `${event.applicationDeadline}T23:59:59`;
+    
+    const deadlineDate = new Date(deadlineStr);
+    const now = new Date();
+    
+    console.log(`Deadline check: ${deadlineStr} vs current time ${now.toISOString()}`);
+    console.log(`Event timezone: ${event.timezone}`);
+    console.log(`Deadline passed: ${deadlineDate < now}`);
+    
+    return deadlineDate < now;
+  })();
   if (isDeadlinePassed) {
     return (
       <div className="min-h-screen flex items-center justify-center">
