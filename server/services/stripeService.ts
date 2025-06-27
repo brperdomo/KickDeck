@@ -351,6 +351,27 @@ export async function createSetupIntent(teamId: number | string, metadata?: Reco
         log(`Could not create/retrieve customer for team ${teamId}: ${customerError.message}`);
         // Continue without customer - will limit charging ability but still allow Setup Intent creation
       }
+    } else {
+      // For temp team IDs during registration, create a customer using metadata
+      if (metadata?.userEmail) {
+        try {
+          const customer = await stripe.customers.create({
+            email: metadata.userEmail,
+            name: metadata.userName || 'Team Manager',
+            metadata: {
+              teamId: teamId.toString(),
+              teamName: metadata.teamName || 'Unknown Team',
+              createdFor: 'temp_team_registration'
+            }
+          });
+          customerId = customer.id;
+          log(`Created customer ${customerId} for temp team ${teamId} during registration`);
+        } catch (customerError: any) {
+          log(`Could not create customer for temp team ${teamId}: ${customerError.message}`);
+        }
+      } else {
+        log(`WARNING: No user email provided for temp team ${teamId} - cannot create customer`);
+      }
     }
     
     const setupIntentData: any = {
