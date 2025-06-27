@@ -246,42 +246,84 @@ export default function UserRegistrationsView() {
       </div>
 
       {/* Registrations Display */}
-      {viewMode === 'grouped' && selectedEvent === 'all' ? (
-        <div className="space-y-8">
-          {eventOptions.map((event) => (
-            <div key={event.key} className="space-y-4">
-              <Collapsible defaultOpen>
-                <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-primary/5 rounded-lg hover:bg-primary/10 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <Calendar className="h-5 w-5 text-primary" />
-                    <h3 className="text-lg font-semibold">{event.name}</h3>
-                    <Badge variant="secondary">{groupedRegistrations[event.key]?.length || 0} teams</Badge>
-                  </div>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 mt-4">
-                    {(groupedRegistrations[event.key] || []).map((registration: Registration) => (
-                      <RegistrationCard 
-                        key={registration.id} 
-                        registration={registration} 
-                        onShowDetails={showRegistrationDetails} 
-                      />
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
+      {viewMode === 'grouped' ? (
+        selectedEvent === 'all' ? (
+          /* Multi-event grouped view */
+          <div className="space-y-8">
+            {eventOptions.map((event) => (
+              <div key={event.key} className="space-y-4">
+                <Collapsible defaultOpen>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-primary/5 rounded-lg hover:bg-primary/10 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-5 w-5 text-primary" />
+                      <h3 className="text-lg font-semibold">{event.name}</h3>
+                      <Badge variant="secondary">{groupedRegistrations[event.key]?.length || 0} teams</Badge>
+                    </div>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 mt-4">
+                      {(groupedRegistrations[event.key] || []).map((registration: Registration) => (
+                        <RegistrationCard 
+                          key={registration.id} 
+                          registration={registration} 
+                          onShowDetails={showRegistrationDetails} 
+                        />
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* Single event grouped view */
+          <div className="space-y-4">
+            <div className="bg-primary/5 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <Calendar className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-semibold">
+                  {eventOptions.find(e => e.key === selectedEvent)?.name || 'Event'}
+                </h3>
+                <Badge variant="secondary">{filteredRegistrations.length} teams</Badge>
+              </div>
             </div>
-          ))}
-        </div>
+            <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
+              {filteredRegistrations.map((registration: Registration) => (
+                <RegistrationCard 
+                  key={registration.id} 
+                  registration={registration} 
+                  onShowDetails={showRegistrationDetails} 
+                />
+              ))}
+            </div>
+          </div>
+        )
       ) : (
-        <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
+        /* List view */
+        <div className="space-y-3">
           {filteredRegistrations.map((registration: Registration) => (
-            <RegistrationCard 
-              key={registration.id} 
-              registration={registration} 
-              onShowDetails={showRegistrationDetails} 
-            />
+            <div key={registration.id} className="border rounded-lg p-4 hover:bg-accent/50 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <h4 className="font-semibold">{registration.teamName}</h4>
+                    <TeamStatusBadge status={registration.status} />
+                    <PaymentStatusBadge 
+                      paymentStatus={registration.paymentStatus} 
+                      hasPaymentInfo={!!registration.setupIntentId}
+                      payLater={registration.payLater}
+                    />
+                  </div>
+                  <div className="text-sm text-muted-foreground mt-1">
+                    {registration.eventName} • {registration.ageGroup} • {formatDate(registration.registeredAt)}
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => showRegistrationDetails(registration)}>
+                  Details
+                </Button>
+              </div>
+            </div>
           ))}
         </div>
       )}
