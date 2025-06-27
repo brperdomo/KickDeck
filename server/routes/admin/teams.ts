@@ -40,6 +40,7 @@ async function processTeamApprovalPayment(team: any, teamId: string): Promise<st
     
   } catch (error) {
     log(`Payment processing error for team ${teamId}: ${error}`, 'admin');
+    log(`ERROR STACK TRACE: ${error instanceof Error ? error.stack : 'No stack trace available'}`, 'admin');
     
     // Check if this is a Connect account issue
     if (error instanceof Error && error.message.includes('Connect account')) {
