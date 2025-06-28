@@ -244,7 +244,7 @@ export async function processDestinationCharge(
       .set({
         paymentIntentId: paymentIntent.id,
         paymentStatus: paymentIntent.status === 'succeeded' ? 'paid' : 'payment_pending',
-        // paidAt: paymentIntent.status === 'succeeded' ? new Date() : null  // Column doesn't exist in schema
+        paidAt: paymentIntent.status === 'succeeded' ? new Date() : null
       })
       .where(eq(teams.id, teamId));
 
@@ -427,7 +427,7 @@ export async function chargeApprovedTeam(teamId: number) {
     await db.update(teams)
       .set({
         paymentStatus: 'payment_failed',
-        notes: `Payment failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        paymentFailureReason: error instanceof Error ? error.message : 'Unknown error'
       })
       .where(eq(teams.id, teamId));
 
@@ -472,6 +472,7 @@ export function registerConnectPaymentRoutes(app: Express) {
             await db.update(teams)
               .set({
                 paymentStatus: 'paid',
+                paidAt: new Date(),
                 status: 'approved'
               })
               .where(eq(teams.id, teamId));
