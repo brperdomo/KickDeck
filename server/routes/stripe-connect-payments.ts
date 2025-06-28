@@ -169,23 +169,8 @@ export async function processDestinationCharge(
           // Payment succeeded but transfer failed - this needs manual handling
         }
         
-        // Send receipt from platform account for Link payments (since they don't use destination charges)
-        if (team?.submitterEmail) {
-          try {
-            console.log(`Sending Link payment receipt from platform account to ${team.submitterEmail}`);
-            
-            await stripe.charges.update(
-              paymentIntent.latest_charge as string,
-              {
-                receipt_email: team.submitterEmail
-              }
-            );
-            
-            console.log(`✅ Link payment receipt sent to ${team.submitterEmail}`);
-          } catch (receiptError) {
-            console.error(`Failed to send Link payment receipt:`, receiptError);
-          }
-        }
+        // Note: Link payments use platform account charges with manual transfers
+        // Receipt handling should be done via custom email system to maintain tournament branding
       }
       
     } else {
@@ -228,25 +213,32 @@ export async function processDestinationCharge(
       paymentIntent = await stripe.paymentIntents.create(paymentIntentParams);
     }
 
-    // Send receipt from Connect account if payment succeeded
+    // Send custom receipt email from tournament organizer if payment succeeded
     if (paymentIntent.status === 'succeeded' && team?.submitterEmail) {
       try {
-        console.log(`Sending receipt from Connect account ${connectAccountId} to ${team.submitterEmail}`);
+        // Import email service dynamically to avoid circular dependencies
+        const { sendTemplatedEmail } = await import('../services/emailService.js');
         
-        // Create receipt from Connect account
-        await stripe.charges.update(
-          paymentIntent.latest_charge as string,
+        console.log(`Sending custom payment receipt to ${team.submitterEmail}`);
+        
+        await sendTemplatedEmail(
+          team.submitterEmail,
+          'payment_processed',
           {
-            receipt_email: team.submitterEmail
-          },
-          {
-            stripeAccount: connectAccountId // Use Connect account credentials
+            teamName: team.name || 'Unknown Team',
+            eventName: 'Tournament Registration', // Will be populated from event data
+            totalAmount: chargeAmount,
+            paymentDate: new Date().toLocaleDateString(),
+            paymentId: paymentIntent.id,
+            submitterName: team.submitterName || 'Team Manager',
+            receiptNumber: paymentIntent.latest_charge as string,
+            formatCurrency: (amount: number) => `$${(amount / 100).toFixed(2)}`
           }
         );
         
-        console.log(`✅ Receipt sent from Connect account to ${team.submitterEmail}`);
+        console.log(`✅ Custom receipt sent to ${team.submitterEmail}`);
       } catch (receiptError) {
-        console.error(`Failed to send receipt from Connect account:`, receiptError);
+        console.error(`Failed to send custom receipt:`, receiptError);
         // Don't fail the payment if receipt sending fails
       }
     }
