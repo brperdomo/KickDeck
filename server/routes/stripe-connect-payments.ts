@@ -244,7 +244,7 @@ export async function processDestinationCharge(
       .set({
         paymentIntentId: paymentIntent.id,
         paymentStatus: paymentIntent.status === 'succeeded' ? 'paid' : 'payment_pending',
-        paidAt: paymentIntent.status === 'succeeded' ? new Date() : null
+        // paidAt: paymentIntent.status === 'succeeded' ? new Date() : null  // Column doesn't exist in schema
       })
       .where(eq(teams.id, teamId));
 
