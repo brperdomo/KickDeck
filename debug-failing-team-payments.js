@@ -67,7 +67,7 @@ async function debugFailingPayments() {
           // Check payment method details if available
           if (setupIntent.payment_method) {
             try {
-              const paymentMethod = await stripe.paymentMethods.retrieve(setupIntent.payment_method as string);
+              const paymentMethod = await stripe.paymentMethods.retrieve(setupIntent.payment_method);
               console.log(`   PM Type: ${paymentMethod.type}`);
               console.log(`   PM Customer: ${paymentMethod.customer || 'None'}`);
               
