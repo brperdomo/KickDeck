@@ -93,6 +93,38 @@ export async function processDestinationCharge(
     console.log(`  - customer: ${paymentMethod.customer}`);
     console.log(`  - customerId variable: ${customerId}`);
 
+    // CONNECT CUSTOMER FIX: Create customer on Connect account if needed
+    if (!customerId && team?.submitterEmail && connectAccountId) {
+      console.log(`Creating customer on Connect account ${connectAccountId} for better receipt delivery`);
+      
+      try {
+        const connectCustomer = await stripe.customers.create({
+          email: team.submitterEmail,
+          name: team.submitterName || team.submitterEmail,
+          metadata: {
+            teamId: teamId.toString(),
+            teamName: team.name || 'Unknown Team',
+            eventId: eventId,
+            createdFor: 'connect_account_payment'
+          }
+        }, {
+          stripeAccount: connectAccountId // Create on Connect account
+        });
+        
+        customerId = connectCustomer.id;
+        console.log(`Created Connect customer: ${customerId} with email: ${team.submitterEmail}`);
+        
+        // Update team record with Connect customer ID
+        await db.update(teams)
+          .set({ stripeCustomerId: customerId })
+          .where(eq(teams.id, teamId));
+          
+      } catch (customerError) {
+        console.error('Error creating Connect customer:', customerError);
+        // Continue without customer if creation fails
+      }
+    }
+
     // Handle Link payment methods which fundamentally cannot be used with customers
     if (paymentMethod.type === 'link') {
       console.log(`Link payment method ${paymentMethodId} detected - Link payments cannot be used with customers in payment intents`);
@@ -179,17 +211,13 @@ export async function processDestinationCharge(
     } else {
       console.log(`Processing regular payment method - using destination charge`);
       
-      // For regular payment methods, use destination charge as before
+      // For regular payment methods, create Payment Intent directly on Connect account
       const paymentIntentParams: any = {
         amount: chargeAmount,
         currency: 'usd',
         payment_method: paymentMethodId,
         confirm: true,
-        on_behalf_of: connectAccountId,
         receipt_email: team?.submitterEmail || null, // Ensure receipts are sent when available
-        transfer_data: {
-          destination: connectAccountId,
-        },
         application_fee_amount: feeCalculation.platformFeeAmount,
         automatic_payment_methods: {
           enabled: true,
@@ -212,7 +240,10 @@ export async function processDestinationCharge(
         console.log(`Using customer: ${customerId}`);
       }
 
-      paymentIntent = await stripe.paymentIntents.create(paymentIntentParams);
+      // Create Payment Intent directly on Connect account for customer visibility
+      paymentIntent = await stripe.paymentIntents.create(paymentIntentParams, {
+        stripeAccount: connectAccountId
+      });
     }
 
     // Record comprehensive transaction in database with detailed fee breakdown

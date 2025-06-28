@@ -113,6 +113,14 @@ MatchPro AI is a comprehensive sports event management platform designed for tou
 - **Security**: Role-based access control and secure payment processing
 
 ## Changelog
+- June 28, 2025: STRIPE CONNECT CUSTOMER VISIBILITY FIX - Resolved customer emails not appearing in Connect account dashboards
+  - IDENTIFIED: Customers were created on platform account (MatchPro LLC) making them invisible to Connect accounts
+  - ROOT CAUSE: on_behalf_of payments create customer relationships with platform, not Connect accounts
+  - IMPLEMENTED: Direct customer creation on Connect accounts with Payment Intents created on Connect accounts
+  - ENHANCED: Tournament organizers now own customer relationships and can see all customer data
+  - VERIFIED: Connect customer creation and Payment Intent processing works perfectly with application fees
+  - IMPROVED: Receipts will now automatically come from tournament organizers instead of MatchPro LLC
+  - PRODUCTION READY: Customer emails will appear in Connect dashboards and receipts sent from proper accounts
 - June 27, 2025: CRITICAL PRODUCTION EMAIL FIX - Resolved registration confirmation emails not being sent to team submitters
   - IDENTIFIED: Email trigger condition checked for 'payment_info_provided' status but actual teams had 'setup_intent_completed' status
   - ROOT CAUSE: Payment status mismatch in conditional logic preventing email system activation during registration
