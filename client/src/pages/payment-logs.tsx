@@ -206,11 +206,11 @@ function TransactionDetailDialog({ transaction }: { transaction: any }) {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="font-medium text-gray-500">Created:</span>
-                <p>{formatDate(transaction.createdAt)}</p>
+                <p>{transaction.createdAt ? formatDate(transaction.createdAt) : 'N/A'}</p>
               </div>
               <div>
                 <span className="font-medium text-gray-500">Updated:</span>
-                <p>{formatDate(transaction.updatedAt)}</p>
+                <p>{transaction.updatedAt ? formatDate(transaction.updatedAt) : 'N/A'}</p>
               </div>
               {transaction.settlementDate && (
                 <div>
@@ -518,10 +518,18 @@ export default function PaymentLogs() {
                     <TableRow key={transaction.id}>
                       <TableCell>
                         <div className="text-sm">
-                          {formatDate(transaction.createdAt)}
+                          {transaction.createdAt ? formatDate(transaction.createdAt) : 'N/A'}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {formatDistanceToNow(new Date(transaction.createdAt), { addSuffix: true })}
+                          {transaction.createdAt ? 
+                            (() => {
+                              try {
+                                return formatDistanceToNow(new Date(transaction.createdAt), { addSuffix: true });
+                              } catch (e) {
+                                return 'Invalid date';
+                              }
+                            })() : 'N/A'
+                          }
                         </div>
                       </TableCell>
                       <TableCell>
