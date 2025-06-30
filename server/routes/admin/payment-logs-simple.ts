@@ -10,7 +10,7 @@ export async function getPaymentLogs(req: Request, res: Response) {
   try {
     const { status, type, search, format, limit = '100', offset = '0', completeOnly } = req.query;
     
-    console.log('Payment logs request params:', { status, type, search, format, limit, offset, completeOnly });
+
     
     // Build WHERE conditions dynamically
     const conditions = [];
@@ -42,12 +42,8 @@ export async function getPaymentLogs(req: Request, res: Response) {
     }
 
     // Filter for complete data only (transactions with team and event information)
-    console.log('Complete only filter check:', completeOnly, typeof completeOnly, completeOnly === 'true');
-    // TEMPORARY TEST: Always apply complete data filter to see if logic works
-    console.log('APPLYING COMPLETE DATA FILTER FOR TESTING');
-    conditions.push(`pt.team_id IS NOT NULL AND pt.event_id IS NOT NULL`);
     if (completeOnly === 'true') {
-      console.log('Adding complete data filter condition (was already added for testing)');
+      conditions.push(`pt.team_id IS NOT NULL AND pt.event_id IS NOT NULL`);
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
@@ -175,13 +171,13 @@ export async function getPaymentLogs(req: Request, res: Response) {
         pt.payout_id,
         pt.created_at,
         pt.updated_at,
-        t.name as team_name,
-        t.manager_name,
-        t.manager_email,
-        t.manager_phone,
-        t.club_name,
-        e.name as event_name,
-        eag.age_group
+        t.name as teamName,
+        t.manager_name as managerName,
+        t.manager_email as managerEmail,
+        t.manager_phone as managerPhone,
+        t.club_name as clubName,
+        e.name as eventName,
+        eag.age_group as ageGroup
       FROM payment_transactions pt
       LEFT JOIN teams t ON pt.team_id = t.id
       LEFT JOIN events e ON pt.event_id = e.id
@@ -193,11 +189,6 @@ export async function getPaymentLogs(req: Request, res: Response) {
       LIMIT ${limitValue} OFFSET ${offsetValue}
     `;
 
-    console.log('Final conditions array:', conditions);
-    console.log('Final WHERE clause:', whereClause);
-    console.log('Final SQL query:', transactionsQuery);
-    console.log('Query parameters:', params);
-    
     const transactionsResult = await db.execute(sql.raw(transactionsQuery, params));
     const transactions = transactionsResult.rows;
 
