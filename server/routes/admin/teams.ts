@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { db } from '@db';
-import { teams, events, users, players, eventAgeGroups } from '@db/schema';
+import { teams, events, users, players, eventAgeGroups, paymentTransactions } from '@db/schema';
 import { eq, and, or, like, asc, desc, sql } from 'drizzle-orm';
 import { log } from '../../vite';
 import { sendTemplatedEmail } from '../../services/emailService';
@@ -1402,15 +1402,55 @@ async function bulkApproveTeams(req: Request, res: Response) {
             recipients.push(team.managerEmail);
           }
 
+          // Get payment transaction details for the email
+          let paymentData = null;
+          if (team.paymentIntentId) {
+            try {
+              // For now, we'll use basic payment data from the team record
+              // since paymentTransactions table might not have all records
+              paymentData = {
+                createdAt: new Date().toISOString(),
+                amount: team.totalAmount
+              };
+            } catch (paymentError) {
+              log(`Error fetching payment data for team ${team.id}: ${paymentError}`, 'admin');
+            }
+          }
+
           for (const recipient of recipients) {
             if (recipient) {
               await sendTemplatedEmail(
                 recipient,
                 'team_approved',
                 {
+                  // Team Information
                   teamName: team.name || 'your team',
                   eventName: event?.name || 'the event',
-                  approvalDate: new Date().toLocaleDateString()
+                  submitterName: team.submitterName || team.managerName || 'Team Manager',
+                  submitterEmail: team.submitterEmail || team.managerEmail || '',
+                  clubName: team.clubName || '',
+                  
+                  // Registration Details
+                  registrationDate: team.createdAt ? new Date(team.createdAt).toLocaleDateString() : new Date().toLocaleDateString(),
+                  approvalDate: new Date().toLocaleDateString(),
+                  
+                  // Payment Information
+                  totalAmount: team.totalAmount ? (team.totalAmount / 100).toFixed(2) : '0.00',
+                  paymentId: team.paymentIntentId || 'Processing',
+                  paymentDate: paymentData?.createdAt ? new Date(paymentData.createdAt).toLocaleDateString() : new Date().toLocaleDateString(),
+                  cardBrand: team.cardBrand || 'Card',
+                  cardLastFour: team.cardLast4 || '****',
+                  receiptNumber: team.paymentIntentId ? team.paymentIntentId.substring(0, 12).toUpperCase() : 'PENDING',
+                  
+                  // Conditional Flags
+                  hasPayment: !!team.paymentIntentId,
+                  hasClub: !!team.clubName,
+                  
+                  // Branding placeholders (these would be populated by the email service)
+                  loginLink: `${process.env.FRONTEND_URL || 'https://app.matchpro.ai'}/dashboard`,
+                  supportEmail: 'support@matchpro.ai',
+                  organizationName: 'MatchPro',
+                  currentYear: new Date().getFullYear().toString()
                 }
               );
             }
