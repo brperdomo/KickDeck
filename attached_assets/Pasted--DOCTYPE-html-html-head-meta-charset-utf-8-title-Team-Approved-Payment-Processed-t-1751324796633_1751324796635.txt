@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Team Approved - Payment Processed</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .header {
+      background-color: {{branding.primaryColor}};
+      padding: 30px 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      color: #ffffff;
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .header img {
+      max-height: 80px;
+      max-width: 100%;
+    }
+
+    .content {
+      padding: 30px 20px;
+    }
+
+    .content h2 {
+      font-size: 20px;
+      margin-bottom: 10px;
+      color: #222;
+    }
+
+    .content p {
+      margin: 15px 0;
+    }
+
+    .info-box,
+    .payment-info,
+    .receipt-box {
+      background-color: #f9f9f9;
+      border: 1px solid #e1e1e1;
+      border-radius: 5px;
+      padding: 15px;
+      margin: 25px 0;
+    }
+
+    .payment-info {
+      background-color: #e6f7ec;
+      border-color: #b3e6c4;
+    }
+
+    .fees-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .fees-table th,
+    .fees-table td {
+      padding: 8px;
+      border: 1px solid #ddd;
+      font-size: 14px;
+    }
+
+    .fees-table th {
+      background-color: #f1f1f1;
+      text-align: left;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 10px;
+      background-color: #d4edda;
+      color: #155724;
+      font-size: 13px;
+      font-weight: bold;
+      border-radius: 4px;
+    }
+
+    .button {
+      display: inline-block;
+      background-color: {{branding.primaryColor}};
+      color: #ffffff;
+      text-decoration: none;
+      padding: 12px 20px;
+      border-radius: 4px;
+      font-weight: bold;
+      margin: 20px 0;
+    }
+
+    ul {
+      padding-left: 20px;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+      color: #888;
+      background-color: #f1f1f1;
+    }
+
+    .footer a {
+      color: #888;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      {{#if branding.logoUrl}}
+        <img src="{{branding.logoUrl}}" alt="{{eventName}} Logo">
+      {{else}}
+        <h1>{{eventName}}</h1>
+      {{/if}}
+    </div>
+
+    <div class="content">
+      <h2>Team Approved – Payment Confirmed</h2>
+
+      <p>Hi {{submitterName}},</p>
+
+      <p>
+        Great news! Your team <strong>{{teamName}}</strong> has been 
+        <span class="status">Approved</span> for 
+        <strong>{{eventName}}</strong> and your payment was successfully processed.
+      </p>
+
+      <div class="info-box">
+        <h3>Registration Details</h3>
+        <p><strong>Team Name:</strong> {{teamName}}</p>
+        <p><strong>Division / Age Group:</strong> {{ageGroup}}</p>
+        <p><strong>Registered By:</strong> {{submitterName}} ({{submitterEmail}})</p>
+        <p><strong>Registration Date:</strong> {{registrationDate}}</p>
+        {{#if clubName}}<p><strong>Club:</strong> {{clubName}}</p>{{/if}}
+        <p><strong>Status:</strong> <span class="status">Approved</span></p>
+      </div>
+
+      <div class="payment-info">
+        <h3>Payment Receipt</h3>
+        <p><strong>Total Paid:</strong> {{formatCurrency totalAmount}}</p>
+        <p><strong>Payment Method:</strong> {{cardBrand}} ending in {{cardLastFour}}</p>
+        <p><strong>Transaction ID:</strong> {{paymentId}}</p>
+        <p><strong>Payment Date:</strong> {{paymentDate}}</p>
+      </div>
+
+      <div class="receipt-box">
+        <h3 style="text-align: center; margin-top: 0;">OFFICIAL RECEIPT</h3>
+        <p style="text-align: center;">{{eventName}}</p>
+        <p><strong>Receipt #:</strong> {{receiptNumber}}</p>
+        <p><strong>Date:</strong> {{paymentDate}}</p>
+        <p><strong>Paid By:</strong> {{submitterName}}</p>
+        <p><strong>Team Name:</strong> {{teamName}}</p>
+
+        {{#if selectedFees.length}}
+        <h4>Fee Details</h4>
+        <table class="fees-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each selectedFees}}
+            <tr>
+              <td>{{name}}</td>
+              <td>{{formatCurrency amount}}</td>
+            </tr>
+            {{/each}}
+            <tr>
+              <td><strong>Total</strong></td>
+              <td><strong>{{formatCurrency totalAmount}}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        {{/if}}
+
+        <p style="text-align: center; font-weight: bold; margin-top: 20px;">Thank you for your payment!</p>
+      </div>
+
+      <h3>What Happens Next?</h3>
+      <p>Your team is officially registered for the event. Here’s what to expect:</p>
+      <ul>
+        <li>Schedule updates will be shared as they become available</li>
+        <li>Prepare your team with necessary equipment and uniforms</li>
+        <li>Review tournament rules and guidelines in advance</li>
+      </ul>
+
+      <p style="text-align: center;">
+        <a href="{{loginLink}}" class="button">Go to Dashboard</a>
+      </p>
+
+      <p>If you have any questions, reach out to us at <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>.</p>
+
+      <p>We look forward to seeing your team at {{eventName}}!</p>
+      <p>– The {{eventName}} Team</p>
+    </div>
+
+    <div class="footer">
+      <p>&copy; {{currentYear}} {{organizationName}}. All rights reserved.</p>
+      <p>This receipt is automatically generated and valid without a signature.</p>
+    </div>
+  </div>
+</body>
+</html>
