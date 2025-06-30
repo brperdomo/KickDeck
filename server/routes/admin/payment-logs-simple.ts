@@ -234,7 +234,7 @@ export async function getPaymentLogs(req: Request, res: Response) {
       ageGroup: t.agegroup,
       // Enhanced timing information
       paymentProcessedAt: t.createdat, // Exact timestamp when payment was processed
-      paymentProcessedTime: new Date(t.createdat).toLocaleString('en-US', {
+      paymentProcessedTime: new Date(t.createdat + 'Z').toLocaleString('en-US', {
         timeZone: 'America/New_York',
         year: 'numeric',
         month: '2-digit',
@@ -247,7 +247,7 @@ export async function getPaymentLogs(req: Request, res: Response) {
       // Approver information
       approvedAt: t.approvedat,
       approvedBy: t.approvedby,
-      approvedTime: t.approvedat ? new Date(t.approvedat).toLocaleString('en-US', {
+      approvedTime: t.approvedat ? new Date(t.approvedat + 'Z').toLocaleString('en-US', {
         timeZone: 'America/New_York',
         year: 'numeric',
         month: '2-digit',
