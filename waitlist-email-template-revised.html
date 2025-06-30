@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Team Registration Status - Waitlisted</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    .header {
+      background-color: #007AFF;
+      text-align: center;
+      padding: 20px;
+    }
+    .header h1 {
+      color: #ffffff;
+      margin: 0;
+      font-size: 22px;
+    }
+    .content {
+      padding: 20px;
+    }
+    .footer {
+      background-color: #f7f7f7;
+      text-align: center;
+      padding: 15px;
+      font-size: 12px;
+      color: #777;
+    }
+    h2, h3 {
+      color: #1f2937;
+    }
+    .info-box,
+    .waitlist-info,
+    .payment-info {
+      background-color: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .waitlist-info {
+      background-color: #fff8e1;
+      border-color: #ffe082;
+    }
+    .payment-info {
+      background-color: #e3f2fd;
+      border-color: #90caf9;
+    }
+    .button {
+      display: inline-block;
+      background-color: #007AFF;
+      color: #fff;
+      text-decoration: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      margin: 15px 0;
+      font-weight: 500;
+    }
+    .status {
+      display: inline-block;
+      background-color: #fff3cd;
+      color: #856404;
+      font-weight: bold;
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+    .fees-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    .fees-table th, .fees-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    .fees-table th {
+      background-color: #f1f5f9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>{{eventName}}</h1>
+    </div>
+
+    <div class="content">
+      <h2>Team Registration Status: Waitlisted</h2>
+      <p>Hello {{submitterName}},</p>
+
+      <p>Thank you for registering <strong>{{teamName}}</strong> for <strong>{{eventName}}</strong>. Your team has been placed on the <span class="status">Waitlist</span>.</p>
+
+      <div class="info-box">
+        <h3>Registration Details</h3>
+        <p><strong>Team:</strong> {{teamName}}</p>
+        <p><strong>Division:</strong> {{ageGroup}}</p>
+        <p><strong>Registered By:</strong> {{submitterName}} ({{submitterEmail}})</p>
+        <p><strong>Registration Date:</strong> {{registrationDate}}</p>
+        {{#if clubName}}<p><strong>Club:</strong> {{clubName}}</p>{{/if}}
+        <p><strong>Status:</strong> <span class="status">Waitlisted</span></p>
+      </div>
+
+      <div class="waitlist-info">
+        <h3>About the Waitlist</h3>
+        <p>Your team has been added to our waitlist because:</p>
+        <ul>
+          <li>The division is currently at capacity and demand has exceeded available spots</li>
+          <li>Teams are accepted from the waitlist in the order they were received if spots become available</li>
+          <li>You will be notified promptly if your team is moved from the waitlist to accepted status</li>
+        </ul>
+        
+        {{#if notes}}
+        <p><strong>Note from Organizers:</strong> {{notes}}</p>
+        {{/if}}
+      </div>
+
+      {{#if totalAmount}}
+      <div class="payment-info">
+        <h3>Payment Status</h3>
+        <p><strong>Total Due (if accepted):</strong> ${{totalAmount}}</p>
+        {{#if setupIntentId}}
+          <p><strong>Payment Method Status:</strong> Saved Securely</p>
+          <p>Your payment method is saved and ready. If your team is accepted, we will charge your card:</p>
+          {{#if cardBrand}}<p><strong>Card:</strong> {{cardBrand}} ending in {{cardLastFour}}</p>{{/if}}
+        {{else}}
+          <p><strong>Payment Method Status:</strong> Not Provided</p>
+          <p>If your team is accepted, you'll be prompted to complete payment at that time.</p>
+        {{/if}}
+      </div>
+      {{/if}}
+
+      {{#if selectedFees.length}}
+      <h3>Registration Fees (if accepted)</h3>
+      <table class="fees-table">
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each selectedFees}}
+          <tr>
+            <td>{{name}}</td>
+            <td>${{amount}}</td>
+          </tr>
+          {{/each}}
+          <tr>
+            <td><strong>Total</strong></td>
+            <td><strong>${{totalAmount}}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+      {{/if}}
+
+      <h3>What Happens Next?</h3>
+      <ul>
+        <li>Continue to prepare your team as if you will participate</li>
+        <li>Check your dashboard periodically for status updates</li>
+        <li>We will contact you immediately if your status changes</li>
+        <li>You may withdraw from the waitlist at any time through your dashboard</li>
+      </ul>
+
+      <p style="text-align: center;">
+        <a href="{{loginLink}}" class="button">View Status on Dashboard</a>
+      </p>
+
+      <p>If you have questions about the waitlist process, contact us at <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>.</p>
+
+      <p>Thank you for your patience and understanding!</p>
+      <p>The {{eventName}} Team</p>
+    </div>
+
+    <div class="footer">
+      &copy; {{currentYear}} MatchPro AI. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>
