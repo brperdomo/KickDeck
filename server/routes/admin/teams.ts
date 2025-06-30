@@ -1434,13 +1434,19 @@ async function bulkApproveTeams(req: Request, res: Response) {
                   registrationDate: team.createdAt ? new Date(team.createdAt).toLocaleDateString() : new Date().toLocaleDateString(),
                   approvalDate: new Date().toLocaleDateString(),
                   
-                  // Payment Information
-                  totalAmount: team.totalAmount ? (team.totalAmount / 100).toFixed(2) : '0.00',
+                  // Payment Information (matching real template structure)
+                  totalAmount: team.totalAmount ? (team.totalAmount / 100) : 0,
                   paymentId: team.paymentIntentId || 'Processing',
                   paymentDate: paymentData?.createdAt ? new Date(paymentData.createdAt).toLocaleDateString() : new Date().toLocaleDateString(),
                   cardBrand: team.cardBrand || 'Card',
                   cardLastFour: team.cardLast4 || '****',
                   receiptNumber: team.paymentIntentId ? team.paymentIntentId.substring(0, 12).toUpperCase() : 'PENDING',
+                  
+                  // Age group information  
+                  ageGroup: 'Age Group', // This would need to be fetched from age groups table
+                  
+                  // Selected fees array (empty for now - would be populated from actual fee data)
+                  selectedFees: [],
                   
                   // Conditional Flags
                   hasPayment: !!team.paymentIntentId,
