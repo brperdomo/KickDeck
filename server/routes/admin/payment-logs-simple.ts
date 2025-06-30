@@ -162,7 +162,7 @@ export async function getPaymentLogs(req: Request, res: Response) {
         pt.amount,
         pt.stripe_fee as stripeFee,
         pt.net_amount as netAmount,
-        (pt.amount - pt.net_amount - pt.stripe_fee) as matchproRevenue,
+        pt.matchpro_revenue as matchproRevenue,
         pt.status,
         pt.card_brand as cardBrand,
         pt.card_last_four as cardLastFour,
