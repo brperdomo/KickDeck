@@ -133,7 +133,12 @@ function TransactionDetailDialog({ transaction }: { transaction: any }) {
                 <p className="text-xs text-gray-400 mt-1">2.9% + $0.30 processing fee</p>
               </div>
               <div>
-                <span className="font-medium text-gray-500">Net Amount:</span>
+                <span className="font-medium text-gray-500">MatchPro Revenue:</span>
+                <p className="font-mono">{formatCurrency(transaction.matchproRevenue || 0)}</p>
+                <p className="text-xs text-gray-400 mt-1">4% platform fee</p>
+              </div>
+              <div>
+                <span className="font-medium text-gray-500">Tournament Receives:</span>
                 <p className="font-mono">{formatCurrency(transaction.netAmount || transaction.amount)}</p>
               </div>
               <div>
