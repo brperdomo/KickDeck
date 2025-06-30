@@ -48,7 +48,8 @@
     }
 
     .info-box,
-    .payment-info {
+    .payment-info,
+    .receipt-box {
       background-color: #f9f9f9;
       border: 1px solid #e1e1e1;
       border-radius: 5px;
@@ -59,6 +60,24 @@
     .payment-info {
       background-color: #e6f7ec;
       border-color: #b3e6c4;
+    }
+
+    .fees-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .fees-table th,
+    .fees-table td {
+      padding: 8px;
+      border: 1px solid #ddd;
+      font-size: 14px;
+    }
+
+    .fees-table th {
+      background-color: #f1f1f1;
+      text-align: left;
     }
 
     .status {
@@ -131,10 +150,46 @@
       <div class="payment-info">
         <h3>Payment Receipt</h3>
         <p><strong>Total Paid:</strong> ${{totalAmount}}</p>
-        {{#if cardBrand}}<p><strong>Payment Method:</strong> {{cardBrand}} ending in {{cardLastFour}}</p>{{/if}}
+        <p><strong>Payment Method:</strong> {{cardBrand}} ending in {{cardLastFour}}</p>
         <p><strong>Transaction ID:</strong> {{paymentId}}</p>
         <p><strong>Payment Date:</strong> {{paymentDate}}</p>
+      </div>
+
+      <div class="receipt-box">
+        <h3 style="text-align: center; margin-top: 0;">OFFICIAL RECEIPT</h3>
+        <p style="text-align: center;">{{eventName}}</p>
         <p><strong>Receipt #:</strong> {{receiptNumber}}</p>
+        <p><strong>Date:</strong> {{paymentDate}}</p>
+        <p><strong>Paid By:</strong> {{submitterName}}</p>
+        <p><strong>Team Name:</strong> {{teamName}}</p>
+
+        {{#if selectedFees.length}}
+        <h4>Fee Details</h4>
+        <table class="fees-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each selectedFees}}
+            <tr>
+              <td>{{name}}</td>
+              <td>${{amount}}</td>
+            </tr>
+            {{/each}}
+            <tr>
+              <td><strong>Total</strong></td>
+              <td><strong>${{totalAmount}}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        {{else}}
+        <p><strong>Total Amount:</strong> ${{totalAmount}}</p>
+        {{/if}}
+
+        <p style="text-align: center; font-weight: bold; margin-top: 20px;">Thank you for your payment!</p>
       </div>
       {{/if}}
 
