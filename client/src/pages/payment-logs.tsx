@@ -280,15 +280,17 @@ export default function PaymentLogs() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [showCompleteOnly, setShowCompleteOnly] = useState<boolean>(true); // Default to show real transactions only
 
   // Query payment transactions
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['paymentLogs', statusFilter, typeFilter, searchQuery],
+    queryKey: ['paymentLogs', statusFilter, typeFilter, searchQuery, showCompleteOnly],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (statusFilter !== 'all') params.append('status', statusFilter);
       if (typeFilter !== 'all') params.append('type', typeFilter);
       if (searchQuery) params.append('search', searchQuery);
+      if (showCompleteOnly) params.append('completeOnly', 'true');
       
       const response = await fetch(`/api/admin/payment-logs?${params.toString()}`);
       if (!response.ok) {
