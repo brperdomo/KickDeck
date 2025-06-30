@@ -587,75 +587,71 @@ async function updateTeamStatus(req: Request, res: Response) {
         } catch (paymentError) {
           log(`Payment processing error for team ${teamId}: ${paymentError}`, 'admin');
           paymentStatus = 'payment_error';
-        }
-      }
-        
-        // Handle duplicate payment prevention
-        if (paymentStatus === 'already_paid') {
-          log(`Team ${teamId} approved successfully - payment was already processed`, 'admin');
-          return res.json({
-            status: 'success',
-            message: 'Team approved successfully. Payment was already processed.',
-            paymentStatus: 'already_paid',
-            warning: 'This team was already charged in a previous approval.'
-          });
-        }
-        
-        if (paymentStatus === 'already_charged') {
-          log(`Team ${teamId} approval blocked - team was already approved and charged`, 'admin');
-          return res.status(400).json({
-            status: 'error',
-            error: 'Duplicate approval attempt',
-            message: 'This team was already approved and charged. To avoid duplicate charges, the approval has been blocked.',
-            paymentStatus: 'already_charged',
-            suggestion: 'If you need to move to approved status without charging, use "Move to Approved Without Charging" option.'
-          });
-        }
-        
-        // If payment failed or requires action, don't approve the team yet
-        if (paymentStatus === 'payment_failed' || paymentStatus === 'payment_required' || paymentStatus === 'no_payment_method' || paymentStatus === 'payment_method_incomplete' || paymentStatus === 'payment_error' || paymentStatus === 'payment_completion_required') {
-          log(`Cannot approve team ${teamId} due to payment issue: ${paymentStatus}`, 'admin');
           
-          // Revert the team status back to its previous state
+          // Revert the team status back to its previous state if payment failed
           await db.update(teams)
             .set({ 
               status: currentTeam.status,
-              notes: `Approval attempted but payment failed (${paymentStatus}). ${notes ? 'Admin notes: ' + notes : 'Please ensure team has completed payment setup before approving.'}`
+              notes: `Approval attempted but payment processing failed: ${paymentError instanceof Error ? paymentError.message : 'Unknown payment error'}. ${notes ? 'Admin notes: ' + notes : ''}`
             })
             .where(eq(teams.id, parseInt(teamId, 10)));
           
-          return res.status(400).json({
+          return res.status(500).json({
             status: 'error',
             error: 'Payment processing failed',
-            message: paymentStatus === 'no_payment_method' 
-              ? 'Team has not completed payment setup. Use "Generate Payment Completion URL" to allow them to complete payment first.'
-              : paymentStatus === 'payment_required'
-                ? 'Team requires manual payment completion. Use "Generate Payment Completion URL" to allow them to finish payment setup.'
-                : paymentStatus === 'payment_method_incomplete'
-                  ? 'Team has incomplete payment method setup. Use "Generate Payment Completion URL" to allow them to complete payment setup.'
-                  : paymentStatus === 'payment_completion_required'
-                    ? 'Team approved but requires payment method completion. Use "Generate Payment Completion URL" to allow them to complete payment setup.'
-                    : 'Payment processing failed. Please check team payment details.',
+            message: paymentError instanceof Error ? paymentError.message : 'Unknown payment error occurred',
             paymentStatus: paymentStatus,
             teamStatus: currentTeam.status
           });
         }
-      } catch (paymentError) {
-        log(`Payment processing error for team ${teamId}: ${paymentError}`, 'admin');
-        paymentStatus = 'payment_error';
+      }
+      
+      // Handle duplicate payment prevention
+      if (paymentStatus === 'already_paid') {
+        log(`Team ${teamId} approved successfully - payment was already processed`, 'admin');
+        return res.json({
+          status: 'success',
+          message: 'Team approved successfully. Payment was already processed.',
+          paymentStatus: 'already_paid',
+          warning: 'This team was already charged in a previous approval.'
+        });
+      }
+      
+      if (paymentStatus === 'already_charged') {
+        log(`Team ${teamId} approval blocked - team was already approved and charged`, 'admin');
+        return res.status(400).json({
+          status: 'error',
+          error: 'Duplicate approval attempt',
+          message: 'This team was already approved and charged. To avoid duplicate charges, the approval has been blocked.',
+          paymentStatus: 'already_charged',
+          suggestion: 'If you need to move to approved status without charging, use "Move to Approved Without Charging" option.'
+        });
+      }
+      
+      // If payment failed or requires action, don't approve the team yet
+      if (paymentStatus === 'payment_failed' || paymentStatus === 'payment_required' || paymentStatus === 'no_payment_method' || paymentStatus === 'payment_method_incomplete' || paymentStatus === 'payment_error' || paymentStatus === 'payment_completion_required') {
+        log(`Cannot approve team ${teamId} due to payment issue: ${paymentStatus}`, 'admin');
         
-        // Revert the team status back to its previous state if payment failed
+        // Revert the team status back to its previous state
         await db.update(teams)
           .set({ 
             status: currentTeam.status,
-            notes: `Approval attempted but payment processing failed: ${paymentError instanceof Error ? paymentError.message : 'Unknown payment error'}. ${notes ? 'Admin notes: ' + notes : ''}`
+            notes: `Approval attempted but payment failed (${paymentStatus}). ${notes ? 'Admin notes: ' + notes : 'Please ensure team has completed payment setup before approving.'}`
           })
           .where(eq(teams.id, parseInt(teamId, 10)));
         
-        return res.status(500).json({
+        return res.status(400).json({
           status: 'error',
           error: 'Payment processing failed',
-          message: paymentError instanceof Error ? paymentError.message : 'Unknown payment error occurred',
+          message: paymentStatus === 'no_payment_method' 
+            ? 'Team has not completed payment setup. Use "Generate Payment Completion URL" to allow them to complete payment first.'
+            : paymentStatus === 'payment_required'
+              ? 'Team requires manual payment completion. Use "Generate Payment Completion URL" to allow them to finish payment setup.'
+              : paymentStatus === 'payment_method_incomplete'
+                ? 'Team has incomplete payment method setup. Use "Generate Payment Completion URL" to allow them to complete payment setup.'
+                : paymentStatus === 'payment_completion_required'
+                  ? 'Team approved but requires payment method completion. Use "Generate Payment Completion URL" to allow them to complete payment setup.'
+                  : 'Payment processing failed. Please check team payment details.',
           paymentStatus: paymentStatus,
           teamStatus: currentTeam.status
         });
