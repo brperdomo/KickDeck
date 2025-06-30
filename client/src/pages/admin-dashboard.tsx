@@ -41,6 +41,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { PaymentStatusBadge, TeamStatusBadge } from "@/components/ui/payment-status-badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useUser } from "@/hooks/use-user";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useTournamentDirector } from "@/hooks/use-tournament-director";
@@ -3682,6 +3683,48 @@ function TeamsView() {
     setIsDetailsDialogOpen(true);
   };
 
+  // Handle team selection for bulk operations
+  const handleTeamSelection = (teamId: number, isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedTeamIds(prev => [...prev, teamId]);
+    } else {
+      setSelectedTeamIds(prev => prev.filter(id => id !== teamId));
+    }
+  };
+
+  // Handle select all/none for bulk operations
+  const handleSelectAll = (teams: any[], isSelectAll: boolean) => {
+    if (isSelectAll) {
+      const registeredTeamIds = teams
+        .filter(team => team.status === 'registered')
+        .map(team => team.id);
+      setSelectedTeamIds(registeredTeamIds);
+    } else {
+      setSelectedTeamIds([]);
+    }
+  };
+
+  // Handle bulk approval dialog
+  const handleBulkApproval = () => {
+    if (selectedTeamIds.length === 0) {
+      toast({
+        title: "No teams selected",
+        description: "Please select teams to approve",
+        variant: "destructive"
+      });
+      return;
+    }
+    setIsBulkApprovalDialogOpen(true);
+  };
+
+  // Confirm bulk approval
+  const confirmBulkApproval = () => {
+    bulkApproveTeamsMutation.mutate({
+      teamIds: selectedTeamIds,
+      notes: bulkApprovalNotes || undefined
+    });
+  };
+
   // Handle team status update
   const handleStatusUpdate = (team: any, status: 'registered' | 'approved' | 'rejected' | 'withdrawn' | 'refunded' | 'waitlisted') => {
     const statusDisplayMap = {
@@ -4089,10 +4132,49 @@ function TeamsView() {
                 </TabsList>
                 
                 <TabsContent value="registered">
+                  {/* Bulk Actions Toolbar */}
+                  {selectedTeamIds.length > 0 && (
+                    <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <span className="font-medium text-blue-900">
+                            {selectedTeamIds.length} team{selectedTeamIds.length !== 1 ? 's' : ''} selected
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedTeamIds([])}
+                          >
+                            Clear Selection
+                          </Button>
+                        </div>
+                        <Button
+                          onClick={handleBulkApproval}
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                          disabled={bulkApproveTeamsMutation.isPending}
+                        >
+                          {bulkApproveTeamsMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                          <Check className="h-4 w-4 mr-2" />
+                          Approve Selected Teams
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="shadow-md rounded-xl overflow-hidden border border-gray-200">
                     <Table className="team-list">
                       <TableHeader>
                         <TableRow className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-gray-800 dark:to-gray-700">
+                          <TableHead className="font-semibold py-4 text-indigo-900 dark:text-blue-100 w-12">
+                            <Checkbox
+                              checked={selectedTeamIds.length > 0 && selectedTeamIds.length === filteredTeams.filter(team => team.status === 'registered').length}
+                              onCheckedChange={(checked) => {
+                                const registeredTeams = filteredTeams.filter(team => team.status === 'registered');
+                                handleSelectAll(registeredTeams, checked === true);
+                              }}
+                              aria-label="Select all teams"
+                            />
+                          </TableHead>
                           <TableHead className="font-semibold py-4 text-indigo-900 dark:text-blue-100">Team Name</TableHead>
                           <TableHead className="font-semibold py-4 text-indigo-900 dark:text-blue-100">Event</TableHead>
                           <TableHead className="font-semibold py-4 text-indigo-900 dark:text-blue-100">Age Group</TableHead>
@@ -4107,7 +4189,7 @@ function TeamsView() {
                       <TableBody>
                         {teamsQuery.isLoading ? (
                           <TableRow>
-                            <TableCell colSpan={9} className="text-center py-4">
+                            <TableCell colSpan={10} className="text-center py-4">
                               <div className="flex justify-center">
                                 <Loader2 className="h-6 w-6 animate-spin" />
                               </div>
@@ -4115,7 +4197,7 @@ function TeamsView() {
                           </TableRow>
                         ) : filteredTeams.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={9} className="text-center py-4">
+                            <TableCell colSpan={10} className="text-center py-4">
                               No teams found
                             </TableCell>
                           </TableRow>
@@ -4124,6 +4206,15 @@ function TeamsView() {
                             .filter((team: any) => team && team.status === 'registered')
                             .map((team: any, index) => (
                               <TableRow key={team.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                                <TableCell className="w-12">
+                                  <Checkbox
+                                    checked={selectedTeamIds.includes(team.id)}
+                                    onCheckedChange={(checked) => {
+                                      handleTeamSelection(team.id, checked === true);
+                                    }}
+                                    aria-label={`Select team ${team.name}`}
+                                  />
+                                </TableCell>
                                 <TableCell className="font-medium">
                                   <div className="flex flex-col">
                                     <span className="text-sm font-medium">{team.name}</span>
