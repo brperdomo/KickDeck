@@ -8,7 +8,7 @@ import { sql } from 'drizzle-orm';
  */
 export async function getPaymentLogs(req: Request, res: Response) {
   try {
-    const { status, type, search, format, limit = '100', offset = '0' } = req.query;
+    const { status, type, search, format, limit = '100', offset = '0', completeOnly } = req.query;
     
     // Build WHERE conditions dynamically
     const conditions = [];
@@ -176,7 +176,9 @@ export async function getPaymentLogs(req: Request, res: Response) {
       LEFT JOIN events e ON pt.event_id = e.id
       LEFT JOIN event_age_groups eag ON t.age_group_id = eag.id
       ${whereClause}
-      ORDER BY pt.created_at DESC
+      ORDER BY 
+        CASE WHEN pt.team_id IS NOT NULL AND pt.event_id IS NOT NULL THEN 0 ELSE 1 END,
+        pt.created_at DESC
       LIMIT ${limitValue} OFFSET ${offsetValue}
     `;
 
