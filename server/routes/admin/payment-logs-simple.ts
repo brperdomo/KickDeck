@@ -181,8 +181,8 @@ export async function getPaymentLogs(req: Request, res: Response) {
         eag.age_group as ageGroup,
         t.approved_at as approvedAt,
         CASE 
-          WHEN u.first_name IS NOT NULL AND u.last_name IS NOT NULL THEN 
-            u.first_name || ' ' || u.last_name
+          WHEN u."firstName" IS NOT NULL AND u."lastName" IS NOT NULL THEN 
+            u."firstName" || ' ' || u."lastName"
           WHEN u.email IS NOT NULL THEN u.email
           ELSE 'Unknown Admin'
         END as approvedBy
