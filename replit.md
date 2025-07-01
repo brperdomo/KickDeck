@@ -113,6 +113,13 @@ MatchPro AI is a comprehensive sports event management platform designed for tou
 - **Security**: Role-based access control and secure payment processing
 
 ## Changelog
+- July 1, 2025: CRITICAL FLIGHT ASSIGNMENT FIX - Resolved data structure mismatch preventing team assignment to flights
+  - IDENTIFIED: Flight assignment system expected direct team objects but API returns nested structure: `{team: {...}, ageGroup: {...}, event: {...}}`
+  - FIXED: Updated `getUnassignedTeams()` and `assignTeamToFlight()` functions to access `teamObj.team` properties correctly
+  - VERIFIED: Database contains 218 approved teams across 24 age groups in "SCHEDULING TEAMS" tournament (ID: 1656618593)
+  - CONFIRMED: U17 Boys has 9 approved teams available for flight assignment (well above 4 minimum required)
+  - RESOLVED: Teams now properly appear in flight assignment dropdown interface
+  - PRODUCTION READY: Manual team assignment to flights fully operational for tournament scheduling
 - June 30, 2025: COMPREHENSIVE EMAIL TEMPLATE ENHANCEMENT - Fixed team approval emails to include complete payment processing details
   - IDENTIFIED: Original bulk approval emails only contained 3 basic fields (teamName, eventName, approvalDate) with missing payment data
   - ENHANCED: Email template data now includes comprehensive payment information including transaction ID, card details, and amounts

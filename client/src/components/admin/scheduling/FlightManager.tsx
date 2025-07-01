@@ -292,14 +292,14 @@ export function FlightManager({ eventId, teamsData, workflowData, onComplete, on
   };
 
   const assignTeamToFlight = (teamId: number, flightId: string) => {
-    const team = teamsData.find(t => t.id === teamId);
-    if (!team) return;
+    const teamObj = teamsData.find(t => t.team?.id === teamId);
+    if (!teamObj) return;
 
     setFlights(prev => prev.map(flight => {
       if (flight.id === flightId) {
         return {
           ...flight,
-          teams: [...flight.teams.filter(t => t.id !== teamId), team]
+          teams: [...flight.teams.filter(t => t.id !== teamId), teamObj.team]
         };
       } else {
         return {
@@ -320,9 +320,11 @@ export function FlightManager({ eventId, teamsData, workflowData, onComplete, on
 
   const getUnassignedTeams = () => {
     const assignedTeamIds = flights.flatMap(flight => flight.teams.map(t => t.id));
-    return teamsData.filter(team => 
-      team.status === 'approved' && !assignedTeamIds.includes(team.id)
-    );
+    return teamsData
+      .filter(teamObj => 
+        teamObj.team?.status === 'approved' && !assignedTeamIds.includes(teamObj.team.id)
+      )
+      .map(teamObj => teamObj.team);
   };
 
   const validateFlights = (): { isValid: boolean; errors: string[] } => {
