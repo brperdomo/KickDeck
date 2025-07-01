@@ -6,8 +6,8 @@
  */
 
 import { db } from "../../db";
-import { eq } from "drizzle-orm";
-import { games, eventBrackets } from "../../db/schema";
+import { eq, inArray } from "drizzle-orm";
+import { games, eventBrackets, complexes, fields, teams } from "../../db/schema";
 
 export class SimpleScheduler {
   static async generateSchedule(eventId: string, workflowData: any) {
@@ -18,6 +18,14 @@ export class SimpleScheduler {
     if (!workflowGames || workflowGames.length === 0) {
       throw new Error('No game data found in workflow');
     }
+
+    // Get real complex and field data for this event
+    const realComplexes = await SimpleScheduler.getRealComplexesForEvent(eventId);
+    console.log(`📍 Found ${realComplexes.length} complexes with fields for event ${eventId}`);
+
+    // Get team coach information for conflict detection
+    const teamCoaches = await SimpleScheduler.getTeamCoachInfo(eventId);
+    console.log(`👨‍🏫 Loaded coach information for ${Object.keys(teamCoaches).length} teams`);
 
     const allGames: any[] = [];
     let gameCounter = 1;
@@ -50,8 +58,8 @@ export class SimpleScheduler {
           // Generate realistic game times starting from next Saturday 9 AM
           startTime: SimpleScheduler.generateGameTime(gameCounter),
           endTime: SimpleScheduler.generateGameTime(gameCounter, 90), // 90 minutes later
-          field: SimpleScheduler.assignField(gameCounter, bracketData.bracketName),
-          complexName: SimpleScheduler.getComplexForAgeGroup(bracketData.bracketName),
+          field: await SimpleScheduler.assignRealField(gameCounter, bracketData.bracketName, realComplexes),
+          complexName: await SimpleScheduler.getComplexForField(gameCounter, bracketData.bracketName, realComplexes),
           // Add field size information for display
           fieldSize: SimpleScheduler.getFieldSizeForAgeGroup(bracketData.bracketName),
           createdAt: new Date().toISOString(),
@@ -72,6 +80,150 @@ export class SimpleScheduler {
         knockoutGames: allGames.filter(g => g.gameType !== 'pool_play').length
       }
     };
+  }
+
+  /**
+   * Get real complexes and fields for the event
+   */
+  static async getRealComplexesForEvent(eventId: string) {
+    try {
+      const complexesWithFields = await db
+        .select({
+          id: complexes.id,
+          name: complexes.name,
+          address: complexes.address,
+          openTime: complexes.openTime,
+          closeTime: complexes.closeTime,
+          fields: {
+            id: fields.id,
+            name: fields.name,
+            fieldSize: fields.fieldSize,
+            hasLights: fields.hasLights,
+            isOpen: fields.isOpen,
+            openTime: fields.openTime,
+            closeTime: fields.closeTime,
+          }
+        })
+        .from(complexes)
+        .leftJoin(fields, eq(complexes.id, fields.complexId))
+        .where(eq(fields.isOpen, true));
+
+      // Group fields by complex
+      const complexMap = new Map();
+      complexesWithFields.forEach(row => {
+        if (!complexMap.has(row.id)) {
+          complexMap.set(row.id, {
+            id: row.id,
+            name: row.name,
+            address: row.address,
+            openTime: row.openTime,
+            closeTime: row.closeTime,
+            fields: []
+          });
+        }
+        if (row.fields && row.fields.id) {
+          complexMap.get(row.id).fields.push(row.fields);
+        }
+      });
+
+      return Array.from(complexMap.values());
+    } catch (error) {
+      console.error('Error fetching complexes:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get team coach information for conflict detection
+   */
+  static async getTeamCoachInfo(eventId: string) {
+    try {
+      const teamData = await db
+        .select({
+          id: teams.id,
+          name: teams.name,
+          coach: teams.coach,
+          coachPhone: teams.coachPhone,
+          coachEmail: teams.coachEmail,
+        })
+        .from(teams)
+        .where(eq(teams.eventId, eventId));
+
+      const coachMap = {};
+      teamData.forEach(team => {
+        coachMap[team.id] = {
+          name: team.coach,
+          phone: team.coachPhone,
+          email: team.coachEmail,
+          teamName: team.name
+        };
+      });
+
+      return coachMap;
+    } catch (error) {
+      console.error('Error fetching team coach info:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Assign real field based on age group requirements and availability
+   */
+  static async assignRealField(gameNumber: number, bracketName: string, realComplexes: any[]): Promise<string> {
+    const requiredFieldSize = this.getFieldSizeForAgeGroup(bracketName);
+    
+    // Find fields that match the required field size
+    const suitableFields = [];
+    
+    realComplexes.forEach(complex => {
+      complex.fields.forEach(field => {
+        if (field.fieldSize === requiredFieldSize && field.isOpen) {
+          suitableFields.push({
+            name: field.name,
+            complexName: complex.name,
+            fieldSize: field.fieldSize,
+            hasLights: field.hasLights
+          });
+        }
+      });
+    });
+
+    if (suitableFields.length === 0) {
+      return `No ${requiredFieldSize} fields available`;
+    }
+
+    // Rotate through available fields
+    const selectedField = suitableFields[gameNumber % suitableFields.length];
+    return selectedField.name;
+  }
+
+  /**
+   * Get complex name for assigned field
+   */
+  static async getComplexForField(gameNumber: number, bracketName: string, realComplexes: any[]): Promise<string> {
+    const requiredFieldSize = this.getFieldSizeForAgeGroup(bracketName);
+    
+    // Find fields that match the required field size
+    const suitableFields = [];
+    
+    realComplexes.forEach(complex => {
+      complex.fields.forEach(field => {
+        if (field.fieldSize === requiredFieldSize && field.isOpen) {
+          suitableFields.push({
+            name: field.name,
+            complexName: complex.name,
+          });
+        }
+      });
+    });
+
+    if (suitableFields.length === 0) {
+      return 'No suitable complex available';
+    }
+
+    // Return complex name for the assigned field
+    const selectedField = suitableFields[gameNumber % suitableFields.length];
+    return selectedField.complexName;
   }
 
   /**
