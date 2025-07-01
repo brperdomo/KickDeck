@@ -1,0 +1,149 @@
+Google Maps API key length: 0 characters
+env.ts:11 Mapbox API key length: 93 characters
+env.ts:17 Google Maps API already loaded
+RouteDebugger.tsx:13 Current route location (Wouter): /admin
+RouteDebugger.tsx:14 Current URL: https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/admin
+RouteDebugger.tsx:15 Current pathname: /admin
+RouteDebugger.tsx:16 Current search: 
+use-user.ts:59 Fetching user with emulation token: not present
+use-user.ts:76 User data fetched: Object
+15Failed to decode downloaded font: <URL>Understand this warning
+15OTS parsing error: invalid sfntVersion: 791289955Understand this warning
+12Invalid keyframe value for property filter: blur(-0.08136px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.16063px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.22707px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.28173px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.32564px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.3598px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.38521px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.40278px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.41343px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.41799px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.41726px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.41199px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.40286px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.39052px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.37556px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.35849px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.33982px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.31996px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.2993px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.27819px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.25693px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.23576px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.21492px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.19459px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.17493px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.15606px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.13808px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.12106px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.10507px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.09014px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.07628px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.0635px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.0518px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.04115px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.03153px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.02289px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.01521px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.00842px)Understand this warning
+12Invalid keyframe value for property filter: blur(-0.00249px)Understand this warning
+RouteDebugger.tsx:13 Current route location (Wouter): /admin/teams
+RouteDebugger.tsx:14 Current URL: https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/admin/teams
+RouteDebugger.tsx:15 Current pathname: /admin/teams
+RouteDebugger.tsx:16 Current search: 
+admin-dashboard.tsx:5904 Updating activeView from URL: teams
+chunk-LRH6BLRZ.js:31 orchestration: Initializing config store with state Object
+chunk-LRH6BLRZ.js:31 orchestration: Initializing feature flag store with state Object
+chunk-LRH6BLRZ.js:31 orchestration: Initializing user store with state Object
+chunk-LRH6BLRZ.js:31 orchestration: Updating combined state Object
+admin-dashboard.tsx:3322 Import eligible events: Array(5)
+admin-dashboard.tsx:3342 Teams data received: Array(427)
+admin-dashboard.tsx:3811 Teams data from API: Array(427)
+admin-dashboard.tsx:3852 Normalized teams data: Array(427)
+RouteDebugger.tsx:13 Current route location (Wouter): /admin/scheduling
+RouteDebugger.tsx:14 Current URL: https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/admin/scheduling
+RouteDebugger.tsx:15 Current pathname: /admin/scheduling
+RouteDebugger.tsx:16 Current search: 
+admin-dashboard.tsx:5904 Updating activeView from URL: scheduling
+chunk-LRH6BLRZ.js:31 orchestration: Initializing config store with state Object
+chunk-LRH6BLRZ.js:31 orchestration: Initializing feature flag store with state Object
+chunk-LRH6BLRZ.js:31 orchestration: Initializing user store with state Object
+chunk-LRH6BLRZ.js:31 orchestration: Updating combined state Object
+SchedulingWorkflow.tsx:56 Fetching teams for event: 1656618593
+SchedulingWorkflow.tsx:60 Teams API response: Array(220)
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: Array(220)
+FlightManager.tsx:67 FlightManager teamsData: Array(2)
+FlightManager.tsx:68 FlightManager ageGroupsData: undefined
+FlightManager.tsx:111 Final extracted age groups: Array(0)
+FlightManager.tsx:67 FlightManager teamsData: Array(2)
+FlightManager.tsx:68 FlightManager ageGroupsData: undefined
+FlightManager.tsx:111 Final extracted age groups: Array(0)
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: Array(220)
+FlightManager.tsx:67 FlightManager teamsData: Array(2)
+FlightManager.tsx:68 FlightManager ageGroupsData: undefined
+FlightManager.tsx:111 Final extracted age groups: Array(0)
+FlightManager.tsx:67 FlightManager teamsData: Array(2)
+FlightManager.tsx:68 FlightManager ageGroupsData: Array(5)
+FlightManager.tsx:94 Extracted age group IDs: Array(220)
+FlightManager.tsx:106 Age groups with names: Array(24)
+FlightManager.tsx:111 Final extracted age groups: Array(24)
+FlightManager.tsx:67 FlightManager teamsData: Array(2)
+FlightManager.tsx:68 FlightManager ageGroupsData: Array(5)
+FlightManager.tsx:111 Final extracted age groups: Array(24)
+chunk-J2F67UGW.js?v=80b17ebe:340 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ chunk-J2F67UGW.js?v=80b17ebe:340Understand this warning
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: Array(220)
+FlightManager.tsx:67 FlightManager teamsData: Array(2)
+FlightManager.tsx:68 FlightManager ageGroupsData: Array(5)
+FlightManager.tsx:111 Final extracted age groups: Array(24)
+FlightManager.tsx:67 FlightManager teamsData: Array(2)
+FlightManager.tsx:68 FlightManager ageGroupsData: Array(5)
+FlightManager.tsx:111 Final extracted age groups: Array(24)
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: Array(220)
+FlightManager.tsx:67 FlightManager teamsData: Array(2)
+FlightManager.tsx:68 FlightManager ageGroupsData: Array(5)
+FlightManager.tsx:111 Final extracted age groups: Array(24)
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: Array(220)
+FlightManager.tsx:67 FlightManager teamsData: Array(2)
+FlightManager.tsx:68 FlightManager ageGroupsData: Array(5)
+FlightManager.tsx:111 Final extracted age groups: Array(24)
+FlightManager.tsx:67 FlightManager teamsData: Array(2)
+FlightManager.tsx:68 FlightManager ageGroupsData: Array(5)
+FlightManager.tsx:111 Final extracted age groups: Array(24)
+FlightManager.tsx:67 FlightManager teamsData: Array(2)
+FlightManager.tsx:68 FlightManager ageGroupsData: Array(5)
+FlightManager.tsx:111 Final extracted age groups: Array(24)
+FlightManager.tsx:67 FlightManager teamsData: Array(2)
+FlightManager.tsx:68 FlightManager ageGroupsData: Array(5)
+FlightManager.tsx:111 Final extracted age groups: Array(24)
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: Array(220)
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: Array(220)
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: Array(220)
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: Array(220)
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: Array(220)
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: Array(220)
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: Array(220)
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: Array(220)
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: Array(220)
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: Array(220)
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: Array(220)
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: Array(220)
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: Array(220)
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.Understand this warning
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: (220) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, …]
+NewRegistrationsBanner.tsx:27 Fetch finished loading: GET "https://7a45a6af-f46a-4d68-b2b2-2f12a1e00d54-00-5s7bw9z7rtfa.spock.replit.dev/api/admin/registrations/new-count".
+queryFn @ NewRegistrationsBanner.tsx:27
+fetchFn @ @tanstack_react-query.js?v=80b17ebe:881
+run @ @tanstack_react-query.js?v=80b17ebe:513
+start @ @tanstack_react-query.js?v=80b17ebe:555
+fetch @ @tanstack_react-query.js?v=80b17ebe:969
+executeFetch_fn @ @tanstack_react-query.js?v=80b17ebe:2278
+(anonymous) @ @tanstack_react-query.js?v=80b17ebe:2312
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: (220) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, …]
+SchedulingWorkflow.tsx:189 SchedulingWorkflow teamsData: (220) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, …]
