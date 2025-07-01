@@ -113,7 +113,7 @@ export function ScheduleBuilder({ eventId, workflowData, onComplete, onError }: 
       }
 
       // Convert API response to our format
-      const scheduledGames: ScheduledGame[] = (data.schedule || data.games || []).map((game: any) => ({
+      const scheduledGames: ScheduledGame[] = (data.scheduleData || data.schedule || data.games || []).map((game: any) => ({
         id: game.id || `game_${Math.random()}`,
         homeTeam: {
           id: game.homeTeam?.id || 0,
