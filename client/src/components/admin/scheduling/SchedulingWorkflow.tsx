@@ -10,7 +10,7 @@ import {
   Users, Trophy, Target, Clock, Calendar, Play,
   CheckCircle, Circle, AlertTriangle, ArrowRight
 } from "lucide-react";
-import FlightManager from "./FlightManager-minimal";
+import { FlightManager } from "./FlightManager";
 import { BracketCreator } from "./BracketCreator";
 import { TeamSeeding } from "./TeamSeeding";
 import { TimeBlockAssignment } from "./TimeBlockAssignment";
@@ -39,8 +39,6 @@ export function SchedulingWorkflow({ eventId, onComplete }: SchedulingWorkflowPr
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  console.log('SchedulingWorkflow component mounted with eventId:', eventId);
-
   // Fetch event data and teams
   const { data: eventData, isLoading: eventLoading } = useQuery({
     queryKey: ['event', eventId],
@@ -56,23 +54,11 @@ export function SchedulingWorkflow({ eventId, onComplete }: SchedulingWorkflowPr
     queryKey: ['teams', eventId],
     queryFn: async () => {
       console.log('Fetching teams for event:', eventId);
-      const response = await fetch(`/api/admin/teams?eventId=${eventId}&status=approved`);
+      const response = await fetch(`/api/admin/teams?eventId=${eventId}`);
       if (!response.ok) throw new Error('Failed to fetch teams');
       const data = await response.json();
       console.log('Teams API response:', data);
-      console.log('Teams API response length:', data?.length);
       return data;
-    },
-    enabled: !!eventId
-  });
-
-  // Fetch age groups for the event
-  const { data: ageGroupsData, isLoading: ageGroupsLoading } = useQuery({
-    queryKey: ['ageGroups', eventId],
-    queryFn: async () => {
-      const response = await fetch(`/api/admin/events/${eventId}/age-groups`);
-      if (!response.ok) throw new Error('Failed to fetch age groups');
-      return response.json();
     },
     enabled: !!eventId
   });
@@ -206,7 +192,6 @@ export function SchedulingWorkflow({ eventId, onComplete }: SchedulingWorkflowPr
       eventId,
       eventData,
       teamsData: Array.isArray(teamsData) ? teamsData : (teamsData?.teams || []),
-      ageGroupsData: ageGroupsData || [],
       workflowData,
       onComplete: (data: any) => updateStepStatus(currentStepData.id, 'completed', data),
       onError: (error: string) => {
