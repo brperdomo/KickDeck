@@ -64,7 +64,8 @@ export function FlightManager({ eventId, teamsData, workflowData, onComplete, on
   });
 
   // Debug: Log teams data structure to understand age group extraction
-  console.log('FlightManager teamsData:', teamsData?.slice(0, 2));
+  console.log('FlightManager received teamsData count:', teamsData?.length);
+  console.log('FlightManager teamsData sample:', teamsData?.slice(0, 2));
   console.log('FlightManager ageGroupsData:', ageGroupsData?.slice(0, 5));
   
   // Enhanced gender-aware age group extraction
