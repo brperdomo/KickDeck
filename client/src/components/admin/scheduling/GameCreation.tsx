@@ -54,9 +54,21 @@ export function GameCreation({ eventId, workflowData, onComplete, onError }: Gam
   const seedings = workflowData?.seed?.bracketSeedings || [];
   const timeBlocks = workflowData?.timeblock?.timeBlocks || [];
 
+  // Debug logging
+  console.log('GameCreation workflowData:', workflowData);
+  console.log('GameCreation brackets:', brackets);
+  console.log('GameCreation seedings:', seedings);
+  console.log('GameCreation timeBlocks:', timeBlocks);
+
   useEffect(() => {
-    if (brackets.length > 0 && seedings.length > 0) {
-      generateAllGames();
+    if (brackets.length > 0) {
+      if (seedings.length > 0) {
+        generateAllGames();
+      } else {
+        // If we have brackets but no seedings, try to generate games with automatic team assignment
+        console.log('No seedings found, attempting automatic team assignment for brackets');
+        generateGamesWithAutoSeeding();
+      }
     }
   }, [brackets, seedings]);
 
@@ -95,8 +107,13 @@ export function GameCreation({ eventId, workflowData, onComplete, onError }: Gam
     const knockoutGames: Game[] = [];
     let gameCounter = 1;
 
+    console.log('generateGamesForBracket - bracket:', bracket);
+    console.log('generateGamesForBracket - seeding:', seeding);
+    console.log('generateGamesForBracket - seeding.teams:', seeding?.teams);
+    console.log('generateGamesForBracket - seeding.pools:', seeding?.pools);
+
     // Generate pool play games
-    if (bracket.format !== 'knockout' && seeding.pools.length > 0) {
+    if (bracket.format !== 'knockout' && seeding?.pools?.length > 0) {
       seeding.pools.forEach((pool: any) => {
         const poolTeams = seeding.teams.filter((team: any) => 
           team.poolAssignment === pool.poolName
@@ -125,7 +142,8 @@ export function GameCreation({ eventId, workflowData, onComplete, onError }: Gam
       });
     } else if (bracket.format === 'pool_play') {
       // Single pool round-robin
-      const teams = seeding.teams;
+      const teams = seeding?.teams || [];
+      console.log('Pool play teams for bracket', bracket.id, ':', teams);
       for (let i = 0; i < teams.length; i++) {
         for (let j = i + 1; j < teams.length; j++) {
           poolGames.push({
