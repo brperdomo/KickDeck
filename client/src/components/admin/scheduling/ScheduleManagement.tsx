@@ -7,6 +7,7 @@ import { AlertCircle, CheckCircle, AlertTriangle, Clock, MapPin, Move } from 'lu
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { formatGameTimeWithTimezone, getFieldTimezone, getTimezoneAbbreviation } from '@/utils/timezone';
 
 interface Game {
   id: number;
@@ -38,6 +39,7 @@ interface Complex {
   address: string;
   openTime?: string;
   closeTime?: string;
+  timezone?: string;
   fields: Field[];
 }
 
@@ -360,7 +362,9 @@ export default function ScheduleManagement({ eventId }: ScheduleManagementProps)
                     {/* Time slots with games */}
                     {timeSlots.map((timeSlot) => (
                       <React.Fragment key={timeSlot}>
-                        <div className="text-sm py-2 font-medium">{timeSlot}</div>
+                        <div className="text-sm py-2 font-medium">
+                          {timeSlot} {getTimezoneAbbreviation(complex.timezone)}
+                        </div>
                         {complex.fields.map((field: Field) => {
                           const assignedGame = games.find((game: Game) => {
                             if (game.fieldId !== field.id) return false;
@@ -509,14 +513,23 @@ export default function ScheduleManagement({ eventId }: ScheduleManagementProps)
                       <SelectValue placeholder="Select a time slot" />
                     </SelectTrigger>
                     <SelectContent>
-                      {timeSlots.map((slot) => (
-                        <SelectItem key={slot} value={slot}>
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4" />
-                            <span>{slot} - {(parseInt(slot.split(':')[0]) + 2).toString().padStart(2, '0')}:00</span>
-                          </div>
-                        </SelectItem>
-                      ))}
+                      {timeSlots.map((slot) => {
+                        // Get timezone from the selected field's complex
+                        const fieldComplexTimezone = selectedField 
+                          ? complexes.find(c => c.fields.some(f => f.id.toString() === selectedField))?.timezone 
+                          : 'America/New_York';
+                        const timezoneAbbr = getTimezoneAbbreviation(fieldComplexTimezone);
+                        const endHour = (parseInt(slot.split(':')[0]) + 2).toString().padStart(2, '0');
+                        
+                        return (
+                          <SelectItem key={slot} value={slot}>
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-4 w-4" />
+                              <span>{slot} - {endHour}:00 {timezoneAbbr}</span>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>

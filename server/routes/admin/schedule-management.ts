@@ -25,6 +25,7 @@ router.get('/complexes/:eventId', async (req, res) => {
         complexAddress: complexes.address,
         complexOpenTime: complexes.openTime,
         complexCloseTime: complexes.closeTime,
+        complexTimezone: complexes.timezone,
         fieldId: fields.id,
         fieldName: fields.name,
         fieldSize: fields.fieldSize,
@@ -48,6 +49,7 @@ router.get('/complexes/:eventId', async (req, res) => {
           address: row.complexAddress,
           openTime: row.complexOpenTime,
           closeTime: row.complexCloseTime,
+          timezone: row.complexTimezone,
           fields: []
         });
       }
