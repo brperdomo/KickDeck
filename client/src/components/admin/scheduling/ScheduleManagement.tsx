@@ -215,21 +215,35 @@ export default function ScheduleManagement({ eventId }: ScheduleManagementProps)
         </div>
         
         <div className="flex gap-2">
-          <Button
-            onClick={() => checkConflictsMutation.mutate(games)}
-            variant="outline"
-            disabled={checkConflictsMutation.isPending}
-          >
-            <AlertTriangle className="h-4 w-4 mr-2" />
-            Check Conflicts
-          </Button>
-          
-          <Button
-            onClick={() => setShowConflicts(true)}
-            variant={conflicts.length > 0 ? "destructive" : "secondary"}
-          >
-            {conflicts.length > 0 ? `${conflicts.length} Conflicts` : 'No Conflicts'}
-          </Button>
+          {games.length === 0 ? (
+            <Button
+              onClick={() => {
+                // Navigate to schedule builder
+                window.location.href = `/admin/events/${eventId}/schedule-builder`;
+              }}
+              size="lg"
+            >
+              Generate Schedule
+            </Button>
+          ) : (
+            <>
+              <Button
+                onClick={() => checkConflictsMutation.mutate(games)}
+                variant="outline"
+                disabled={checkConflictsMutation.isPending}
+              >
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                Check Conflicts
+              </Button>
+              
+              <Button
+                onClick={() => setShowConflicts(true)}
+                variant={conflicts.length > 0 ? "destructive" : "secondary"}
+              >
+                {conflicts.length > 0 ? `${conflicts.length} Conflicts` : 'No Conflicts'}
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -276,8 +290,40 @@ export default function ScheduleManagement({ eventId }: ScheduleManagementProps)
         </Card>
       </div>
 
+      {/* Empty State when no games exist */}
+      {games.length === 0 ? (
+        <Card>
+          <CardContent className="py-12">
+            <div className="text-center space-y-4">
+              <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center">
+                <AlertCircle className="h-12 w-12 text-gray-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">No Games Generated Yet</h3>
+                <p className="text-gray-600 mt-2">
+                  To manage and arrange game schedules, you first need to generate games from your tournament brackets.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Button
+                  onClick={() => {
+                    window.location.href = `/admin/events/${eventId}/schedule-builder`;
+                  }}
+                  size="lg"
+                >
+                  Go to Schedule Builder
+                </Button>
+                <p className="text-sm text-gray-500">
+                  Complete your tournament setup: Flight Teams → Create Brackets → Generate Games
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
       {/* Drag and Drop Schedule Grid */}
-      {isDragEnabled ? (
+      {isDragEnabled && games.length > 0 ? (
         <DragDropContext onDragEnd={handleDragEnd}>
           <div className="space-y-6">
             {complexes.map((complex: Complex) => (
