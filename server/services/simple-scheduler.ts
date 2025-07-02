@@ -118,7 +118,7 @@ export class SimpleScheduler {
           address: complexes.address,
           openTime: complexes.openTime,
           closeTime: complexes.closeTime,
-          // timezone: complexes.timezone, // Remove until schema is updated
+          timezone: complexes.timezone,
           fields: {
             id: fields.id,
             name: fields.name,
@@ -143,6 +143,7 @@ export class SimpleScheduler {
             address: row.address,
             openTime: row.openTime,
             closeTime: row.closeTime,
+            timezone: row.timezone,
             fields: []
           });
         }

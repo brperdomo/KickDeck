@@ -71,6 +71,7 @@ export const complexes = pgTable("complexes", {
   longitude: text("longitude"),
   openTime: text("open_time").notNull(),
   closeTime: text("close_time").notNull(),
+  timezone: text("timezone").default("America/New_York"),
   rules: text("rules"),
   directions: text("directions"),
   isOpen: boolean("is_open").default(true).notNull(),
