@@ -6315,6 +6315,13 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           breakBetweenGames: breakBetweenGames || 15
         });
 
+        // Create time slots for the games before saving to database
+        if (scheduleResult.games && scheduleResult.games.length > 0) {
+          console.log('🕒 Creating time slots for generated games...');
+          await SimpleScheduler.createTimeSlots(eventId, scheduleResult.games, null, 
+            minutesPerGame || 90, minRestPeriod || 60);
+        }
+
         // Save the generated schedule to the database
         await db.transaction(async (tx) => {
           // Delete existing games for this event
@@ -6362,6 +6369,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
                 homeTeamId: game.homeTeamId,
                 awayTeamId: game.awayTeamId,
                 fieldId: game.fieldId || null,
+                timeSlotId: game.timeSlotId || null, // Include the time slot ID from createTimeSlots
                 startTime: game.startTime || null,
                 endTime: game.endTime || null,
                 date: game.date || null,
