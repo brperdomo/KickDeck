@@ -6134,7 +6134,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
     // Add these new endpoints for scheduling functionality
     app.get('/api/admin/events/:id/schedule', hasEventAccess, async (req, res) => {
       try {
-        const eventId = parseInt(req.params.id);
+        const eventId = req.params.id;
 
         // Fetch all games for this event with related data including gameTimeSlots
         const schedule = await db
