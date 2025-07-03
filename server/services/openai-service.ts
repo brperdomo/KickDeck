@@ -498,54 +498,9 @@ export class SoccerSchedulerAI {
         };
       }
       
-      try {
-        // 3. Prepare prompt for OpenAI
-        const prompt = this.generateBracketAssignmentPrompt(teamsWithoutBrackets, availableBrackets);
-        
-        // 4. Call OpenAI API
-        const bracketResponse = await openai.chat.completions.create({
-          model: MODEL,
-          messages: [
-            {
-              role: "system",
-              content: "You are an advanced sports tournament assistant specializing in soccer team classifications. You assign teams to appropriate brackets based on their attributes."
-            },
-            {
-              role: "user",
-              content: prompt
-            }
-          ],
-          response_format: { type: "json_object" },
-          max_tokens: 2000,
-          temperature: 0.3
-        });
-        
-        // 5. Parse and return the suggestions
-        const suggestions = JSON.parse(bracketResponse.choices[0].message.content);
-        
-        return {
-          suggestions: suggestions.bracketAssignments || [],
-          source: "ai"
-        };
-      } catch (openaiError) {
-        console.error("OpenAI API error:", openaiError);
-        
-        // Check if it's a rate limit or quota error
-        const isRateLimitError = openaiError.status === 429 || 
-                               (openaiError.error && 
-                               (openaiError.error.type === 'insufficient_quota' || 
-                                openaiError.error.type === 'rate_limit_exceeded'));
-        
-        if (isRateLimitError) {
-          console.log("Rate limit or quota exceeded, using fallback method for bracket assignment");
-          
-          // Use a fallback method for bracket suggestions
-          return this.generateFallbackBracketSuggestions(teamsWithoutBrackets, availableBrackets);
-        }
-        
-        // For other OpenAI errors, rethrow
-        throw openaiError;
-      }
+      // Skip OpenAI API to avoid quota issues and use fallback directly
+      console.log("Using fallback method to avoid OpenAI quota issues");
+      return this.generateFallbackBracketSuggestions(teamsWithoutBrackets, availableBrackets);
     } catch (error) {
       console.error("Error suggesting bracket assignments:", error);
       
