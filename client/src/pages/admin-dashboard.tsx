@@ -1466,6 +1466,16 @@ function ReportsView() {
                 Financial Reports
               </Button>
               <Button
+                variant={selectedReport === 'platform-fees' ? 'secondary' : 'ghost'}
+                data-variant={selectedReport === 'platform-fees' ? 'secondary' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => setSelectedReport('platform-fees')}
+                disabled={isExporting !== null}
+              >
+                <DollarSign className="mr-2 h-4 w-4" />
+                Platform Fee Reports
+              </Button>
+              <Button
                 variant={selectedReport === 'manager' ? 'secondary' : 'ghost'}
                 data-variant={selectedReport === 'manager' ? 'secondary' : 'ghost'}
                 className="w-full justify-start"
@@ -1504,16 +1514,6 @@ function ReportsView() {
               >
                 <FileText className="mr-2 h-4 w-4" />
                 Guest Player Reports
-              </Button>
-              <Button
-                variant={selectedReport === 'platform-fees' ? 'secondary' : 'ghost'}
-                data-variant={selectedReport === 'platform-fees' ? 'secondary' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => setSelectedReport('platform-fees')}
-                disabled={isExporting !== null}
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                Platform Fee Reports
               </Button>
             </div>
           </CardContent>
