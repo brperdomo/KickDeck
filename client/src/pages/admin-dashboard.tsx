@@ -1066,6 +1066,7 @@ function ReportsView() {
                   <option value="registration-orders">Registration Orders</option>
                   <option value="payment-logs">Payment Logs</option>
                   <option value="platform-fees">Platform Fee Reports</option>
+                  {/* Force rebuild */}
                   <option value="financial-overview">Financial Overview</option>
                   <option value="fees-analysis">Fees Analysis</option>
                   <option value="bookkeeping">Bookkeeping Report</option>
