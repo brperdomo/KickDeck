@@ -992,7 +992,7 @@ function AdministratorsView() {
 
 function ReportsView() {
   const [selectedReport, setSelectedReport] = useState<ReportType>('financial');
-  const [selectedFinancialReport, setSelectedFinancialReport] = useState<string>('accounting-codes');
+  const [selectedFinancialReport, setSelectedFinancialReport] = useState<string>('platform-fees');
   const { isExporting, startExport } = useExportProcess();
   const navigate = useLocation()[1];
   const [isAccountingCodeModalOpen, setIsAccountingCodeModalOpen] = useState(false);
@@ -1461,17 +1461,7 @@ function ReportsView() {
           </CardHeader>
           <CardContent className="p-3">
             <div className="space-y-2">
-              <Button
-                variant="default"
-                className="w-full justify-start mb-3"
-                onClick={() => {
-                  setSelectedReport('financial');
-                  setSelectedFinancialReport('platform-fees');
-                }}
-              >
-                <DollarSign className="mr-2 h-4 w-4" />
-                Platform Fee Reports
-              </Button>
+
               <Button
                 variant={selectedReport === 'financial' ? 'secondary' : 'ghost'}
                 data-variant={selectedReport === 'financial' ? 'secondary' : 'ghost'}
