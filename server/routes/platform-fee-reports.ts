@@ -9,13 +9,14 @@ import type { Express } from "express";
 import { db } from "@db";
 import { paymentTransactions, teams, events } from "@db/schema";
 import { eq, and, gte, lte, desc, sql } from "drizzle-orm";
+import { isAdmin } from "../middleware";
 
 export function registerPlatformFeeReports(app: Express) {
   
   /**
    * Get platform fee summary with breakdown
    */
-  app.get("/api/admin/reports/platform-fees/summary", async (req, res) => {
+  app.get("/api/admin/reports/platform-fees/summary", isAdmin, async (req, res) => {
     try {
       const { startDate, endDate, eventId } = req.query;
 
@@ -117,7 +118,7 @@ export function registerPlatformFeeReports(app: Express) {
   /**
    * Get detailed transaction list with fee breakdown
    */
-  app.get("/api/admin/reports/platform-fees/transactions", async (req, res) => {
+  app.get("/api/admin/reports/platform-fees/transactions", isAdmin, async (req, res) => {
     try {
       const { startDate, endDate, eventId, limit = 50, offset = 0 } = req.query;
 
@@ -218,7 +219,7 @@ export function registerPlatformFeeReports(app: Express) {
   /**
    * Get all transactions with comprehensive filtering
    */
-  app.get("/api/admin/reports/all-transactions", async (req, res) => {
+  app.get("/api/admin/reports/all-transactions", isAdmin, async (req, res) => {
     try {
       const { 
         startDate, 
@@ -334,7 +335,7 @@ export function registerPlatformFeeReports(app: Express) {
   /**
    * Export transactions to CSV
    */
-  app.get("/api/admin/reports/transactions/export", async (req, res) => {
+  app.get("/api/admin/reports/transactions/export", isAdmin, async (req, res) => {
     try {
       const { startDate, endDate, eventId, status } = req.query;
 
