@@ -498,7 +498,7 @@ function isAdminUser(user: SelectUser | null): user is SelectUser & { isAdmin: t
 
 type View = 'events' | 'teams' | 'administrators' | 'settings' | 'households' | 'reports' | 'account' | 'complexes' | 'scheduling' | 'files' | 'formTemplates' | 'roles' | 'members';
 type SettingsView = 'general';
-type ReportType = 'financial' | 'manager' | 'player' | 'schedule' | 'guest-player';
+type ReportType = 'financial' | 'manager' | 'player' | 'schedule' | 'guest-player' | 'platform-fees';
 type RoleType = 'super_admin' | 'tournament_admin' | 'score_admin' | 'finance_admin';
 
 function EventsView() {
