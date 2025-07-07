@@ -58,6 +58,7 @@ import {
   getOrganizationFinancialSummary, 
   getStripeFeeOptimizationReport 
 } from "./routes/enhanced-financial-reports";
+import { getPlatformFeeReport, getRevenueTrends } from "./routes/platform-fee-report";
 import { getNewRegistrationsCount, acknowledgeNewRegistrations } from "./routes/admin/registrations";
 import { getTinyMCEConfig } from "./services/configService";
 import { requestPasswordReset, verifyResetToken, completePasswordReset } from "./routes/auth";
@@ -2231,6 +2232,10 @@ export function registerRoutes(app: Express): Server {
     
     // Enhanced financial reporting endpoints with Stripe fee analysis
     app.get('/api/reports/enhanced/event/:eventId/financial', isAdmin, getEnhancedEventFinancialReport);
+  
+  // Platform fee report routes
+  app.get('/api/platform-fee-report', isAdmin, getPlatformFeeReport);
+  app.get('/api/revenue-trends', isAdmin, getRevenueTrends);
     app.get('/api/reports/enhanced/organization/summary', isAdmin, getOrganizationFinancialSummary);
     app.get('/api/reports/enhanced/stripe-optimization', isAdmin, getStripeFeeOptimizationReport);
     
