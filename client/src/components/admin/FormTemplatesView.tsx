@@ -39,7 +39,9 @@ export function FormTemplatesView() {
       if (!response.ok) throw new Error('Failed to fetch templates');
       const templates = await response.json();
       return templates;
-    }
+    },
+    refetchOnWindowFocus: false,
+    staleTime: 0  // Always refetch when invalidated
   });
 
   const deleteTemplateMutation = useMutation({
@@ -51,7 +53,8 @@ export function FormTemplatesView() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['form-templates']);
+      // Invalidate and refetch the templates data
+      queryClient.invalidateQueries({ queryKey: ['form-templates'] });
       toast({
         title: "Success",
         description: "Template deleted successfully",

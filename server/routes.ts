@@ -7851,6 +7851,43 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
       }
     });
     
+    app.delete('/api/admin/form-templates/:id', isAdmin, async (req, res) => {
+      try {
+        const templateId = parseInt(req.params.id);
+        console.log(`Deleting form template with ID: ${templateId}`);
+
+        await db.transaction(async (tx) => {
+          // Delete all field options first
+          await tx
+            .delete(formFieldOptions)
+            .where(
+              inArray(
+                formFieldOptions.fieldId,
+                tx.select({ id: formFields.id })
+                  .from(formFields)
+                  .where(eq(formFields.templateId, templateId))
+              )
+            );
+
+          // Delete all fields
+          await tx
+            .delete(formFields)
+            .where(eq(formFields.templateId, templateId));
+
+          // Delete the template
+          await tx
+            .delete(eventFormTemplates)
+            .where(eq(eventFormTemplates.id, templateId));
+        });
+
+        console.log(`Form template ${templateId} deleted successfully`);
+        res.json({ message: 'Template deleted successfully' });
+      } catch (error) {
+        console.error('Error deleting form template:', error);
+        res.status(500).json({ error: "Failed to delete form template" });
+      }
+    });
+
     app.post('/api/admin/form-templates', isAdmin, async (req, res) => {
       try {
         const { name, description, isPublished, fields, eventId } = req.body;
