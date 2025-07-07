@@ -40,6 +40,7 @@ import EventClubsPage from "@/pages/event-clubs";
 import Newsletter from "@/pages/newsletter";
 import RegistrationOrdersReport from "@/pages/registration-orders-report";
 import PaymentLogs from "@/pages/payment-logs";
+import PlatformFeeReportPage from "@/pages/platform-fee-report";
 import FinancialOverviewReport from "@/pages/financial-overview-report";
 import EventFinancialReport from "@/pages/event-financial-report";
 import EventRegistrationReport from "@/pages/event-registration-report";
@@ -392,6 +393,9 @@ function Router() {
           </Route>
           <Route path="/payment-logs">
             {user.isAdmin ? <PaymentLogs /> : <NotFound />}
+          </Route>
+          <Route path="/platform-fee-report">
+            {user.isAdmin ? <PlatformFeeReportPage /> : <NotFound />}
           </Route>
           <Route path="/financial-overview-report">
             {user.isAdmin ? <FinancialOverviewReport /> : <NotFound />}
