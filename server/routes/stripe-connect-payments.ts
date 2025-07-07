@@ -34,13 +34,25 @@ export async function processDestinationCharge(
   paymentMethodId: string,
   totalAmountCents: number,
   connectAccountId: string,
-  isPreCalculated: boolean = false
+  isPreCalculated: boolean = false,
+  customerId: string | null = null
 ) {
   try {
-    // Get team information for receipt email
-    const team = await db.query.teams.findFirst({
-      where: eq(teams.id, teamId)
-    });
+    // Get team and event information for receipt email  
+    const [teamInfo] = await db
+      .select({
+        team: teams,
+        event: events
+      })
+      .from(teams)
+      .innerJoin(events, eq(teams.eventId, events.id))
+      .where(eq(teams.id, teamId));
+
+    if (!teamInfo) {
+      throw new Error('Team or event not found');
+    }
+
+    const { team, event } = teamInfo;
 
     let feeCalculation;
     
@@ -79,12 +91,13 @@ export async function processDestinationCharge(
     
     // Get the customer from the payment method to ensure proper association
     const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
-    let customerId = paymentMethod.customer as string | null;
+    let customerIdToUse = customerId || paymentMethod.customer as string | null;
     
     console.log(`PAYMENT METHOD DEBUG: Retrieved payment method ${paymentMethodId}`);
     console.log(`  - type: ${paymentMethod.type}`);
     console.log(`  - customer: ${paymentMethod.customer}`);
-    console.log(`  - customerId variable: ${customerId}`);
+    console.log(`  - customerId parameter: ${customerId}`);
+    console.log(`  - customerIdToUse: ${customerIdToUse}`);
 
     // Handle Link payment methods which fundamentally cannot be used with customers
     if (paymentMethod.type === 'link') {
@@ -99,8 +112,8 @@ export async function processDestinationCharge(
       }
       
       // For Link payments, we MUST process without a customer to avoid attachment errors
-      customerId = null;
-      console.log(`AFTER Link fix: customerId is now ${customerId}`);
+      customerIdToUse = null;
+      console.log(`AFTER Link fix: customerIdToUse is now ${customerIdToUse}`);
     }
 
     // Handle Link payment methods differently since they can't use destination charges
@@ -191,7 +204,7 @@ export async function processDestinationCharge(
       console.log(`  Tournament Receives: $${(feeCalculation.tournamentReceives / 100).toFixed(2)}`);
       
       // Create meaningful description for Stripe dashboard
-      const description = `${event.name} - ${team.name}${teamInfo.ageGroup ? ` (${teamInfo.ageGroup.name})` : ''}`;
+      const description = `${event.name} - ${team.name}`;
 
       // For regular payment methods, use destination charge as before
       const paymentIntentParams: any = {
@@ -236,10 +249,73 @@ export async function processDestinationCharge(
         throw new Error(`Platform fee mismatch: params=${paymentIntentParams.application_fee_amount} vs calculated=${feeCalculation.platformFeeAmount}`);
       }
 
-      // Include customer if we have one
-      if (customerId) {
-        paymentIntentParams.customer = customerId;
-        console.log(`Using customer: ${customerId}`);
+      // Handle customer attachment for payment methods
+      if (customerIdToUse) {
+        try {
+          // Verify customer exists in Stripe first
+          const customer = await stripe.customers.retrieve(customerIdToUse);
+          console.log(`Verified customer ${customerIdToUse} exists in Stripe`);
+          
+          // Check if payment method is attached to this customer
+          const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
+          
+          if (!paymentMethod.customer) {
+            console.log(`Attaching payment method ${paymentMethodId} to customer ${customerIdToUse}`);
+            await stripe.paymentMethods.attach(paymentMethodId, {
+              customer: customerIdToUse,
+            });
+            console.log(`Successfully attached payment method to customer`);
+          } else if (paymentMethod.customer !== customerIdToUse) {
+            console.log(`Payment method attached to different customer: ${paymentMethod.customer}, expected: ${customerIdToUse}`);
+            // Detach from old customer and attach to correct one
+            await stripe.paymentMethods.detach(paymentMethodId);
+            await stripe.paymentMethods.attach(paymentMethodId, {
+              customer: customerIdToUse,
+            });
+            console.log(`Re-attached payment method to correct customer`);
+          }
+          
+          paymentIntentParams.customer = customerIdToUse;
+          console.log(`Using customer: ${customerIdToUse}`);
+          
+        } catch (customerError) {
+          if (customerError.code === 'resource_missing') {
+            console.log(`Customer ${customerIdToUse} does not exist in Stripe, creating new customer`);
+            
+            // Create new customer in main MatchPro account
+            const newCustomer = await stripe.customers.create({
+              email: team.submitterEmail || 'noemail@example.com',
+              name: team.submitterName || team.name,
+              metadata: {
+                teamId: teamId.toString(),
+                teamName: team.name || 'Unknown Team',
+                eventId: eventId,
+                eventName: event.name || 'Unknown Event',
+                originalCustomerId: customerIdToUse,
+                replacementReason: 'Original customer not found in Stripe'
+              }
+            });
+            
+            console.log(`Created new customer ${newCustomer.id} for team ${teamId}`);
+            
+            // Update team record with new customer ID
+            await db.update(teams)
+              .set({ stripeCustomerId: newCustomer.id })
+              .where(eq(teams.id, teamId));
+            
+            // Attach payment method to new customer
+            await stripe.paymentMethods.attach(paymentMethodId, {
+              customer: newCustomer.id,
+            });
+            console.log(`Attached payment method to new customer ${newCustomer.id}`);
+            
+            paymentIntentParams.customer = newCustomer.id;
+            console.log(`Using new customer: ${newCustomer.id}`);
+            
+          } else {
+            throw customerError; // Re-throw non-customer-missing errors
+          }
+        }
       }
 
       paymentIntent = await stripe.paymentIntents.create(paymentIntentParams);
@@ -417,6 +493,9 @@ export async function chargeApprovedTeam(teamId: number) {
             })
             .where(eq(teams.id, teamId));
             
+          // Update local team object with the customer ID for this session
+          team.stripeCustomerId = customerIdToSet;
+            
         } else {
           // For legacy teams with incomplete setup intents, try to auto-recover by creating a fresh payment flow
           console.log(`Attempting auto-recovery for team ${teamId} with incomplete setup intent...`);
@@ -489,13 +568,15 @@ export async function chargeApprovedTeam(teamId: number) {
     });
 
     // Process the destination charge using the calculated total amount
+    console.log(`Team customer ID for charge: ${team.stripeCustomerId}`);
     const result = await processDestinationCharge(
       team.id,
       team.eventId,
       paymentMethodId, // Use the payment method we determined above
       feeCalculation.totalChargedAmount, // Use the total amount including platform fees
       event.stripeConnectAccountId,
-      true // Mark as pre-calculated to avoid double fee calculation
+      true, // Mark as pre-calculated to avoid double fee calculation
+      team.stripeCustomerId // Pass customer ID for payment method attachment
     );
 
     console.log(`Successfully charged team ${teamId} and routed payment to Connect account ${event.stripeConnectAccountId}`);
