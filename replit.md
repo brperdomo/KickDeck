@@ -113,6 +113,13 @@ MatchPro AI is a comprehensive sports event management platform designed for tou
 - **Security**: Role-based access control and secure payment processing
 
 ## Changelog
+- July 8, 2025: LINK PAYMENT REPLACEMENT SYSTEM - Implemented ability for teams with Link payments to generate new payment URLs with regular cards
+  - IDENTIFIED: Teams using Link payment methods (no longer supported) can now generate new payment completion URLs
+  - ENHANCED: Payment completion URL generation detects Link payment methods and allows replacement with regular debit/credit cards
+  - IMPROVED: Clear messaging distinguishes between teams ready for approval vs teams needing Link payment replacement
+  - IMPLEMENTED: New Setup Intent creation for Link payment replacement with proper metadata tracking
+  - GUIDED: Frontend shows specific messages for Link payment replacement URLs vs regular completion URLs
+  - PRODUCTION READY: Teams with Link payments can seamlessly transition to regular card payments without losing registration data
 - July 8, 2025: ENHANCED PAYMENT COMPLETION URL ERROR MESSAGING - Improved user guidance for teams ready for approval instead of needing new payment URLs
   - ENHANCED: Payment completion URL error messages now provide specific guidance when teams have completed payment setup
   - CLARIFIED: Teams with 'payment_info_provided' status and existing payment methods should be approved, not given new completion URLs
