@@ -1196,15 +1196,31 @@ async function generatePaymentCompletionUrl(req: Request, res: Response) {
     
     const team = teamResult[0];
     
-    // Check if team needs payment setup
+    // Check if team needs payment setup or has Link payment that needs replacement
     // Allow URL generation for teams with:
     // 1. payment_required status (incomplete setup)
     // 2. approved status but no payment (payment failed during approval)
     // 3. any team with total amount > 0 but no successful payment
+    // 4. teams with Link payment methods (no longer supported)
+    
+    let hasLinkPayment = false;
+    if (team.paymentMethodId) {
+      try {
+        const paymentMethod = await stripe.paymentMethods.retrieve(team.paymentMethodId);
+        hasLinkPayment = paymentMethod.type === 'link';
+        if (hasLinkPayment) {
+          log(`Team ${teamId} has Link payment method ${team.paymentMethodId} - allowing URL generation for card replacement`, 'admin');
+        }
+      } catch (error) {
+        log(`Error checking payment method type for team ${teamId}: ${error}`, 'admin');
+      }
+    }
+    
     const needsPayment = (
       team.paymentStatus === 'payment_required' ||
       (team.status === 'approved' && team.paymentStatus !== 'paid') ||
-      (team.totalAmount && team.totalAmount > 0 && team.paymentStatus !== 'paid')
+      (team.totalAmount && team.totalAmount > 0 && team.paymentStatus !== 'paid') ||
+      hasLinkPayment  // Allow Link payments to be replaced with card payments
     );
     
     if (!needsPayment) {
@@ -1219,8 +1235,14 @@ async function generatePaymentCompletionUrl(req: Request, res: Response) {
       } else if (!team.totalAmount || team.totalAmount === 0) {
         message = 'Team has no payment amount required. No completion URL needed.';
       } else if (team.paymentStatus === 'payment_info_provided' && team.status === 'registered') {
-        message = 'Team has completed payment setup and is ready for approval.';
-        guidance = 'To charge this team, approve them using the "Approve" button. Payment will be automatically processed during approval.';
+        // Check if this team has Link payment method
+        if (hasLinkPayment) {
+          message = 'Team used Link payment which is no longer supported.';
+          guidance = 'Generate a new payment URL so the team can pay with a regular debit/credit card instead.';
+        } else {
+          message = 'Team has completed payment setup and is ready for approval.';
+          guidance = 'To charge this team, approve them using the "Approve" button. Payment will be automatically processed during approval.';
+        }
       }
       
       return res.status(400).json({ 
@@ -1243,23 +1265,37 @@ async function generatePaymentCompletionUrl(req: Request, res: Response) {
         setupIntentStatus = existingSetupIntent.status;
         
         if (existingSetupIntent.status === 'succeeded' && existingSetupIntent.payment_method) {
-          // Setup Intent is actually complete - update team record
-          await db
-            .update(teams)
-            .set({
-              paymentMethodId: existingSetupIntent.payment_method.toString(),
-              stripeCustomerId: existingSetupIntent.customer?.toString() || null,
-              paymentStatus: 'payment_info_provided'
-            })
-            .where(eq(teams.id, parseInt(teamId, 10)));
+          // Check if this is a Link payment method that needs to be replaced
+          let isLinkPayment = false;
+          try {
+            const paymentMethod = await stripe.paymentMethods.retrieve(existingSetupIntent.payment_method.toString());
+            isLinkPayment = paymentMethod.type === 'link';
+          } catch (error) {
+            log(`Error checking payment method type in Setup Intent: ${error}`, 'admin');
+          }
           
-          return res.json({
-            message: 'Team payment setup is already complete',
-            guidance: 'This team is ready for approval. Use the "Approve" button to charge their payment method and complete the registration.',
-            status: 'complete',
-            paymentMethodId: existingSetupIntent.payment_method,
-            actionNeeded: 'approval'
-          });
+          if (isLinkPayment) {
+            log(`Setup Intent ${existingSetupIntent.id} has Link payment method - creating new Setup Intent for card payment`, 'admin');
+            // Don't return early - continue to create new Setup Intent for card payment
+          } else {
+            // Setup Intent is actually complete with regular card - update team record
+            await db
+              .update(teams)
+              .set({
+                paymentMethodId: existingSetupIntent.payment_method.toString(),
+                stripeCustomerId: existingSetupIntent.customer?.toString() || null,
+                paymentStatus: 'payment_info_provided'
+              })
+              .where(eq(teams.id, parseInt(teamId, 10)));
+            
+            return res.json({
+              message: 'Team payment setup is already complete',
+              guidance: 'This team is ready for approval. Use the "Approve" button to charge their payment method and complete the registration.',
+              status: 'complete',
+              paymentMethodId: existingSetupIntent.payment_method,
+              actionNeeded: 'approval'
+            });
+          }
         }
         
         if (existingSetupIntent.status === 'requires_payment_method' && existingSetupIntent.client_secret) {
@@ -1286,6 +1322,7 @@ async function generatePaymentCompletionUrl(req: Request, res: Response) {
     }
     
     // Create new Setup Intent for completion (card payments only, no Link)
+    const eventType = hasLinkPayment ? 'link_payment_replacement' : 'incomplete_registration_recovery';
     const newSetupIntent = await stripe.setupIntents.create({
       payment_method_types: ['card'],
       usage: 'off_session',
@@ -1293,18 +1330,23 @@ async function generatePaymentCompletionUrl(req: Request, res: Response) {
         teamId: teamId,
         teamName: team.name || 'Unknown Team',
         originalSetupIntent: team.setupIntentId,
-        eventType: 'incomplete_registration_recovery',
-        managerEmail: team.managerEmail || 'unknown'
+        eventType: eventType,
+        managerEmail: team.managerEmail || 'unknown',
+        replacingLinkPayment: hasLinkPayment ? 'true' : 'false'
       }
     });
     
     // Update team with new Setup Intent
+    const noteMessage = hasLinkPayment 
+      ? `\nNew Setup Intent created to replace Link payment with card: ${newSetupIntent.id} (${new Date().toISOString()})`
+      : `\nNew Setup Intent created for incomplete registration: ${newSetupIntent.id} (${new Date().toISOString()})`;
+      
     await db
       .update(teams)
       .set({
         setupIntentId: newSetupIntent.id,
         paymentStatus: 'setup_intent_created',
-        notes: (team.notes || '') + `\nNew Setup Intent created for incomplete registration: ${newSetupIntent.id} (${new Date().toISOString()})`
+        notes: (team.notes || '') + noteMessage
       })
       .where(eq(teams.id, parseInt(teamId, 10)));
     
@@ -1312,6 +1354,10 @@ async function generatePaymentCompletionUrl(req: Request, res: Response) {
     const completionUrl = `${frontendUrl}/complete-payment?setup_intent=${newSetupIntent.client_secret}&team_id=${teamId}`;
     
     log(`Payment completion URL generated for team ${teamId}: ${completionUrl}`, 'admin');
+    
+    const successMessage = hasLinkPayment 
+      ? 'Payment completion URL generated successfully for Link payment replacement'
+      : 'Payment completion URL generated successfully';
     
     return res.json({
       success: true,
@@ -1321,7 +1367,8 @@ async function generatePaymentCompletionUrl(req: Request, res: Response) {
       teamName: team.name,
       managerEmail: team.managerEmail,
       originalSetupIntentStatus: setupIntentStatus,
-      message: 'Payment completion URL generated successfully'
+      replacingLinkPayment: hasLinkPayment,
+      message: successMessage
     });
     
   } catch (error) {

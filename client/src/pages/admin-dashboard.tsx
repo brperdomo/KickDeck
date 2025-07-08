@@ -5230,9 +5230,12 @@ function TeamsView() {
                                 if (data.completionUrl) {
                                   // Copy URL to clipboard
                                   await navigator.clipboard.writeText(data.completionUrl);
+                                  const isLinkReplacement = data.replacingLinkPayment;
                                   toast({
-                                    title: "Completion URL Generated",
-                                    description: "Payment completion URL copied to clipboard. Send this to the team manager.",
+                                    title: isLinkReplacement ? "Link Payment Replacement URL Generated" : "Completion URL Generated",
+                                    description: isLinkReplacement 
+                                      ? "New payment URL created for card payment (replacing Link). Send this to the team manager."
+                                      : "Payment completion URL copied to clipboard. Send this to the team manager.",
                                   });
                                 } else {
                                   // Show more specific error message with guidance if available
