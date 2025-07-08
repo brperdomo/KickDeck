@@ -8409,6 +8409,53 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
       }
     });
 
+    // Assign template to event
+    app.post('/api/admin/enhanced-form-templates/:id/assign-event', isAdmin, async (req, res) => {
+      try {
+        const templateId = parseInt(req.params.id);
+        const { eventId } = req.body;
+
+        if (!eventId) {
+          return res.status(400).json({ error: 'Event ID is required' });
+        }
+
+        // Update the template to assign it to the event
+        const result = await db
+          .update(eventFormTemplates)
+          .set({ 
+            eventId: eventId,
+            updatedAt: new Date()
+          })
+          .where(eq(eventFormTemplates.id, templateId))
+          .returning();
+
+        if (result.length === 0) {
+          return res.status(404).json({ error: 'Template not found' });
+        }
+
+        // Verify the event exists
+        const event = await db
+          .select({ id: events.id, name: events.name })
+          .from(events)
+          .where(eq(events.id, eventId))
+          .limit(1);
+
+        if (event.length === 0) {
+          return res.status(404).json({ error: 'Event not found' });
+        }
+
+        res.json({ 
+          success: true, 
+          message: `Template assigned to event "${event[0].name}" successfully`,
+          template: result[0],
+          event: event[0]
+        });
+      } catch (error) {
+        console.error('Error assigning template to event:', error);
+        res.status(500).json({ error: 'Failed to assign template to event' });
+      }
+    });
+
     app.post('/api/admin/form-templates', isAdmin, async (req, res) => {
       try {
         const { name, description, isPublished, fields, eventId } = req.body;
