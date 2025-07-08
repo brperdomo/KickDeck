@@ -1,17 +1,23 @@
 /**
  * SendGrid Service
- * 
+ *
  * This service handles communications with the SendGrid API,
  * particularly for sending emails with dynamic templates.
  */
 
-import sgMail from '@sendgrid/mail';
+import sgMail from "@sendgrid/mail";
 
 // Initialize the SendGrid client if API key is available
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  console.log(
+    "Loaded SendGrid API Key:",
+    process.env.SENDGRID_API_KEY.substring(0, 10),
+  );
 } else {
-  console.warn('SENDGRID_API_KEY is not set. SendGrid functionality will not work properly.');
+  console.warn(
+    "SENDGRID_API_KEY is not set. SendGrid functionality will not work properly.",
+  );
 }
 
 /**
@@ -27,7 +33,7 @@ if (process.env.SENDGRID_API_KEY) {
 export async function sendEmail(options) {
   try {
     if (!process.env.SENDGRID_API_KEY) {
-      throw new Error('SENDGRID_API_KEY is not set');
+      throw new Error("SENDGRID_API_KEY is not set");
     }
 
     // Create the email message
@@ -36,7 +42,7 @@ export async function sendEmail(options) {
       from: options.from,
       subject: options.subject,
       text: options.text,
-      html: options.html
+      html: options.html,
     };
 
     // Send the email
@@ -44,7 +50,7 @@ export async function sendEmail(options) {
     console.log(`Email sent to ${options.to} via SendGrid`);
     return true;
   } catch (error) {
-    console.error('Error sending email with SendGrid:', error);
+    console.error("Error sending email with SendGrid:", error);
     return false;
   }
 }
@@ -61,7 +67,7 @@ export async function sendEmail(options) {
 export async function sendDynamicTemplateEmail(options) {
   try {
     if (!process.env.SENDGRID_API_KEY) {
-      throw new Error('SENDGRID_API_KEY is not set');
+      throw new Error("SENDGRID_API_KEY is not set");
     }
 
     // Create the email message with dynamic template
@@ -69,15 +75,17 @@ export async function sendDynamicTemplateEmail(options) {
       to: options.to,
       from: options.from,
       templateId: options.templateId,
-      dynamicTemplateData: options.dynamicTemplateData || {}
+      dynamicTemplateData: options.dynamicTemplateData || {},
     };
 
     // Send the email
     await sgMail.send(msg);
-    console.log(`Dynamic template email sent to ${options.to} using template ${options.templateId}`);
+    console.log(
+      `Dynamic template email sent to ${options.to} using template ${options.templateId}`,
+    );
     return true;
   } catch (error) {
-    console.error('Error sending dynamic template email with SendGrid:', error);
+    console.error("Error sending dynamic template email with SendGrid:", error);
     return false;
   }
 }
@@ -88,29 +96,31 @@ export async function sendDynamicTemplateEmail(options) {
  */
 export async function verifyConfiguration() {
   if (!process.env.SENDGRID_API_KEY) {
-    console.error('SENDGRID_API_KEY is not set');
+    console.error("SENDGRID_API_KEY is not set");
     return false;
   }
-  
+
   try {
     // Make a simple API call to test authentication
-    const response = await fetch('https://api.sendgrid.com/v3/user/profile', {
-      method: 'GET',
+    const response = await fetch("https://api.sendgrid.com/v3/user/profile", {
+      method: "GET",
       headers: {
-        'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
-        'Content-Type': 'application/json'
-      }
+        Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`,
+        "Content-Type": "application/json",
+      },
     });
-    
+
     if (response.ok) {
-      console.log('SendGrid API key is valid');
+      console.log("SendGrid API key is valid");
       return true;
     } else {
-      console.error(`SendGrid API key verification failed: ${response.status} ${response.statusText}`);
+      console.error(
+        `SendGrid API key verification failed: ${response.status} ${response.statusText}`,
+      );
       return false;
     }
   } catch (error) {
-    console.error('Error verifying SendGrid configuration:', error);
+    console.error("Error verifying SendGrid configuration:", error);
     return false;
   }
 }
