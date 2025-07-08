@@ -8456,6 +8456,104 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
       }
     });
 
+    // Resend team approval email
+    app.post('/api/admin/teams/:id/resend-approval-email', isAdmin, async (req, res) => {
+      try {
+        const teamId = parseInt(req.params.id);
+
+        // Get team details with event information
+        const teamResult = await db
+          .select({
+            team: teams,
+            event: {
+              id: events.id,
+              name: events.name
+            }
+          })
+          .from(teams)
+          .leftJoin(events, eq(teams.eventId, events.id))
+          .where(eq(teams.id, teamId))
+          .limit(1);
+
+        if (teamResult.length === 0) {
+          return res.status(404).json({ error: 'Team not found' });
+        }
+
+        const { team, event } = teamResult[0];
+
+        // Check if team is approved (only approved teams should get approval emails)
+        if (team.status !== 'approved') {
+          return res.status(400).json({ 
+            error: 'Can only resend approval emails for approved teams',
+            currentStatus: team.status 
+          });
+        }
+
+        // Determine recipients
+        const recipients = [];
+        if (team.submitterEmail) {
+          recipients.push(team.submitterEmail);
+        }
+        if (team.managerEmail && team.managerEmail !== team.submitterEmail) {
+          recipients.push(team.managerEmail);
+        }
+
+        if (recipients.length === 0) {
+          return res.status(400).json({ error: 'No email recipients found for this team' });
+        }
+
+        // Send approval email to each recipient
+        for (const recipient of recipients) {
+          await sendTemplatedEmail(
+            recipient,
+            'team_approved',
+            {
+              // Team Information
+              teamName: team.name || 'your team',
+              eventName: event?.name || 'the event',
+              submitterName: team.submitterName || team.managerName || 'Team Manager',
+              submitterEmail: team.submitterEmail || team.managerEmail || '',
+              clubName: team.clubName || '',
+              
+              // Registration Details
+              registrationDate: team.createdAt ? new Date(team.createdAt).toLocaleDateString() : new Date().toLocaleDateString(),
+              approvalDate: new Date().toLocaleDateString(),
+              
+              // Payment Information
+              totalAmount: team.totalAmount ? (team.totalAmount / 100) : 0,
+              paymentId: team.paymentIntentId || 'Completed',
+              paymentDate: team.paymentDate ? new Date(team.paymentDate).toLocaleDateString() : new Date().toLocaleDateString(),
+              cardBrand: team.cardBrand || 'Card',
+              cardLastFour: team.cardLast4 || '****',
+              transactionId: team.paymentIntentId || 'Completed',
+              
+              // Additional context
+              hasPayment: !!team.paymentIntentId,
+              hasClub: !!team.clubName,
+              
+              // Branding placeholders
+              loginLink: `${process.env.FRONTEND_URL || 'https://app.matchpro.ai'}/dashboard`,
+              supportEmail: 'support@matchpro.ai',
+              organizationName: 'MatchPro',
+              currentYear: new Date().getFullYear().toString()
+            }
+          );
+        }
+
+        res.json({ 
+          success: true, 
+          message: `Approval email resent successfully to ${recipients.length} recipient(s)`,
+          recipients: recipients,
+          teamName: team.name,
+          eventName: event?.name
+        });
+
+      } catch (error) {
+        console.error('Error resending approval email:', error);
+        res.status(500).json({ error: 'Failed to resend approval email' });
+      }
+    });
+
     app.post('/api/admin/form-templates', isAdmin, async (req, res) => {
       try {
         const { name, description, isPublished, fields, eventId } = req.body;

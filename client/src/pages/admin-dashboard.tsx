@@ -3512,6 +3512,36 @@ function TeamsView() {
     }
   });
 
+  // Resend approval email mutation
+  const resendApprovalEmailMutation = useMutation({
+    mutationFn: async (teamId: number) => {
+      const response = await fetch(`/api/admin/teams/${teamId}/resend-approval-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to resend approval email');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Email Sent Successfully",
+        description: `Approval email resent to ${data.recipients.length} recipient(s) for ${data.teamName}`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Email Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
   // Mutation for deleting team registration
   const deleteTeamMutation = useMutation({
     mutationFn: async (teamId: number) => {
@@ -5451,6 +5481,20 @@ function TeamsView() {
                 {/* For teams in approved status */}
                 {selectedTeam.status === 'approved' && (
                   <>
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        resendApprovalEmailMutation.mutate(selectedTeam.id);
+                      }}
+                      disabled={resendApprovalEmailMutation.isPending}
+                    >
+                      {resendApprovalEmailMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      ) : (
+                        <Mail className="h-4 w-4 mr-1" />
+                      )}
+                      Resend Approval Email
+                    </Button>
                     <Button 
                       variant="outline"
                       onClick={() => {
