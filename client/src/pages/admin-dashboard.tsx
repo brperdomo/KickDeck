@@ -5218,7 +5218,11 @@ function TeamsView() {
                                 
                                 if (!response.ok) {
                                   const errorData = await response.json();
-                                  throw new Error(errorData.error || 'Failed to generate completion URL');
+                                  // Show guidance if available, otherwise show error
+                                  const message = errorData.guidance ? 
+                                    `${errorData.error}\n\n${errorData.guidance}` : 
+                                    (errorData.error || 'Failed to generate completion URL');
+                                  throw new Error(message);
                                 }
                                 
                                 const data = await response.json();
@@ -5231,15 +5235,18 @@ function TeamsView() {
                                     description: "Payment completion URL copied to clipboard. Send this to the team manager.",
                                   });
                                 } else {
-                                  // Show more specific error message
-                                  const errorMessage = data.error || data.message || 'No completion URL received';
-                                  throw new Error(errorMessage);
+                                  // Show more specific error message with guidance if available
+                                  const message = data.guidance ? 
+                                    `${data.message || data.error}\n\n${data.guidance}` : 
+                                    (data.error || data.message || 'No completion URL received');
+                                  throw new Error(message);
                                 }
                               } catch (error) {
+                                const errorMessage = error instanceof Error ? error.message : "Failed to generate completion URL";
                                 toast({
-                                  title: "Error",
-                                  description: error instanceof Error ? error.message : "Failed to generate completion URL",
-                                  variant: "destructive",
+                                  title: errorMessage.includes("ready for approval") ? "Team Ready for Approval" : "Error",
+                                  description: errorMessage,
+                                  variant: errorMessage.includes("ready for approval") ? "default" : "destructive",
                                 });
                               }
                             }}

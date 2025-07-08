@@ -1210,6 +1210,7 @@ async function generatePaymentCompletionUrl(req: Request, res: Response) {
     if (!needsPayment) {
       // Provide specific helpful messages based on team status
       let message = 'Team does not need payment setup';
+      let guidance = '';
       
       if (team.paymentStatus === 'paid') {
         message = 'Team payment is already complete. No completion URL needed.';
@@ -1217,13 +1218,18 @@ async function generatePaymentCompletionUrl(req: Request, res: Response) {
         message = 'Team is approved and payment has been processed successfully.';
       } else if (!team.totalAmount || team.totalAmount === 0) {
         message = 'Team has no payment amount required. No completion URL needed.';
+      } else if (team.paymentStatus === 'payment_info_provided' && team.status === 'registered') {
+        message = 'Team has completed payment setup and is ready for approval.';
+        guidance = 'To charge this team, approve them using the "Approve" button. Payment will be automatically processed during approval.';
       }
       
       return res.status(400).json({ 
         error: message,
+        guidance: guidance,
         currentStatus: team.paymentStatus,
         teamStatus: team.status,
-        totalAmount: team.totalAmount
+        totalAmount: team.totalAmount,
+        actionNeeded: team.paymentStatus === 'payment_info_provided' && team.status === 'registered' ? 'approval' : 'none'
       });
     }
     
@@ -1249,8 +1255,10 @@ async function generatePaymentCompletionUrl(req: Request, res: Response) {
           
           return res.json({
             message: 'Team payment setup is already complete',
+            guidance: 'This team is ready for approval. Use the "Approve" button to charge their payment method and complete the registration.',
             status: 'complete',
-            paymentMethodId: existingSetupIntent.payment_method
+            paymentMethodId: existingSetupIntent.payment_method,
+            actionNeeded: 'approval'
           });
         }
         
