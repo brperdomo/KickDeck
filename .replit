@@ -42,5 +42,4 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "sh -c 'npm run build && NODE_OPTIONS=\"--import tsx\" node server/index.ts'"
-waitForPort = 5000
+args = "npm run dev"
