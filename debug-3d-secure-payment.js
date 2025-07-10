@@ -71,26 +71,13 @@ async function debug3DSecurePayment(email) {
             }
           }
           
-          // Analyze status mismatch
-          if (setupIntent.status === 'succeeded' && team.paymentStatus !== 'payment_info_provided') {
-            console.log(`\n✅ STATUS MISMATCH FOUND - PAYMENT ACTUALLY SUCCEEDED!`);
+          // Analyze status mismatch  
+          if (setupIntent.status === 'succeeded' && team.paymentStatus !== 'paid') {
+            console.log(`\n✅ SETUP INTENT COMPLETED - CUSTOMER AUTHENTICATED SUCCESSFULLY`);
             console.log(`   Stripe shows: ${setupIntent.status}`);
             console.log(`   Database shows: ${team.paymentStatus}`);
-            console.log(`   📋 RECOMMENDED ACTION: Update database to match Stripe`);
-            
-            // Offer to fix the database
-            if (process.argv.includes('--fix')) {
-              console.log(`\n🔧 FIXING DATABASE STATUS...`);
-              await db
-                .update(teams)
-                .set({
-                  paymentStatus: 'paid',
-                  paymentMethodId: setupIntent.payment_method?.toString(),
-                  stripeCustomerId: setupIntent.customer?.toString()
-                })
-                .where(eq(teams.id, team.id));
-              console.log(`✅ Team ${team.id} payment status updated to 'paid'`);
-            }
+            console.log(`   📋 RECOMMENDED ACTION: Team ready for approval, not automatic payment marking`);
+            console.log(`   💡 USE: "Approve Without Payment" button or generate payment completion URL`);
           }
           
           if (setupIntent.status === 'requires_action') {
@@ -139,14 +126,16 @@ async function checkAll3DSecureIssues() {
           const setupIntent = await stripe.setupIntents.retrieve(team.setupIntentId);
           
           if (setupIntent.status === 'succeeded' && team.paymentStatus !== 'paid') {
-            console.log(`\n✅ MISMATCH FOUND: Team ${team.id} (${team.name})`);
+            console.log(`\n✅ 3D SECURE COMPLETED: Team ${team.id} (${team.name})`);
             console.log(`   Database: ${team.paymentStatus} | Stripe: ${setupIntent.status}`);
+            console.log(`   📋 ACTION: Generate payment completion URL or approve without payment`);
             fixableTeams.push({
               id: team.id,
               name: team.name,
               setupIntentId: setupIntent.id,
               paymentMethod: setupIntent.payment_method,
-              customer: setupIntent.customer
+              customer: setupIntent.customer,
+              status: 'needs_completion_url'
             });
           }
           
@@ -162,27 +151,15 @@ async function checkAll3DSecureIssues() {
     }
     
     if (fixableTeams.length > 0) {
-      console.log(`\n📋 SUMMARY: ${fixableTeams.length} teams can be automatically fixed`);
+      console.log(`\n📋 SUMMARY: ${fixableTeams.length} teams completed 3D Secure authentication`);
       fixableTeams.forEach(team => {
-        console.log(`   - Team ${team.id}: ${team.name}`);
+        console.log(`   - Team ${team.id}: ${team.name} - Needs payment completion URL`);
       });
       
-      if (process.argv.includes('--fix')) {
-        console.log(`\n🔧 FIXING ALL TEAMS...`);
-        for (const team of fixableTeams) {
-          await db
-            .update(teams)
-            .set({
-              paymentStatus: 'paid',
-              paymentMethodId: team.paymentMethod?.toString(),
-              stripeCustomerId: team.customer?.toString()
-            })
-            .where(eq(teams.id, team.id));
-          console.log(`✅ Fixed Team ${team.id}`);
-        }
-      } else {
-        console.log(`\n💡 Run with --fix flag to automatically update these teams`);
-      }
+      console.log(`\n💡 NEXT STEPS:`);
+      console.log(`   1. Generate payment completion URLs for these teams`);
+      console.log(`   2. Or use "Approve Without Payment" if they should be charged during approval`);
+      console.log(`   3. These teams have valid payment methods but need final charge processing`);
     }
     
   } catch (error) {
