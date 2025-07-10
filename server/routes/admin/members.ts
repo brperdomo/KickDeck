@@ -127,7 +127,8 @@ export async function getMemberById(req: Request, res: Response) {
       ageGroup: reg.ageGroup?.ageGroup || 'Unknown Age Group',
       registrationDate: reg.team.createdAt,
       status: reg.team.status || 'pending',
-      amountPaid: reg.team.registrationFee || 0,
+      // Use totalAmount (stored in cents) and convert to dollars, fallback to registrationFee
+      amountPaid: reg.team.totalAmount ? (reg.team.totalAmount / 100) : (reg.team.registrationFee || 0),
       termsAccepted: reg.team.termsAcknowledged || false,
       termsAcceptedAt: reg.team.termsAcknowledgedAt || reg.team.createdAt
     }));
@@ -269,10 +270,12 @@ export async function resendPaymentConfirmation(req: Request, res: Response) {
       }
     }
     
-    // Format fee amount for display
-    const feeAmount = registration.team.registrationFee 
-      ? `$${(registration.team.registrationFee / 100).toFixed(2)}` 
-      : 'N/A';
+    // Format fee amount for display - use totalAmount (in cents) or fallback to registrationFee
+    const feeAmount = registration.team.totalAmount 
+      ? `$${(registration.team.totalAmount / 100).toFixed(2)}` 
+      : registration.team.registrationFee 
+        ? `$${(registration.team.registrationFee / 100).toFixed(2)}` 
+        : 'N/A';
     
     // Send confirmation email
     if (submitterEmail) {
@@ -384,7 +387,8 @@ export async function getCurrentUserRegistrations(req: Request, res: Response) {
     // Enhanced version of formattedRegistrations with payment details
     const formattedRegistrations = await Promise.all(teamRegistrations.map(async reg => {
       // Get the actual payment amount from payment_transactions table for approved teams
-      let actualAmountCharged = reg.team.registrationFee || reg.team.totalAmount || 0;
+      // Use totalAmount (in cents) first, then fallback to registrationFee
+      let actualAmountCharged = reg.team.totalAmount || reg.team.registrationFee || 0;
       let transactionData = null;
       
       if (reg.team.status === 'approved' && reg.team.paymentIntentId) {

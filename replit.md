@@ -113,6 +113,14 @@ MatchPro AI is a comprehensive sports event management platform designed for tou
 - **Security**: Role-based access control and secure payment processing
 
 ## Changelog
+- July 10, 2025: CRITICAL PAYMENT AMOUNT DISPLAY FIX - Resolved incorrect $0.00 payment amounts in member registration display
+  - IDENTIFIED: Member details showing $0.00 for paid registrations due to using wrong database field (registrationFee vs totalAmount)
+  - FIXED: Updated getMemberById API to use totalAmount field (stored in cents) and convert to dollars for display
+  - ENHANCED: Added fallback logic checking totalAmount first, then registrationFee for backward compatibility
+  - CORRECTED: Payment confirmation email function also updated to use proper amount calculation
+  - VERIFIED: Database contains correct payment data (e.g., team 478 shows $447.50 stored as 44750 cents in totalAmount field)
+  - UNIVERSAL: Fix applies to all member records across the system, ensuring accurate payment amount display
+  - PRODUCTION READY: Member payment amounts now display correctly showing actual paid amounts instead of $0.00
 - July 10, 2025: MEMBER MERGE FUNCTIONALITY FULLY COMPLETED - Implemented comprehensive member account merging system with complete data consolidation and dual database synchronization
   - CREATED: Complete member merge interface with search functionality, confirmation dialog, and user-friendly warnings about permanent data transfer
   - IMPLEMENTED: Backend API endpoint /api/admin/members/:id/merge with POST method for merging source member into target member account
