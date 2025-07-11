@@ -113,6 +113,13 @@ MatchPro AI is a comprehensive sports event management platform designed for tou
 - **Security**: Role-based access control and secure payment processing
 
 ## Changelog
+- July 11, 2025: CRITICAL BULK APPROVAL TRACKING FIX - Fixed missing approval tracking in bulk team approval functionality to maintain complete audit trails
+  - IDENTIFIED: Bulk approval function was not recording approved_by_user_id and approved_at fields, creating audit trail gaps
+  - FIXED: Added proper approval tracking to bulk approval workflow including approver user ID and timestamp
+  - CONFIRMED: Individual approvals and payment completion URLs already working correctly with full tracking
+  - VERIFIED: Payment Logs interface already displays approval tracking information with approver details
+  - ENHANCED: All approval workflows (individual, bulk, payment completion) now maintain complete audit trails
+  - PRODUCTION READY: Complete team approval tracking system operational across all approval methods
 - July 11, 2025: COMPREHENSIVE VALIDATION SYSTEM WITH SPECIFIC ERROR MESSAGING - Fixed critical routing issues and implemented detailed step-by-step validation to replace vague error messages
   - FIXED: Critical API routing issue from `/api/admin/game-metadata/{eventId}/game-metadata` to proper `/api/admin/events/{eventId}/game-metadata`
   - ENHANCED: Comprehensive step-by-step validation system with specific error messages instead of generic "No games found" errors
