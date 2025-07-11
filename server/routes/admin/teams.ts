@@ -1555,10 +1555,13 @@ async function bulkApproveTeams(req: Request, res: Response) {
           });
         }
 
-        // Update team status to approved
+        // Update team status to approved with proper tracking
+        const now = new Date().toISOString();
         await db.update(teams)
           .set({ 
             status: 'approved',
+            approvedByUserId: req.user?.id || null,
+            approvedAt: sql`${now}`,
             notes: notes ? `${team.notes ? team.notes + '\n' : ''}Bulk approval: ${notes}` : team.notes
           })
           .where(eq(teams.id, parseInt(teamId, 10)));
