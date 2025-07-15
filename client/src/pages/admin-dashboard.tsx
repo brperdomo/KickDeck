@@ -30,6 +30,7 @@ import { TeamModal } from "@/components/teams/TeamModal";
 import { TeamCsvUploader } from "@/components/teams/TeamCsvUploader";
 import { FormSubmissionsCard } from "@/components/admin/FormSubmissionsCard";
 import { FeeAdjustmentDialog } from "@/components/admin/FeeAdjustmentDialog";
+import { TeamContactEditDialog } from "@/components/TeamContactEditDialog";
 import { BracketAssignmentModal } from "@/components/BracketAssignmentModal";
 import { ScheduleVisualization } from "@/components/ScheduleVisualization";
 import BracketSelector from "@/components/admin/scheduling/BracketSelector";
@@ -3245,6 +3246,7 @@ function TeamsView() {
   const [isBulkRejectionDialogOpen, setIsBulkRejectionDialogOpen] = useState(false);
   const [bulkRejectionNotes, setBulkRejectionNotes] = useState("");
   const [isFeeAdjustmentDialogOpen, setIsFeeAdjustmentDialogOpen] = useState(false);
+  const [isTeamContactEditOpen, setIsTeamContactEditOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -3679,6 +3681,44 @@ function TeamsView() {
     }
   });
   
+  // Update Team Contacts Mutation
+  const updateTeamContactsMutation = useMutation({
+    mutationFn: async (contactData: any) => {
+      const response = await fetch(`/api/member/teams/${selectedTeam.id}/contacts`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(contactData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update team contacts');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Team contacts updated successfully",
+        variant: "default"
+      });
+      setIsTeamContactEditOpen(false);
+      // Refresh the team details to show updated contact information
+      queryClient.invalidateQueries(['admin', 'teams', selectedTeam?.id]);
+      // Also refetch all teams to ensure the list is updated
+      teamsQuery.refetch();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
 
   // Update selectedTeam when player data is available
   useEffect(() => {
@@ -4906,8 +4946,16 @@ function TeamsView() {
                 </Card>
                 
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Team Information</CardTitle>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsTeamContactEditOpen(true)}
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit Contacts
+                    </Button>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="grid grid-cols-3 gap-1">
@@ -6002,6 +6050,15 @@ function TeamsView() {
             teamsQuery.refetch();
           }
         }}
+      />
+
+      {/* Team Contact Edit Dialog */}
+      <TeamContactEditDialog
+        team={selectedTeam}
+        open={isTeamContactEditOpen}
+        onOpenChange={setIsTeamContactEditOpen}
+        onSubmit={(contactData) => updateTeamContactsMutation.mutate(contactData)}
+        isSubmitting={updateTeamContactsMutation.isPending}
       />
     </>
   );

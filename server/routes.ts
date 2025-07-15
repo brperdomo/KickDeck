@@ -17,6 +17,7 @@ import foldersRouter from "./routes/folders";
 import csvUploadRouter from "./routes/csv-upload";
 import csvTeamUploadRouter from "./routes/csv-team-upload";
 import memberRosterUploadRouter from "./routes/member-roster-upload";
+import memberTeamManagementRouter from "./routes/member-team-management";
 import accountingCodesRouter from "./routes/admin/accounting-codes";
 import feesRouter from "./routes/admin/fees";
 import publicAgeGroupsRouter from "./routes/age-groups";  // Public age groups router
