@@ -4581,6 +4581,9 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
     
     // CSV upload helper for team imports (admin)
     app.use('/api/admin/import', isAdmin, csvTeamUploadRouter);
+    
+    // Member team management routes
+    app.use('/api/member-teams', memberTeamManagementRouter);
 
     // API endpoint for team import eligible events - shows ALL events regardless of application deadline
     app.get('/api/admin/import-eligible-events', isAdmin, async (req, res) => {

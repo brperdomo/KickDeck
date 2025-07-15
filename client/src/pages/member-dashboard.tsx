@@ -171,7 +171,7 @@ export default function MemberDashboard() {
   // Update team contact information mutation
   const updateTeamContactsMutation = useMutation({
     mutationFn: async ({ teamId, contacts }: { teamId: number; contacts: typeof managerForm }) => {
-      const response = await fetch(`/api/member/teams/${teamId}/contacts`, {
+      const response = await fetch(`/api/member-teams/${teamId}/contacts`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
