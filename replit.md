@@ -113,6 +113,15 @@ MatchPro AI is a comprehensive sports event management platform designed for tou
 - **Security**: Role-based access control and secure payment processing
 
 ## Changelog
+- July 15, 2025: ADMIN TEAM CONTACT EDITING FEATURE COMPLETED - Implemented comprehensive contact editing functionality in admin dashboard with automatic account creation and email notifications
+  - CREATED: "Edit Contacts" button in team details Team Information card for easy access to contact management
+  - IMPLEMENTED: TeamContactEditDialog component with professional form interface supporting manager and coach contact updates
+  - ENHANCED: Contact update mutation with real-time validation and proper error handling for email format validation
+  - INTEGRATED: Automatic user account creation for new email addresses with SendGrid welcome email notifications
+  - FIXED: Import path issues in member-team-management routes using proper @db schema imports
+  - VALIDATED: Form validation ensures manager name and email are required, with optional coach information
+  - ACCESSIBLE: Contact editing functionality available directly from admin team details interface
+  - PRODUCTION READY: Complete admin contact editing system operational with automatic account provisioning and email workflows
 - July 15, 2025: ENHANCED APPROVED TEAMS DISPLAY WITH DATE APPROVED COLUMN - Added chronological approval date display with most recent approvals first
   - IMPLEMENTED: "Date Approved" column in approved teams table showing actual approval timestamps instead of registration dates
   - ENHANCED: Backend API now includes approvedAt field in team data and sorts approved teams by approval timestamp (most recent first)

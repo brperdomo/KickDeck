@@ -7,6 +7,7 @@ import { createAdmin } from "./create-admin";
 import path from "path";
 import uploadRouter from "./routes/upload";
 import memberRosterUploadRouter from "./routes/member-roster-upload";
+import memberTeamManagementRouter from "./routes/member-team-management";
 import { createEmailTemplatesTable } from "./migrations/create_email_templates";
 import { createEmailTemplateRoutingTable } from "./migrations/create_email_template_routing";
 import { createTables } from "./create-tables";
@@ -172,6 +173,9 @@ async function testDbConnection() {
 
     // Register member roster upload routes after authentication is fully configured
     app.use("/api/member-roster", memberRosterUploadRouter);
+    
+    // Register member team management routes for updating contacts
+    app.use("/api/member", memberTeamManagementRouter);
 
     log("API routes registered");
 
