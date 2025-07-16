@@ -6,9 +6,27 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, FileText, Users, Calendar, AlertCircle, CheckCircle, Download, ArrowLeft, Home, User, Shield } from "lucide-react";
+import { Upload, FileText, Users, Calendar, AlertCircle, CheckCircle, Download, ArrowLeft, Home, User, Shield, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "wouter";
+
+// Utility function to format currency
+const formatCurrency = (amountInCents: number | null | undefined): string => {
+  if (amountInCents === null || amountInCents === undefined || isNaN(amountInCents)) {
+    return '$0.00';
+  }
+  return `$${(amountInCents / 100).toFixed(2)}`;
+};
+
+// Utility function to format date safely
+const formatDateSafe = (dateString: string | null | undefined): string => {
+  if (!dateString) return 'Unknown';
+  try {
+    return format(new Date(dateString), 'MMM d, yyyy');
+  } catch (error) {
+    return 'Invalid Date';
+  }
+};
 
 interface Team {
   id: number;
@@ -23,6 +41,13 @@ interface Team {
   rosterUploadMethod: string | null;
   playerCount: number;
   needsRoster: boolean;
+  submitterEmail: string | null;
+  submitterName: string | null;
+  managerEmail: string | null;
+  managerName: string | null;
+  totalAmount: number | null;
+  registrationFee: number | null;
+  status: string | null;
 }
 
 interface Player {
@@ -171,9 +196,9 @@ export default function MemberRosterUpload() {
       <div className="container mx-auto p-6 space-y-6">
         {/* Navigation Breadcrumbs */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-          <Link href="/dashboard" className="flex items-center gap-1 hover:text-primary transition-colors">
+          <Link href="/dashboard/member-roster" className="flex items-center gap-1 hover:text-primary transition-colors">
             <Home className="h-4 w-4" />
-            Dashboard
+            Member Dashboard
           </Link>
           <span>/</span>
           <span className="text-foreground font-medium">Team Roster Upload</span>
@@ -183,10 +208,10 @@ export default function MemberRosterUpload() {
         <div className="bg-white/60 backdrop-blur-sm rounded-lg border border-white/20 shadow-lg p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link href="/dashboard">
+              <Link href="/dashboard/member-roster">
                 <Button variant="outline" size="sm" className="flex items-center gap-2">
                   <ArrowLeft className="h-4 w-4" />
-                  Back to Dashboard
+                  Back to Member Dashboard
                 </Button>
               </Link>
               <div>
@@ -298,14 +323,34 @@ export default function MemberRosterUpload() {
                     </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          Registered: {team.createdAt ? format(new Date(team.createdAt), 'MMM d, yyyy') : 'Unknown'}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-orange-700">
+                            <div className="p-1 bg-orange-100 rounded">
+                              <Calendar className="h-3 w-3" />
+                            </div>
+                            <span>Registered: {formatDateSafe(team.createdAt)}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-orange-700">
+                            <div className="p-1 bg-orange-100 rounded">
+                              <User className="h-3 w-3" />
+                            </div>
+                            <span>Submitted by: {team.submitterName || team.submitterEmail || 'Unknown'}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          Current Players: {team.playerCount}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-orange-700">
+                            <div className="p-1 bg-orange-100 rounded">
+                              <Users className="h-3 w-3" />
+                            </div>
+                            <span>Current Players: {team.playerCount}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-orange-700">
+                            <div className="p-1 bg-orange-100 rounded">
+                              <DollarSign className="h-3 w-3" />
+                            </div>
+                            <span>Amount: {formatCurrency(team.totalAmount || team.registrationFee)}</span>
+                          </div>
                         </div>
                       </div>
                       
@@ -426,25 +471,41 @@ export default function MemberRosterUpload() {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-4">
-                    <div className="flex items-center gap-6 text-sm">
-                      <div className="flex items-center gap-2 text-green-700">
-                        <div className="p-1 bg-green-100 rounded">
-                          <Calendar className="h-3 w-3" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-green-700">
+                          <div className="p-1 bg-green-100 rounded">
+                            <Calendar className="h-3 w-3" />
+                          </div>
+                          <span>Registered: {formatDateSafe(team.createdAt)}</span>
                         </div>
-                        <span>Registered: {team.createdAt ? format(new Date(team.createdAt), 'MMM d, yyyy') : 'Unknown'}</span>
+                        <div className="flex items-center gap-2 text-green-700">
+                          <div className="p-1 bg-green-100 rounded">
+                            <User className="h-3 w-3" />
+                          </div>
+                          <span>Submitted by: {team.submitterName || team.submitterEmail || 'Unknown'}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 text-green-700">
-                        <div className="p-1 bg-green-100 rounded">
-                          <Users className="h-3 w-3" />
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-green-700">
+                          <div className="p-1 bg-green-100 rounded">
+                            <Users className="h-3 w-3" />
+                          </div>
+                          <span>Players: {team.playerCount}</span>
                         </div>
-                        <span>Players: {team.playerCount}</span>
+                        <div className="flex items-center gap-2 text-green-700">
+                          <div className="p-1 bg-green-100 rounded">
+                            <DollarSign className="h-3 w-3" />
+                          </div>
+                          <span>Amount: {formatCurrency(team.totalAmount || team.registrationFee)}</span>
+                        </div>
                       </div>
                       {team.rosterUploadedAt && (
-                        <div className="flex items-center gap-2 text-green-700">
+                        <div className="flex items-center gap-2 text-green-700 md:col-span-2">
                           <div className="p-1 bg-green-100 rounded">
                             <Upload className="h-3 w-3" />
                           </div>
-                          <span>Uploaded: {format(new Date(team.rosterUploadedAt), 'MMM d, yyyy')}</span>
+                          <span>Uploaded: {formatDateSafe(team.rosterUploadedAt)}</span>
                         </div>
                       )}
                     </div>
