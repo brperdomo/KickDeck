@@ -1,31 +1,31 @@
 {
-  "variant": "vibrant",
-  "primary": "hsl(220 85% 60%)",
+  "variant": "professional",
+  "primary": "hsl(220 90% 56%)",
   "appearance": "light",
-  "radius": 0.75,
+  "radius": 0.5,
   "colors": {
-    "background": "hsl(210 20% 98%)",
-    "foreground": "hsl(220 15% 15%)",
+    "background": "hsl(0 0% 100%)",
+    "foreground": "hsl(222.2 84% 4.9%)",
     "card": "hsl(0 0% 100%)",
-    "card-foreground": "hsl(220 15% 15%)",
+    "card-foreground": "hsl(222.2 84% 4.9%)",
     "popover": "hsl(0 0% 100%)",
-    "popover-foreground": "hsl(220 15% 15%)",
-    "primary": "hsl(220 85% 60%)",
-    "primary-foreground": "hsl(0 0% 100%)",
-    "secondary": "hsl(210 40% 96.1%)",
-    "secondary-foreground": "hsl(220 15% 25%)",
-    "muted": "hsl(210 40% 96.1%)",
+    "popover-foreground": "hsl(222.2 84% 4.9%)",
+    "primary": "hsl(221.2 83.2% 53.3%)",
+    "primary-foreground": "hsl(210 40% 98%)",
+    "secondary": "hsl(210 40% 96%)",
+    "secondary-foreground": "hsl(222.2 47.4% 11.2%)",
+    "muted": "hsl(210 40% 96%)",
     "muted-foreground": "hsl(215.4 16.3% 46.9%)",
-    "accent": "hsl(270 70% 65%)",
-    "accent-foreground": "hsl(0 0% 100%)",
-    "destructive": "hsl(0 70% 58%)",
-    "destructive-foreground": "hsl(0 0% 100%)",
+    "accent": "hsl(210 40% 96%)",
+    "accent-foreground": "hsl(222.2 47.4% 11.2%)",
+    "destructive": "hsl(0 62.8% 30.6%)",
+    "destructive-foreground": "hsl(210 40% 98%)",
     "border": "hsl(214.3 31.8% 91.4%)",
     "input": "hsl(214.3 31.8% 91.4%)",
-    "ring": "hsl(220 85% 60%)",
-    "success": "hsl(142 76% 42%)",
-    "warning": "hsl(38 92% 55%)",
-    "info": "hsl(210 90% 65%)"
+    "ring": "hsl(221.2 83.2% 53.3%)",
+    "success": "hsl(142.1 76.2% 36.3%)",
+    "warning": "hsl(38 92% 50%)",
+    "info": "hsl(199 89% 48%)"
   },
   "custom": {
     "scheduling": {
@@ -46,16 +46,16 @@
       }
     },
     "adminNav": {
-      "background": "linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 20% 98%) 100%)",
-      "text": "hsl(220 15% 25%)",
-      "active": "hsl(220 85% 60%)",
-      "hover": "hsl(210 40% 96.1%)"
+      "background": "linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 40% 98%) 100%)",
+      "text": "hsl(222.2 47.4% 11.2%)",
+      "active": "hsl(221.2 83.2% 53.3%)",
+      "hover": "hsl(210 40% 96%)"
     },
     "gradients": {
-      "primary": "linear-gradient(135deg, hsl(220 85% 60%) 0%, hsl(270 70% 65%) 100%)",
-      "sidebar": "linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 20% 98%) 100%)",
-      "card": "linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(210 20% 99%) 100%)",
-      "hero": "linear-gradient(135deg, hsl(220 85% 60%) 0%, hsl(270 70% 65%) 50%, hsl(330 75% 60%) 100%)"
+      "primary": "linear-gradient(135deg, hsl(221.2 83.2% 53.3%) 0%, hsl(212 100% 47%) 100%)",
+      "sidebar": "linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 20% 99%) 100%)",
+      "card": "linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(210 40% 99%) 100%)",
+      "hero": "linear-gradient(135deg, hsl(221.2 83.2% 53.3%) 0%, hsl(212 100% 47%) 50%, hsl(207 89% 54%) 100%)"
     },
     "shadows": {
       "card": "0 8px 32px rgba(59, 130, 246, 0.12)",
