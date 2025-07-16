@@ -1,14 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Save, User, Mail, Phone, Search, Check, UserCheck, Users } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Badge } from '@/components/ui/badge';
+import { Loader2, Save, User, Mail, Phone } from 'lucide-react';
 
 interface TeamContactEditDialogProps {
   team: any;
@@ -32,24 +27,6 @@ export function TeamContactEditDialog({
   const [headCoachEmail, setHeadCoachEmail] = useState('');
   const [headCoachPhone, setHeadCoachPhone] = useState('');
   const [errors, setErrors] = useState<{[key: string]: string}>({});
-  
-  // Email search states
-  const [managerEmailOpen, setManagerEmailOpen] = useState(false);
-  const [coachEmailOpen, setCoachEmailOpen] = useState(false);
-  const [emailSearchQuery, setEmailSearchQuery] = useState('');
-
-  // Fetch existing users for email search
-  const { data: existingUsers = [] } = useQuery({
-    queryKey: ['/api/admin/members', emailSearchQuery],
-    queryFn: async () => {
-      if (!emailSearchQuery || emailSearchQuery.length < 2) return [];
-      const response = await fetch(`/api/admin/members?search=${encodeURIComponent(emailSearchQuery)}&limit=10`);
-      if (!response.ok) return [];
-      const data = await response.json();
-      return data.members || [];
-    },
-    enabled: emailSearchQuery.length >= 2,
-  });
 
   // Populate form when team data changes
   useEffect(() => {
@@ -88,20 +65,6 @@ export function TeamContactEditDialog({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Helper function to handle email selection
-  const handleEmailSelect = (selectedUser: any, isManager: boolean) => {
-    if (isManager) {
-      setManagerEmail(selectedUser.email);
-      setManagerName(selectedUser.name || '');
-      setManagerEmailOpen(false);
-    } else {
-      setHeadCoachEmail(selectedUser.email);
-      setHeadCoachName(selectedUser.name || '');
-      setCoachEmailOpen(false);
-    }
-    setEmailSearchQuery('');
-  };
-
   const handleSubmit = () => {
     if (!validateForm()) {
       return;
@@ -123,10 +86,10 @@ export function TeamContactEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
+            <User className="h-5 w-5" />
             Edit Team Contacts
           </DialogTitle>
         </DialogHeader>
@@ -139,206 +102,83 @@ export function TeamContactEditDialog({
             <p className="text-sm text-muted-foreground">{team.ageGroup?.name || 'No age group'}</p>
           </div>
 
-          {/* Tabbed Interface */}
-          <Tabs defaultValue="manager" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="manager" className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Team Manager
-              </TabsTrigger>
-              <TabsTrigger value="coach" className="flex items-center gap-2">
-                <UserCheck className="h-4 w-4" />
-                Head Coach
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="manager" className="space-y-4 mt-6">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="managerName">Name *</Label>
-                  <Input
-                    id="managerName"
-                    value={managerName}
-                    onChange={(e) => setManagerName(e.target.value)}
-                    placeholder="Manager's full name"
-                    className={errors.managerName ? 'border-red-500' : ''}
-                  />
-                  {errors.managerName && (
-                    <p className="text-red-500 text-sm mt-1">{errors.managerName}</p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="managerEmail">Email *</Label>
-                  <div className="relative">
-                    <Popover open={managerEmailOpen} onOpenChange={setManagerEmailOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={managerEmailOpen}
-                          className={`w-full justify-between ${errors.managerEmail ? 'border-red-500' : ''}`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-4 w-4 text-muted-foreground" />
-                            <span className="truncate">
-                              {managerEmail || "Search for existing email or type new one..."}
-                            </span>
-                          </div>
-                          <Search className="h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0" align="start">
-                        <Command>
-                          <CommandInput
-                            placeholder="Search emails or type new..."
-                            value={emailSearchQuery}
-                            onValueChange={setEmailSearchQuery}
-                          />
-                          <CommandList>
-                            {emailSearchQuery && (
-                              <CommandGroup heading="Actions">
-                                <CommandItem
-                                  onSelect={() => {
-                                    setManagerEmail(emailSearchQuery);
-                                    setManagerEmailOpen(false);
-                                    setEmailSearchQuery('');
-                                  }}
-                                >
-                                  <Mail className="h-4 w-4 mr-2" />
-                                  Use "{emailSearchQuery}" as new email
-                                </CommandItem>
-                              </CommandGroup>
-                            )}
-                            {existingUsers.length > 0 && (
-                              <CommandGroup heading="Existing Users">
-                                {existingUsers.map((user: any) => (
-                                  <CommandItem
-                                    key={user.id}
-                                    onSelect={() => handleEmailSelect(user, true)}
-                                  >
-                                    <div className="flex items-center gap-2 w-full">
-                                      <Check className="h-4 w-4" />
-                                      <div className="flex-1">
-                                        <div className="font-medium">{user.name}</div>
-                                        <div className="text-sm text-muted-foreground">{user.email}</div>
-                                      </div>
-                                      <Badge variant="secondary" className="text-xs">
-                                        {user.teamCount || 0} teams
-                                      </Badge>
-                                    </div>
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            )}
-                            {emailSearchQuery.length >= 2 && existingUsers.length === 0 && (
-                              <CommandEmpty>No existing users found. You can still use the new email above.</CommandEmpty>
-                            )}
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  {errors.managerEmail && (
-                    <p className="text-red-500 text-sm mt-1">{errors.managerEmail}</p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="managerPhone">Phone</Label>
-                  <Input
-                    id="managerPhone"
-                    value={managerPhone}
-                    onChange={(e) => setManagerPhone(e.target.value)}
-                    placeholder="(555) 123-4567"
-                  />
-                </div>
+          {/* Manager Information */}
+          <div className="space-y-4">
+            <h4 className="font-medium flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Team Manager
+            </h4>
+            
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="managerName">Name *</Label>
+                <Input
+                  id="managerName"
+                  value={managerName}
+                  onChange={(e) => setManagerName(e.target.value)}
+                  placeholder="Manager's full name"
+                  className={errors.managerName ? 'border-red-500' : ''}
+                />
+                {errors.managerName && (
+                  <p className="text-red-500 text-sm mt-1">{errors.managerName}</p>
+                )}
               </div>
-            </TabsContent>
 
-            <TabsContent value="coach" className="space-y-4 mt-6">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="headCoachName">Name</Label>
-                  <Input
-                    id="headCoachName"
-                    value={headCoachName}
-                    onChange={(e) => setHeadCoachName(e.target.value)}
-                    placeholder="Coach's full name"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="managerEmail">Email *</Label>
+                <Input
+                  id="managerEmail"
+                  type="email"
+                  value={managerEmail}
+                  onChange={(e) => setManagerEmail(e.target.value)}
+                  placeholder="manager@example.com"
+                  className={errors.managerEmail ? 'border-red-500' : ''}
+                />
+                {errors.managerEmail && (
+                  <p className="text-red-500 text-sm mt-1">{errors.managerEmail}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="managerPhone">Phone</Label>
+                <Input
+                  id="managerPhone"
+                  value={managerPhone}
+                  onChange={(e) => setManagerPhone(e.target.value)}
+                  placeholder="(555) 123-4567"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Coach Information */}
+          <div className="space-y-4">
+            <h4 className="font-medium flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Head Coach
+            </h4>
+            
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="headCoachName">Name</Label>
+                <Input
+                  id="headCoachName"
+                  value={headCoachName}
+                  onChange={(e) => setHeadCoachName(e.target.value)}
+                  placeholder="Coach's full name"
+                />
+              </div>
 
               <div>
                 <Label htmlFor="headCoachEmail">Email</Label>
-                <div className="relative">
-                  <Popover open={coachEmailOpen} onOpenChange={setCoachEmailOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={coachEmailOpen}
-                        className={`w-full justify-between ${errors.headCoachEmail ? 'border-red-500' : ''}`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span className="truncate">
-                            {headCoachEmail || "Search for existing email or type new one..."}
-                          </span>
-                        </div>
-                        <Search className="h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0" align="start">
-                      <Command>
-                        <CommandInput
-                          placeholder="Search emails or type new..."
-                          value={emailSearchQuery}
-                          onValueChange={setEmailSearchQuery}
-                        />
-                        <CommandList>
-                          {emailSearchQuery && (
-                            <CommandGroup heading="Actions">
-                              <CommandItem
-                                onSelect={() => {
-                                  setHeadCoachEmail(emailSearchQuery);
-                                  setCoachEmailOpen(false);
-                                  setEmailSearchQuery('');
-                                }}
-                              >
-                                <Mail className="h-4 w-4 mr-2" />
-                                Use "{emailSearchQuery}" as new email
-                              </CommandItem>
-                            </CommandGroup>
-                          )}
-                          {existingUsers.length > 0 && (
-                            <CommandGroup heading="Existing Users">
-                              {existingUsers.map((user: any) => (
-                                <CommandItem
-                                  key={user.id}
-                                  onSelect={() => handleEmailSelect(user, false)}
-                                >
-                                  <div className="flex items-center gap-2 w-full">
-                                    <Check className="h-4 w-4" />
-                                    <div className="flex-1">
-                                      <div className="font-medium">{user.name}</div>
-                                      <div className="text-sm text-muted-foreground">{user.email}</div>
-                                    </div>
-                                    <Badge variant="secondary" className="text-xs">
-                                      {user.teamCount || 0} teams
-                                    </Badge>
-                                  </div>
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          )}
-                          {emailSearchQuery.length >= 2 && existingUsers.length === 0 && (
-                            <CommandEmpty>No existing users found. You can still use the new email above.</CommandEmpty>
-                          )}
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                <Input
+                  id="headCoachEmail"
+                  type="email"
+                  value={headCoachEmail}
+                  onChange={(e) => setHeadCoachEmail(e.target.value)}
+                  placeholder="coach@example.com"
+                  className={errors.headCoachEmail ? 'border-red-500' : ''}
+                />
                 {errors.headCoachEmail && (
                   <p className="text-red-500 text-sm mt-1">{errors.headCoachEmail}</p>
                 )}
@@ -353,9 +193,8 @@ export function TeamContactEditDialog({
                   placeholder="(555) 123-4567"
                 />
               </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+            </div>
+          </div>
         </div>
 
         <DialogFooter>

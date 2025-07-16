@@ -78,13 +78,8 @@ router.get('/my-teams', requireAuth, async (req: Request, res: Response) => {
         rosterUploadedAt: teamsTable.rosterUploadedAt,
         rosterUploadMethod: teamsTable.rosterUploadMethod,
         submitterEmail: teamsTable.submitterEmail,
-        submitterName: teamsTable.submitterName,
         managerEmail: teamsTable.managerEmail,
-        managerName: teamsTable.managerName,
-        totalAmount: teamsTable.totalAmount,
-        registrationFee: teamsTable.registrationFee,
         createdAt: teamsTable.createdAt,
-        status: teamsTable.status,
       })
       .from(teamsTable)
       .leftJoin(eventsTable, eq(teamsTable.eventId, eventsTable.id))

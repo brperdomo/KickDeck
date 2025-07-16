@@ -4584,9 +4584,6 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
     
     // Member team management routes
     app.use('/api/member-teams', memberTeamManagementRouter);
-    
-    // Member roster upload routes
-    app.use('/api/member-roster', memberRosterUploadRouter);
 
     // API endpoint for team import eligible events - shows ALL events regardless of application deadline
     app.get('/api/admin/import-eligible-events', isAdmin, async (req, res) => {
