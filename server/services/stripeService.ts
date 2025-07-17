@@ -334,7 +334,8 @@ export async function createRefund(paymentIntentId: string, amount?: number) {
         paymentIntentId: paymentIntentId,
         amount: -(amount || paymentIntent.amount), // Negative amount for refund
         status: 'refunded',
-        paymentDate: new Date(),
+        transactionType: 'refund',
+        refundedAt: new Date(),
       });
     }
     
