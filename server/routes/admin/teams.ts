@@ -673,8 +673,114 @@ async function updateTeamStatus(req: Request, res: Response) {
             const errorMessage = paymentError.message;
             
             if (errorMessage.includes('was previously used and cannot be reused')) {
-              specificError = 'Payment method unusable (burned)';
-              actionRequired = 'Team must provide new payment method through registration';
+              // Try intelligent recovery using correct customer from Setup Intent
+              log(`Attempting intelligent payment method recovery for team ${teamId}`, 'admin');
+              
+              try {
+                if (currentTeam.setupIntentId) {
+                  const setupIntent = await stripe.setupIntents.retrieve(currentTeam.setupIntentId);
+                  const correctCustomerId = setupIntent.customer as string;
+                  
+                  if (correctCustomerId) {
+                    log(`Found correct customer ${correctCustomerId} from Setup Intent`, 'admin');
+                    
+                    // Verify customer exists and has usable payment methods
+                    const customer = await stripe.customers.retrieve(correctCustomerId);
+                    const paymentMethods = await stripe.paymentMethods.list({
+                      customer: correctCustomerId,
+                      type: 'card'
+                    });
+                    
+                    // Check if we can use the original burned payment method directly
+                    const originalPaymentMethod = setupIntent.payment_method;
+                    if (originalPaymentMethod) {
+                      log(`Attempting direct payment with burned payment method ${originalPaymentMethod}`, 'admin');
+                      
+                      // Try to charge the payment method directly without customer association
+                      const { calculateEventFees } = await import('../services/fee-calculator.js');
+                      const feeCalculation = await calculateEventFees(currentTeam.eventId, currentTeam.totalAmount);
+                      
+                      // Get event Connect account info
+                      const [eventInfo] = await db
+                        .select({
+                          stripeConnectAccountId: events.stripeConnectAccountId,
+                          connectAccountStatus: events.connectAccountStatus,
+                          connectChargesEnabled: events.connectChargesEnabled
+                        })
+                        .from(events)
+                        .where(eq(events.id, currentTeam.eventId));
+                      
+                      if (eventInfo?.stripeConnectAccountId && 
+                          eventInfo.connectAccountStatus === 'active' && 
+                          eventInfo.connectChargesEnabled) {
+                        
+                        // Create payment intent with burned payment method (no customer)
+                        const directPaymentIntent = await stripe.paymentIntents.create({
+                          amount: feeCalculation.totalChargedAmount,
+                          currency: 'usd',
+                          payment_method: originalPaymentMethod,
+                          confirm: true,
+                          off_session: true,
+                          application_fee_amount: feeCalculation.platformFeeAmount,
+                          transfer_data: {
+                            destination: eventInfo.stripeConnectAccountId,
+                          },
+                          metadata: {
+                            teamId: teamId,
+                            teamName: currentTeam.name,
+                            eventType: 'burned_payment_method_recovery',
+                            originalSetupIntent: setupIntent.id,
+                            recoveryMethod: 'direct_payment_without_customer'
+                          }
+                        });
+                        
+                        if (directPaymentIntent.status === 'succeeded') {
+                          log(`✅ Direct payment successful for burned payment method: ${directPaymentIntent.id}`, 'admin');
+                          
+                          // Update team with payment success
+                          await db.update(teams)
+                            .set({
+                              paymentIntentId: directPaymentIntent.id,
+                              paymentStatus: 'paid',
+                              paymentMethodId: originalPaymentMethod,
+                              stripeCustomerId: correctCustomerId
+                            })
+                            .where(eq(teams.id, parseInt(teamId, 10)));
+                          
+                          // Record the successful payment transaction
+                          await db.insert(paymentTransactions).values({
+                            teamId: parseInt(teamId, 10),
+                            eventId: parseInt(currentTeam.eventId.toString()),
+                            paymentIntentId: directPaymentIntent.id,
+                            transactionType: 'payment',
+                            amount: feeCalculation.totalChargedAmount,
+                            platformFeeAmount: feeCalculation.platformFeeAmount,
+                            status: 'succeeded',
+                            createdAt: new Date()
+                          });
+                          
+                          log(`✅ Payment recovery successful for team ${teamId} - charged $${(feeCalculation.totalChargedAmount / 100).toFixed(2)}`, 'admin');
+                          paymentStatus = 'payment_successful';
+                        } else {
+                          throw new Error(`Direct payment failed with status: ${directPaymentIntent.status}`);
+                        }
+                      } else {
+                        throw new Error('Event does not have proper Connect account for payment processing');
+                      }
+                    } else {
+                      throw new Error('No payment method found in Setup Intent for recovery');
+                    }
+                  } else {
+                    throw new Error('No customer found in Setup Intent');
+                  }
+                } else {
+                  throw new Error('No Setup Intent available for recovery');
+                }
+              } catch (recoveryError) {
+                log(`Payment method recovery failed for team ${teamId}: ${recoveryError}`, 'admin');
+                specificError = 'Payment method unusable (burned)';
+                actionRequired = 'Team must provide new payment method through registration';
+              }
             } else if (errorMessage.includes('No such customer')) {
               specificError = 'Customer record missing from Stripe';
               actionRequired = 'Team needs to resubmit payment information';
@@ -690,14 +796,17 @@ async function updateTeamStatus(req: Request, res: Response) {
             }
           }
           
-          return res.status(400).json({
-            status: 'error',
-            error: specificError,
-            message: `${specificError}. ${actionRequired}`,
-            actionRequired: actionRequired,
-            paymentStatus: paymentStatus,
-            teamStatus: currentTeam.status
-          });
+          // Only return error if payment was not successfully recovered
+          if (paymentStatus !== 'payment_successful') {
+            return res.status(400).json({
+              status: 'error',
+              error: specificError,
+              message: `${specificError}. ${actionRequired}`,
+              actionRequired: actionRequired,
+              paymentStatus: paymentStatus,
+              teamStatus: currentTeam.status
+            });
+          }
         }
       }
       
