@@ -57,6 +57,22 @@ async function processTeamApprovalPayment(team: any, teamId: string): Promise<st
       return await processTeamApprovalPaymentFallback(team, teamId);
     }
     
+    // Check if this is a burned payment method issue
+    if (error instanceof Error && error.message.includes('was previously used and cannot be reused')) {
+      log(`ADMIN MAIN: Burned payment method detected for team ${teamId} - team needs new payment method`, 'admin');
+      
+      // Mark payment method as unusable and require new one
+      await db.update(teams)
+        .set({
+          paymentStatus: 'payment_method_invalid',
+          paymentMethodId: null, // Clear the burned payment method
+          notes: `Payment method was previously used without customer and cannot be reused. Team needs to provide new payment method.`
+        })
+        .where(eq(teams.id, parseInt(teamId, 10)));
+      
+      return 'burned_payment_method';
+    }
+    
     // Parse detailed Stripe error information for admin context
     let detailedErrorContext = 'Unknown error';
     if (error && typeof error === 'object' && 'detailedContext' in error) {
@@ -708,7 +724,7 @@ async function updateTeamStatus(req: Request, res: Response) {
       }
       
       // If payment failed or requires action, don't approve the team yet
-      if (paymentStatus === 'payment_failed' || paymentStatus === 'payment_required' || paymentStatus === 'no_payment_method' || paymentStatus === 'payment_method_incomplete' || paymentStatus === 'payment_error' || paymentStatus === 'payment_completion_required') {
+      if (paymentStatus === 'payment_failed' || paymentStatus === 'payment_required' || paymentStatus === 'no_payment_method' || paymentStatus === 'payment_method_incomplete' || paymentStatus === 'payment_error' || paymentStatus === 'payment_completion_required' || paymentStatus === 'burned_payment_method') {
         log(`Cannot approve team ${teamId} due to payment issue: ${paymentStatus}`, 'admin');
         
         // Revert the team status back to its previous state
@@ -730,7 +746,9 @@ async function updateTeamStatus(req: Request, res: Response) {
                 ? 'Team has incomplete payment method setup. Use "Generate Payment Completion URL" to allow them to complete payment setup.'
                 : paymentStatus === 'payment_completion_required'
                   ? 'Team approved but requires payment method completion. Use "Generate Payment Completion URL" to allow them to complete payment setup.'
-                  : 'Payment processing failed. Please check team payment details.',
+                  : paymentStatus === 'burned_payment_method'
+                    ? 'Team\'s payment method was previously used and cannot be reused. Use "Generate Payment Completion URL" to allow them to provide a new payment method.'
+                    : 'Payment processing failed. Please check team payment details.',
           paymentStatus: paymentStatus,
           teamStatus: currentTeam.status
         });

@@ -74,6 +74,14 @@ export function PaymentMethodDisplay({ team, showCardDetails = true }: PaymentMe
         </Badge>
       );
 
+    case 'payment_method_invalid':
+      return (
+        <Badge variant="destructive" className="bg-red-600/90 text-white">
+          <AlertCircle className="w-3 h-3 mr-1" />
+          Card Unusable
+        </Badge>
+      );
+
     case 'requires_payment_method':
       return (
         <Badge variant="outline" className="text-orange-600 border-orange-400">
