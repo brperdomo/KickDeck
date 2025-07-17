@@ -1,0 +1,585 @@
+10Failed to decode downloaded font: <URL>Understand this warning
+10OTS parsing error: invalid sfntVersion: 791289955Understand this warning
+index-DxuLsOIm.js:747 Fetching brackets for event 1825427780 and age group 9987
+6Fetch finished loading: GET "<URL>".
+index-DxuLsOIm.js:855 Sending status update with data: {teamId: 492, status: 'approved', notes: 'Approval attempted but payment failed (payment_err…eam has completed payment setup before approving.', skipPayment: undefined, skipEmail: undefined}
+index-DxuLsOIm.js:855 Fetch finished loading: PUT "https://app.matchpro.ai/api/admin/teams/492/status".
+mutationFn @ index-DxuLsOIm.js:855
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37
+index-DxuLsOIm.js:855 Raw response text: {"status":"success","team":{"id":492,"eventId":1825427780,"ageGroupId":9987,"groupId":null,"bracketId":168,"clubId":null,"clubName":"Legends FC SD","name":"Legends FC SD  B2012 RL","coach":"{\"headCoachName\":\"Richard Kaiser\",\"headCoachEmail\":\"rkaiser@legendsfcsd.com\",\"headCoachPhone\":\"(760) 685-5678\",\"accountCreated\":true}","managerName":"Ephraim Vidal","managerPhone":"(908) 255-6930","managerEmail":"pharos42@gmail.com","submitterName":"undefined undefined","submitterEmail":"pharos42@gmail.com","seedRanking":null,"createdAt":"2025-07-08T05:50:13.062Z","status":"approved","registrationFee":null,"selectedFeeIds":"{\"30\"}","totalAmount":119500,"paymentStatus":"setup_intent_completed","paymentDate":null,"paymentIntentId":null,"setupIntentId":"seti_1RiUOVP4BpmZARxtbeuDicoB","paymentMethodId":"pm_1RiUPOP4BpmZARxt2dBwVtuO","cardBrand":null,"cardLast4":null,"paymentMethodType":null,"paymentErrorCode":null,"paymentErrorMessage":null,"refundDate":null,"stripeCustomerId":"cus_SgzlHyNazHByMw","termsAcknowledged":true,"termsAcknowledgedAt":"2025-07-08T05:50:11.414Z","termsAcknowledgementRecord":null,"addRosterLater":true,"rosterUploadedAt":null,"rosterUploadMethod":null,"initialRosterComplete":false,"appliedCoupon":null,"notes":"Approval attempted but payment failed (payment_error). Admin notes: Approval attempted but payment failed (payment_error). Admin notes: Approval attempted but payment failed (payment_error). Please ensure team has completed payment setup before approving.","approvedByUserId":24,"approvedAt":"2025-07-17T19:45:44.483Z"},"notification":{"status":"sent","recipients":["pharos42@gmail.com"],"message":"Email notification sent successfully"}}
+index-DxuLsOIm.js:855 Teams data received: (514) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, …]
+index-DxuLsOIm.js:855 Teams data from API: (514) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, …]
+index-DxuLsOIm.js:855 Normalized teams data: (514) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, …]
+index-DxuLsOIm.js:747 Fetching brackets for event 1825427780 and age group 9986
+index-DxuLsOIm.js:855 Sending status update with data: {teamId: 500, status: 'approved', notes: 'Approval attempted but payment failed (payment_err…eam has completed payment setup before approving.', skipPayment: undefined, skipEmail: undefined}
+chunk-B3ZFZ2XE.js:3 [Violation] 'setTimeout' handler took 53ms
+index-DxuLsOIm.js:855  PUT https://app.matchpro.ai/api/admin/teams/500/status 400 (Bad Request)
+mutationFn @ index-DxuLsOIm.js:855
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Raw response text: {"status":"error","error":"Payment processing failed","message":"Payment processing failed. Please check team payment details.","paymentStatus":"payment_error","teamStatus":"registered"}
+index-DxuLsOIm.js:855 Error response: {status: 'error', error: 'Payment processing failed', message: 'Payment processing failed. Please check team payment details.', paymentStatus: 'payment_error', teamStatus: 'registered'}
+mutationFn @ index-DxuLsOIm.js:855
+await in mutationFn
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Error in updateTeamStatus mutation: Error: Payment processing failed
+    at Object.mutationFn (index-DxuLsOIm.js:855:83045)
+mutationFn @ index-DxuLsOIm.js:855
+await in mutationFn
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+8Fetch failed loading: PUT "<URL>".
+index-DxuLsOIm.js:747 Fetching brackets for event 1825427780 and age group 9990
+index-DxuLsOIm.js:855 Sending status update with data: {teamId: 501, status: 'approved', notes: 'Approval attempted but payment failed (payment_err…eam has completed payment setup before approving.', skipPayment: undefined, skipEmail: undefined}
+teams:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
+index-DxuLsOIm.js:855  PUT https://app.matchpro.ai/api/admin/teams/501/status 400 (Bad Request)
+mutationFn @ index-DxuLsOIm.js:855
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Raw response text: {"status":"error","error":"Payment processing failed","message":"Payment processing failed. Please check team payment details.","paymentStatus":"payment_error","teamStatus":"registered"}
+index-DxuLsOIm.js:855 Error response: {status: 'error', error: 'Payment processing failed', message: 'Payment processing failed. Please check team payment details.', paymentStatus: 'payment_error', teamStatus: 'registered'}
+mutationFn @ index-DxuLsOIm.js:855
+await in mutationFn
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Error in updateTeamStatus mutation: Error: Payment processing failed
+    at Object.mutationFn (index-DxuLsOIm.js:855:83045)
+mutationFn @ index-DxuLsOIm.js:855
+await in mutationFn
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+chunk-B3ZFZ2XE.js:3 [Violation] 'setTimeout' handler took 52ms
+index-DxuLsOIm.js:747 Fetching brackets for event 1825427780 and age group 9989
+index-DxuLsOIm.js:855 Sending status update with data: {teamId: 537, status: 'approved', notes: 'Approval attempted but payment failed (payment_err…eam has completed payment setup before approving.', skipPayment: undefined, skipEmail: undefined}
+index-DxuLsOIm.js:855  PUT https://app.matchpro.ai/api/admin/teams/537/status 400 (Bad Request)
+mutationFn @ index-DxuLsOIm.js:855
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Raw response text: {"status":"error","error":"Payment processing failed","message":"Payment processing failed. Please check team payment details.","paymentStatus":"payment_error","teamStatus":"registered"}
+index-DxuLsOIm.js:855 Error response: {status: 'error', error: 'Payment processing failed', message: 'Payment processing failed. Please check team payment details.', paymentStatus: 'payment_error', teamStatus: 'registered'}
+mutationFn @ index-DxuLsOIm.js:855
+await in mutationFn
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Error in updateTeamStatus mutation: Error: Payment processing failed
+    at Object.mutationFn (index-DxuLsOIm.js:855:83045)
+mutationFn @ index-DxuLsOIm.js:855
+await in mutationFn
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Sending status update with data: {teamId: 538, status: 'approved', notes: null, skipPayment: undefined, skipEmail: undefined}
+chunk-B3ZFZ2XE.js:3 [Violation] 'setTimeout' handler took 52ms
+index-DxuLsOIm.js:855  PUT https://app.matchpro.ai/api/admin/teams/538/status 400 (Bad Request)
+mutationFn @ index-DxuLsOIm.js:855
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Raw response text: {"status":"error","error":"Payment processing failed","message":"Payment processing failed. Please check team payment details.","paymentStatus":"payment_error","teamStatus":"registered"}
+index-DxuLsOIm.js:855 Error response: {status: 'error', error: 'Payment processing failed', message: 'Payment processing failed. Please check team payment details.', paymentStatus: 'payment_error', teamStatus: 'registered'}
+mutationFn @ index-DxuLsOIm.js:855
+await in mutationFn
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Error in updateTeamStatus mutation: Error: Payment processing failed
+    at Object.mutationFn (index-DxuLsOIm.js:855:83045)
+mutationFn @ index-DxuLsOIm.js:855
+await in mutationFn
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Sending status update with data: {teamId: 538, status: 'approved', notes: null, skipPayment: undefined, skipEmail: undefined}
+index-DxuLsOIm.js:855  PUT https://app.matchpro.ai/api/admin/teams/538/status 400 (Bad Request)
+mutationFn @ index-DxuLsOIm.js:855
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Raw response text: {"status":"error","error":"Payment processing failed","message":"Payment processing failed. Please check team payment details.","paymentStatus":"payment_error","teamStatus":"registered"}
+index-DxuLsOIm.js:855 Error response: {status: 'error', error: 'Payment processing failed', message: 'Payment processing failed. Please check team payment details.', paymentStatus: 'payment_error', teamStatus: 'registered'}
+mutationFn @ index-DxuLsOIm.js:855
+await in mutationFn
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Error in updateTeamStatus mutation: Error: Payment processing failed
+    at Object.mutationFn (index-DxuLsOIm.js:855:83045)
+mutationFn @ index-DxuLsOIm.js:855
+await in mutationFn
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Sending status update with data: {teamId: 539, status: 'approved', notes: null, skipPayment: undefined, skipEmail: undefined}
+index-DxuLsOIm.js:855  PUT https://app.matchpro.ai/api/admin/teams/539/status 400 (Bad Request)
+mutationFn @ index-DxuLsOIm.js:855
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Raw response text: {"status":"error","error":"Payment processing failed","message":"Payment processing failed. Please check team payment details.","paymentStatus":"payment_error","teamStatus":"registered"}
+index-DxuLsOIm.js:855 Error response: {status: 'error', error: 'Payment processing failed', message: 'Payment processing failed. Please check team payment details.', paymentStatus: 'payment_error', teamStatus: 'registered'}
+mutationFn @ index-DxuLsOIm.js:855
+await in mutationFn
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Error in updateTeamStatus mutation: Error: Payment processing failed
+    at Object.mutationFn (index-DxuLsOIm.js:855:83045)
+mutationFn @ index-DxuLsOIm.js:855
+await in mutationFn
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Sending status update with data: {teamId: 540, status: 'approved', notes: null, skipPayment: undefined, skipEmail: undefined}
+index-DxuLsOIm.js:855  PUT https://app.matchpro.ai/api/admin/teams/540/status 400 (Bad Request)
+mutationFn @ index-DxuLsOIm.js:855
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Raw response text: {"status":"error","error":"Payment processing failed","message":"Payment processing failed. Please check team payment details.","paymentStatus":"payment_error","teamStatus":"registered"}
+index-DxuLsOIm.js:855 Error response: {status: 'error', error: 'Payment processing failed', message: 'Payment processing failed. Please check team payment details.', paymentStatus: 'payment_error', teamStatus: 'registered'}
+mutationFn @ index-DxuLsOIm.js:855
+await in mutationFn
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Error in updateTeamStatus mutation: Error: Payment processing failed
+    at Object.mutationFn (index-DxuLsOIm.js:855:83045)
+mutationFn @ index-DxuLsOIm.js:855
+await in mutationFn
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Sending status update with data: {teamId: 541, status: 'approved', notes: null, skipPayment: undefined, skipEmail: undefined}
+index-DxuLsOIm.js:855  PUT https://app.matchpro.ai/api/admin/teams/541/status 400 (Bad Request)
+mutationFn @ index-DxuLsOIm.js:855
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Raw response text: {"status":"error","error":"Payment processing failed","message":"Payment processing failed. Please check team payment details.","paymentStatus":"payment_error","teamStatus":"registered"}
+index-DxuLsOIm.js:855 Error response: {status: 'error', error: 'Payment processing failed', message: 'Payment processing failed. Please check team payment details.', paymentStatus: 'payment_error', teamStatus: 'registered'}
+mutationFn @ index-DxuLsOIm.js:855
+await in mutationFn
+fn @ index-DxuLsOIm.js:40
+f @ index-DxuLsOIm.js:40
+start @ index-DxuLsOIm.js:40
+execute @ index-DxuLsOIm.js:40
+await in execute
+mutate @ index-DxuLsOIm.js:40
+(anonymous) @ index-DxuLsOIm.js:40
+Eo @ index-DxuLsOIm.js:855
+onClick @ index-DxuLsOIm.js:855
+Sue @ index-DxuLsOIm.js:37
+Eue @ index-DxuLsOIm.js:37
+Pue @ index-DxuLsOIm.js:37
+lM @ index-DxuLsOIm.js:37
+qG @ index-DxuLsOIm.js:37
+(anonymous) @ index-DxuLsOIm.js:37
+gO @ index-DxuLsOIm.js:40
+fG @ index-DxuLsOIm.js:37
+b2 @ index-DxuLsOIm.js:37
+G4 @ index-DxuLsOIm.js:37
+Vue @ index-DxuLsOIm.js:37Understand this error
+index-DxuLsOIm.js:855 Error in updateTeamStatus mutation: Error: Payment processing failed
+    at Object.mutationFn (index-DxuLsOIm.js:855:83045)

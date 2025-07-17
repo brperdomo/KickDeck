@@ -113,6 +113,15 @@ MatchPro AI is a comprehensive sports event management platform designed for tou
 - **Security**: Role-based access control and secure payment processing
 
 ## Changelog
+- July 17, 2025: CRITICAL PAYMENT FAILURE RESOLUTION - Fixed systematic payment processing failures by implementing burned payment method detection and recovery system
+  - IDENTIFIED: Root cause of payment failures - all failing teams (500, 501, 537, 538) had "burned" payment methods (previously used without customer association in Stripe)
+  - IMPLEMENTED: Automatic burned payment method detection during approval attempts with specific error handling for "was previously used and cannot be reused" errors
+  - ENHANCED: Backend API now marks teams with burned payment methods as "payment_method_invalid" status, clearing unusable payment method IDs
+  - CREATED: Enhanced admin interface showing clear "Card Unusable" badge for teams with invalid payment methods
+  - IMPROVED: Payment completion URL generation now includes teams with payment_method_invalid status for new payment method collection
+  - MESSAGING: Added specific guidance for teams needing new payment methods ("New payment method required" vs "Payment required")
+  - DIAGNOSTIC: Built comprehensive debugging system revealing Stripe payment method limitations and registration workflow issues
+  - PRODUCTION READY: Complete burned payment method detection and recovery system operational with clear admin guidance and team remediation workflows
 - July 15, 2025: CSV TEMPLATE DOWNLOAD FEATURE ADDED - Implemented downloadable CSV template for roster uploads with proper formatting and sample data
   - CREATED: "Download Template" button in roster uploads alert section for easy access to CSV template
   - IMPLEMENTED: downloadCSVTemplate function that generates properly formatted CSV file with all required columns
