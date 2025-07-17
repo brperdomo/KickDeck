@@ -1089,8 +1089,7 @@ async function processRefund(req: Request, res: Response) {
         log(`Creating test payment intent for refund testing in development mode`, 'admin');
         
         // First, create a test payment intent that's already paid
-        const testIntent = await createTestPaymentIntent(refundAmount * 100, {
-          teamId: teamId,
+        const testIntent = await createTestPaymentIntent(refundAmount, parseInt(teamId, 10), {
           teamName: team.name || 'Test Team',
           eventId: team.eventId?.toString() || '',
           test_mode: 'true',
@@ -1099,7 +1098,7 @@ async function processRefund(req: Request, res: Response) {
         
         if (testIntent && testIntent.id) {
           // Now process the refund using the test intent
-          const refund = await createRefund(testIntent.id, reason);
+          const refund = await createRefund(testIntent.id, isPartialRefund ? amount : undefined);
           refundId = refund.id;
           stripeRefundStatus = 'success';
           
@@ -1126,8 +1125,8 @@ async function processRefund(req: Request, res: Response) {
         status: 'refunded',
         refundDate: now,
         notes: reason ? `${team.notes || ''} \nRefund reason: ${reason}`.trim() : team.notes,
-        // Use SQL template for the timestamp to avoid TypeScript errors
-        updatedAt: sql`${now}`
+        // Set updated timestamp
+        updatedAt: now
       })
       .where(eq(teams.id, parseInt(teamId, 10)))
       .returning();
