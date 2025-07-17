@@ -1013,10 +1013,15 @@ async function processRefund(req: Request, res: Response) {
   // Set JSON content type from the start to ensure HTML isn't returned
   res.setHeader('Content-Type', 'application/json');
   
+  console.log(`🔍 REFUND DEBUG: Starting refund process for team ${req.params.teamId}`);
+  console.log(`🔍 REFUND DEBUG: Request body:`, req.body);
+  
   try {
     const { teamId } = req.params;
     const { reason, amount } = req.body;
     const isPartialRefund = amount !== undefined && amount !== null;
+    
+    console.log(`🔍 REFUND DEBUG: teamId=${teamId}, reason=${reason}, amount=${amount}, isPartialRefund=${isPartialRefund}`);
     
     log(`Processing ${isPartialRefund ? 'partial' : 'full'} refund for team ID: ${teamId}. ${isPartialRefund ? `Amount: $${amount/100}` : ''} Reason: ${reason || 'Not provided'}`, 'admin');
     
@@ -1234,7 +1239,12 @@ async function processRefund(req: Request, res: Response) {
       }
     });
   } catch (error) {
-    // Log the full error for debugging
+    // Enhanced error logging for debugging
+    console.error(`🚨 REFUND ERROR: Failed to process refund for team ${req.params.teamId}`);
+    console.error(`🚨 REFUND ERROR: Error details:`, error);
+    console.error(`🚨 REFUND ERROR: Error message:`, error instanceof Error ? error.message : 'Unknown error');
+    console.error(`🚨 REFUND ERROR: Error stack:`, error instanceof Error ? error.stack : 'No stack trace');
+    
     log(`Error processing refund: ${error}`, 'admin');
     if (error instanceof Error) {
       log(`Error stack: ${error.stack}`, 'admin');
@@ -1244,7 +1254,12 @@ async function processRefund(req: Request, res: Response) {
     return res.status(500).json({ 
       status: 'error',
       error: 'Failed to process refund',
-      message: error instanceof Error ? error.message : 'Unknown error occurred'
+      message: error instanceof Error ? error.message : 'Unknown error occurred',
+      debug: {
+        teamId: req.params.teamId,
+        requestBody: req.body,
+        timestamp: new Date().toISOString()
+      }
     });
   }
 }
