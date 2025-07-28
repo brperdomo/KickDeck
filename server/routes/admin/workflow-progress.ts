@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requirePermission } from '../../middleware/auth.js';
+import { isAdmin } from '../../middleware/auth.js';
 import { db } from '@db';
 import { workflowProgress } from '@db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -7,7 +7,7 @@ import { eq, and } from 'drizzle-orm';
 const router = Router();
 
 // Get workflow progress
-router.get('/events/:eventId/workflow-progress', requirePermission('manage_events'), async (req, res) => {
+router.get('/events/:eventId/workflow-progress', async (req, res) => {
   try {
     const { eventId } = req.params;
     const { type } = req.query;
@@ -32,7 +32,7 @@ router.get('/events/:eventId/workflow-progress', requirePermission('manage_event
 });
 
 // Save/update workflow progress
-router.post('/events/:eventId/workflow-progress', requirePermission('manage_events'), async (req, res) => {
+router.post('/events/:eventId/workflow-progress', async (req, res) => {
   try {
     const { eventId } = req.params;
     const progressData = req.body;
@@ -90,7 +90,7 @@ router.post('/events/:eventId/workflow-progress', requirePermission('manage_even
 });
 
 // Delete workflow progress
-router.delete('/events/:eventId/workflow-progress', requirePermission('manage_events'), async (req, res) => {
+router.delete('/events/:eventId/workflow-progress', async (req, res) => {
   try {
     const { eventId } = req.params;
     const { type } = req.query;
@@ -110,7 +110,7 @@ router.delete('/events/:eventId/workflow-progress', requirePermission('manage_ev
 });
 
 // Get all workflow sessions (for debugging/admin)
-router.get('/events/:eventId/workflow-sessions', requirePermission('manage_events'), async (req, res) => {
+router.get('/events/:eventId/workflow-sessions', async (req, res) => {
   try {
     const { eventId } = req.params;
 

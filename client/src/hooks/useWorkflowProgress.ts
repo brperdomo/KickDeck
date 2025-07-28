@@ -34,7 +34,9 @@ export function useWorkflowProgress(eventId: string, workflowType: 'scheduling' 
   const { data: savedProgress, isLoading } = useQuery({
     queryKey: ['workflow-progress', eventId, workflowType],
     queryFn: async () => {
-      const response = await fetch(`/api/admin/events/${eventId}/workflow-progress?type=${workflowType}`);
+      const response = await fetch(`/api/admin/events/${eventId}/workflow-progress?type=${workflowType}`, {
+        credentials: 'include'
+      });
       if (!response.ok) {
         if (response.status === 404) return null; // No saved progress
         throw new Error('Failed to load workflow progress');
@@ -49,6 +51,7 @@ export function useWorkflowProgress(eventId: string, workflowType: 'scheduling' 
       const response = await fetch(`/api/admin/events/${eventId}/workflow-progress`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           ...progress,
           eventId,
