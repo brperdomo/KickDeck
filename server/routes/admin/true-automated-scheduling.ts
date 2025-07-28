@@ -15,6 +15,28 @@ interface TournamentData {
   endDate: string;
 }
 
+interface GeneratedGame {
+  id: number;
+  homeTeam: string;
+  awayTeam: string;
+  ageGroup: string;
+  gender: string;
+  round: number;
+  field: string;
+  startTime: string;
+  endTime: string;
+  duration: number;
+}
+
+interface GeneratedFlight {
+  name: string;
+  ageGroup: string;
+  gender: string;
+  teamCount: number;
+  gameCount: number;
+  teams: string[];
+}
+
 interface GeneratedSchedule {
   totalGames: number;
   totalFlights: number;
@@ -23,6 +45,13 @@ interface GeneratedSchedule {
   conflicts: string[];
   warnings: string[];
   scheduleUrl: string;
+  games: GeneratedGame[];
+  flights: GeneratedFlight[];
+  gameFormats: {
+    gameDuration: number;
+    restPeriod: number;
+    operatingHours: string;
+  };
 }
 
 // Quick check endpoint - minimal data for UI
@@ -142,7 +171,8 @@ router.post('/:eventId/generate-complete-schedule', isAdmin, async (req, res) =>
     const warnings: string[] = [];
     const conflicts: string[] = [];
 
-    for (const [flightKey, flightTeams] of flightGroups) {
+    for (const flightKey of flightGroups.keys()) {
+      const flightTeams = flightGroups.get(flightKey)!;
       const [ageGroup, gender] = flightKey.split('_');
       
       console.log(`Processing flight: ${flightKey} with ${flightTeams.length} teams`);
@@ -315,8 +345,66 @@ router.post('/:eventId/generate-complete-schedule', isAdmin, async (req, res) =>
       }
     }
 
+    // Get detailed game information for display
+    const detailedGames = await db
+      .select({
+        gameId: games.id,
+        homeTeamId: games.homeTeamId,
+        awayTeamId: games.awayTeamId,
+        homeTeamName: sql<string>`ht.name`.as('homeTeamName'),
+        awayTeamName: sql<string>`at.name`.as('awayTeamName'),
+        ageGroup: eventAgeGroups.ageGroup,
+        gender: eventAgeGroups.gender,
+        round: games.round,
+        duration: games.duration,
+        fieldId: games.fieldId,
+        fieldName: sql<string>`f.name`.as('fieldName'),
+        timeSlotId: games.timeSlotId,
+        startTime: gameTimeSlots.startTime,
+        endTime: gameTimeSlots.endTime
+      })
+      .from(games)
+      .leftJoin(sql`teams ht`, sql`ht.id = ${games.homeTeamId}`)
+      .leftJoin(sql`teams at`, sql`at.id = ${games.awayTeamId}`)
+      .leftJoin(eventAgeGroups, eq(games.ageGroupId, eventAgeGroups.id))
+      .leftJoin(sql`fields f`, sql`f.id = ${games.fieldId}`)
+      .leftJoin(gameTimeSlots, eq(games.timeSlotId, gameTimeSlots.id))
+      .where(eq(games.eventId, eventId.toString()))
+      .orderBy(games.matchNumber);
+
     const gamesByDay: { [key: string]: number } = {};
     const scheduledDays = Math.ceil(totalGamesCreated / (availableFields.length * 5)); // Estimate
+
+    // Build flight information
+    const flights: GeneratedFlight[] = [];
+    for (const flightKey of flightGroups.keys()) {
+      const flightTeams = flightGroups.get(flightKey)!;
+      const [ageGroup, gender] = flightKey.split('_');
+      const flightGames = detailedGames.filter(g => g.ageGroup === ageGroup && g.gender === gender);
+      
+      flights.push({
+        name: `${ageGroup} ${gender} Flight`,
+        ageGroup: ageGroup,
+        gender: gender,
+        teamCount: flightTeams.length,
+        gameCount: flightGames.length,
+        teams: flightTeams.map((t: any) => t.name)
+      });
+    }
+
+    // Format games for frontend display
+    const formattedGames: GeneratedGame[] = detailedGames.map(game => ({
+      id: game.gameId,
+      homeTeam: game.homeTeamName || 'TBD',
+      awayTeam: game.awayTeamName || 'TBD',
+      ageGroup: game.ageGroup || 'Unknown',
+      gender: game.gender || 'Mixed',
+      round: game.round || 1,
+      field: game.fieldName || 'Field TBD',
+      startTime: game.startTime || 'TBD',
+      endTime: game.endTime || 'TBD',
+      duration: game.duration || 90
+    }));
 
     const result: GeneratedSchedule = {
       totalGames: totalGamesCreated,
@@ -325,7 +413,14 @@ router.post('/:eventId/generate-complete-schedule', isAdmin, async (req, res) =>
       gamesByDay: gamesByDay,
       conflicts: conflicts,
       warnings: warnings,
-      scheduleUrl: `/admin/events/${eventId}/schedule`
+      scheduleUrl: `/admin/events/${eventId}/schedule`,
+      games: formattedGames,
+      flights: flights,
+      gameFormats: {
+        gameDuration: 90, // Default values - could be enhanced to read from event settings
+        restPeriod: 30,
+        operatingHours: '8:00 AM - 8:00 PM'
+      }
     };
 
     console.log(`Schedule generation complete: ${totalGamesCreated} games, ${createdFlights.length} flights`);
