@@ -22,22 +22,15 @@ import { phoneFormatterMiddleware } from "./middleware/phone-formatter";
 import dotenv from "dotenv";
 
 // Load environment variables based on NODE_ENV
-// Force development mode when running via npm run dev (detected by tsx process)
-const isDevScript = process.argv.some(arg => arg.includes('tsx'));
-console.log('Process argv:', process.argv);
-console.log('isDevScript detected:', isDevScript);
+const nodeEnv = process.env.NODE_ENV || "development";
 
-// Always use development mode in Replit development environment
-const nodeEnv = "development";
-
-if (false) { // Never execute production logic in dev mode
+if (nodeEnv === "production") {
   dotenv.config({ path: ".env.production" });
   log(`Loaded production environment variables from .env.production`);
   log("Applied exact development SendGrid configuration to production");
 } else {
   dotenv.config();
   log(`Loaded development environment variables from .env`);
-  log(`Running in development mode (detected tsx: ${isDevScript})`);
 }
 
 // Force exact mirror of working development configuration
@@ -119,8 +112,8 @@ async function testDbConnection() {
   let server: any; // Fix implicit any error
 
   try {
-    // Use development mode for Replit development environment
-    const nodeEnv = "development";
+    // Use NODE_ENV from environment or default to development
+    const nodeEnv = process.env.NODE_ENV || "development";
     app.set("env", nodeEnv);
 
     log(`Server starting in ${nodeEnv} mode`);
@@ -187,8 +180,7 @@ async function testDbConnection() {
     log("API routes registered");
 
     // Set up appropriate middleware based on environment
-    // Since we're forcing development mode, always use Vite middleware
-    if (false) { // Force development mode
+    if (nodeEnv === "production") {
       try {
         // Try production static files first
         serveStatic(app);
@@ -249,8 +241,8 @@ async function testDbConnection() {
       const availablePort = await findAvailablePort(PORT);
 
       // Create and start the server properly
-      // Always use existing server instance in development mode
-      if (!server) {
+      if (nodeEnv === "production") {
+        // In production, create a new server instance
         const { createServer } = await import("http");
         server = createServer(app);
       }
