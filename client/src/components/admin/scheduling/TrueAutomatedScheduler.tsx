@@ -8,12 +8,34 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Zap, Calendar, CheckCircle, Loader2, 
-  Trophy, Users, Clock, MapPin, AlertTriangle 
+  Trophy, Users, Clock, MapPin, AlertTriangle, Settings 
 } from 'lucide-react';
 
 interface TrueAutomatedSchedulerProps {
   eventId: string;
   onComplete?: (scheduleData: any) => void;
+}
+
+interface GeneratedGame {
+  id: number;
+  homeTeam: string;
+  awayTeam: string;
+  ageGroup: string;
+  gender: string;
+  round: number;
+  field: string;
+  startTime: string;
+  endTime: string;
+  duration: number;
+}
+
+interface GeneratedFlight {
+  name: string;
+  ageGroup: string;
+  gender: string;
+  teamCount: number;
+  gameCount: number;
+  teams: string[];
 }
 
 interface GeneratedSchedule {
@@ -24,6 +46,13 @@ interface GeneratedSchedule {
   conflicts: string[];
   warnings: string[];
   scheduleUrl: string;
+  games?: GeneratedGame[];
+  flights?: GeneratedFlight[];
+  gameFormats?: {
+    gameDuration: number;
+    restPeriod: number;
+    operatingHours: string;
+  };
 }
 
 export function TrueAutomatedScheduler({ eventId, onComplete }: TrueAutomatedSchedulerProps) {
@@ -258,7 +287,7 @@ export function TrueAutomatedScheduler({ eventId, onComplete }: TrueAutomatedSch
           )}
 
           {generatedSchedule && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="text-center">
                 <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-600" />
                 <h3 className="text-lg font-semibold mb-2">Tournament Schedule Ready!</h3>
@@ -267,6 +296,7 @@ export function TrueAutomatedScheduler({ eventId, onComplete }: TrueAutomatedSch
                 </p>
               </div>
 
+              {/* Summary Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">{generatedSchedule.totalGames}</div>
@@ -287,6 +317,117 @@ export function TrueAutomatedScheduler({ eventId, onComplete }: TrueAutomatedSch
                   <div className="text-sm text-muted-foreground">Conflicts</div>
                 </div>
               </div>
+
+              {/* Flight Organization */}
+              {generatedSchedule.flights && generatedSchedule.flights.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Flight Organization
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {generatedSchedule.flights.map((flight, index) => (
+                        <div key={index} className="p-4 border rounded-lg">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h4 className="font-medium">{flight.name}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {flight.teamCount} teams • {flight.gameCount} games
+                              </p>
+                            </div>
+                            <Badge variant={flight.gender === 'Boys' ? 'default' : flight.gender === 'Girls' ? 'secondary' : 'outline'}>
+                              {flight.ageGroup}
+                            </Badge>
+                          </div>
+                          <div className="text-sm">
+                            <span className="font-medium">Teams: </span>
+                            {flight.teams.join(', ')}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Generated Games */}
+              {generatedSchedule.games && generatedSchedule.games.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      Generated Games Schedule
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                      {generatedSchedule.games.map((game, index) => (
+                        <div key={game.id || index} className="p-4 border rounded-lg">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex-1">
+                              <div className="font-medium text-lg">
+                                {game.homeTeam} vs {game.awayTeam}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {game.ageGroup} {game.gender} • Round {game.round}
+                              </div>
+                            </div>
+                            <Badge variant="outline">{game.ageGroup}</Badge>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div>
+                              <span className="font-medium">Field: </span>
+                              {game.field}
+                            </div>
+                            <div>
+                              <span className="font-medium">Time: </span>
+                              {game.startTime !== 'TBD' ? 
+                                new Date(game.startTime).toLocaleString() : 
+                                'TBD'
+                              }
+                            </div>
+                            <div>
+                              <span className="font-medium">Duration: </span>
+                              {game.duration} minutes
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Game Format Information */}
+              {generatedSchedule.gameFormats && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Settings className="h-5 w-5" />
+                      Applied Game Formats
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <span className="font-medium">Game Duration: </span>
+                        {generatedSchedule.gameFormats.gameDuration} minutes
+                      </div>
+                      <div>
+                        <span className="font-medium">Rest Period: </span>
+                        {generatedSchedule.gameFormats.restPeriod} minutes
+                      </div>
+                      <div>
+                        <span className="font-medium">Operating Hours: </span>
+                        {generatedSchedule.gameFormats.operatingHours}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {generatedSchedule.warnings && generatedSchedule.warnings.length > 0 && (
                 <Alert>
