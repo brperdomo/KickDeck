@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { db } from '../../../db';
-import { events, workflowProgress, teams } from '../../../db/schema';
+import { db } from '@db';
+import { events, workflowProgress, teams } from '@db/schema';
 import { eq, sql, and, desc } from 'drizzle-orm';
 
 const router = Router();
