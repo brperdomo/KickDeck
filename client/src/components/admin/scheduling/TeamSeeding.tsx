@@ -337,6 +337,7 @@ export function TeamSeeding({ eventId, workflowData, onComplete, onError }: Team
       }
     };
 
+    console.log('TeamSeeding handleComplete - sending data:', seedingData);
     onComplete(seedingData);
   };
 
