@@ -119,12 +119,18 @@ export function SchedulingWorkflow({ eventId, onComplete }: SchedulingWorkflowPr
 
   // Update step status
   const updateStepStatus = (stepId: string, status: WorkflowStep['status'], data?: any) => {
+    console.log(`SchedulingWorkflow updateStepStatus - Step: ${stepId}, Status: ${status}, Data:`, data);
+    
     setWorkflowSteps(prev => prev.map(step => 
       step.id === stepId ? { ...step, status } : step
     ));
     
     if (data) {
-      setWorkflowData(prev => ({ ...prev, [stepId]: data }));
+      setWorkflowData(prev => {
+        const newData = { ...prev, [stepId]: data };
+        console.log('SchedulingWorkflow updated workflowData:', newData);
+        return newData;
+      });
     }
 
     // Auto-advance to next step if current step is completed
@@ -233,9 +239,24 @@ export function SchedulingWorkflow({ eventId, onComplete }: SchedulingWorkflowPr
 
       // Step 4: Check if team seeding exists - only if Step 3 is complete
       if (validationResults.bracket.completed) {
-        if (workflowData?.seed || workflowData?.bracket?.brackets?.length > 0) {
-          validationResults.seed.completed = true;
-          validationResults.seed.details = '✓ Team seeding configured';
+        console.log('Validating seeding - workflowData.seed:', workflowData?.seed);
+        
+        if (workflowData?.seed?.bracketSeedings?.length > 0) {
+          // Check if seeding data has proper team rankings
+          const hasValidSeedings = workflowData.seed.bracketSeedings.every((seeding: any) => 
+            seeding.teams?.length > 0 && 
+            seeding.teams.every((team: any) => team.seedRanking && team.seedRanking > 0)
+          );
+          
+          console.log('Seeding validation result:', { hasValidSeedings, bracketSeedings: workflowData.seed.bracketSeedings });
+          
+          if (hasValidSeedings) {
+            validationResults.seed.completed = true;
+            validationResults.seed.details = `✓ ${workflowData.seed.bracketSeedings.length} brackets seeded with ${workflowData.seed.summary?.totalTeams || 0} teams`;
+          } else {
+            validationResults.seed.errors.push('Team seeding incomplete - teams missing rankings');
+            validationResults.seed.details = 'Complete team rankings for all brackets in Step 4';
+          }
         } else {
           validationResults.seed.errors.push('Team seeding not configured');
           validationResults.seed.details = 'Assign teams to bracket positions in Step 4';
