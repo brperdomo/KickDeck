@@ -11,13 +11,13 @@ router.get('/scheduling', async (req, res) => {
     console.log('Fetching tournaments for scheduling...');
     const { status, hasProgress } = req.query;
     
-    // Build the base query
-    let whereConditions = [];
+    // Build the base query - filter out archived events by default
+    let whereConditions = [sql`${events.isArchived} = false`];
     
     if (status && status !== 'all') {
       // Map status to appropriate database field if needed
       if (status === 'draft') {
-        whereConditions.push(sql`${events.isArchived} = false`);
+        // Already filtering non-archived above
       } else if (status === 'active') {
         whereConditions.push(sql`${events.startDate} <= NOW() AND ${events.endDate} >= NOW()`);
       } else if (status === 'completed') {
@@ -112,10 +112,12 @@ router.get('/scheduling', async (req, res) => {
       }
     }
 
-    // Filter by progress if requested
-    const filteredTournaments = hasProgress === 'true' 
-      ? tournaments.filter(t => t.hasProgress)
-      : tournaments;
+    // Filter by progress if requested and only show tournaments with teams
+    let filteredTournaments = tournaments.filter(t => t.teamsCount > 0);
+    
+    if (hasProgress === 'true') {
+      filteredTournaments = filteredTournaments.filter(t => t.hasProgress);
+    }
 
     // Add status determination
     const tournamentsWithStatus = filteredTournaments.map(tournament => {
