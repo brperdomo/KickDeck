@@ -142,6 +142,16 @@ export function TournamentSelectionInterface({
         </CardContent>
       </Card>
 
+      {/* Info Alert */}
+      <Alert className="border-[#2E86AB] bg-blue-50">
+        <Trophy className="h-4 w-4" />
+        <AlertDescription>
+          <strong>Smart Filtering:</strong> Only showing non-archived tournaments with approved teams ready for scheduling. 
+          {filteredTournaments.length === 0 && tournaments?.length === 0 && " No tournaments with approved teams found."}
+          {filteredTournaments.length === 0 && tournaments?.length > 0 && " No tournaments match your current filters."}
+        </AlertDescription>
+      </Alert>
+
       {/* Tournament Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredTournaments.map((tournament: Tournament) => (
