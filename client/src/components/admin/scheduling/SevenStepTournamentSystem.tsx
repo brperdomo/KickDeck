@@ -125,97 +125,144 @@ export function SevenStepTournamentSystem({ eventId }: SevenStepTournamentSystem
   };
 
   return (
-    <div className="space-y-6">
-      {/* System Overview Header */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+    <div className="space-y-8 p-8">
+      {/* Modern Progress Overview */}
+      <div className="relative">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
+              <Trophy className="h-6 w-6 text-white" />
+            </div>
             <div>
-              <CardTitle className="text-2xl font-bold text-blue-600">
-                7-Step Automated Tournament System
-              </CardTitle>
-              <p className="text-gray-600 mt-2">
-                Systematic approach to tournament management with genuine one-click automation
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-sm text-gray-500">Overall Progress</div>
-              <div className="text-2xl font-bold text-blue-600">
-                {completedSteps.length}/{steps.length}
-              </div>
+              <h2 className="text-2xl font-bold text-gray-900">7-Step Tournament System</h2>
+              <p className="text-gray-600">Automated tournament scheduling workflow</p>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <Progress value={getProgressPercentage()} className="h-2" />
-            <div className="flex justify-between text-sm text-gray-600">
-              <span>Steps Completed: {completedSteps.length}</span>
-              <span>Estimated Total Time: 60-90 minutes</span>
+          <div className="flex items-center space-x-3">
+            <Badge className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-0 px-4 py-2">
+              {completedSteps.length}/{steps.length} Complete
+            </Badge>
+            <div className="text-right text-sm">
+              <div className="font-semibold text-gray-900">{Math.round(getProgressPercentage())}%</div>
+              <div className="text-gray-500">Progress</div>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Step Navigation */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-7 gap-4">
+        </div>
+        
+        <div className="relative">
+          <Progress value={getProgressPercentage()} className="h-3 bg-gray-100" />
+          <div className="absolute -top-1 left-0 right-0 flex justify-between">
             {steps.map((step, index) => (
-              <div key={step.id} className="relative">
-                <Button
-                  variant={step.status === 'current' ? 'default' : step.status === 'completed' ? 'outline' : 'ghost'}
-                  size="lg"
-                  className={`w-full h-auto p-4 flex flex-col items-center space-y-2 ${
-                    step.status === 'completed' ? 'bg-green-50 border-green-200 hover:bg-green-100' :
-                    step.status === 'current' ? 'bg-blue-600 text-white' :
-                    'opacity-50 cursor-not-allowed'
-                  }`}
-                  onClick={() => handleStepNavigation(step.id)}
-                  disabled={step.status === 'pending' && !completedSteps.includes(step.id - 1) && step.id !== 1}
-                >
-                  <div className="flex items-center space-x-2">
-                    {step.status === 'completed' ? (
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                    ) : (
-                      step.icon
-                    )}
-                    <Badge variant={step.status === 'current' ? 'secondary' : 'outline'}>
-                      {step.id}
-                    </Badge>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs font-medium">{step.title}</div>
-                    <div className="text-xs opacity-75">{step.estimatedTime}</div>
-                  </div>
-                </Button>
-                
-                {/* Arrow between steps */}
-                {index < steps.length - 1 && (
-                  <ArrowRight className="absolute -right-6 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                )}
-              </div>
+              <div
+                key={step.id}
+                className={`w-5 h-5 rounded-full border-2 transition-all duration-300 ${
+                  completedSteps.includes(step.id)
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 border-emerald-500'
+                    : currentStep === step.id
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 border-blue-500'
+                    : 'bg-white border-gray-300'
+                }`}
+                style={{ left: `${(index / (steps.length - 1)) * 100}%`, transform: 'translateX(-50%)' }}
+              />
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      {/* Modern Step Navigation */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {steps.map((step) => (
+          <Card 
+            key={step.id}
+            className={`group cursor-pointer transition-all duration-300 border-0 shadow-lg hover:shadow-xl overflow-hidden ${
+              step.status === 'current' 
+                ? 'ring-2 ring-blue-500 bg-gradient-to-br from-blue-50 to-purple-50' 
+                : step.status === 'completed'
+                ? 'ring-2 ring-emerald-500 bg-gradient-to-br from-emerald-50 to-teal-50'
+                : 'bg-white hover:bg-gray-50'
+            }`}
+            onClick={() => handleStepNavigation(step.id)}
+          >
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className={`p-3 rounded-xl transition-all duration-300 ${
+                    step.status === 'completed' 
+                      ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white'
+                      : step.status === 'current'
+                      ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white'
+                      : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'
+                  }`}>
+                    {step.status === 'completed' ? <CheckCircle className="h-5 w-5" /> : step.icon}
+                  </div>
+                  <div>
+                    <Badge className={`${
+                      step.status === 'current' 
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0' 
+                        : step.status === 'completed'
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-0'
+                        : 'bg-gray-100 text-gray-600 border-gray-200'
+                    }`}>
+                      Step {step.id}
+                    </Badge>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {step.estimatedTime}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h3 className="font-semibold text-base leading-tight text-gray-900 mb-2">
+                  {step.title}
+                </h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {step.description}
+                </p>
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                <div className={`text-sm font-medium ${
+                  step.status === 'completed' ? 'text-emerald-600' :
+                  step.status === 'current' ? 'text-blue-600' : 'text-gray-400'
+                }`}>
+                  {step.status === 'completed' ? '✓ Completed' :
+                   step.status === 'current' ? '→ In Progress' : '○ Pending'}
+                </div>
+                {step.status === 'current' && (
+                  <Button size="sm" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-0">
+                    <Play className="h-3 w-3 mr-1" />
+                    Continue
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
       {/* Current Step Details */}
-      <Card>
-        <CardHeader>
+      <Card className="border-0 shadow-lg bg-gradient-to-r from-white to-blue-50/30">
+        <CardHeader className="pb-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              {steps.find(s => s.id === currentStep)?.icon}
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
+                {steps.find(s => s.id === currentStep)?.icon && 
+                  React.cloneElement(steps.find(s => s.id === currentStep)!.icon as React.ReactElement, {
+                    className: "h-6 w-6 text-white"
+                  })
+                }
+              </div>
               <div>
-                <CardTitle>
+                <CardTitle className="text-xl text-gray-900">
                   Step {currentStep}: {steps.find(s => s.id === currentStep)?.title}
                 </CardTitle>
-                <p className="text-gray-600 mt-1">
+                <p className="text-gray-600 mt-1 leading-relaxed">
                   {steps.find(s => s.id === currentStep)?.description}
                 </p>
               </div>
             </div>
-            <Badge variant="outline">
+            <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 px-3 py-1">
               {steps.find(s => s.id === currentStep)?.estimatedTime}
             </Badge>
           </div>
@@ -225,20 +272,26 @@ export function SevenStepTournamentSystem({ eventId }: SevenStepTournamentSystem
       {/* Current Step Component */}
       {getCurrentStepComponent()}
 
-      {/* Quick Actions */}
+      {/* Completion Celebration */}
       {completedSteps.length === steps.length && (
-        <Card className="bg-green-50 border-green-200">
-          <CardContent className="p-6">
+        <Card className="border-0 shadow-xl bg-gradient-to-r from-emerald-50 to-teal-50 overflow-hidden">
+          <CardContent className="p-8">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+              <div className="flex items-center space-x-4">
+                <div className="p-4 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl">
+                  <CheckCircle className="h-8 w-8 text-white" />
+                </div>
                 <div>
-                  <h3 className="font-semibold text-green-800">Tournament System Complete!</h3>
-                  <p className="text-green-700">All 7 steps completed. Your tournament is ready for operation.</p>
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                    Tournament System Complete!
+                  </h3>
+                  <p className="text-emerald-700 mt-1 text-lg">
+                    All 7 steps completed. Your tournament is ready for operation.
+                  </p>
                 </div>
               </div>
-              <Button size="lg" className="bg-green-600 hover:bg-green-700">
-                <Play className="h-4 w-4 mr-2" />
+              <Button size="lg" className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border-0 px-8 py-3">
+                <Play className="h-5 w-5 mr-2" />
                 Launch Tournament
               </Button>
             </div>
