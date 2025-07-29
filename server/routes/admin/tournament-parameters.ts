@@ -75,14 +75,17 @@ router.get('/events/:eventId/tournament-parameters', isAdmin, async (req, res) =
     if (existingAgeGroups.length === 0) {
       // Get unique age groups from teams in this event
       const teamsInEvent = await db.query.teams.findMany({
-        where: eq(teams.eventId, eventId.toString())
+        where: eq(teams.eventId, eventId.toString()),
+        with: {
+          ageGroup: true
+        }
       });
 
       const uniqueAgeGroups = new Map();
       teamsInEvent.forEach(team => {
-        if (team.ageGroup) {
+        if (team.ageGroup?.ageGroup) {
           // Extract base age group (remove gender suffix)
-          const baseAgeGroup = team.ageGroup.replace(/\s+(Boys|Girls|B|G)$/i, '').trim();
+          const baseAgeGroup = team.ageGroup.ageGroup.replace(/\s+(Boys|Girls|B|G)$/i, '').trim();
           if (!uniqueAgeGroups.has(baseAgeGroup)) {
             uniqueAgeGroups.set(baseAgeGroup, {
               name: baseAgeGroup,
