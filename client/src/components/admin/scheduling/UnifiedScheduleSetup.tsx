@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Zap, Calendar, Clock, Users, MapPin, CheckCircle, 
-  ArrowRight, Settings, Play
+  ArrowRight, Settings, Play, Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -58,6 +58,83 @@ export function UnifiedScheduleSetup({ eventId, onComplete }: UnifiedScheduleSet
   });
 
   const { toast } = useToast();
+
+  // Fetch real tournament data
+  const { data: eventData, isLoading: eventLoading } = useQuery({
+    queryKey: ['event', eventId],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/events/${eventId}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch event data');
+      return response.json();
+    }
+  });
+
+  // Fetch real teams data
+  const { data: teamsData, isLoading: teamsLoading } = useQuery({
+    queryKey: ['teams', eventId],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/teams?eventId=${eventId}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch teams data');
+      return response.json();
+    }
+  });
+
+  // Fetch real venues/complexes data
+  const { data: venuesData, isLoading: venuesLoading } = useQuery({
+    queryKey: ['venues', eventId],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/events/${eventId}/complexes`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch venues data');
+      return response.json();
+    }
+  });
+
+  // Auto-populate data when loaded
+  useEffect(() => {
+    if (eventData && !eventLoading) {
+      setSetupData(prev => ({
+        ...prev,
+        startDate: eventData.startDate?.split('T')[0] || '',
+        endDate: eventData.endDate?.split('T')[0] || ''
+      }));
+    }
+  }, [eventData, eventLoading]);
+
+  useEffect(() => {
+    if (teamsData && !teamsLoading) {
+      // Get approved teams and their names
+      const approvedTeams = teamsData.filter((team: any) => team.status === 'approved');
+      const teamNamesList = approvedTeams.map((team: any) => team.name).join('\n');
+      
+      // Group teams by age group to suggest age group selection
+      const ageGroups = [...new Set(approvedTeams.map((team: any) => team.ageGroup?.ageGroup || 'Unknown'))];
+      
+      setSetupData(prev => ({
+        ...prev,
+        teamNames: teamNamesList,
+        selectedAgeGroup: ageGroups.length === 1 ? ageGroups[0] : prev.selectedAgeGroup
+      }));
+    }
+  }, [teamsData, teamsLoading]);
+
+  useEffect(() => {
+    if (venuesData && !venuesLoading) {
+      // Count total available fields
+      const totalFields = venuesData.reduce((total: number, venue: any) => 
+        total + (venue.fields?.length || 0), 0);
+      
+      setSetupData(prev => ({
+        ...prev,
+        availableFields: totalFields || 4
+      }));
+    }
+  }, [venuesData, venuesLoading]);
   
   // Load standard age group templates
   const loadTemplate = (template: string) => {
@@ -125,8 +202,48 @@ export function UnifiedScheduleSetup({ eventId, onComplete }: UnifiedScheduleSet
     generateScheduleMutation.mutate(setupData);
   };
 
+  // Show loading state while data is loading
+  if (eventLoading || teamsLoading || venuesLoading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+            <h3 className="text-lg font-semibold mb-2">Loading Tournament Data</h3>
+            <p className="text-gray-600">
+              Fetching real team names, tournament dates, and venue information...
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {/* Tournament Data Overview */}
+      {eventData && (
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <h3 className="font-semibold text-green-800">Real Tournament Data Loaded</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-green-700">Event:</span> {eventData.name}
+              </div>
+              <div>
+                <span className="font-medium text-green-700">Teams:</span> {teamsData?.filter((t: any) => t.status === 'approved')?.length || 0} approved
+              </div>
+              <div>
+                <span className="font-medium text-green-700">Venues:</span> {venuesData?.length || 0} complexes, {venuesData?.reduce((total: number, venue: any) => total + (venue.fields?.length || 0), 0)} fields
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header */}
       <Card className="border-0 bg-gradient-to-r from-blue-50 to-purple-50">
         <CardHeader>
@@ -350,6 +467,19 @@ export function UnifiedScheduleSetup({ eventId, onComplete }: UnifiedScheduleSet
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Display real venue information */}
+              {venuesData && venuesData.length > 0 && (
+                <div className="mb-4 p-3 bg-blue-50 rounded-md">
+                  <h4 className="font-medium text-blue-800 mb-2">Available Venues:</h4>
+                  {venuesData.map((venue: any, index: number) => (
+                    <div key={index} className="text-sm text-blue-700 mb-1">
+                      <span className="font-medium">{venue.name}</span> - {venue.fields?.length || 0} fields
+                      {venue.address && <span className="text-gray-600"> ({venue.address})</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
+              
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Available Fields</Label>
