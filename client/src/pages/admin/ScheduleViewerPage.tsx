@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScheduleViewer } from '@/components/admin/scheduling/ScheduleViewer';
+import { ScheduleViewer } from '@/components/admin/scheduling/ScheduleViewerFixed';
 import { ArrowLeft, Calendar, Trophy } from 'lucide-react';
 import { Link } from 'wouter';
 

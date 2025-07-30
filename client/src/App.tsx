@@ -80,7 +80,7 @@ import SchedulingDashboard from "@/pages/SchedulingDashboard";
 import TournamentSystemPage from "@/pages/admin/TournamentSystemPage";
 
 // Schedule viewer page  
-const ScheduleViewerPage = lazy(() => import("@/pages/admin/ScheduleViewerPage").then(m => ({ default: m.ScheduleViewerPage })));
+const ScheduleViewerPage = lazy(() => import("@/pages/admin/ScheduleViewerPage"));
 
 // Comprehensive Schedule Manager
 const ComprehensiveScheduleManagerPage = lazy(() => import("@/pages/admin/ComprehensiveScheduleManagerPage").then(m => ({ default: m.ComprehensiveScheduleManagerPage })));
