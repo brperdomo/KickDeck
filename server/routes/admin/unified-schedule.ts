@@ -262,7 +262,7 @@ router.post('/events/:eventId/unified-schedule', requireAuth, async (req, res) =
     for (const game of scheduledGames) {
       // Save the game to database (matching actual schema)
       const savedGame = await db.insert(games).values({
-        eventId: parseInt(eventId), // Convert to integer to match schema
+        eventId: eventId, // Keep as string to match schema
         ageGroupId: game.ageGroupId,
         homeTeamId: game.team1Id,
         awayTeamId: game.team2Id,
@@ -275,7 +275,7 @@ router.post('/events/:eventId/unified-schedule', requireAuth, async (req, res) =
 
       // Create a time slot for this game
       await db.insert(gameTimeSlots).values({
-        eventId: parseInt(eventId), // Convert to integer to match schema
+        eventId: eventId, // Keep as string to match schema
         fieldId: 1, // Default field ID - will be enhanced later
         startTime: game.startTime,
         endTime: game.endTime,
