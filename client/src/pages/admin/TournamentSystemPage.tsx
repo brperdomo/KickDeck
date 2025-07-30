@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { SevenStepTournamentSystem } from '@/components/admin/scheduling/SevenStepTournamentSystem';
+import TournamentSchedulingWithSetup from '@/components/admin/TournamentSchedulingWithSetup';
 import { Settings, Trophy, AlertTriangle, Calendar, Users, ArrowRight } from 'lucide-react';
 
 interface Event {
@@ -19,6 +19,7 @@ interface Event {
 
 export default function TournamentSystemPage() {
   const [selectedEventId, setSelectedEventId] = useState<string>('');
+  const [selectedTournament, setSelectedTournament] = useState<any>(null);
 
   // Fetch tournaments available for scheduling
   const { data: tournaments, isLoading } = useQuery({
@@ -32,6 +33,16 @@ export default function TournamentSystemPage() {
     }
   });
 
+  const handleTournamentSelect = (tournament: any) => {
+    setSelectedTournament(tournament);
+    setSelectedEventId(tournament.id.toString());
+  };
+
+  const handleBackToSelection = () => {
+    setSelectedTournament(null);
+    setSelectedEventId('');
+  };
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -40,6 +51,16 @@ export default function TournamentSystemPage() {
           <span>Loading tournament system...</span>
         </div>
       </div>
+    );
+  }
+
+  // If tournament is selected, show scheduling with setup
+  if (selectedTournament) {
+    return (
+      <TournamentSchedulingWithSetup 
+        selectedTournament={selectedTournament}
+        onBack={handleBackToSelection}
+      />
     );
   }
 
@@ -97,7 +118,7 @@ export default function TournamentSystemPage() {
                     {tournaments.map((tournament: Event) => (
                       <div
                         key={tournament.id}
-                        onClick={() => setSelectedEventId(tournament.id.toString())}
+                        onClick={() => handleTournamentSelect(tournament)}
                         className="group relative p-6 border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-lg transition-all duration-200 cursor-pointer bg-gradient-to-r from-white to-gray-50/50 hover:from-blue-50/50 hover:to-purple-50/50"
                       >
                         <div className="flex items-center justify-between">
