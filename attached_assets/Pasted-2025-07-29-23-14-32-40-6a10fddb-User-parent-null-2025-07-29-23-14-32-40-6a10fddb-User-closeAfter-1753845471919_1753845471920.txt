@@ -1,0 +1,140 @@
+2025-07-29 23:14:32.40
+6a10fddb
+User
+_parent: null,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+_closeAfterHandlingError: false,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+_readableState: [ReadableState],
+2025-07-29 23:14:32.40
+6a10fddb
+User
+_writableState: [WritableState],
+2025-07-29 23:14:32.40
+6a10fddb
+User
+allowHalfOpen: false,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+_pendingData: null,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+_pendingEncoding: '',
+2025-07-29 23:14:32.40
+6a10fddb
+User
+_server: null,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+ssl: [TLSWrap],
+2025-07-29 23:14:32.40
+6a10fddb
+User
+_rejectUnauthorized: true,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+parser: null,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+autoSelectFamilyAttemptedAddresses: [Array],
+2025-07-29 23:14:32.40
+6a10fddb
+User
+[Symbol(alpncallback)]: null,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+[Symbol(pendingSession)]: null,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+[Symbol(async_id_symbol)]: 14334,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+[Symbol(timeout)]: null,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+[Symbol(kBuffer)]: null,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+[Symbol(kBufferGen)]: null,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+[Symbol(kCapture)]: false,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+[Symbol(kBytesWritten)]: 0,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+},
+2025-07-29 23:14:32.40
+6a10fddb
+User
+writeBuffer: undefined,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+tlsWrite: undefined
+2025-07-29 23:14:32.40
+6a10fddb
+User
+_keepAlive: false,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+_ending: true,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+processID: 15803358,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+secretKey: -853010246,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+connectionString: 'postgresql://neondb_owner_1749858646225:npg_P1V6RMlHLTeq@ep-tiny-cake-a5mjjazc.us-east-2.aws.neon.tech/neondb?sslmode=require',
+2025-07-29 23:14:32.40
+6a10fddb
+User
+max: 10,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+maxUses: Infinity,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+allowExitOnIdle: false,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+maxLifetimeSeconds: 0,
+2025-07-29 23:14:32.40
+6a10fddb
+User
+},
+2025-07-29 23:14:32.40
+6a10fddb
+User
+release: [Function (anonymous)],
+2025-07-29 23:14:32.40
+6a10fddb
+User
+activeQuery: null,
