@@ -22,6 +22,8 @@ router.post('/events/:eventId/unified-schedule', requireAuth, async (req, res) =
       userId: req.user?.id,
       userEmail: req.user?.email
     });
+    
+    console.log('[Unified Schedule] REQUEST BODY:', JSON.stringify(req.body, null, 2));
 
     const { eventId } = req.params;
     const {
