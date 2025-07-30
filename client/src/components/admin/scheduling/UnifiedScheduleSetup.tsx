@@ -75,17 +75,31 @@ export function UnifiedScheduleSetup({ eventId, onComplete }: UnifiedScheduleSet
   const { data: teamsData, isLoading: teamsLoading, error: teamsError } = useQuery({
     queryKey: ['teams', eventId],
     queryFn: async () => {
+      console.log(`QUICK SCHEDULER DEBUG: Fetching teams for event ${eventId}`);
+      console.log(`QUICK SCHEDULER DEBUG: API URL: /api/admin/teams?eventId=${eventId}`);
+      
       const response = await fetch(`/api/admin/teams?eventId=${eventId}`, {
         credentials: 'include'
       });
+      
+      console.log(`QUICK SCHEDULER DEBUG: Response status: ${response.status}`);
+      console.log(`QUICK SCHEDULER DEBUG: Response ok: ${response.ok}`);
+      
       if (!response.ok) {
         const errorData = await response.json();
-        console.log('Teams API Error:', errorData);
+        console.log('QUICK SCHEDULER DEBUG: Teams API Error Details:', errorData);
+        
+        // Show specific authentication error
+        if (response.status === 401) {
+          throw new Error(`Authentication required - please log in as admin to access tournament data`);
+        }
+        
         throw new Error(`Failed to fetch teams: ${errorData.error || response.statusText}`);
       }
       const data = await response.json();
-      console.log('Teams Data for event', eventId, ':', data);
-      console.log('Approved teams count:', data?.filter((t: any) => t.status === 'approved')?.length || 0);
+      console.log('QUICK SCHEDULER DEBUG: Teams Data for event', eventId, ':', data);
+      console.log('QUICK SCHEDULER DEBUG: Total teams received:', data?.length || 0);
+      console.log('QUICK SCHEDULER DEBUG: Approved teams count:', data?.filter((t: any) => t.status === 'approved')?.length || 0);
       return data;
     }
   });
@@ -273,13 +287,21 @@ export function UnifiedScheduleSetup({ eventId, onComplete }: UnifiedScheduleSet
                 <div className="flex items-start gap-2">
                   <div className="h-4 w-4 rounded-full bg-blue-400 flex-shrink-0 mt-0.5" />
                   <div className="text-sm">
-                    <div className="font-medium text-blue-900 mb-1">Authentication Required for Event {eventId}</div>
+                    <div className="font-medium text-blue-900 mb-1">🔒 Admin Login Required for Event {eventId}</div>
                     <p className="text-blue-700 text-xs leading-relaxed">
                       This tournament (Event {eventId}) has <strong>217 approved teams</strong> in the database, but the Quick Scheduler needs admin access to load them. 
-                      Please log in as an admin to see the real age groups and approved teams data.
                     </p>
+                    <div className="mt-2 p-2 bg-white rounded border border-blue-200">
+                      <p className="text-blue-800 text-xs font-medium mb-1">To access the 217 teams:</p>
+                      <a 
+                        href="/login" 
+                        className="inline-block px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+                      >
+                        Login as Admin →
+                      </a>
+                    </div>
                     <p className="text-blue-600 text-xs mt-1">
-                      API Error: {teamsError?.message || ageGroupsError?.message}
+                      Error: {teamsError?.message || ageGroupsError?.message}
                     </p>
                   </div>
                 </div>
