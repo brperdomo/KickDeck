@@ -7,10 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
   Zap, Calendar, Clock, Users, MapPin, CheckCircle, 
-  ArrowRight, Settings, Play, Loader2, Lock
+  ArrowRight, Settings, Play, Loader2, Lock, AlertTriangle, Building2, Target
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -356,8 +356,28 @@ export function UnifiedScheduleSetup({ eventId, onComplete }: UnifiedScheduleSet
     );
   }
 
+  // Calculate scheduled vs unscheduled age groups
+  const scheduledAgeGroups = ageGroupsData?.filter((ag: any) => ag.hasSchedule) || [];
+  const unscheduledAgeGroups = ageGroupsData?.filter((ag: any) => !ag.hasSchedule) || [];
+
   return (
     <div className="space-y-6">
+      {/* Duplicate Scheduling Prevention Alert */}
+      {scheduledAgeGroups.length > 0 && (
+        <Alert className="border-orange-200 bg-orange-50">
+          <AlertTriangle className="h-4 w-4 text-orange-600" />
+          <AlertTitle className="text-orange-800">Duplicate Scheduling Prevention</AlertTitle>
+          <AlertDescription className="text-orange-700">
+            <strong>{scheduledAgeGroups.length} age groups already have schedules</strong> and are hidden from Quick Generator to prevent duplicate scheduling. 
+            {unscheduledAgeGroups.length > 0 ? (
+              ` You can schedule the remaining ${unscheduledAgeGroups.length} unscheduled age groups below.`
+            ) : (
+              ' Use the "Manage Age Groups" tab to edit existing schedules or regenerate them with updated team seeding.'
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Tournament Data Overview */}
       {eventData && (
         <Card className="border-green-200 bg-green-50">
@@ -485,14 +505,30 @@ export function UnifiedScheduleSetup({ eventId, onComplete }: UnifiedScheduleSet
                       {ageGroupsError ? (
                         <SelectItem value="error" disabled>Error loading age groups - authentication required</SelectItem>
                       ) : ageGroupsData?.length > 0 ? (
-                        ageGroupsData.map((ageGroup: any) => (
-                          <SelectItem key={ageGroup.id} value={ageGroup.id.toString()}>
-                            {ageGroup.ageGroup} ({ageGroup.gender}) - {teamsData?.filter((teamData: any) => {
-                              const team = teamData.team || teamData;
-                              return team.ageGroupId === ageGroup.id && team.status === 'approved';
-                            })?.length || 0} teams
-                          </SelectItem>
-                        ))
+                        (() => {
+                          const unscheduledAgeGroups = ageGroupsData.filter((ageGroup: any) => {
+                            // Only show age groups that don't already have games scheduled
+                            const hasGames = ageGroup.hasSchedule || false;
+                            return !hasGames;
+                          });
+                          
+                          const scheduledCount = ageGroupsData.filter((ag: any) => ag.hasSchedule).length;
+                          
+                          return unscheduledAgeGroups.length === 0 ? (
+                            <SelectItem value="none" disabled>
+                              All {scheduledCount} age groups already scheduled - use Manage Age Groups to edit
+                            </SelectItem>
+                          ) : (
+                            unscheduledAgeGroups.map((ageGroup: any) => (
+                              <SelectItem key={ageGroup.id} value={ageGroup.id.toString()}>
+                                {ageGroup.ageGroup} ({ageGroup.gender}) - {teamsData?.filter((teamData: any) => {
+                                  const team = teamData.team || teamData;
+                                  return team.ageGroupId === ageGroup.id && team.status === 'approved';
+                                })?.length || 0} teams
+                              </SelectItem>
+                            ))
+                          );
+                        })()
                       ) : (
                         <SelectItem value="none" disabled>No age groups configured</SelectItem>
                       )}

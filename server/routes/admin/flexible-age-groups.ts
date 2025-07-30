@@ -247,4 +247,179 @@ router.post('/events/:eventId/age-groups/:ageGroupId/schedule', isAdmin, async (
   }
 });
 
+
+
+// GET /api/admin/events/:eventId/age-groups/:ageGroupId/teams
+// Get teams for a specific age group with seeding information
+router.get('/events/:eventId/age-groups/:ageGroupId/teams', isAdmin, async (req, res) => {
+  try {
+    const eventId = parseInt(req.params.eventId);
+    const ageGroupId = parseInt(req.params.ageGroupId);
+    
+    if (isNaN(eventId) || isNaN(ageGroupId)) {
+      return res.status(400).json({ error: 'Invalid event ID or age group ID' });
+    }
+
+    const approvedTeams = await db.query.teams.findMany({
+      where: and(
+        eq(teams.eventId, eventId.toString()),
+        eq(teams.ageGroupId, ageGroupId),
+        eq(teams.status, 'approved')
+      )
+    });
+
+    const teamsWithSeeding = approvedTeams.map((team, index) => ({
+      id: team.id,
+      name: team.name,
+      clubName: team.clubName,
+      coach: team.coach,
+      seedRanking: team.seedRanking || index + 1,
+      status: team.status
+    }));
+
+    res.json(teamsWithSeeding);
+  } catch (error) {
+    console.error('Error fetching age group teams:', error);
+    res.status(500).json({ error: 'Failed to fetch teams for age group' });
+  }
+});
+
+// PUT /api/admin/events/:eventId/age-groups/:ageGroupId/seeding
+// Update team seeding for an age group
+router.put('/events/:eventId/age-groups/:ageGroupId/seeding', isAdmin, async (req, res) => {
+  try {
+    const eventId = parseInt(req.params.eventId);
+    const ageGroupId = parseInt(req.params.ageGroupId);
+    const { teams: updatedTeams } = req.body;
+    
+    if (isNaN(eventId) || isNaN(ageGroupId)) {
+      return res.status(400).json({ error: 'Invalid event ID or age group ID' });
+    }
+
+    if (!updatedTeams || !Array.isArray(updatedTeams)) {
+      return res.status(400).json({ error: 'Teams array is required' });
+    }
+
+    // Update seed rankings for each team
+    for (const team of updatedTeams) {
+      await db.update(teams)
+        .set({ seedRanking: team.seedRanking })
+        .where(and(
+          eq(teams.id, team.id),
+          eq(teams.eventId, eventId.toString()),
+          eq(teams.ageGroupId, ageGroupId)
+        ));
+    }
+
+    res.json({ success: true, message: 'Team seeding updated successfully' });
+  } catch (error) {
+    console.error('Error updating team seeding:', error);
+    res.status(500).json({ error: 'Failed to update team seeding' });
+  }
+});
+
+// POST /api/admin/events/:eventId/age-groups/:ageGroupId/regenerate-schedule
+// Regenerate schedule for an existing age group (deletes old games and creates new ones)
+router.post('/events/:eventId/age-groups/:ageGroupId/regenerate-schedule', isAdmin, async (req, res) => {
+  try {
+    const eventId = parseInt(req.params.eventId);
+    const ageGroupId = parseInt(req.params.ageGroupId);
+    
+    if (isNaN(eventId) || isNaN(ageGroupId)) {
+      return res.status(400).json({ error: 'Invalid event ID or age group ID' });
+    }
+
+    console.log(`=== REGENERATING SCHEDULE FOR AGE GROUP ${ageGroupId} ===`);
+
+    // First, delete existing games for this age group
+    const existingGames = await db.query.games.findMany({
+      where: and(
+        eq(games.eventId, eventId.toString()),
+        eq(games.ageGroupId, ageGroupId)
+      )
+    });
+
+    console.log(`Found ${existingGames.length} existing games to delete`);
+
+    // Delete games and their time slots
+    for (const game of existingGames) {
+      if (game.timeSlotId) {
+        await db.delete(gameTimeSlots).where(eq(gameTimeSlots.id, game.timeSlotId));
+      }
+      await db.delete(games).where(eq(games.id, game.id));
+    }
+
+    // Generate new schedule using existing logic
+    const response = await fetch(`http://localhost:3000/api/admin/events/${eventId}/age-groups/${ageGroupId}/schedule`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to generate new schedule');
+    }
+
+    const result = await response.json();
+
+    res.json({
+      success: true,
+      gamesGenerated: result.gamesGenerated || 0,
+      message: `Schedule regenerated with updated team seeding`
+    });
+
+  } catch (error: any) {
+    console.error('Error regenerating schedule:', error);
+    res.status(500).json({ 
+      error: 'Failed to regenerate schedule',
+      details: error.message 
+    });
+  }
+});
+
+// DELETE /api/admin/events/:eventId/age-groups/:ageGroupId/schedule
+// Delete all games for a specific age group
+router.delete('/events/:eventId/age-groups/:ageGroupId/schedule', isAdmin, async (req, res) => {
+  try {
+    const eventId = parseInt(req.params.eventId);
+    const ageGroupId = parseInt(req.params.ageGroupId);
+    
+    if (isNaN(eventId) || isNaN(ageGroupId)) {
+      return res.status(400).json({ error: 'Invalid event ID or age group ID' });
+    }
+
+    console.log(`=== DELETING SCHEDULE FOR AGE GROUP ${ageGroupId} ===`);
+
+    // Get existing games for this age group
+    const existingGames = await db.query.games.findMany({
+      where: and(
+        eq(games.eventId, eventId.toString()),
+        eq(games.ageGroupId, ageGroupId)
+      )
+    });
+
+    console.log(`Found ${existingGames.length} games to delete`);
+
+    // Delete games and their time slots
+    for (const game of existingGames) {
+      if (game.timeSlotId) {
+        await db.delete(gameTimeSlots).where(eq(gameTimeSlots.id, game.timeSlotId));
+      }
+      await db.delete(games).where(eq(games.id, game.id));
+    }
+
+    res.json({
+      success: true,
+      gamesDeleted: existingGames.length,
+      message: `Deleted ${existingGames.length} games for this age group`
+    });
+
+  } catch (error: any) {
+    console.error('Error deleting age group schedule:', error);
+    res.status(500).json({ 
+      error: 'Failed to delete schedule',
+      details: error.message 
+    });
+  }
+});
+
 export default router;
