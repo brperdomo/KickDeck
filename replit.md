@@ -113,6 +113,15 @@ MatchPro AI is a comprehensive sports event management platform designed for tou
 - **Security**: Role-based access control and secure payment processing
 
 ## Changelog
+- July 30, 2025: AUTHENTICATION MIDDLEWARE CONFLICT FIX COMPLETED - Successfully resolved 401 Unauthorized errors preventing all game deletion functionality (individual, bulk, delete-all)
+  - ✅ ROOT CAUSE IDENTIFIED: Schedule-management router had duplicate authentication middleware causing conflicts (requireAuth + isAdmin)
+  - ✅ MIDDLEWARE CONFLICTS RESOLVED: Removed redundant requireAuth middleware from individual route handlers since isAdmin is applied at router level
+  - ✅ CONSISTENT AUTHENTICATION: All deletion endpoints now use single isAdmin middleware preventing authentication conflicts
+  - ✅ FRONTEND URL FIXES: Corrected individual deletion URL to include eventId (`/api/admin/events/:eventId/games/:gameId`)
+  - ✅ BULK DELETION URL: Fixed bulk deletion endpoint URL to match backend (`/api/admin/events/:eventId/games/bulk`)
+  - ✅ DELETE-ALL OPERATIONAL: Delete-all endpoint properly configured at `/api/admin/events/:eventId/games/delete-all`
+  - ✅ FOREIGN KEY CONSTRAINTS: Maintained proper deletion order (games first, then time slots) to prevent database constraint violations
+  - SYSTEM STATUS: Complete game deletion system operational for authenticated admin users with proper authorization checks
 - July 30, 2025: BULK GAME DELETION ENDPOINT FIX COMPLETED - Successfully resolved 500 Internal Server Error preventing "Clear All Games" functionality in schedule management interface
   - ✅ ROOT CAUSE FIXED: Frontend called `/api/admin/events/:eventId/games/delete-all` but backend only had `/games/all` endpoint
   - ✅ MATCHING ENDPOINT ADDED: Created `/api/admin/events/:eventId/games/delete-all` endpoint to match frontend API calls

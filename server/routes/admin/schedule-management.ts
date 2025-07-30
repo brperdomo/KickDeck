@@ -1,13 +1,12 @@
 import { Router } from 'express';
-import { requireAuth } from '../../middleware/auth';
 import { db } from '@db';
 import { games, gameTimeSlots } from '@db/schema';
 import { eq, and, inArray } from 'drizzle-orm';
 
 const router = Router();
 
-// Delete individual game
-router.delete('/events/:eventId/games/:gameId', requireAuth, async (req, res) => {
+// Delete individual game - no middleware here since isAdmin is applied at router level
+router.delete('/events/:eventId/games/:gameId', async (req, res) => {
   try {
     const { eventId, gameId } = req.params;
     
@@ -56,8 +55,8 @@ router.delete('/events/:eventId/games/:gameId', requireAuth, async (req, res) =>
   }
 });
 
-// Bulk delete games
-router.delete('/events/:eventId/games/bulk', requireAuth, async (req, res) => {
+// Bulk delete games - no middleware here since isAdmin is applied at router level
+router.delete('/events/:eventId/games/bulk', async (req, res) => {
   try {
     const { eventId } = req.params;
     const { gameIds } = req.body;
@@ -96,8 +95,8 @@ router.delete('/events/:eventId/games/bulk', requireAuth, async (req, res) => {
   }
 });
 
-// Delete all games for an event (primary endpoint)
-router.delete('/events/:eventId/games/all', requireAuth, async (req, res) => {
+// Delete all games for an event (primary endpoint) - no middleware here since isAdmin is applied at router level
+router.delete('/events/:eventId/games/all', async (req, res) => {
   try {
     const { eventId } = req.params;
     
@@ -138,8 +137,8 @@ router.delete('/events/:eventId/games/all', requireAuth, async (req, res) => {
   }
 });
 
-// Delete all games for an event (alternative endpoint to match frontend)
-router.delete('/events/:eventId/games/delete-all', requireAuth, async (req, res) => {
+// Delete all games for an event (alternative endpoint to match frontend) - no middleware here since isAdmin is applied at router level
+router.delete('/events/:eventId/games/delete-all', async (req, res) => {
   try {
     const { eventId } = req.params;
     
