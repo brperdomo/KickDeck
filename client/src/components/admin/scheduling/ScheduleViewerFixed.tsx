@@ -69,7 +69,7 @@ interface ScheduleViewerProps {
   eventId: string;
 }
 
-export function ScheduleViewerFixed({ eventId }: ScheduleViewerProps) {
+export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
   // Use useMemo for initial state to ensure stable references
   const initialState = useMemo(() => ({
     searchTerm: '',
