@@ -177,6 +177,10 @@ async function testDbConnection() {
     // Register member team management routes for updating contacts
     app.use("/api/member", memberTeamManagementRouter);
 
+    // Register scheduling readiness route (dynamic import fixed)
+    const { default: schedulingReadinessRoutes } = await import('./routes/admin/scheduling-readiness');
+    app.use('/api/admin', schedulingReadinessRoutes);
+
     log("API routes registered");
 
     // Set up appropriate middleware based on environment
