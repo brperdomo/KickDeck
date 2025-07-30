@@ -162,10 +162,26 @@ export function UnifiedScheduleSetup({ eventId, onComplete }: UnifiedScheduleSet
     }
   }, [eventData, eventLoading]);
 
+  // Auto-select game format based on age group
+  const getGameFormatForAgeGroup = (ageGroup: string): { format: string; duration: number; fieldType: string } => {
+    const age = ageGroup.toLowerCase();
+    if (age.includes('u6') || age.includes('u7') || age.includes('u8')) {
+      return { format: '4v4', duration: 60, fieldType: 'Small' };
+    } else if (age.includes('u9') || age.includes('u10')) {
+      return { format: '7v7', duration: 70, fieldType: 'Medium' };
+    } else if (age.includes('u11') || age.includes('u12')) {
+      return { format: '9v9', duration: 80, fieldType: 'Large' };
+    } else {
+      return { format: '11v11', duration: 90, fieldType: 'Full Size' };
+    }
+  };
+
   // Update team names when age group is selected
   useEffect(() => {
-    if (teamsData && setupData.selectedAgeGroup && !teamsLoading) {
+    if (teamsData && setupData.selectedAgeGroup && !teamsLoading && ageGroupsData) {
       const selectedAgeGroupId = parseInt(setupData.selectedAgeGroup);
+      const selectedAgeGroupData = ageGroupsData.find((ag: any) => ag.id === selectedAgeGroupId);
+      
       const teamsInAgeGroup = teamsData.filter((teamData: any) => {
         const team = teamData.team || teamData;
         return team.ageGroupId === selectedAgeGroupId && team.status === 'approved';
@@ -175,12 +191,22 @@ export function UnifiedScheduleSetup({ eventId, onComplete }: UnifiedScheduleSet
         return team.name;
       }).join('\n');
       
+      // Auto-select game format based on age group
+      let formatConfig = { format: '11v11', duration: 90, fieldType: 'Full Size' };
+      if (selectedAgeGroupData) {
+        formatConfig = getGameFormatForAgeGroup(selectedAgeGroupData.ageGroup);
+        console.log(`AUTO-FORMAT: ${selectedAgeGroupData.ageGroup} → ${formatConfig.format}, ${formatConfig.duration}min, ${formatConfig.fieldType} field`);
+      }
+      
       setSetupData(prev => ({
         ...prev,
-        teamNames: teamNamesList
+        teamNames: teamNamesList,
+        gameFormat: formatConfig.format,
+        gameDuration: formatConfig.duration,
+        fieldType: formatConfig.fieldType
       }));
     }
-  }, [teamsData, setupData.selectedAgeGroup, teamsLoading]);
+  }, [teamsData, setupData.selectedAgeGroup, teamsLoading, ageGroupsData]);
 
   useEffect(() => {
     if (venuesData && !venuesLoading) {
