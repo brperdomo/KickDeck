@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { requireAuth, requirePermission } from '../../middleware/auth';
-import { db } from '../../../db';
+import { requireAuth } from '../../middleware/auth';
+import { db } from '@db';
 import { events, teams, complexes, fields, games, gameTimeSlots, eventAgeGroups } from '@db/schema';
 import { eq, and } from 'drizzle-orm';
 
