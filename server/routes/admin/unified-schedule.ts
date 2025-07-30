@@ -281,6 +281,7 @@ router.post('/events/:eventId/unified-schedule', requireAuth, async (req, res) =
         fieldId: 1, // Default field ID - will be enhanced later
         startTime: game.startTime,
         endTime: game.endTime,
+        dayIndex: 0, // Required field
         isAvailable: false
       });
 
