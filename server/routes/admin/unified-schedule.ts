@@ -80,27 +80,100 @@ router.post('/events/:eventId/unified-schedule', requireAuth, requirePermission(
 
     console.log(`[Unified Schedule] Available fields: ${eventFields.length}`);
 
-    // Generate round-robin games for this age group
+    // Generate games for this age group using smart tournament logic
     const generatedGames = [];
     const gameId = Date.now(); // Simple ID generation for demo
     
-    // Create round-robin matchups using real team data
-    for (let i = 0; i < approvedTeams.length; i++) {
-      for (let j = i + 1; j < approvedTeams.length; j++) {
-        generatedGames.push({
-          id: gameId + generatedGames.length,
-          team1: approvedTeams[i].name,
-          team2: approvedTeams[j].name,
-          team1Id: approvedTeams[i].id,
-          team2Id: approvedTeams[j].id,
-          ageGroup: `${ageGroup.ageGroup} (${ageGroup.gender})`,
-          ageGroupId: ageGroupId,
-          format: gameFormat,
-          duration: gameDuration,
-          status: 'scheduled'
-        });
+    console.log(`[Schedule Logic] Age group has ${approvedTeams.length} teams`);
+    
+    // Smart tournament format selection based on team count
+    let gameFormat_type = 'pool_play';
+    let maxGamesPerTeam = 3; // Default reasonable limit
+    
+    if (approvedTeams.length <= 4) {
+      // Small group: Round robin (every team plays every team)
+      gameFormat_type = 'round_robin';
+      maxGamesPerTeam = approvedTeams.length - 1;
+    } else if (approvedTeams.length <= 8) {
+      // Medium group: Pool play with 3-4 games per team
+      gameFormat_type = 'pool_play';
+      maxGamesPerTeam = 3;
+    } else {
+      // Large group: Pool play with 2-3 games per team
+      gameFormat_type = 'pool_play';
+      maxGamesPerTeam = 2;
+    }
+    
+    console.log(`[Schedule Logic] Using ${gameFormat_type} format with max ${maxGamesPerTeam} games per team`);
+    
+    // Generate games based on format
+    if (gameFormat_type === 'round_robin') {
+      // Full round robin for small groups
+      for (let i = 0; i < approvedTeams.length; i++) {
+        for (let j = i + 1; j < approvedTeams.length; j++) {
+          generatedGames.push({
+            id: gameId + generatedGames.length,
+            team1: approvedTeams[i].name,
+            team2: approvedTeams[j].name,
+            team1Id: approvedTeams[i].id,
+            team2Id: approvedTeams[j].id,
+            ageGroup: `${ageGroup.ageGroup} (${ageGroup.gender})`,
+            ageGroupId: ageGroupId,
+            format: gameFormat,
+            duration: gameDuration,
+            status: 'scheduled'
+          });
+        }
+      }
+    } else {
+      // Pool play format - each team plays a limited number of opponents
+      const teamGameCounts = new Array(approvedTeams.length).fill(0);
+      
+      // Try to create balanced matchups where each team gets maxGamesPerTeam games
+      let attempts = 0;
+      const maxAttempts = 1000; // Prevent infinite loops
+      
+      while (attempts < maxAttempts && teamGameCounts.some(count => count < maxGamesPerTeam)) {
+        attempts++;
+        
+        // Find two teams that can both play another game
+        for (let i = 0; i < approvedTeams.length; i++) {
+          if (teamGameCounts[i] >= maxGamesPerTeam) continue;
+          
+          for (let j = i + 1; j < approvedTeams.length; j++) {
+            if (teamGameCounts[j] >= maxGamesPerTeam) continue;
+            
+            // Check if these teams have already played each other
+            const alreadyPlayed = generatedGames.some(game => 
+              (game.team1Id === approvedTeams[i].id && game.team2Id === approvedTeams[j].id) ||
+              (game.team1Id === approvedTeams[j].id && game.team2Id === approvedTeams[i].id)
+            );
+            
+            if (!alreadyPlayed) {
+              generatedGames.push({
+                id: gameId + generatedGames.length,
+                team1: approvedTeams[i].name,
+                team2: approvedTeams[j].name,
+                team1Id: approvedTeams[i].id,
+                team2Id: approvedTeams[j].id,
+                ageGroup: `${ageGroup.ageGroup} (${ageGroup.gender})`,
+                ageGroupId: ageGroupId,
+                format: gameFormat,
+                duration: gameDuration,
+                status: 'scheduled'
+              });
+              
+              teamGameCounts[i]++;
+              teamGameCounts[j]++;
+              break;
+            }
+          }
+        }
       }
     }
+    
+    console.log(`[Schedule Logic] Generated ${generatedGames.length} games using ${gameFormat_type} format`);
+    console.log(`[Schedule Logic] Average games per team: ${(generatedGames.length * 2 / approvedTeams.length).toFixed(1)}`);
 
     // Assign time slots and fields
     const scheduledGames = [];
