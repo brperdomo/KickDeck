@@ -14,6 +14,11 @@ router.get('/test-schedule', async (req, res) => {
 
 // Generate unified schedule for a single age group
 router.post('/events/:eventId/unified-schedule', requireAuth, async (req, res) => {
+  console.log('[UNIFIED SCHEDULE] ===== REQUEST INTERCEPTED =====');
+  console.log('[UNIFIED SCHEDULE] Route Hit! Event ID:', req.params.eventId);
+  console.log('[UNIFIED SCHEDULE] Body Keys:', Object.keys(req.body || {}));
+  console.log('[UNIFIED SCHEDULE] User:', req.user?.email || 'No user');
+  
   try {
     console.log('[Unified Schedule API] POST request received:', {
       eventId: req.params.eventId,
