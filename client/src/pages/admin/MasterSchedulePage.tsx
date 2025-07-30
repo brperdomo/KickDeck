@@ -12,11 +12,12 @@ import { UnifiedScheduleSetup } from '@/components/admin/scheduling/UnifiedSched
 import { ScheduleViewer } from '@/components/admin/scheduling/ScheduleViewerFixed';
 import DragDropCalendarScheduler from '@/components/admin/scheduling/DragDropCalendarScheduler';
 import GameCardsGenerator from '@/components/admin/scheduling/GameCardsGenerator';
+import AgeGroupManagementPanel from '@/components/admin/scheduling/AgeGroupManagementPanel';
 
 export default function MasterSchedulePage() {
   const { eventId } = useParams<{ eventId: string }>();
   const [, setLocation] = useLocation();
-  const [currentView, setCurrentView] = useState<'quick' | 'view' | 'calendar' | 'cards'>('quick');
+  const [currentView, setCurrentView] = useState<'quick' | 'view' | 'calendar' | 'cards' | 'manage'>('quick');
 
   if (!eventId) {
     return <div>Event ID not found</div>;
@@ -111,6 +112,18 @@ export default function MasterSchedulePage() {
             <FileText className="h-5 w-5" />
             Game Cards
           </Button>
+          <Button
+            variant={currentView === 'manage' ? 'default' : 'outline'}
+            onClick={() => setCurrentView('manage')}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+              currentView === 'manage' 
+                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105' 
+                : 'bg-white/90 text-gray-700 hover:bg-white hover:shadow-md border-2 border-gray-200'
+            }`}
+          >
+            <Settings className="h-5 w-5" />
+            Manage Age Groups
+          </Button>
         </div>
 
         {/* Content Area */}
@@ -147,7 +160,7 @@ export default function MasterSchedulePage() {
             </Alert>
             <DragDropCalendarScheduler eventId={eventId} />
           </div>
-        ) : (
+        ) : currentView === 'cards' ? (
           <div className="space-y-6">
             <Alert className="border-orange-200 bg-orange-50">
               <FileText className="h-4 w-4 text-orange-600" />
@@ -157,6 +170,17 @@ export default function MasterSchedulePage() {
               </AlertDescription>
             </Alert>
             <GameCardsGenerator eventId={eventId} />
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <Alert className="border-green-200 bg-green-50">
+              <Settings className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800">
+                <strong>Age Group Management:</strong> Edit team seeding, manage existing age groups, 
+                and regenerate schedules for late registrations or waitlisted teams.
+              </AlertDescription>
+            </Alert>
+            <AgeGroupManagementPanel eventId={eventId} />
           </div>
         )}
       </div>
@@ -179,6 +203,13 @@ export default function MasterSchedulePage() {
                 <div>
                   <strong>View & Manage:</strong> Use Schedule Viewer to see all generated games, 
                   filter by criteria, and export to CSV for distribution.
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Settings className="h-4 w-4 text-green-600 mt-0.5" />
+                <div>
+                  <strong>Age Group Management:</strong> Edit team seeding and regenerate schedules 
+                  for late registrations or waitlisted teams using the Manage Age Groups tab.
                 </div>
               </div>
             </div>
