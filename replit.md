@@ -120,7 +120,10 @@ MatchPro AI is a comprehensive sports event management platform designed for tou
   - ✅ REALISTIC GAME COUNTS: Dramatically reduced game generation from exponential round-robin to manageable tournament schedules (6 teams: ~9 games vs 15, 9 teams: ~18 games vs 36, 12 teams: ~24 games vs 66)
   - ✅ PROFESSIONAL SCHEDULING: System now generates tournament schedules matching industry standards with appropriate game loads per team instead of excessive full round-robin tournaments
   - ✅ ENHANCED USER EXPERIENCE: Game format fields automatically populate when age group selected, eliminating manual configuration and ensuring proper field size matching
-  - SYSTEM STATUS: Intelligent scheduling engine operational - generates realistic, professional tournament schedules with smart format selection and manageable game counts
+  - ✅ GAME PERSISTENCE BUG FIXED: Quick Scheduler now saves generated games to database instead of only returning them in JSON response
+  - ✅ DATABASE INTEGRATION: Games properly saved to games and game_time_slots tables with correct schema field mapping
+  - ✅ MASTER SCHEDULE VISIBILITY: Generated games now appear in View Complete Schedule tab instead of disappearing after generation
+  - SYSTEM STATUS: Intelligent scheduling engine operational - generates realistic, professional tournament schedules with smart format selection, manageable game counts, and proper database persistence
 - July 30, 2025: ALL TOURNAMENTS SCHEDULE VIEWER COMPLETED - Successfully transformed main Scheduling page into comprehensive cross-tournament schedule management hub
   - ✅ COMPLETE INTERFACE TRANSFORMATION: Replaced SchedulingDashboard with AllTournamentsScheduleViewer component showing schedules from ALL tournaments
   - ✅ BACKEND API IMPLEMENTATION: Created tournaments-with-schedules.ts and games-all-tournaments.ts APIs providing cross-tournament data access

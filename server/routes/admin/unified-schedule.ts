@@ -81,7 +81,20 @@ router.post('/events/:eventId/unified-schedule', requireAuth, requirePermission(
     console.log(`[Unified Schedule] Available fields: ${eventFields.length}`);
 
     // Generate games for this age group using smart tournament logic
-    const generatedGames = [];
+    type GeneratedGame = {
+      id: number;
+      team1: string;
+      team2: string;
+      team1Id: number;
+      team2Id: number;
+      ageGroup: string;
+      ageGroupId: number;
+      format: string;
+      duration: number;
+      status: string;
+    };
+    
+    const generatedGames: GeneratedGame[] = [];
     const gameId = Date.now(); // Simple ID generation for demo
     
     console.log(`[Schedule Logic] Age group has ${approvedTeams.length} teams`);
@@ -228,24 +241,59 @@ router.post('/events/:eventId/unified-schedule', requireAuth, requirePermission(
 
     console.log(`[Unified Schedule] Generated ${scheduledGames.length} scheduled games`);
 
-    // Return the generated schedule
+    // Save games to database
+    console.log(`[Database Save] Saving ${scheduledGames.length} games to database...`);
+    
+    const savedGames = [];
+    for (const game of scheduledGames) {
+      // Save the game to database (matching actual schema)
+      const [savedGame] = await db.insert(games).values({
+        eventId: parseInt(eventId),
+        ageGroupId: game.ageGroupId,
+        homeTeamId: game.team1Id,
+        awayTeamId: game.team2Id,
+        status: 'scheduled',
+        round: 1,
+        matchNumber: savedGames.length + 1,
+        duration: game.duration,
+        breakTime: restPeriod
+      }).returning();
+
+      // Create a time slot for this game
+      await db.insert(gameTimeSlots).values({
+        eventId: parseInt(eventId),
+        fieldId: 1, // Default field ID - will be enhanced later
+        startTime: game.startTime,
+        endTime: game.endTime,
+        isAvailable: false
+      });
+
+      savedGames.push(savedGame);
+    }
+
+    console.log(`[Database Save] Successfully saved ${savedGames.length} games to database`);
+
+    // Return the generated schedule with database IDs
     res.json({
       success: true,
       ageGroup: `${ageGroup.ageGroup} (${ageGroup.gender})`,
       ageGroupId: ageGroupId,
-      gamesCount: scheduledGames.length,
+      gamesCount: savedGames.length,
       teamsCount: approvedTeams.length,
       schedule: scheduledGames,
+      savedGames: savedGames.map(g => ({ id: g.id, homeTeamId: g.homeTeamId, awayTeamId: g.awayTeamId, matchNumber: g.matchNumber })),
       teams: approvedTeams.map(team => ({ id: team.id, name: team.name })),
       summary: {
-        totalGames: scheduledGames.length,
+        totalGames: savedGames.length,
         teamsInvolved: approvedTeams.length,
-        daysUsed: Math.ceil(scheduledGames.length / (availableFields * 6)),
-        fieldsUsed: Math.min(availableFields, scheduledGames.length),
+        daysUsed: Math.ceil(savedGames.length / (availableFields * 6)),
+        fieldsUsed: Math.min(availableFields, savedGames.length),
         format: gameFormat,
         duration: gameDuration,
         tournamentDates: `${startDate} to ${endDate}`,
-        operatingHours: `${operatingStart} - ${operatingEnd}`
+        operatingHours: `${operatingStart} - ${operatingEnd}`,
+        databaseSaved: true,
+        message: `Generated and saved ${savedGames.length} games to database - you can now view them in the Master Schedule!`
       }
     });
 
