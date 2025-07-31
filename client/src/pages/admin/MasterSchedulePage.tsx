@@ -14,11 +14,12 @@ import DragDropCalendarScheduler from '@/components/admin/scheduling/DragDropCal
 import GameCardsGenerator from '@/components/admin/scheduling/GameCardsGenerator';
 import AgeGroupManagementPanel from '@/components/admin/scheduling/AgeGroupManagementPanel';
 import { FlightReviewDashboard } from '@/components/admin/scheduling/FlightReviewDashboard';
+import { GameFormatEngine } from '@/components/admin/scheduling/GameFormatEngine';
 
 export default function MasterSchedulePage() {
   const { eventId } = useParams<{ eventId: string }>();
   const [, setLocation] = useLocation();
-  const [currentView, setCurrentView] = useState<'quick' | 'view' | 'calendar' | 'cards' | 'manage' | 'flights'>('flights');
+  const [currentView, setCurrentView] = useState<'quick' | 'view' | 'calendar' | 'cards' | 'manage' | 'flights' | 'formats'>('flights');
 
   if (!eventId) {
     return <div>Event ID not found</div>;
@@ -137,6 +138,18 @@ export default function MasterSchedulePage() {
             <Settings className="h-5 w-5" />
             Manage Age Groups
           </Button>
+          <Button
+            variant={currentView === 'formats' ? 'default' : 'outline'}
+            onClick={() => setCurrentView('formats')}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+              currentView === 'formats' 
+                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105' 
+                : 'bg-white/90 text-gray-700 hover:bg-white hover:shadow-md border-2 border-gray-200'
+            }`}
+          >
+            <Settings className="h-5 w-5" />
+            Game Formats
+          </Button>
         </div>
 
         {/* Content Area */}
@@ -194,6 +207,17 @@ export default function MasterSchedulePage() {
               </AlertDescription>
             </Alert>
             <GameCardsGenerator eventId={eventId} />
+          </div>
+        ) : currentView === 'formats' ? (
+          <div className="space-y-6">
+            <Alert className="border-purple-200 bg-purple-50">
+              <Settings className="h-4 w-4 text-purple-600" />
+              <AlertDescription className="text-purple-800">
+                <strong>Game Format Engine:</strong> Configure game lengths, field sizes, and rest periods for each flight. 
+                Use templates for quick setup or create custom formats for specific competitive levels.
+              </AlertDescription>
+            </Alert>
+            <GameFormatEngine eventId={eventId} />
           </div>
         ) : (
           <div className="space-y-6">

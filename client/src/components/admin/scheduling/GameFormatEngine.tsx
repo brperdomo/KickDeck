@@ -1,0 +1,503 @@
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+import { Settings, Clock, Users, MapPin, Save, Copy, Trash2, CheckCircle } from 'lucide-react';
+
+interface FlightFormatData {
+  flightId: number;
+  flightName: string;
+  ageGroup: string;
+  gender: string;
+  teamCount: number;
+  currentFormat?: GameFormat;
+}
+
+interface GameFormat {
+  id?: number;
+  gameLength: number; // 30, 35, 40 minute halves
+  fieldSize: string; // 7v7, 9v9, 11v11
+  bufferTime: number; // minutes between games
+  restPeriod: number; // minimum rest between team games
+  maxGamesPerDay: number;
+  templateName?: string;
+}
+
+interface FormatTemplate {
+  id: number;
+  name: string;
+  description: string;
+  gameLength: number;
+  fieldSize: string;
+  bufferTime: number;
+  restPeriod: number;
+  maxGamesPerDay: number;
+}
+
+interface GameFormatEngineProps {
+  eventId: string;
+}
+
+export function GameFormatEngine({ eventId }: GameFormatEngineProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedTemplate, setSelectedTemplate] = useState<{ [flightId: number]: number }>({});
+  const [customFormats, setCustomFormats] = useState<{ [flightId: number]: GameFormat }>({});
+  const [editingFlight, setEditingFlight] = useState<number | null>(null);
+
+  // Fetch flights ready for format configuration
+  const { data: flightData, isLoading } = useQuery({
+    queryKey: ['flight-formats', eventId],
+    queryFn: async (): Promise<FlightFormatData[]> => {
+      const response = await fetch(`/api/admin/events/${eventId}/flight-formats`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch flight format data');
+      return response.json();
+    }
+  });
+
+  // Fetch format templates
+  const { data: templates } = useQuery({
+    queryKey: ['format-templates'],
+    queryFn: async (): Promise<FormatTemplate[]> => {
+      const response = await fetch('/api/admin/format-templates', {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch format templates');
+      return response.json();
+    }
+  });
+
+  // Save format configuration
+  const saveFormatMutation = useMutation({
+    mutationFn: async ({ flightId, format }: { flightId: number; format: GameFormat }) => {
+      const response = await fetch(`/api/admin/events/${eventId}/flights/${flightId}/format`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(format)
+      });
+      if (!response.ok) throw new Error('Failed to save format configuration');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Format Saved",
+        description: "Game format configuration has been saved successfully"
+      });
+      queryClient.invalidateQueries({ queryKey: ['flight-formats', eventId] });
+      setEditingFlight(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Save Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Lock all formats and proceed to bracket creation
+  const lockFormatsMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/admin/events/${eventId}/flight-formats/lock`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to lock formats');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Formats Locked",
+        description: "Game formats are locked and ready for bracket creation"
+      });
+      queryClient.invalidateQueries({ queryKey: ['flight-formats', eventId] });
+    }
+  });
+
+  const handleTemplateApply = (flightId: number, templateId: number) => {
+    const template = templates?.find(t => t.id === templateId);
+    if (template) {
+      const format: GameFormat = {
+        gameLength: template.gameLength,
+        fieldSize: template.fieldSize,
+        bufferTime: template.bufferTime,
+        restPeriod: template.restPeriod,
+        maxGamesPerDay: template.maxGamesPerDay,
+        templateName: template.name
+      };
+      setCustomFormats(prev => ({ ...prev, [flightId]: format }));
+      setSelectedTemplate(prev => ({ ...prev, [flightId]: templateId }));
+    }
+  };
+
+  const handleCustomFormatChange = (flightId: number, field: keyof GameFormat, value: string | number) => {
+    setCustomFormats(prev => ({
+      ...prev,
+      [flightId]: {
+        ...prev[flightId],
+        [field]: value,
+        templateName: undefined // Clear template name when customizing
+      }
+    }));
+    setSelectedTemplate(prev => ({ ...prev, [flightId]: 0 })); // Clear template selection
+  };
+
+  const handleSaveFormat = (flightId: number) => {
+    const format = customFormats[flightId];
+    if (format) {
+      saveFormatMutation.mutate({ flightId, format });
+    }
+  };
+
+  const getFormatBadge = (format: GameFormat | undefined) => {
+    if (!format) return <Badge variant="outline">Not Configured</Badge>;
+    
+    return (
+      <div className="flex gap-1">
+        <Badge variant="default">{format.fieldSize}</Badge>
+        <Badge variant="secondary">{format.gameLength}min halves</Badge>
+        {format.templateName && (
+          <Badge variant="outline">{format.templateName}</Badge>
+        )}
+      </div>
+    );
+  };
+
+  const unconfiguredFlights = flightData?.filter(f => !f.currentFormat) || [];
+  const configuredFlights = flightData?.filter(f => f.currentFormat) || [];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Game Format Engine</h2>
+          <p className="text-muted-foreground">
+            Configure game formats for each flight before creating brackets
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => lockFormatsMutation.mutate()}
+            disabled={unconfiguredFlights.length > 0 || lockFormatsMutation.isPending}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            <CheckCircle className="h-4 w-4 mr-2" />
+            Lock Formats & Create Brackets
+          </Button>
+        </div>
+      </div>
+
+      {/* Progress Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Settings className="h-8 w-8 text-blue-600" />
+              <div>
+                <p className="text-2xl font-bold">{configuredFlights.length}</p>
+                <p className="text-sm text-muted-foreground">Configured Flights</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Clock className="h-8 w-8 text-orange-600" />
+              <div>
+                <p className="text-2xl font-bold">{unconfiguredFlights.length}</p>
+                <p className="text-sm text-muted-foreground">Needs Configuration</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Users className="h-8 w-8 text-green-600" />
+              <div>
+                <p className="text-2xl font-bold">{flightData?.reduce((sum, f) => sum + f.teamCount, 0) || 0}</p>
+                <p className="text-sm text-muted-foreground">Total Teams</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Format Configuration */}
+      <Tabs defaultValue="needs-config" className="w-full">
+        <TabsList>
+          <TabsTrigger value="needs-config">
+            <Settings className="h-4 w-4 mr-2" />
+            Needs Configuration ({unconfiguredFlights.length})
+          </TabsTrigger>
+          <TabsTrigger value="configured">
+            <CheckCircle className="h-4 w-4 mr-2" />
+            Configured ({configuredFlights.length})
+          </TabsTrigger>
+          <TabsTrigger value="templates">
+            <Copy className="h-4 w-4 mr-2" />
+            Format Templates
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="needs-config" className="space-y-4">
+          {unconfiguredFlights.length === 0 ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">All Flights Configured</h3>
+                <p className="text-muted-foreground">
+                  All flights have game format configurations. Ready to proceed to bracket creation.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            unconfiguredFlights.map((flight) => (
+              <Card key={flight.flightId}>
+                <CardHeader>
+                  <CardTitle>{flight.ageGroup} {flight.gender} - {flight.flightName}</CardTitle>
+                  <CardDescription>
+                    {flight.teamCount} teams • Configure game format settings
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    {/* Template Selection */}
+                    <div className="space-y-3">
+                      <Label>Quick Start Templates</Label>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {templates?.map((template) => (
+                          <Button
+                            key={template.id}
+                            variant={selectedTemplate[flight.flightId] === template.id ? "default" : "outline"}
+                            className="justify-start h-auto p-4"
+                            onClick={() => handleTemplateApply(flight.flightId, template.id)}
+                          >
+                            <div className="text-left">
+                              <div className="font-semibold">{template.name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {template.fieldSize} • {template.gameLength}min • {template.maxGamesPerDay} games/day
+                              </div>
+                            </div>
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Custom Configuration */}
+                    {(customFormats[flight.flightId] || editingFlight === flight.flightId) && (
+                      <div className="border rounded-lg p-4 space-y-4">
+                        <h4 className="font-semibold">Custom Configuration</h4>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {/* Game Length */}
+                          <div className="space-y-2">
+                            <Label>Game Length (minute halves)</Label>
+                            <Select
+                              value={customFormats[flight.flightId]?.gameLength?.toString() || ""}
+                              onValueChange={(value) => handleCustomFormatChange(flight.flightId, 'gameLength', parseInt(value))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select length" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="30">30 minutes</SelectItem>
+                                <SelectItem value="35">35 minutes</SelectItem>
+                                <SelectItem value="40">40 minutes</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Field Size */}
+                          <div className="space-y-2">
+                            <Label>Field Size</Label>
+                            <Select
+                              value={customFormats[flight.flightId]?.fieldSize || ""}
+                              onValueChange={(value) => handleCustomFormatChange(flight.flightId, 'fieldSize', value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select size" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="7v7">7v7</SelectItem>
+                                <SelectItem value="9v9">9v9</SelectItem>
+                                <SelectItem value="11v11">11v11</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Buffer Time */}
+                          <div className="space-y-2">
+                            <Label>Buffer Time (minutes)</Label>
+                            <Input
+                              type="number"
+                              min="5"
+                              max="30"
+                              value={customFormats[flight.flightId]?.bufferTime || ""}
+                              onChange={(e) => handleCustomFormatChange(flight.flightId, 'bufferTime', parseInt(e.target.value))}
+                              placeholder="10"
+                            />
+                          </div>
+
+                          {/* Rest Period */}
+                          <div className="space-y-2">
+                            <Label>Rest Period (minutes)</Label>
+                            <Input
+                              type="number"
+                              min="30"
+                              max="300"
+                              value={customFormats[flight.flightId]?.restPeriod || ""}
+                              onChange={(e) => handleCustomFormatChange(flight.flightId, 'restPeriod', parseInt(e.target.value))}
+                              placeholder="90"
+                            />
+                          </div>
+
+                          {/* Max Games Per Day */}
+                          <div className="space-y-2">
+                            <Label>Max Games Per Day</Label>
+                            <Input
+                              type="number"
+                              min="1"
+                              max="8"
+                              value={customFormats[flight.flightId]?.maxGamesPerDay || ""}
+                              onChange={(e) => handleCustomFormatChange(flight.flightId, 'maxGamesPerDay', parseInt(e.target.value))}
+                              placeholder="3"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleSaveFormat(flight.flightId)}
+                            disabled={!customFormats[flight.flightId] || saveFormatMutation.isPending}
+                          >
+                            <Save className="h-4 w-4 mr-2" />
+                            Save Format
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setEditingFlight(null);
+                              setCustomFormats(prev => {
+                                const updated = { ...prev };
+                                delete updated[flight.flightId];
+                                return updated;
+                              });
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {!customFormats[flight.flightId] && editingFlight !== flight.flightId && (
+                      <Button
+                        variant="outline"
+                        onClick={() => setEditingFlight(flight.flightId)}
+                      >
+                        <Settings className="h-4 w-4 mr-2" />
+                        Custom Configuration
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </TabsContent>
+
+        <TabsContent value="configured" className="space-y-4">
+          {configuredFlights.map((flight) => (
+            <Card key={flight.flightId} className="border-green-200 bg-green-50/30">
+              <CardHeader>
+                <CardTitle>{flight.ageGroup} {flight.gender} - {flight.flightName}</CardTitle>
+                <CardDescription>
+                  {flight.teamCount} teams • Format configured and ready
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    {getFormatBadge(flight.currentFormat)}
+                    <div className="text-sm text-muted-foreground">
+                      {flight.currentFormat?.restPeriod}min rest • {flight.currentFormat?.bufferTime}min buffer • Max {flight.currentFormat?.maxGamesPerDay} games/day
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setEditingFlight(flight.flightId);
+                      setCustomFormats(prev => ({
+                        ...prev,
+                        [flight.flightId]: flight.currentFormat!
+                      }));
+                    }}
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Edit Format
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </TabsContent>
+
+        <TabsContent value="templates" className="space-y-4">
+          <div className="grid gap-4">
+            {templates?.map((template) => (
+              <Card key={template.id}>
+                <CardHeader>
+                  <CardTitle>{template.name}</CardTitle>
+                  <CardDescription>{template.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium">Field Size:</span>
+                      <p>{template.fieldSize}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Game Length:</span>
+                      <p>{template.gameLength} minute halves</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Rest Period:</span>
+                      <p>{template.restPeriod} minutes</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Max Games/Day:</span>
+                      <p>{template.maxGamesPerDay}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
