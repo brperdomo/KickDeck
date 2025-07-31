@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { AlertCircle, Users, Check, X, ArrowRight } from 'lucide-react';
+import { AlertCircle, Users, Check, X, ArrowRight, Edit3 } from 'lucide-react';
 
 interface Team {
   id: number;
@@ -43,6 +43,7 @@ export function FlightReviewDashboard({ eventId }: FlightReviewDashboardProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedFlight, setSelectedFlight] = useState<{ [teamId: number]: number }>({});
+  const [editingTeamId, setEditingTeamId] = useState<number | null>(null);
 
   // Fetch flight review data
   const { data: flightData, isLoading } = useQuery({
@@ -182,7 +183,10 @@ export function FlightReviewDashboard({ eventId }: FlightReviewDashboardProps) {
           onClick={handleBulkAssign}
           disabled={Object.keys(selectedFlight).length === 0 || assignTeamsMutation.isPending}
         >
-          Assign Selected Teams ({Object.keys(selectedFlight).length})
+          {Object.keys(selectedFlight).length > 0 && editingTeamId ? 
+            `Update Flight Assignment (${Object.keys(selectedFlight).length})` :
+            `Assign Selected Teams (${Object.keys(selectedFlight).length})`
+          }
         </Button>
         <Button 
           variant="outline"
@@ -191,6 +195,17 @@ export function FlightReviewDashboard({ eventId }: FlightReviewDashboardProps) {
         >
           Lock Flights & Proceed to Scheduling
         </Button>
+        {editingTeamId && (
+          <Button 
+            variant="secondary"
+            onClick={() => {
+              setEditingTeamId(null);
+              setSelectedFlight({});
+            }}
+          >
+            Cancel Reassignment
+          </Button>
+        )}
       </div>
 
       {/* Flight Review by Age Group */}
@@ -201,8 +216,8 @@ export function FlightReviewDashboard({ eventId }: FlightReviewDashboardProps) {
             Needs Assignment ({totalTeamsWithoutSelection})
           </TabsTrigger>
           <TabsTrigger value="assigned">
-            <Check className="h-4 w-4 mr-2" />
-            Already Assigned ({totalTeamsWithSelection})
+            <Edit3 className="h-4 w-4 mr-2" />
+            Flight Reassignment ({totalTeamsWithSelection})
           </TabsTrigger>
           <TabsTrigger value="all-groups">
             <Users className="h-4 w-4 mr-2" />
@@ -272,25 +287,96 @@ export function FlightReviewDashboard({ eventId }: FlightReviewDashboardProps) {
               <CardHeader>
                 <CardTitle>{group.ageGroup} {group.gender}</CardTitle>
                 <CardDescription>
-                  {group.teamsWithSelection.length} teams already assigned to flights
+                  {group.teamsWithSelection.length} teams with flight assignments • Click edit icon to reassign
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-2">
-                  {group.teamsWithSelection.map((team) => (
-                    <div key={team.id} className="flex items-center justify-between p-3 border rounded bg-green-50">
-                      <div>
-                        <span className="font-medium">{team.name}</span>
-                        <Badge variant="outline" className="ml-2">{team.status}</Badge>
+                <div className="space-y-4">
+                  {/* Available Flights for Reassignment */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <h4 className="col-span-full font-medium">Available Flights for Reassignment:</h4>
+                    {group.availableFlights.map((flight) => (
+                      <div key={flight.id} className="flex items-center gap-2 p-2 border rounded">
+                        {getFlightLevelBadge(flight.level)}
+                        <span className="font-medium">{flight.name}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Badge className="bg-green-600 text-white">
-                          {team.selectedBracketName}
-                        </Badge>
-                        <Check className="h-4 w-4 text-green-600" />
+                    ))}
+                  </div>
+
+                  {/* Teams with Current Assignments */}
+                  <div className="grid gap-2">
+                    {group.teamsWithSelection.map((team) => (
+                      <div key={team.id} className="flex items-center justify-between p-3 border rounded bg-green-50">
+                        <div>
+                          <span className="font-medium">{team.name}</span>
+                          <Badge variant="outline" className="ml-2">{team.status}</Badge>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {editingTeamId === team.id ? (
+                            // Reassignment Mode
+                            <div className="flex items-center gap-2">
+                              <Select
+                                value={selectedFlight[team.id]?.toString() || team.bracketId?.toString() || ""}
+                                onValueChange={(value) => handleFlightSelection(team.id, parseInt(value))}
+                              >
+                                <SelectTrigger className="w-40">
+                                  <SelectValue placeholder="Select new flight" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {group.availableFlights.map((flight) => (
+                                    <SelectItem key={flight.id} value={flight.id.toString()}>
+                                      {flight.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  if (selectedFlight[team.id]) {
+                                    handleBulkAssign();
+                                  }
+                                  setEditingTeamId(null);
+                                }}
+                                disabled={!selectedFlight[team.id]}
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setEditingTeamId(null);
+                                  setSelectedFlight(prev => {
+                                    const updated = { ...prev };
+                                    delete updated[team.id];
+                                    return updated;
+                                  });
+                                }}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            // Display Mode
+                            <div className="flex items-center gap-2">
+                              <Badge className="bg-green-600 text-white">
+                                {team.selectedBracketName}
+                              </Badge>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setEditingTeamId(team.id)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Edit3 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
