@@ -634,6 +634,83 @@ export const selectPlayerSchema = createSelectSchema(players);
 
 export type InsertPlayer = typeof players.$inferInsert;
 export type SelectPlayer = typeof players.$inferSelect;
+
+// Game Format Templates - Reusable format configurations
+export const formatTemplates = pgTable("format_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description").notNull(),
+  gameLength: integer("game_length").notNull(), // minute halves: 30, 35, 40
+  fieldSize: text("field_size").notNull(), // 7v7, 9v9, 11v11
+  bufferTime: integer("buffer_time").notNull(), // minutes between games
+  restPeriod: integer("rest_period").notNull(), // minimum rest between team games
+  maxGamesPerDay: integer("max_games_per_day").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: text("created_at").notNull().default(new Date().toISOString()),
+  updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
+});
+
+// Game Formats - Flight-specific format configurations
+export const gameFormats = pgTable("game_formats", {
+  id: serial("id").primaryKey(),
+  bracketId: integer("bracket_id").notNull().references(() => eventBrackets.id, { onDelete: 'cascade' }),
+  gameLength: integer("game_length").notNull(), // minute halves: 30, 35, 40
+  fieldSize: text("field_size").notNull(), // 7v7, 9v9, 11v11
+  bufferTime: integer("buffer_time").notNull(), // minutes between games
+  restPeriod: integer("rest_period").notNull(), // minimum rest between team games
+  maxGamesPerDay: integer("max_games_per_day").notNull(),
+  templateName: text("template_name"), // Reference to template used (if any)
+  createdAt: text("created_at").notNull().default(new Date().toISOString()),
+  updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
+});
+
+export const insertFormatTemplateSchema = createInsertSchema(formatTemplates, {
+  name: z.string().min(1, "Template name is required"),
+  description: z.string().min(1, "Description is required"),
+  gameLength: z.number().int().min(20).max(50, "Game length must be 20-50 minutes"),
+  fieldSize: z.enum(["7v7", "9v9", "11v11"]),
+  bufferTime: z.number().int().min(5).max(30, "Buffer time must be 5-30 minutes"),
+  restPeriod: z.number().int().min(30).max(300, "Rest period must be 30-300 minutes"),
+  maxGamesPerDay: z.number().int().min(1).max(8, "Max games per day must be 1-8"),
+});
+
+export const insertGameFormatSchema = createInsertSchema(gameFormats, {
+  gameLength: z.number().int().min(20).max(50, "Game length must be 20-50 minutes"),
+  fieldSize: z.enum(["7v7", "9v9", "11v11"]),
+  bufferTime: z.number().int().min(5).max(30, "Buffer time must be 5-30 minutes"),
+  restPeriod: z.number().int().min(30).max(300, "Rest period must be 30-300 minutes"),
+  maxGamesPerDay: z.number().int().min(1).max(8, "Max games per day must be 1-8"),
+  templateName: z.string().optional(),
+});
+
+export const selectFormatTemplateSchema = createSelectSchema(formatTemplates);
+export const selectGameFormatSchema = createSelectSchema(gameFormats);
+
+export type InsertFormatTemplate = typeof formatTemplates.$inferInsert;
+export type SelectFormatTemplate = typeof formatTemplates.$inferSelect;
+export type InsertGameFormat = typeof gameFormats.$inferInsert;
+export type SelectGameFormat = typeof gameFormats.$inferSelect;
+
+// Game Format Relations
+export const gameFormatsRelations = relations(gameFormats, ({ one }) => ({
+  bracket: one(eventBrackets, {
+    fields: [gameFormats.bracketId],
+    references: [eventBrackets.id]
+  }),
+}));
+
+export const eventBracketsRelations = relations(eventBrackets, ({ one, many }) => ({
+  ageGroup: one(eventAgeGroups, {
+    fields: [eventBrackets.ageGroupId],
+    references: [eventAgeGroups.id]
+  }),
+  event: one(events, {
+    fields: [eventBrackets.eventId],
+    references: [events.id]
+  }),
+  teams: many(teams),
+  gameFormat: one(gameFormats),
+}));
 export type InsertTeam = typeof teams.$inferInsert;
 export type SelectTeam = typeof teams.$inferSelect;
 export type InsertGame = typeof games.$inferInsert;
