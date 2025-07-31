@@ -29,7 +29,7 @@ router.get('/:eventId/bracket-creation', async (req, res) => {
         level: eventBrackets.level,
         ageGroup: eventAgeGroups.ageGroup,
         gender: eventAgeGroups.gender,
-        maxTeams: eventBrackets.maxTeams
+        // maxTeams: eventBrackets.maxTeams
       })
       .from(eventBrackets)
       .innerJoin(eventAgeGroups, eq(eventBrackets.ageGroupId, eventAgeGroups.id))
