@@ -66,18 +66,18 @@ export default function MasterSchedulePage() {
 
       {/* MatchPro Navigation Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex gap-3 mb-8 flex-wrap">
+        <div className="flex gap-2 mb-8 overflow-x-auto scrollbar-hide">
           {/* Phase 1: Flight Management */}
           <Button
             variant={currentView === 'flights' ? 'default' : 'outline'}
             onClick={() => setCurrentView('flights')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
               currentView === 'flights' 
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25 hover:bg-blue-500' 
                 : 'bg-slate-700 text-slate-200 hover:bg-slate-600 border border-slate-600 hover:border-slate-500'
             }`}
           >
-            <Plane className="h-5 w-5" />
+            <Plane className="h-4 w-4" />
             1. Flight Review
           </Button>
           
@@ -85,13 +85,13 @@ export default function MasterSchedulePage() {
           <Button
             variant={currentView === 'formats' ? 'default' : 'outline'}
             onClick={() => setCurrentView('formats')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
               currentView === 'formats' 
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25 hover:bg-blue-500' 
                 : 'bg-slate-700 text-slate-200 hover:bg-slate-600 border border-slate-600 hover:border-slate-500'
             }`}
           >
-            <Settings className="h-5 w-5" />
+            <Settings className="h-4 w-4" />
             2. Game Formats
           </Button>
           
@@ -99,13 +99,13 @@ export default function MasterSchedulePage() {
           <Button
             variant={currentView === 'brackets' ? 'default' : 'outline'}
             onClick={() => setCurrentView('brackets')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
               currentView === 'brackets' 
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25 hover:bg-blue-500' 
                 : 'bg-slate-700 text-slate-200 hover:bg-slate-600 border border-slate-600 hover:border-slate-500'
             }`}
           >
-            <Trophy className="h-5 w-5" />
+            <Trophy className="h-4 w-4" />
             3. Create Brackets
           </Button>
           
@@ -113,13 +113,13 @@ export default function MasterSchedulePage() {
           <Button
             variant={currentView === 'quick' ? 'default' : 'outline'}
             onClick={() => setCurrentView('quick')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
               currentView === 'quick' 
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25 hover:bg-blue-500' 
                 : 'bg-slate-700 text-slate-200 hover:bg-slate-600 border border-slate-600 hover:border-slate-500'
             }`}
           >
-            <Zap className="h-5 w-5" />
+            <Zap className="h-4 w-4" />
             4. Auto Schedule
           </Button>
           
@@ -127,39 +127,39 @@ export default function MasterSchedulePage() {
           <Button
             variant={currentView === 'view' ? 'default' : 'outline'}
             onClick={() => setCurrentView('view')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
               currentView === 'view' 
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25 hover:bg-blue-500' 
                 : 'bg-slate-700 text-slate-200 hover:bg-slate-600 border border-slate-600 hover:border-slate-500'
             }`}
           >
-            <Eye className="h-5 w-5" />
+            <Eye className="h-4 w-4" />
             Schedule Viewer
           </Button>
           
           <Button
             variant={currentView === 'calendar' ? 'default' : 'outline'}
             onClick={() => setCurrentView('calendar')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
               currentView === 'calendar' 
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25 hover:bg-blue-500' 
                 : 'bg-slate-700 text-slate-200 hover:bg-slate-600 border border-slate-600 hover:border-slate-500'
             }`}
           >
-            <Calendar className="h-5 w-5" />
+            <Calendar className="h-4 w-4" />
             Calendar Interface
           </Button>
           
           <Button
             variant={currentView === 'cards' ? 'default' : 'outline'}
             onClick={() => setCurrentView('cards')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
               currentView === 'cards' 
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25 hover:bg-blue-500' 
                 : 'bg-slate-700 text-slate-200 hover:bg-slate-600 border border-slate-600 hover:border-slate-500'
             }`}
           >
-            <FileText className="h-5 w-5" />
+            <FileText className="h-4 w-4" />
             Game Cards
           </Button>
         </div>
