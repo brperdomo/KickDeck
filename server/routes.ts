@@ -96,7 +96,7 @@ import flightsRouter from "./routes/admin/flights";
 import bracketsRouter from "./routes/admin/brackets";
 import flightReviewRouter from "./routes/admin/flight-review";
 import flightFormatsRouter from "./routes/admin/flight-formats";
-import bracketCreationRouter from "./routes/admin/bracket-creation-simple";
+import bracketCreationRouter from "./routes/admin/bracket-creation-sql";
 import gamesRouter from "./routes/admin/games";
 import fieldsRouter from "./routes/admin/fields";
 import schedulePublicationRouter from "./routes/admin/schedule-publication";
