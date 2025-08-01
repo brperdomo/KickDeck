@@ -935,6 +935,26 @@ export function registerRoutes(app: Express): Server {
     app.use('/api/admin', isAdmin, intelligentSchedulingRouter); // Intelligent scheduling system router
     app.use('/api/admin/events', isAdmin, gameMetadataRouter); // Game metadata and scheduling rules router
     app.use('/api/admin', isAdmin, gameFormatsRouter); // Game format configuration router
+
+  // Debug endpoint for testing templates without authentication
+  app.get('/api/debug/format-templates', async (req, res) => {
+    try {
+      const { db } = await import('@db');
+      const { formatTemplates } = await import('@db/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const templates = await db
+        .select()
+        .from(formatTemplates)
+        .where(eq(formatTemplates.isActive, true))
+        .orderBy(formatTemplates.name);
+
+      res.json({ debug: true, templates, count: templates.length });
+    } catch (error) {
+      console.error('Error fetching format templates (debug):', error);
+      res.status(500).json({ error: 'Failed to fetch format templates', debug: true, details: error.message });
+    }
+  });
     app.use('/api/admin/events', isAdmin, bracketCreationSqlRouter); // Bracket creation and team assignment router
     app.use('/api/admin/games', isAdmin, gamesRouter); // Game management router
     app.use('/api/admin/schedule', isAdmin, scheduleManagementRouter); // Schedule management with drag-and-drop

@@ -179,11 +179,11 @@ export function setupAuth(app: Express) {
   if (app.get("env") === "production") {
     app.set("trust proxy", 1);
     
-    // Enhanced production session settings
+    // Enhanced production session settings for Replit
     sessionSettings.cookie = {
       ...sessionSettings.cookie,
       secure: false, // Never use secure on Replit
-      sameSite: 'lax',
+      sameSite: 'lax', // Change back to lax for compatibility
       domain: undefined // Let browser determine domain
     };
     
