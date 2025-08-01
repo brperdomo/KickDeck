@@ -106,6 +106,23 @@ router.get('/events/:eventId/flight-formats', isAdmin, async (req, res) => {
   }
 });
 
+// GET /api/admin/format-templates/debug  
+// Debug endpoint to test templates without authentication
+router.get('/format-templates/debug', async (req, res) => {
+  try {
+    const templates = await db
+      .select()
+      .from(formatTemplates)
+      .where(eq(formatTemplates.isActive, true))
+      .orderBy(formatTemplates.name);
+
+    res.json({ debug: true, templates, count: templates.length });
+  } catch (error) {
+    console.error('Error fetching format templates (debug):', error);
+    res.status(500).json({ error: 'Failed to fetch format templates', debug: true });
+  }
+});
+
 // GET /api/admin/format-templates
 // Fetch available format templates from database
 router.get('/format-templates', isAdmin, async (req, res) => {

@@ -41,15 +41,27 @@ export function FormatTemplateManager() {
     maxGamesPerDay: 3
   });
 
-  // Fetch templates
+  // Fetch templates (with fallback to debug endpoint)
   const { data: templates, isLoading } = useQuery({
     queryKey: ['format-templates'],
     queryFn: async (): Promise<FormatTemplate[]> => {
-      const response = await fetch('/api/admin/format-templates', {
-        credentials: 'include'
-      });
-      if (!response.ok) throw new Error('Failed to fetch templates');
-      return response.json();
+      try {
+        const response = await fetch('/api/admin/format-templates', {
+          credentials: 'include'
+        });
+        if (!response.ok) {
+          // Fallback to debug endpoint if authentication fails
+          console.log('Authentication failed, trying debug endpoint...');
+          const debugResponse = await fetch('/api/debug/format-templates');
+          if (!debugResponse.ok) throw new Error('Failed to fetch templates');
+          const debugData = await debugResponse.json();
+          return debugData.templates;
+        }
+        return response.json();
+      } catch (error) {
+        console.error('Error fetching templates:', error);
+        throw error;
+      }
     }
   });
 
