@@ -2,7 +2,7 @@ import { Application } from 'express';
 import { db } from '@db';
 import { teams } from '@db/schema';
 import { eq, and, isNotNull } from 'drizzle-orm';
-import { isAdmin } from '../middleware/auth';
+import { isAdmin } from '../middleware';
 import { calculateFeeBreakdown, getPlatformFeeRate } from '../services/fee-calculator';
 
 export function registerPaymentReportRoutes(app: Application) {
