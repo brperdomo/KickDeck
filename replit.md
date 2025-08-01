@@ -28,7 +28,9 @@ Preferred communication style: Simple, everyday language.
     - **Email Communication**: Dynamic template system via SendGrid for automated notifications.
     - **Administrative Features**: Role-based access, team approval/rejection, payment tracking, audit trails, and comprehensive user/team management (contact editing, member merge, email updates).
     - **Scheduling Engine**: Constraint-aware system preventing conflicts (field, team rest, daily limits). Features include:
+        - **Tournament Director Workflow**: Game Format Configuration → Flight Selection → Bracket Creation → Auto Scheduling
         - Intelligent game generation based on team counts and game formats (round-robin, pool play).
+        - Format-driven flight creation ensuring operational alignment with game requirements.
         - Automated parameter configuration from existing tournament data.
         - Drag-and-drop calendar for fine-tuning with visual conflict detection (e.g., coach color-coding).
         - Comprehensive game card PDF generation with QR code reporting.
