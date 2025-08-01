@@ -10,7 +10,7 @@ import {
   gameFormats
 } from '../../../db/schema.js';
 import { eq, and, isNotNull, isNull } from 'drizzle-orm';
-import { isAdmin } from '../../middleware/index.js';
+import { isAdmin } from '../../middleware';
 
 const router = Router();
 
