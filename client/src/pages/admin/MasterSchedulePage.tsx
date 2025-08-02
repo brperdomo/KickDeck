@@ -17,12 +17,13 @@ import { FlightReviewDashboard } from '@/components/admin/scheduling/FlightRevie
 import { GameFormatEngine } from '@/components/admin/scheduling/GameFormatEngine';
 import { FormatTemplateManager } from '@/components/admin/templates/FormatTemplateManager';
 import { FlightConfigurationTable } from '@/components/admin/scheduling/FlightConfigurationTable';
+import { WorkflowDataFlow } from '@/components/admin/scheduling/WorkflowDataFlow';
 import BracketCreationEngine from '@/components/admin/scheduling/BracketCreationEngine';
 
 export default function MasterSchedulePage() {
   const { eventId } = useParams<{ eventId: string }>();
   const [, setLocation] = useLocation();
-  const [currentView, setCurrentView] = useState<'quick' | 'view' | 'calendar' | 'cards' | 'manage' | 'flights' | 'formats' | 'brackets' | 'overview'>('overview');
+  const [currentView, setCurrentView] = useState<'quick' | 'view' | 'calendar' | 'cards' | 'manage' | 'flights' | 'formats' | 'brackets' | 'overview' | 'workflow'>('overview');
 
   if (!eventId) {
     return <div>Event ID not found</div>;
@@ -192,6 +193,39 @@ export default function MasterSchedulePage() {
               </AlertDescription>
             </Alert>
             <FlightConfigurationTable eventId={eventId} />
+            
+            {/* Add Data Flow Demo Button */}
+            <div className="mt-6 text-center">
+              <Button
+                onClick={() => setCurrentView('workflow')}
+                className="bg-blue-600 hover:bg-blue-500 text-white"
+              >
+                <ArrowRight className="h-4 w-4 mr-2" />
+                See How This Data Flows Through Workflow
+              </Button>
+            </div>
+          </div>
+        ) : currentView === 'workflow' ? (
+          <div className="space-y-6">
+            <Alert className="border-slate-600 bg-slate-800">
+              <ArrowRight className="h-4 w-4 text-blue-400" />
+              <AlertDescription className="text-slate-200">
+                <strong>Workflow Data Integration:</strong> This demonstration shows how flight configuration data 
+                flows through each phase of the tournament scheduling system. The timing, formats, and team counts 
+                you set in the Overview tab directly drive bracket creation and final schedule generation.
+              </AlertDescription>
+            </Alert>
+            <WorkflowDataFlow eventId={eventId} />
+            <div className="text-center">
+              <Button
+                variant="outline"
+                onClick={() => setCurrentView('overview')}
+                className="border-slate-600 text-slate-200 hover:bg-slate-700"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Flight Configuration
+              </Button>
+            </div>
           </div>
         ) : currentView === 'flights' ? (
           <div className="space-y-6">
