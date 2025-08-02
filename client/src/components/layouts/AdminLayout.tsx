@@ -95,13 +95,13 @@ export function AdminLayout({ children, sidebar, styles }) {
     <div className="flex flex-col h-screen" style={{ backgroundColor: styles?.adminNavBackground || '#FFFFFF'}}> 
       {/* Mobile Header */}
       {(isMobile || isTablet) && (
-        <div className="flex items-center justify-between px-4 py-3 border-b shadow-sm" style={{ backgroundColor: styles?.adminNavBackground || '#FFFFFF' }}>
-          <div className="text-lg font-semibold">Admin Dashboard</div>
+        <div className="flex items-center justify-between px-4 py-3 border-b shadow-sm bg-slate-900 border-slate-700">
+          <div className="text-lg font-semibold text-white">Admin Dashboard</div>
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="touch-target"
+            className="touch-target text-white hover:bg-slate-800"
           >
             {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
           </Button>
