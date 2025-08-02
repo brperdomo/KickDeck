@@ -141,7 +141,7 @@ router.get('/field-size-requirements', requireAuth, isAdmin, async (req, res) =>
       summary: {
         ageGroups: requirements.length,
         fieldTypes: capacityRules.length,
-        supportedSizes: [...new Set(requirements.map(r => r.requiredFieldSize))]
+        supportedSizes: Array.from(new Set(requirements.map(r => r.requiredFieldSize)))
       }
     });
     
@@ -220,7 +220,7 @@ router.get('/events/:eventId/validate-coach-conflicts', requireAuth, isAdmin, as
         totalConflicts: conflicts.length,
         criticalConflicts: criticalConflicts.length,
         warnings: warnings.length,
-        coachesAffected: new Set(conflicts.map(c => c.coach.uniqueKey)).size,
+        coachesAffected: Array.from(new Set(conflicts.map(c => c.coach.uniqueKey))).length,
         status: criticalConflicts.length === 0 ? 'no_conflicts' : 'conflicts_detected'
       }
     });
@@ -301,14 +301,14 @@ router.post('/events/:eventId/validate-all-constraints', requireAuth, isAdmin, a
         teamsChecked: teams.length,
         criticalIssues: travelCritical,
         warnings: travelWarnings,
-        compliantTeams: teams.length - travelValidations.filter(tv => 
-          tv.validations.some(v => v.severity === 'critical')).length
+        compliantTeams: teams.length - travelValidations.filter((tv: any) => 
+          tv.validations.some((v: any) => v.severity === 'critical')).length
       },
       recommendations: [
         ...coachConflicts.filter(c => c.suggestedResolution).map(c => c.suggestedResolution),
         ...fieldSizeValidation.violations.filter(v => v.alternativeFields?.length).map(v => 
           `Consider alternative fields for ${v.requiredSize} games`),
-        ...allTravelValidations.filter(v => v.suggestion).map(v => v.suggestion)
+        ...allTravelValidations.filter((v: any) => v.suggestion).map((v: any) => v.suggestion)
       ].filter(Boolean)
     };
 
