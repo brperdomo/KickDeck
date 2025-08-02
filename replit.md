@@ -28,10 +28,10 @@ Preferred communication style: Simple, everyday language.
     - **Email Communication**: Dynamic template system via SendGrid for automated notifications.
     - **Administrative Features**: Role-based access, team approval/rejection, payment tracking, audit trails, and comprehensive user/team management (contact editing, member merge, email updates).
     - **Scheduling Engine**: Advanced multi-tier system with constraint-aware optimization. Features include:
-        - **Three Scheduling Approaches**: TournamentScheduler (deterministic), SimpleScheduler (constraint-aware), OpenAI-Service (AI-powered)
+        - **Four Scheduling Approaches**: TournamentScheduler (deterministic), SimpleScheduler (constraint-aware), OpenAI-Service (AI-powered), SwissSystemScheduler (performance-based pairings)
         - **Tournament Progression Engine**: Dynamic advancement logic with complete tiebreaker systems (head-to-head, goal difference, etc.)
         - **Intelligent Scheduler Framework**: Multi-objective optimization with field utilization, team fairness, and travel minimization
-        - **Comprehensive Game Generation**: Round-robin, pool play, single elimination, and hybrid formats
+        - **Comprehensive Game Generation**: Round-robin, pool play, single elimination, double elimination, Swiss system, and hybrid formats
         - **Tournament Director Workflow**: Game Format Configuration → Flight Selection → Bracket Creation → Auto Scheduling
         - Format-driven flight creation ensuring operational alignment with game requirements
         - Automated parameter configuration from existing tournament data
@@ -47,6 +47,21 @@ Preferred communication style: Simple, everyday language.
         - **Team Rest Period Validation**: Configurable periods with intelligent violation detection
         - **Field Size Matching**: Strict age group enforcement with alternative suggestions
         - **Travel Time Constraints**: Real complex distance matrix with buffer enforcement (15-22 minute travel times between venues)
+    - **Facility Intelligence System (COMPLETE)**:
+        - **Lighting Constraint Validation**: Automatic scheduling adjustments for games requiring artificial lighting
+        - **Parking Capacity Management**: Real-time parking demand calculation and overflow prevention
+        - **Concession Coordination**: Integration of concession stand capacity and operating hours
+        - **Facility Optimization Recommendations**: System-wide analysis for infrastructure improvements
+    - **Swiss Tournament System (COMPLETE)**:
+        - **Intelligent Pairing Algorithm**: Swiss system pairings with performance-based matchmaking
+        - **Comprehensive Tiebreaker System**: Buchholz score, strength of schedule, head-to-head records
+        - **Color Balance Management**: Home/away assignment optimization across tournament rounds
+        - **Tournament Validation**: Automated constraint checking for Swiss format requirements
+    - **Referee Management System (COMPLETE)**:
+        - **Intelligent Assignment Engine**: Multi-objective optimization for referee assignments
+        - **Certification Compliance**: Automatic validation of referee qualifications for games
+        - **Workload Balancing**: Fair distribution of assignments across referee pool
+        - **Payment Tracking**: Comprehensive payment management and reporting system
 
 ### Data Storage
 - **Primary Database**: PostgreSQL for all event, team, player, payment, and scheduling data.

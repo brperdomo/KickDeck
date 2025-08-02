@@ -84,6 +84,10 @@ export const fields = pgTable("fields", {
   name: text("name").notNull(),
   hasLights: boolean("has_lights").default(false).notNull(),
   hasParking: boolean("has_parking").default(false).notNull(),
+  hasConcessions: boolean("has_concessions").default(false).notNull(),
+  concessionCapacity: integer("concession_capacity").default(0),
+  concessionHours: text("concession_hours"), // JSON: {open: "07:00", close: "21:00"}
+  parkingCapacity: integer("parking_capacity").default(50),
   isOpen: boolean("is_open").default(true).notNull(),
   openTime: text("open_time").default("08:00"),
   closeTime: text("close_time").default("22:00"),
@@ -156,6 +160,10 @@ export const insertFieldSchema = createInsertSchema(fields, {
   name: z.string().min(1, "Field name is required"),
   hasLights: z.boolean(),
   hasParking: z.boolean(),
+  hasConcessions: z.boolean(),
+  concessionCapacity: z.number().min(0).optional(),
+  concessionHours: z.string().optional(),
+  parkingCapacity: z.number().min(0).optional(),
   isOpen: z.boolean(),
   openTime: z.string().min(1, "Opening time is required"),
   closeTime: z.string().min(1, "Closing time is required"),
@@ -165,6 +173,62 @@ export const insertFieldSchema = createInsertSchema(fields, {
 });
 
 export const selectFieldSchema = createSelectSchema(fields);
+
+// Referee Management Tables
+export const referees = pgTable("referees", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  phone: text("phone"),
+  certificationLevel: text("certification_level").notNull(), // Youth, Adult, Advanced, National
+  certificationExpiry: timestamp("certification_expiry"),
+  availability: text("availability"), // JSON schedule by day of week
+  preferredComplexes: text("preferred_complexes"), // JSON array of complex IDs
+  payRate: integer("pay_rate").default(0), // cents per game
+  isActive: boolean("is_active").default(true).notNull(),
+  notes: text("notes"), // Admin notes about referee
+  totalGamesAssigned: integer("total_games_assigned").default(0),
+  totalPaymentEarned: integer("total_payment_earned").default(0), // cents
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const gameAssignments = pgTable("game_assignments", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").notNull(), // References games table
+  refereeId: integer("referee_id").notNull().references(() => referees.id),
+  position: text("position").notNull(), // center, assistant1, assistant2, 4th_official
+  assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+  assignedBy: integer("assigned_by"), // User ID who made assignment
+  paymentStatus: text("payment_status").default("pending").notNull(), // pending, paid, cancelled
+  paymentAmount: integer("payment_amount").default(0), // cents
+  paymentDate: timestamp("payment_date"),
+  confirmedByReferee: boolean("confirmed_by_referee").default(false),
+  notes: text("notes") // Assignment-specific notes
+});
+
+export const insertRefereeSchema = createInsertSchema(referees, {
+  name: z.string().min(1, "Referee name is required"),
+  email: z.string().email("Valid email is required"),
+  certificationLevel: z.enum(["Youth", "Adult", "Advanced", "National"]),
+  phone: z.string().optional(),
+  payRate: z.number().min(0).optional(),
+  availability: z.string().optional(),
+  preferredComplexes: z.string().optional(),
+  notes: z.string().optional()
+});
+
+export const selectRefereeSchema = createSelectSchema(referees);
+
+export const insertGameAssignmentSchema = createInsertSchema(gameAssignments, {
+  gameId: z.number().min(1, "Game ID is required"),
+  refereeId: z.number().min(1, "Referee ID is required"),
+  position: z.enum(["center", "assistant1", "assistant2", "4th_official"]),
+  paymentAmount: z.number().min(0).optional(),
+  notes: z.string().optional()
+});
+
+export const selectGameAssignmentSchema = createSelectSchema(gameAssignments);
 
 export const events = pgTable("events", {
   id: bigint("id", { mode: "number" }).primaryKey(),
