@@ -72,6 +72,9 @@ import fieldManagementRouter from "./routes/admin/field-management";
 import enhancedConflictDetectionRouter from "./routes/admin/enhanced-conflict-detection";
 import enhancedFieldManagementRouter from "./routes/admin/enhanced-field-management";
 import constraintValidationRouter from "./routes/admin/constraint-validation";
+import swissTournamentRouter from "./routes/admin/swiss-tournaments";
+import facilityConstraintRouter from "./routes/admin/facility-constraints";
+import refereeManagementRouter from "./routes/admin/referee-management";
 import paymentCompletionRouter from "./routes/payment-completion";
 import tournamentsWithSchedulesRouter from "./routes/admin/tournaments-with-schedules";
 import gamesAllTournamentsRouter from "./routes/admin/games-all-tournaments";
@@ -1212,6 +1215,9 @@ export function registerRoutes(app: Express): Server {
     app.use('/api/admin/enhanced-conflict-detection', isAdmin, enhancedConflictDetectionRouter); // Advanced conflict analysis
     app.use('/api/admin/enhanced-field-management', isAdmin, enhancedFieldManagementRouter); // Flexible time slots and blackouts
     app.use('/api/admin/constraint-validation', isAdmin, constraintValidationRouter); // Comprehensive constraint validation
+    app.use('/api/admin/swiss-tournaments', isAdmin, swissTournamentRouter); // Swiss system tournament format
+    app.use('/api/admin/facility-constraints', isAdmin, facilityConstraintRouter); // Facility constraint management
+    app.use('/api/admin/referees', isAdmin, refereeManagementRouter); // Referee management system
     app.use('/api/admin/events', isAdmin, schedulePublicationRouter); // Schedule publication and distribution
     app.use('/api/admin/clubs', isAdmin, adminClubsRouter); // Admin club management router
     app.use('/api/admin/event-clubs', isAdmin, eventClubsRouter); // Event clubs management router
