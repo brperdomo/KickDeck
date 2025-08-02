@@ -1,0 +1,116 @@
+{
+  "tie_patterns": [
+    {
+      "type": "round_robin",
+      "teams": ["A", "B", "C", "D"],
+      "matchups": [
+        ["A", "B"],
+        ["A", "C"],
+        ["A", "D"],
+        ["B", "C"],
+        ["B", "D"],
+        ["C", "D"]
+      ],
+      "advancement": "Top 2 teams based on points"
+    },
+    {
+      "type": "pool_play",
+      "pools": {
+        "Pool A": ["A", "B", "C"],
+        "Pool B": ["D", "E", "F"]
+      },
+      "matchups": {
+        "Pool A": [["A", "B"], ["A", "C"], ["B", "C"]],
+        "Pool B": [["D", "E"], ["D", "F"], ["E", "F"]]
+      },
+      "advancement": {
+        "Pool A": ["Winner"],
+        "Pool B": ["Winner"],
+        "Wildcard": "Best 2nd place team overall"
+      }
+    },
+    {
+      "type": "knockout",
+      "seeding": "power",
+      "teams": ["1", "2", "3", "4", "5", "6", "7", "8"],
+      "bracket": [
+        ["1", "8"],
+        ["4", "5"],
+        ["3", "6"],
+        ["2", "7"]
+      ],
+      "advancement": "Single elimination",
+      "consolation": true,
+      "third_place_match": true
+    },
+    {
+      "type": "hybrid",
+      "pools": {
+        "Pool A": ["A", "B", "C"],
+        "Pool B": ["D", "E", "F"]
+      },
+      "pool_matchups": {
+        "Pool A": [["A", "B"], ["A", "C"], ["B", "C"]],
+        "Pool B": [["D", "E"], ["D", "F"], ["E", "F"]]
+      },
+      "advancement": {
+        "Pool A": ["Top 2"],
+        "Pool B": ["Top 2"]
+      },
+      "knockout_bracket": [
+        ["A1", "B2"],
+        ["B1", "A2"]
+      ],
+      "final": ["Winner of Semis"]
+    },
+    {
+      "type": "wildcard_advancement",
+      "pools": {
+        "Pool A": ["A", "B", "C", "D"],
+        "Pool B": ["E", "F", "G", "H"]
+      },
+      "advancement": {
+        "Pool A": ["Top 2"],
+        "Pool B": ["Top 2"],
+        "Wildcard": "Best 3rd place team across all pools"
+      }
+    },
+    {
+      "type": "tie_breakers",
+      "rules": [
+        "head_to_head",
+        "goal_difference",
+        "goals_scored",
+        "fewest_goals_allowed",
+        "fair_play_points",
+        "coin_toss"
+      ]
+    },
+    {
+      "type": "game_distribution",
+      "pattern": "2-1",
+      "days": ["Saturday", "Sunday"],
+      "distribution": {
+        "Saturday": 2,
+        "Sunday": 1
+      }
+    },
+    {
+      "type": "game_distribution",
+      "pattern": "1-2",
+      "days": ["Saturday", "Sunday"],
+      "distribution": {
+        "Saturday": 1,
+        "Sunday": 2
+      }
+    },
+    {
+      "type": "game_distribution",
+      "pattern": "3-0",
+      "days": ["Saturday"],
+      "distribution": {
+        "Saturday": 3
+      }
+    }
+  ]
+}
