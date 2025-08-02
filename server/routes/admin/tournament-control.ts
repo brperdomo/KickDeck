@@ -6,7 +6,7 @@
 import { Router } from 'express';
 import { db } from '@db';
 import { isAdmin } from '../../middleware';
-import { events, teams, games, eventAgeGroups, eventBrackets, fields, gameFormats } from '@db/schema';
+import { events, teams, games, eventAgeGroups, eventBrackets, fields, gameFormats, eventGameFormats, eventScheduleConstraints, gameTimeSlots } from '@db/schema';
 import { eq, and, count, isNull } from 'drizzle-orm';
 
 const router = Router();
@@ -347,31 +347,44 @@ async function getFlightConfigurations(eventId: string) {
     ))
     .groupBy(teams.ageGroupId);
 
-  // Get game format configurations
-  const gameFormatConfigs = await db
+  // Get game format configurations from both tables
+  const eventGameFormatConfigs = await db
+    .select()
+    .from(eventGameFormats)
+    .where(eq(eventGameFormats.eventId, parseInt(eventId)));
+
+  const bracketGameFormatConfigs = await db
     .select()
     .from(gameFormats)
-    .where(eq(gameFormats.eventId, parseInt(eventId)));
+    .leftJoin(eventBrackets, eq(gameFormats.bracketId, eventBrackets.id))
+    .where(eq(eventBrackets.eventId, parseInt(eventId)));
 
   // Combine the data with smart defaults
   return flightConfigs.map(config => {
     const teamCountData = teamCounts.find(tc => tc.ageGroupId === config.ageGroupId);
-    const formatConfig = gameFormatConfigs.find(gf => gf.ageGroupId === config.ageGroupId);
+    
+    // Try to find format config from event-level or bracket-level configurations
+    const eventFormatConfig = eventGameFormatConfigs.find(gf => gf.ageGroup === config.ageGroup);
+    const bracketFormatConfig = bracketGameFormatConfigs.find(bgf => 
+      bgf.event_brackets?.ageGroupId === config.ageGroupId
+    )?.game_formats;
+    
+    const formatConfig = eventFormatConfig || bracketFormatConfig;
     
     return {
       id: config.id.toString(),
       divisionName: config.divisionName || `${config.ageGroup} ${config.gender}`,
       startDate: new Date().toISOString().split('T')[0],
       endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      matchCount: formatConfig?.gamesPerTeam || 3,
+      matchCount: 3, // Will be calculated based on tournament format
       matchTime: formatConfig?.gameLength || 35,
-      breakTime: formatConfig?.restPeriod || 5,
+      breakTime: formatConfig?.restPeriod || formatConfig?.halfTimeBreak || 5,
       paddingTime: formatConfig?.bufferTime || 10,
-      totalTime: (formatConfig?.gameLength || 35) + (formatConfig?.restPeriod || 5) + (formatConfig?.bufferTime || 10),
+      totalTime: (formatConfig?.gameLength || 35) + (formatConfig?.halfTimeBreak || 5) + (formatConfig?.bufferTime || 10),
       formatName: formatConfig?.format || 'Round Robin',
       teamCount: teamCountData?.teamCount || 0,
       ageGroupId: config.ageGroupId,
-      fieldSize: config.fieldSize || '11v11'
+      fieldSize: config.fieldSize || formatConfig?.fieldSize || '11v11'
     };
   });
 }
@@ -382,12 +395,12 @@ async function getBracketConfigurations(eventId: string) {
       id: eventBrackets.id,
       name: eventBrackets.name,
       ageGroupId: eventBrackets.ageGroupId,
-      maxTeams: eventBrackets.maxTeams,
-      bracketType: eventBrackets.bracketType,
-      isActive: eventBrackets.isActive
+      level: eventBrackets.level,
+      description: eventBrackets.description,
+      eligibility: eventBrackets.eligibility
     })
     .from(eventBrackets)
-    .where(eq(eventBrackets.eventId, parseInt(eventId)));
+    .where(eq(eventBrackets.eventId, eventId));
 
   return brackets;
 }
@@ -420,19 +433,15 @@ async function generateGamesForFlight(eventId: string, flight: any) {
 
       gamesToCreate.push({
         eventId: eventId,
+        ageGroupId: flight.ageGroupId,
         homeTeamId: homeTeam.id,
         awayTeamId: awayTeam.id,
         homeTeamName: homeTeam.name,
         awayTeamName: awayTeam.name,
-        ageGroup: flight.divisionName,
-        gameNumber: gameNumber++,
-        gameLength: flight.matchTime,
-        fieldSize: flight.fieldSize,
+        matchNumber: gameNumber++,
+        duration: flight.matchTime,
         status: 'scheduled',
-        bracketId: flight.id,
-        round: 1,
-        homeTeamCoach: homeTeam.managerName,
-        awayTeamCoach: awayTeam.managerName
+        round: 1
       });
     }
   }
@@ -474,16 +483,11 @@ async function assignFieldsToGames(eventId: string) {
   for (const game of unscheduledGames) {
     const assignedField = availableFields[fieldIndex % availableFields.length];
     
-    // Check field size compatibility
-    const isCompatible = isFieldSizeCompatible(game.fieldSize, assignedField.fieldSize);
-    
-    if (isCompatible) {
-      updates.push({
-        gameId: game.id,
-        fieldId: assignedField.id,
-        fieldSize: assignedField.fieldSize
-      });
-    }
+    // For now, assign field without size compatibility check since fieldSize doesn't exist in games table
+    updates.push({
+      gameId: game.id,
+      fieldId: assignedField.id
+    });
     
     fieldIndex++;
   }
@@ -493,8 +497,7 @@ async function assignFieldsToGames(eventId: string) {
     await db
       .update(games)
       .set({ 
-        fieldId: update.fieldId,
-        fieldSize: update.fieldSize
+        fieldId: update.fieldId
       })
       .where(eq(games.id, update.gameId));
   }
