@@ -58,7 +58,7 @@ router.get('/events/:eventId/flight-formats', isAdmin, async (req, res) => {
       where: eq(eventBrackets.eventId, eventId)
     });
 
-    console.log(`[Flight Formats] Found ${flights.length} flights/brackets`);
+    console.log(`[Flight Formats] Found ${flights.length} flights`);
 
     // Get all game formats for this event
     const gameFormats = await db.query.eventGameFormats.findMany({
@@ -78,49 +78,49 @@ router.get('/events/:eventId/flight-formats', isAdmin, async (req, res) => {
       flightLevelMap.set(template.level, template.display_name);
     });
 
-    const flightData = await Promise.all(flights.map(async bracket => {
-      // Find matching game format by age group (bracket.level)
+    const flightData = await Promise.all(flights.map(async flight => {
+      // Find matching game format by age group (flight.level)
       const matchingFormat = gameFormats.find(format => 
-        format.ageGroup === bracket.level || 
-        format.ageGroup.includes(bracket.level) ||
-        bracket.level.includes(format.ageGroup)
+        format.ageGroup === flight.level || 
+        format.ageGroup.includes(flight.level) ||
+        flight.level.includes(format.ageGroup)
       );
 
-      const teamCount = await getTeamCountForFlight(eventId, bracket.id);
+      const teamCount = await getTeamCountForFlight(eventId, flight.id);
 
-      // Extract components from bracket name
-      // The bracket name might just be "Nike Elite" without age group info
-      // We need to get age group from the bracket's relationship or description
+      // Extract components from flight name
+      // The flight name might just be "Nike Elite" without age group info
+      // We need to get age group from the flight's relationship or description
       
       // Try to extract age group from name first
-      const ageGroupMatch = bracket.name.match(/(U\d+)/i);
-      const genderMatch = bracket.name.match(/(Boys|Girls|Mixed)/i);
+      const ageGroupMatch = flight.name.match(/(U\d+)/i);
+      const genderMatch = flight.name.match(/(Boys|Girls|Mixed)/i);
       
       // If no age group in name, we need to look up the actual age group
-      // For now, let's get the age group from the bracket's associated teams
+      // For now, let's get the age group from the flight's associated teams
       let ageGroup = ageGroupMatch ? ageGroupMatch[1] : null;
       let gender = genderMatch ? genderMatch[1] : null;
       
-      // If we don't have age group/gender from the bracket name, 
-      // try to get it from the teams in this bracket
+      // If we don't have age group/gender from the flight name, 
+      // try to get it from the teams in this flight
       if (!ageGroup || !gender) {
-        const bracketTeams = await db.execute(sql`
+        const flightTeams = await db.execute(sql`
           SELECT DISTINCT 
             eag.age_group as age_group_name,
             eag.gender
           FROM teams t
           JOIN event_age_groups eag ON t.age_group_id = eag.id
           WHERE t.event_id = ${eventId} 
-          AND t.bracket_id = ${bracket.id}
+          AND t.bracket_id = ${flight.id}
           AND t.status = 'approved'
           LIMIT 1
         `);
         
-        if (bracketTeams.rows.length > 0) {
-          const teamInfo = bracketTeams.rows[0];
+        if (flightTeams.rows.length > 0) {
+          const teamInfo = flightTeams.rows[0] as any;
           ageGroup = ageGroup || teamInfo.age_group_name;
           // The database already stores 'Boys'/'Girls' correctly
-          gender = gender || teamInfo.gender || 'Mixed';
+          gender = gender || (teamInfo.gender as string) || 'Mixed';
         }
       }
       
@@ -128,8 +128,8 @@ router.get('/events/:eventId/flight-formats', isAdmin, async (req, res) => {
       ageGroup = ageGroup || 'Unknown Age';
       gender = gender || 'Mixed';
       
-      // The flight name is typically the bracket name itself (Nike Elite, etc.)
-      let flightName = bracket.name;
+      // The flight name is typically the flight name itself (Nike Elite, etc.)
+      let flightName = flight.name;
       
       // Only remove age group and gender if they were actually in the name
       if (ageGroupMatch) {
@@ -140,21 +140,21 @@ router.get('/events/:eventId/flight-formats', isAdmin, async (req, res) => {
       }
       
       // Get flight level display name (Top Flight, Middle Flight, etc.)
-      const flightLevelDisplay = flightLevelMap.get(bracket.level) || bracket.level;
+      const flightLevelDisplay = flightLevelMap.get(flight.level) || flight.level;
       
       // Create comprehensive display name: "U17 Boys Nike Elite - Top Flight"
       const displayName = flightName 
         ? `${ageGroup} ${gender} ${flightName} - ${flightLevelDisplay}`
         : `${ageGroup} ${gender} - ${flightLevelDisplay}`;
 
-      console.log(`[Flight Formats] Bracket ${bracket.id} (${bracket.level}): teams=${teamCount}, hasFormat=${!!matchingFormat}`);
+      console.log(`[Flight Formats] Flight ${flight.id} (${flight.level}): teams=${teamCount}, hasFormat=${!!matchingFormat}`);
 
       return {
-        flightId: bracket.id,
-        flightName: flightName || bracket.name, // The flight name (Nike Elite, etc.)
+        flightId: flight.id,
+        flightName: flightName || flight.name, // The flight name (Nike Elite, etc.)
         ageGroup: ageGroup,
         gender: gender,
-        level: bracket.level,
+        level: flight.level,
         displayName: displayName,
         teamCount,
         currentFormat: matchingFormat ? {
