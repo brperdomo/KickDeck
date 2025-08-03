@@ -1,0 +1,122 @@
+index-DykT4XBn.js:847 Mapbox API key length: 93 characters
+index-DykT4XBn.js:847 Google Maps API already loaded
+index-DykT4XBn.js:672 Current route location (Wouter): /admin/events/1844329078/master-schedule
+index-DykT4XBn.js:672 Current URL: https://app.matchpro.ai/admin/events/1844329078/master-schedule
+index-DykT4XBn.js:672 Current pathname: /admin/events/1844329078/master-schedule
+index-DykT4XBn.js:672 Current search: 
+index-DykT4XBn.js:672 Fetching user with emulation token: not present
+chunk-FLCULYKI.js:31 orchestration: Initializing config store with state {anonymous-site-visit-logging: {…}, chatgpt: {…}, context-menus: {…}, debugger: {…}, docs-support: {…}, …}
+chunk-FLCULYKI.js:31 orchestration: Initializing feature flag store with state {anonymous-site-visit-logging: {…}, chatgpt: {…}, context-menus: {…}, debugger: {…}, docs-support: {…}, …}
+chunk-FLCULYKI.js:31 orchestration: Initializing user store with state {pill-player: {…}}
+chunk-FLCULYKI.js:31 orchestration: Updating combined state {anonymous-site-visit-logging: {…}, chatgpt: {…}, context-menus: {…}, debugger: {…}, docs-support: {…}, …}
+index-DykT4XBn.js:672 User data fetched: {id: 24, email: 'bperdomo@zoho.com', username: 'bperdomo@zoho.com', password: '$2b$12$d6n1CBWgsWFm0fh77F1OX.YxDZy7/O3aLSuJOuq4QkvOtFmSit7BC', firstName: 'Bryan', …}
+18Fetch finished loading: GET "<URL>".
+5Fetch failed loading: GET "<URL>".
+MasterSchedulePage-X9d4954Y.js:224  GET https://app.matchpro.ai/api/admin/events/1844329078/schedule-conflicts 500 (Internal Server Error)
+queryFn @ MasterSchedulePage-X9d4954Y.js:224
+i @ index-DykT4XBn.js:41
+f @ index-DykT4XBn.js:41
+start @ index-DykT4XBn.js:41
+fetch @ index-DykT4XBn.js:41
+tg @ index-DykT4XBn.js:41
+onSubscribe @ index-DykT4XBn.js:41
+subscribe @ index-DykT4XBn.js:41
+(anonymous) @ index-DykT4XBn.js:41
+hW @ index-DykT4XBn.js:39
+k1 @ index-DykT4XBn.js:41
+Jh @ index-DykT4XBn.js:41
+(anonymous) @ index-DykT4XBn.js:41
+N @ index-DykT4XBn.js:26
+T @ index-DykT4XBn.js:26Understand this error
+MasterSchedulePage-X9d4954Y.js:224  GET https://app.matchpro.ai/api/admin/events/1844329078/schedule-metrics 500 (Internal Server Error)
+queryFn @ MasterSchedulePage-X9d4954Y.js:224
+i @ index-DykT4XBn.js:41
+f @ index-DykT4XBn.js:41
+start @ index-DykT4XBn.js:41
+fetch @ index-DykT4XBn.js:41
+tg @ index-DykT4XBn.js:41
+onSubscribe @ index-DykT4XBn.js:41
+subscribe @ index-DykT4XBn.js:41
+(anonymous) @ index-DykT4XBn.js:41
+hW @ index-DykT4XBn.js:39
+k1 @ index-DykT4XBn.js:41
+Jh @ index-DykT4XBn.js:41
+(anonymous) @ index-DykT4XBn.js:41
+N @ index-DykT4XBn.js:26
+T @ index-DykT4XBn.js:26Understand this error
+util.js:31 Google Maps JavaScript API warning: NoApiKeys https://developers.google.com/maps/documentation/javascript/error-messages#no-api-keys
+Yxa @ util.js:31
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1379
+Promise.then
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1379
+setTimeout
+jda @ js?libraries=places&v=beta&callback=Function.prototype:1379
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622Understand this warning
+MasterSchedulePage-X9d4954Y.js:224  GET https://app.matchpro.ai/api/admin/events/1844329078/schedule-conflicts 500 (Internal Server Error)
+queryFn @ MasterSchedulePage-X9d4954Y.js:224
+i @ index-DykT4XBn.js:41
+f @ index-DykT4XBn.js:41
+start @ index-DykT4XBn.js:41
+fetch @ index-DykT4XBn.js:41
+tg @ index-DykT4XBn.js:41
+(anonymous) @ index-DykT4XBn.js:41
+setInterval
+kP @ index-DykT4XBn.js:41
+EP @ index-DykT4XBn.js:41
+onQueryUpdate @ index-DykT4XBn.js:41
+(anonymous) @ index-DykT4XBn.js:41
+(anonymous) @ index-DykT4XBn.js:41
+batch @ index-DykT4XBn.js:41
+ic @ index-DykT4XBn.js:41
+c @ index-DykT4XBn.js:41
+h @ index-DykT4XBn.js:41
+(anonymous) @ index-DykT4XBn.js:41
+Promise.catch
+f @ index-DykT4XBn.js:41
+start @ index-DykT4XBn.js:41
+fetch @ index-DykT4XBn.js:41
+tg @ index-DykT4XBn.js:41
+onSubscribe @ index-DykT4XBn.js:41
+subscribe @ index-DykT4XBn.js:41
+(anonymous) @ index-DykT4XBn.js:41
+hW @ index-DykT4XBn.js:39
+k1 @ index-DykT4XBn.js:41
+Jh @ index-DykT4XBn.js:41
+(anonymous) @ index-DykT4XBn.js:41
+N @ index-DykT4XBn.js:26
+T @ index-DykT4XBn.js:26Understand this error
+MasterSchedulePage-X9d4954Y.js:224  GET https://app.matchpro.ai/api/admin/events/1844329078/schedule-metrics 500 (Internal Server Error)
+queryFn @ MasterSchedulePage-X9d4954Y.js:224
+i @ index-DykT4XBn.js:41
+f @ index-DykT4XBn.js:41
+start @ index-DykT4XBn.js:41
+fetch @ index-DykT4XBn.js:41
+tg @ index-DykT4XBn.js:41
+(anonymous) @ index-DykT4XBn.js:41
+setInterval
+kP @ index-DykT4XBn.js:41
+EP @ index-DykT4XBn.js:41
+onQueryUpdate @ index-DykT4XBn.js:41
+(anonymous) @ index-DykT4XBn.js:41
+(anonymous) @ index-DykT4XBn.js:41
+batch @ index-DykT4XBn.js:41
+ic @ index-DykT4XBn.js:41
+c @ index-DykT4XBn.js:41
+h @ index-DykT4XBn.js:41
+(anonymous) @ index-DykT4XBn.js:41
+Promise.catch
+f @ index-DykT4XBn.js:41
+start @ index-DykT4XBn.js:41
+fetch @ index-DykT4XBn.js:41
+tg @ index-DykT4XBn.js:41
+onSubscribe @ index-DykT4XBn.js:41
+subscribe @ index-DykT4XBn.js:41
+(anonymous) @ index-DykT4XBn.js:41
+hW @ index-DykT4XBn.js:39
+k1 @ index-DykT4XBn.js:41
+Jh @ index-DykT4XBn.js:41
+(anonymous) @ index-DykT4XBn.js:41
+N @ index-DykT4XBn.js:26
+T @ index-DykT4XBn.js:26Understand this error
