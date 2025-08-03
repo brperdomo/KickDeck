@@ -226,11 +226,11 @@ export function GameFormatEngine({ eventId }: GameFormatEngineProps) {
         const errorResponse = await error.response?.json();
         const errorMsg = errorResponse?.error || error.message;
         
-        if (errorResponse?.unconfiguredFlights) {
+        if (errorResponse?.unconfiguredFlights && errorResponse.unconfiguredFlights.length > 0) {
           toast({
-            title: "Configuration Required",
-            description: `Please configure formats for: ${errorResponse.unconfiguredFlights.join(', ')}`,
-            variant: "destructive"
+            title: "Partial Configuration Note",
+            description: `Some flights still need configuration: ${errorResponse.unconfiguredFlights.join(', ')}. Bracket creation will proceed for configured flights only.`,
+            variant: "default"
           });
         } else {
           toast({
@@ -352,7 +352,7 @@ export function GameFormatEngine({ eventId }: GameFormatEngineProps) {
         <div className="flex gap-2">
           <Button
             onClick={() => lockFormatsMutation.mutate()}
-            disabled={unconfiguredFlights.length > 0 || lockFormatsMutation.isPending}
+            disabled={configuredFlights.length === 0 || lockFormatsMutation.isPending}
             className="bg-green-600 hover:bg-green-700"
           >
             <CheckCircle className="h-4 w-4 mr-2" />
