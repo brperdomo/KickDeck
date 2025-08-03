@@ -420,7 +420,7 @@ export async function getTeams(req: Request, res: Response) {
       bracket: {
         id: eventBrackets.id,
         name: eventBrackets.name,
-        division: eventBrackets.division
+        description: eventBrackets.description
       }
     })
     .from(teams)
@@ -515,7 +515,7 @@ export async function getTeamById(req: Request, res: Response) {
       bracket: {
         id: eventBrackets.id,
         name: eventBrackets.name,
-        division: eventBrackets.division
+        description: eventBrackets.description
       },
       user: {
         email: users.email,
