@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Settings, Clock, Users, MapPin, Save, Copy, Trash2, CheckCircle, FileTemplate } from 'lucide-react';
+import { Settings, Clock, Users, MapPin, Save, Copy, Trash2, CheckCircle, FileText } from 'lucide-react';
 import { FormatTemplateManager } from '@/components/admin/templates/FormatTemplateManager';
 
 interface FlightFormatData {
@@ -196,7 +196,7 @@ export function GameFormatEngine({ eventId }: GameFormatEngineProps) {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('Lock formats error:', errorData);
-        const error = new Error(errorData.error || 'Failed to lock formats');
+        const error = new Error(errorData.error || 'Failed to lock formats') as any;
         error.response = { json: () => Promise.resolve(errorData) };
         throw error;
       }
@@ -209,7 +209,7 @@ export function GameFormatEngine({ eventId }: GameFormatEngineProps) {
       });
       queryClient.invalidateQueries({ queryKey: ['flight-formats', eventId] });
     },
-    onError: async (error) => {
+    onError: async (error: any) => {
       try {
         const errorResponse = await error.response?.json();
         const errorMsg = errorResponse?.error || error.message;
@@ -334,7 +334,7 @@ export function GameFormatEngine({ eventId }: GameFormatEngineProps) {
         <div>
           <h2 className="text-2xl font-bold text-white">Game Format Engine</h2>
           <p className="text-slate-300">
-            Configure game formats for each flight before creating brackets
+            Configure game formats for each flight before bracket creation
           </p>
         </div>
         <div className="flex gap-2">
@@ -344,7 +344,7 @@ export function GameFormatEngine({ eventId }: GameFormatEngineProps) {
             className="bg-green-600 hover:bg-green-700"
           >
             <CheckCircle className="h-4 w-4 mr-2" />
-            Lock Formats & Create Brackets
+            Lock Formats & Proceed to Bracket Creation
           </Button>
         </div>
       </div>
@@ -412,7 +412,7 @@ export function GameFormatEngine({ eventId }: GameFormatEngineProps) {
                 <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2 text-white">All Flights Configured</h3>
                 <p className="text-slate-300">
-                  All flights have game format configurations. Ready to proceed to bracket creation.
+                  All flights have game format configurations. Ready to proceed to tournament bracket creation.
                 </p>
               </CardContent>
             </Card>
