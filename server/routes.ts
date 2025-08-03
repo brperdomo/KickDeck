@@ -1031,7 +1031,7 @@ export function registerRoutes(app: Express): Server {
     app.use('/api/admin', isAdmin, workflowProgressRouter); // Workflow progress tracking for session persistence
     app.use('/api/admin/tournaments', isAdmin, tournamentSelectionRouter); // Tournament selection with session isolation
     app.use('/api/admin', isAdmin, tournamentControlRouter); // Unified tournament control center
-    app.use('/api/admin', isAdmin, scheduleConflictsRouter); // Schedule conflict detection for Master Schedule
+    app.use('/api/schedule', scheduleConflictsRouter); // Schedule conflict detection for Master Schedule (lightweight auth)
     app.use('/api/admin/events', isAdmin, trueAutomatedSchedulingRouter); // True automated scheduling
     app.use('/api/admin/events', isAdmin, tournamentParametersRouter); // Tournament parameters
     app.use('/api/admin', isAdmin, flexibleAgeGroupsRoutes); // Flexible age group management

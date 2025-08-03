@@ -56,7 +56,7 @@ export function MasterScheduleConflictDetection({ eventId }: ConflictDetectionPr
   const { data: conflictData, refetch: refetchConflicts, isLoading } = useQuery({
     queryKey: ['master-schedule-conflicts', eventId],
     queryFn: async (): Promise<ConflictSummary> => {
-      const response = await fetch(`/api/admin/events/${eventId}/schedule-conflicts`);
+      const response = await fetch(`/api/schedule/events/${eventId}/schedule-conflicts`);
       if (!response.ok) throw new Error('Failed to fetch conflict data');
       return response.json();
     },
@@ -67,7 +67,7 @@ export function MasterScheduleConflictDetection({ eventId }: ConflictDetectionPr
   const { data: metrics } = useQuery({
     queryKey: ['schedule-metrics', eventId],
     queryFn: async (): Promise<ValidationMetrics> => {
-      const response = await fetch(`/api/admin/events/${eventId}/schedule-metrics`);
+      const response = await fetch(`/api/schedule/events/${eventId}/schedule-metrics`);
       if (!response.ok) throw new Error('Failed to fetch metrics');
       return response.json();
     },
