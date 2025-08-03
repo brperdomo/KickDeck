@@ -246,9 +246,22 @@ router.post('/events/:eventId/flight-formats/lock', isAdmin, async (req, res) =>
 
     console.log(`[Lock Formats] Found ${flightsWithoutFormats.length} flights without formats`);
 
-    if (flightsWithoutFormats.length > 0) {
+    // Check if there are any configured flights at all
+    const configuredFlights = await db
+      .select({
+        flightId: eventBrackets.id,
+        flightName: eventBrackets.name
+      })
+      .from(eventBrackets)
+      .innerJoin(eventAgeGroups, eq(eventBrackets.ageGroupId, eventAgeGroups.id))
+      .innerJoin(gameFormats, eq(gameFormats.bracketId, eventBrackets.id))
+      .where(eq(eventAgeGroups.eventId, eventId));
+
+    console.log(`[Lock Formats] Found ${configuredFlights.length} configured flights`);
+
+    if (configuredFlights.length === 0) {
       return res.status(400).json({ 
-        error: 'All flights must have format configurations before locking',
+        error: 'At least one flight must have format configuration before locking',
         unconfiguredFlights: flightsWithoutFormats.map(f => f.flightName)
       });
     }
