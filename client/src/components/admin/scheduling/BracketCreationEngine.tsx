@@ -28,6 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 // Helper function to format flight names with proper context
 const formatFlightName = (level: string, ageGroup?: string, gender?: string): string => {
@@ -85,7 +86,7 @@ export default function BracketCreationEngine({ eventId }: BracketCreationEngine
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch bracket data
+  // Fetch bracket data with real-time updates
   const { data: bracketData, isLoading } = useQuery({
     queryKey: ['bracket-creation', eventId],
     queryFn: async () => {
@@ -94,7 +95,9 @@ export default function BracketCreationEngine({ eventId }: BracketCreationEngine
       });
       if (!response.ok) throw new Error('Failed to fetch bracket data');
       return response.json();
-    }
+    },
+    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
+    refetchOnWindowFocus: true
   });
 
   // Auto-assign teams mutation
@@ -254,6 +257,46 @@ export default function BracketCreationEngine({ eventId }: BracketCreationEngine
       toast({
         title: "Auto-Seeding Failed",
         description: "Failed to automatically seed teams.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Drag and drop handler
+  const handleDragEnd = async (result: any) => {
+    const { destination, source, draggableId } = result;
+
+    // If dropped outside of any droppable area
+    if (!destination) {
+      return;
+    }
+
+    // If dropped in the same position
+    if (destination.droppableId === source.droppableId && destination.index === source.index) {
+      return;
+    }
+
+    const teamId = parseInt(draggableId);
+
+    try {
+      // Check if moving from unassigned to a flight
+      if (source.droppableId === 'unassigned' && destination.droppableId.startsWith('flight-')) {
+        const flightId = parseInt(destination.droppableId.replace('flight-', ''));
+        await handleManualAssignment(teamId.toString(), flightId);
+      }
+      // Check if moving from a flight to unassigned
+      else if (source.droppableId.startsWith('flight-') && destination.droppableId === 'unassigned') {
+        await handleRemoveFromFlight(teamId);
+      }
+      // Check if moving between flights
+      else if (source.droppableId.startsWith('flight-') && destination.droppableId.startsWith('flight-')) {
+        const newFlightId = parseInt(destination.droppableId.replace('flight-', ''));
+        await handleManualAssignment(teamId.toString(), newFlightId);
+      }
+    } catch (error) {
+      toast({
+        title: "Assignment Failed",
+        description: "Failed to move team. Please try again.",
         variant: "destructive"
       });
     }
@@ -476,68 +519,131 @@ export default function BracketCreationEngine({ eventId }: BracketCreationEngine
         </TabsContent>
 
         <TabsContent value="assign" className="space-y-4">
-          {/* Auto-Assignment Controls */}
-          <Card className="border-slate-600 bg-slate-800">
-            <CardHeader>
-              <CardTitle className="text-white">Auto-Assignment</CardTitle>
-              <CardDescription className="text-slate-300">
-                Automatically distribute teams across flights using intelligent algorithms
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Button
-                  onClick={() => autoAssignMutation.mutate({ method: 'balanced' })}
-                  disabled={autoAssignMutation.isPending}
-                  className="bg-blue-600 hover:bg-blue-700 h-auto py-4"
-                >
-                  <div className="text-left">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Shuffle className="h-4 w-4" />
-                      <span className="font-semibold">Balanced</span>
+          <DragDropContext onDragEnd={handleDragEnd}>
+            {/* Auto-Assignment Controls */}
+            <Card className="border-slate-600 bg-slate-800">
+              <CardHeader>
+                <CardTitle className="text-white">Auto-Assignment</CardTitle>
+                <CardDescription className="text-slate-300">
+                  Automatically distribute teams across flights using intelligent algorithms, or drag and drop teams manually
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Button
+                    onClick={() => autoAssignMutation.mutate({ method: 'balanced' })}
+                    disabled={autoAssignMutation.isPending}
+                    className="bg-blue-600 hover:bg-blue-700 h-auto py-4"
+                  >
+                    <div className="text-left">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Shuffle className="h-4 w-4" />
+                        <span className="font-semibold">Balanced</span>
+                      </div>
+                      <div className="text-xs text-blue-200">
+                        Equal team distribution across flights
+                      </div>
                     </div>
-                    <div className="text-xs text-blue-200">
-                      Equal team distribution across flights
+                  </Button>
+                  
+                  <Button
+                    onClick={() => autoAssignMutation.mutate({ method: 'skill' })}
+                    disabled={autoAssignMutation.isPending}
+                    variant="outline"
+                    className="border-slate-600 bg-slate-700 hover:bg-slate-600 h-auto py-4"
+                  >
+                    <div className="text-left">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Target className="h-4 w-4" />
+                        <span className="font-semibold">Skill-Based</span>
+                      </div>
+                      <div className="text-xs text-slate-300">
+                        Group teams by competitive level
+                      </div>
                     </div>
-                  </div>
-                </Button>
-                
-                <Button
-                  onClick={() => autoAssignMutation.mutate({ method: 'skill' })}
-                  disabled={autoAssignMutation.isPending}
-                  variant="outline"
-                  className="border-slate-600 bg-slate-700 hover:bg-slate-600 h-auto py-4"
-                >
-                  <div className="text-left">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Target className="h-4 w-4" />
-                      <span className="font-semibold">Skill-Based</span>
+                  </Button>
+                  
+                  <Button
+                    onClick={() => autoAssignMutation.mutate({ method: 'geographic' })}
+                    disabled={autoAssignMutation.isPending}
+                    variant="outline"
+                    className="border-slate-600 bg-slate-700 hover:bg-slate-600 h-auto py-4"
+                  >
+                    <div className="text-left">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Users className="h-4 w-4" />
+                        <span className="font-semibold">Geographic</span>
+                      </div>
+                      <div className="text-xs text-slate-300">
+                        Minimize travel conflicts
+                      </div>
                     </div>
-                    <div className="text-xs text-slate-300">
-                      Group teams by competitive level
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Unassigned Teams Pool */}
+            <Card className="border-slate-600 bg-slate-800">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Unassigned Teams ({unassignedTeams.length})
+                </CardTitle>
+                <CardDescription className="text-slate-300">
+                  Drag teams from here to assign them to flights
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Droppable droppableId="unassigned">
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 min-h-[120px] p-4 rounded-lg border-2 border-dashed transition-colors ${
+                        snapshot.isDraggingOver 
+                          ? 'border-blue-400 bg-blue-900/20' 
+                          : 'border-slate-600 bg-slate-700/30'
+                      }`}
+                    >
+                      {unassignedTeams.map((team, index) => (
+                        <Draggable key={team.id} draggableId={team.id.toString()} index={index}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className={`p-3 rounded-lg border transition-all cursor-move ${
+                                snapshot.isDragging
+                                  ? 'border-blue-400 bg-blue-900/40 shadow-lg transform rotate-2'
+                                  : 'border-slate-500 bg-slate-700 hover:bg-slate-600'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <GripVertical className="h-4 w-4 text-slate-400" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-white truncate">{team.name}</p>
+                                  {team.clubName && (
+                                    <p className="text-xs text-slate-300 truncate">{team.clubName}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                      {unassignedTeams.length === 0 && (
+                        <div className="col-span-full text-center text-slate-400 py-8">
+                          <Users className="h-8 w-8 mx-auto mb-2 text-slate-500" />
+                          <p>All teams have been assigned to flights</p>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </Button>
-                
-                <Button
-                  onClick={() => autoAssignMutation.mutate({ method: 'geographic' })}
-                  disabled={autoAssignMutation.isPending}
-                  variant="outline"
-                  className="border-slate-600 bg-slate-700 hover:bg-slate-600 h-auto py-4"
-                >
-                  <div className="text-left">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Users className="h-4 w-4" />
-                      <span className="font-semibold">Geographic</span>
-                    </div>
-                    <div className="text-xs text-slate-300">
-                      Minimize travel conflicts
-                    </div>
-                  </div>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                  )}
+                </Droppable>
+              </CardContent>
+            </Card>
 
           {/* Flight Assignment Overview */}
           <div className="grid gap-4">
@@ -582,93 +688,129 @@ export default function BracketCreationEngine({ eventId }: BracketCreationEngine
                       </Select>
                     </div>
 
-                    {/* Assigned Teams with Seeding */}
-                    {flight.registeredTeams?.length > 0 ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between mb-2">
-                          <Label className="text-slate-300 text-sm">Team Seeding & Management</Label>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            className="bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600"
-                            onClick={() => handleAutoSeed(flight.flightId)}
+                    {/* Flight Drop Zone with Assigned Teams */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <Label className="text-slate-300 text-sm">Teams in Flight (Drop Zone)</Label>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600"
+                          onClick={() => handleAutoSeed(flight.flightId)}
+                          disabled={!flight.registeredTeams?.length}
+                        >
+                          <Star className="h-3 w-3 mr-1" />
+                          Auto Seed
+                        </Button>
+                      </div>
+                      
+                      <Droppable droppableId={`flight-${flight.flightId}`}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                            className={`min-h-[120px] p-4 rounded-lg border-2 border-dashed transition-colors ${
+                              snapshot.isDraggingOver 
+                                ? 'border-green-400 bg-green-900/20' 
+                                : 'border-slate-600 bg-slate-700/30'
+                            }`}
                           >
-                            <Star className="h-3 w-3 mr-1" />
-                            Auto Seed
-                          </Button>
-                        </div>
-                        
-                        <div className="space-y-1">
-                          {flight.registeredTeams
-                            .sort((a, b) => (a.seed || 999) - (b.seed || 999))
-                            .map((team: Team, index: number) => (
-                            <div 
-                              key={team.id}
-                              className="flex items-center gap-2 p-3 bg-slate-700 rounded border border-slate-600 hover:border-slate-500 transition-colors"
-                            >
-                              {/* Seed Number */}
-                              <div className="flex items-center gap-1">
-                                <Badge variant="outline" className="border-blue-500 text-blue-300 w-8 h-6 text-xs justify-center">
-                                  {team.seed || index + 1}
-                                </Badge>
-                                <div className="flex flex-col gap-1">
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-4 w-4 p-0 text-slate-400 hover:text-white"
-                                    onClick={() => handleSeedChange(team.id, 'up')}
-                                    disabled={index === 0}
-                                  >
-                                    <ArrowUp className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-4 w-4 p-0 text-slate-400 hover:text-white"
-                                    onClick={() => handleSeedChange(team.id, 'down')}
-                                    disabled={index === flight.registeredTeams.length - 1}
-                                  >
-                                    <ArrowDown className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              </div>
+                            {flight.registeredTeams?.length > 0 ? (
+                              <div className="space-y-2">
+                                {flight.registeredTeams
+                                  .sort((a, b) => (a.seed || 999) - (b.seed || 999))
+                                  .map((team: Team, index: number) => (
+                                  <Draggable key={team.id} draggableId={team.id.toString()} index={index}>
+                                    {(provided, snapshot) => (
+                                      <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        className={`flex items-center gap-2 p-3 rounded border transition-all cursor-move ${
+                                          snapshot.isDragging
+                                            ? 'border-green-400 bg-green-900/40 shadow-lg transform rotate-1'
+                                            : 'border-slate-600 bg-slate-700 hover:bg-slate-600'
+                                        }`}
+                                      >
+                                        {/* Seed Number & Drag Handle */}
+                                        <div className="flex items-center gap-2">
+                                          <GripVertical className="h-4 w-4 text-slate-400" />
+                                          <Badge variant="outline" className="border-blue-500 text-blue-300 w-8 h-6 text-xs justify-center">
+                                            {team.seed || index + 1}
+                                          </Badge>
+                                          <div className="flex flex-col gap-1">
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              className="h-4 w-4 p-0 text-slate-400 hover:text-white"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleSeedChange(team.id, 'up');
+                                              }}
+                                              disabled={index === 0}
+                                            >
+                                              <ArrowUp className="h-3 w-3" />
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              className="h-4 w-4 p-0 text-slate-400 hover:text-white"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleSeedChange(team.id, 'down');
+                                              }}
+                                              disabled={index === flight.registeredTeams.length - 1}
+                                            >
+                                              <ArrowDown className="h-3 w-3" />
+                                            </Button>
+                                          </div>
+                                        </div>
 
-                              {/* Team Info */}
-                              <div className="flex-1">
-                                <div className="font-medium text-white text-sm">{team.name}</div>
-                                {team.clubName && (
-                                  <div className="text-xs text-slate-400">{team.clubName}</div>
-                                )}
-                              </div>
+                                        {/* Team Info */}
+                                        <div className="flex-1">
+                                          <div className="font-medium text-white text-sm">{team.name}</div>
+                                          {team.clubName && (
+                                            <div className="text-xs text-slate-400">{team.clubName}</div>
+                                          )}
+                                        </div>
 
-                              {/* Status & Actions */}
-                              <div className="flex items-center gap-2">
-                                <Badge 
-                                  variant="outline" 
-                                  className={`text-xs ${team.status === 'approved' ? 'border-green-500 text-green-300' : 'border-slate-500 text-slate-300'}`}
-                                >
-                                  {team.status}
-                                </Badge>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-6 w-6 p-0 text-slate-400 hover:text-red-300"
-                                  onClick={() => handleRemoveFromFlight(team.id)}
-                                >
-                                  <Minus className="h-3 w-3" />
-                                </Button>
+                                        {/* Status & Actions */}
+                                        <div className="flex items-center gap-2">
+                                          <Badge 
+                                            variant="outline" 
+                                            className={`text-xs ${team.status === 'approved' ? 'border-green-500 text-green-300' : 'border-slate-500 text-slate-300'}`}
+                                          >
+                                            {team.status}
+                                          </Badge>
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-6 w-6 p-0 text-slate-400 hover:text-red-300"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleRemoveFromFlight(team.id);
+                                            }}
+                                          >
+                                            <Minus className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </Draggable>
+                                ))}
                               </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-6 text-slate-400">
-                        <Users className="h-8 w-8 mx-auto mb-2 text-slate-500" />
-                        <p className="text-sm">No teams assigned to this flight yet</p>
-                        <p className="text-xs text-slate-500 mt-1">Use the dropdown above to manually assign teams</p>
-                      </div>
-                    )}
+                            ) : (
+                              <div className="text-center py-8 text-slate-400">
+                                <Users className="h-8 w-8 mx-auto mb-2 text-slate-500" />
+                                <p className="text-sm">No teams assigned to this flight yet</p>
+                                <p className="text-xs text-slate-500 mt-1">Drag teams from the unassigned pool above</p>
+                              </div>
+                            )}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -684,6 +826,7 @@ export default function BracketCreationEngine({ eventId }: BracketCreationEngine
               </Card>
             )}
           </div>
+          </DragDropContext>
         </TabsContent>
 
         <TabsContent value="preview">
