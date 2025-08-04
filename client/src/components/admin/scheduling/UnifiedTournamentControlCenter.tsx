@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -45,6 +46,8 @@ interface SchedulingComponents {
 export function UnifiedTournamentControlCenter({ eventId }: TournamentControlCenterProps) {
   const [autoMode, setAutoMode] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showFlightSelector, setShowFlightSelector] = useState(false);
+  const [selectedFlights, setSelectedFlights] = useState<string[]>([]);
 
   // Fetch tournament status
   const { data: tournamentStatus, refetch: refetchStatus } = useQuery({
@@ -80,7 +83,8 @@ export function UnifiedTournamentControlCenter({ eventId }: TournamentControlCen
           totalFlights: 0,
           configuredFlights: 0,
           readyForScheduling: false,
-          error: true
+          error: true,
+          flights: []
         };
       }
       const flightConfigs = await response.json();
@@ -100,14 +104,21 @@ export function UnifiedTournamentControlCenter({ eventId }: TournamentControlCen
         totalFlights: flightConfigs.length || 0,
         configuredFlights: configuredFlights.length,
         readyForScheduling: configuredFlights.length > 0,
-        error: false
+        error: false,
+        flights: configuredFlights.map((flight: any) => ({
+          id: flight.id,
+          flightName: flight.flightName,
+          ageGroup: flight.ageGroup,
+          formatName: flight.formatName,
+          teamCount: flight.teamCount || 0
+        }))
       };
     },
     refetchInterval: 5000,
     retry: 1
   });
 
-  // Auto-scheduling mutation
+  // Auto-scheduling mutation (all flights)
   const autoScheduleMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(`/api/admin/events/${eventId}/generate-complete-schedule`, {
@@ -179,6 +190,43 @@ export function UnifiedTournamentControlCenter({ eventId }: TournamentControlCen
         description: data.message || "Step completed successfully.",
       });
       refetchStatus();
+      setShowFlightSelector(false);
+      setSelectedFlights([]);
+    }
+  });
+
+  // Selective scheduling mutation (selected flights only)
+  const selectiveScheduleMutation = useMutation({
+    mutationFn: async (flightIds: string[]) => {
+      const response = await fetch(`/api/admin/events/${eventId}/generate-selective-schedule`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          flightIds, 
+          includeReferees: true, 
+          includeFacilities: true 
+        })
+      });
+      if (!response.ok) throw new Error('Selective scheduling failed');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Selective Scheduling Complete",
+        description: `${data.message || `Schedule generated for ${selectedFlights.length} selected flights.`}`,
+      });
+      setIsProcessing(false);
+      refetchStatus();
+      setShowFlightSelector(false);
+      setSelectedFlights([]);
+    },
+    onError: (error) => {
+      setIsProcessing(false);
+      toast({
+        title: "Selective Scheduling Failed",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive"
+      });
     }
   });
 
@@ -186,6 +234,36 @@ export function UnifiedTournamentControlCenter({ eventId }: TournamentControlCen
     setIsProcessing(true);
     setAutoMode(true);
     autoScheduleMutation.mutate();
+  };
+  
+  const handleSelectiveSchedule = () => {
+    if (selectedFlights.length === 0) {
+      toast({
+        title: "No Flights Selected",
+        description: "Please select at least one flight to schedule.",
+        variant: "destructive"
+      });
+      return;
+    }
+    setIsProcessing(true);
+    selectiveScheduleMutation.mutate(selectedFlights);
+  };
+  
+  const toggleFlightSelection = (flightId: string) => {
+    setSelectedFlights(prev => 
+      prev.includes(flightId) 
+        ? prev.filter(id => id !== flightId)
+        : [...prev, flightId]
+    );
+  };
+  
+  const selectAllFlights = () => {
+    const allFlightIds = schedulingReadiness?.flights?.map((f: any) => f.id) || [];
+    setSelectedFlights(allFlightIds);
+  };
+  
+  const clearFlightSelection = () => {
+    setSelectedFlights([]);
   };
 
   const handleManualStep = (step: string) => {
@@ -253,7 +331,7 @@ export function UnifiedTournamentControlCenter({ eventId }: TournamentControlCen
             </div>
 
             {/* Quick Action Buttons */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <Button
                 onClick={handleAutoSchedule}
                 disabled={isProcessing || !schedulingReadiness?.readyForScheduling}
@@ -265,10 +343,22 @@ export function UnifiedTournamentControlCenter({ eventId }: TournamentControlCen
               >
                 <Zap className="h-4 w-4" />
                 {isProcessing ? 'Running Auto-Schedule...' : 
-                 schedulingReadiness?.error ? 'Auto-Schedule (Login Required)' :
+                 schedulingReadiness?.error ? 'Schedule All (Login Required)' :
                  schedulingReadiness?.readyForScheduling 
-                   ? `Auto-Schedule (${schedulingReadiness.configuredFlights} Flights Ready)` 
-                   : 'Auto-Schedule (No Configured Flights)'}
+                   ? `Schedule All (${schedulingReadiness.configuredFlights} Flights)` 
+                   : 'Schedule All (No Configured Flights)'}
+              </Button>
+
+              <Button
+                onClick={() => setShowFlightSelector(!showFlightSelector)}
+                disabled={!schedulingReadiness?.readyForScheduling || schedulingReadiness?.error}
+                variant="outline"
+                className={`flex items-center gap-2 border-slate-600 text-slate-200 hover:bg-slate-700 ${
+                  schedulingReadiness?.readyForScheduling ? '' : 'opacity-50 cursor-not-allowed'
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                {showFlightSelector ? 'Hide Flight Selector' : 'Select Flights'}
               </Button>
 
               <Button
@@ -333,6 +423,106 @@ export function UnifiedTournamentControlCenter({ eventId }: TournamentControlCen
                   )}
                 </AlertDescription>
               </Alert>
+            )}
+
+            {/* Flight Selection Panel */}
+            {showFlightSelector && schedulingReadiness?.flights && schedulingReadiness.flights.length > 0 && (
+              <Card className="border-slate-600 bg-slate-900">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg text-white flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Select Flights to Schedule
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={selectAllFlights}
+                        className="border-slate-600 text-slate-200 hover:bg-slate-700"
+                      >
+                        Select All
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={clearFlightSelection}
+                        className="border-slate-600 text-slate-200 hover:bg-slate-700"
+                      >
+                        Clear All
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {schedulingReadiness.flights.map((flight: any) => (
+                      <Card 
+                        key={flight.id} 
+                        className={`border transition-colors cursor-pointer ${
+                          selectedFlights.includes(flight.id)
+                            ? 'border-blue-500 bg-blue-900/20' 
+                            : 'border-slate-600 bg-slate-800 hover:bg-slate-700'
+                        }`}
+                        onClick={() => toggleFlightSelection(flight.id)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Checkbox
+                                  checked={selectedFlights.includes(flight.id)}
+                                  onChange={() => toggleFlightSelection(flight.id)}
+                                  className="text-blue-500"
+                                />
+                                <span className="font-medium text-white text-sm">
+                                  {flight.flightName}
+                                </span>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-xs text-slate-300">
+                                  <strong>{flight.ageGroup}</strong>
+                                </p>
+                                <p className="text-xs text-slate-400">
+                                  Format: {flight.formatName}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="text-xs text-slate-300 border-slate-600">
+                                    {flight.teamCount} teams
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-600">
+                    <div className="text-sm text-slate-300">
+                      <strong>{selectedFlights.length}</strong> of <strong>{schedulingReadiness.flights.length}</strong> flights selected
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowFlightSelector(false)}
+                        className="border-slate-600 text-slate-200 hover:bg-slate-700"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleSelectiveSchedule}
+                        disabled={selectedFlights.length === 0 || isProcessing}
+                        className="bg-green-600 hover:bg-green-500 text-white"
+                      >
+                        <Calendar className="h-4 w-4 mr-2" />
+                        {isProcessing ? 'Scheduling...' : `Schedule ${selectedFlights.length} Flights`}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* Next Action */}

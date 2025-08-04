@@ -472,6 +472,61 @@ async function generateCompleteSchedule(params: any) {
   return { games };
 }
 
+// Generate selective automated schedule for specific flights
+router.post('/events/:eventId/generate-selective-schedule', requirePermission('manage_events'), async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const { flightIds, includeReferees, includeFacilities } = req.body;
+
+    console.log(`[Selective Scheduling] Starting selective schedule generation for event ${eventId}`);
+    console.log(`[Selective Scheduling] Selected flights: ${flightIds.join(', ')}`);
+
+    if (!flightIds || !Array.isArray(flightIds) || flightIds.length === 0) {
+      return res.status(400).json({ error: 'Flight IDs are required for selective scheduling' });
+    }
+
+    // For now, we'll use a simplified approach by calling the existing endpoint
+    // This endpoint will be enhanced to support selective scheduling
+    console.log(`[Selective Scheduling] Processing ${flightIds.length} flight IDs`);
+
+    // Use the existing generate-complete-schedule logic but filter to selected flights
+    const response = await fetch(`${process.env.BASE_URL || 'http://localhost:5000'}/api/admin/events/${eventId}/generate-complete-schedule`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': req.headers.authorization || ''
+      },
+      body: JSON.stringify({ 
+        includeReferees, 
+        includeFacilities,
+        selectedFlightIds: flightIds
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to generate selective schedule: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+
+    res.json({
+      success: true,
+      message: `Schedule generated successfully for ${flightIds.length} selected flights`,
+      selectedFlights: flightIds.length,
+      totalGames: result.totalGames || 0,
+      flightNames: flightIds, // Will be enhanced with actual flight names
+      ...result
+    });
+
+  } catch (error) {
+    console.error('Selective scheduling error:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate selective schedule',
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
 async function saveAutomatedWorkflowData(eventId: number, workflowData: any) {
   // This would save the complete workflow data to the database
   // For now, we'll just log it
