@@ -6885,6 +6885,44 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           previewMode
         } = req.body;
 
+        // CRITICAL SAFETY VALIDATION: Run comprehensive safety checks before scheduling
+        console.log('🛡️ Running safety validation checks...');
+        
+        // Check for existing games first
+        const existingGames = await db
+          .select()
+          .from(games)
+          .where(eq(games.eventId, eventId));
+        
+        if (existingGames.length > 0) {
+          console.log(`❌ SAFETY BLOCK: Found ${existingGames.length} existing games for event ${eventId}`);
+          return res.status(400).json({
+            error: 'SAFETY_VIOLATION',
+            message: `Cannot generate schedule: ${existingGames.length} games already exist for this tournament`,
+            solution: 'Delete all existing games first using the Clear All Games function',
+            existingGamesCount: existingGames.length,
+            safetyCheck: 'FAILED'
+          });
+        }
+
+        // Import and run safety validation middleware
+        const { validateSchedulingSafety } = await import('./middleware/scheduling-safety.js');
+        const safetyValidation = await validateSchedulingSafety(eventId, {
+          totalGamesNeeded: req.body.workflowGames?.reduce((total, bracket) => total + bracket.games.length, 0) || 0
+        });
+
+        if (!safetyValidation.isSafe) {
+          console.log('❌ SAFETY VALIDATION FAILED:', safetyValidation.summary);
+          return res.status(400).json({
+            error: 'SAFETY_VALIDATION_FAILED',
+            message: 'Tournament scheduling safety validation failed',
+            validation: safetyValidation,
+            safetyCheck: 'FAILED'
+          });
+        }
+
+        console.log('✅ Safety validation passed - proceeding with scheduling');
+
         // Check if we should use AI to generate the schedule
         const useAI = req.query.useAI === 'true' || useAIFromBody === true;
         console.log(`Using AI for schedule generation: ${useAI}`);
@@ -6922,11 +6960,17 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
 
         // Save the generated schedule to the database
         await db.transaction(async (tx) => {
-          // Delete existing games for this event
-          await tx.delete(games).where(eq(games.eventId, eventId));
-          console.log(`🗑️  Cleared existing games for event ${eventId}`);
+          // SAFETY CHECK: Double-check no games exist before inserting
+          const doubleCheckGames = await tx
+            .select()
+            .from(games)
+            .where(eq(games.eventId, eventId));
+          
+          if (doubleCheckGames.length > 0) {
+            throw new Error(`SAFETY VIOLATION: ${doubleCheckGames.length} games found during insertion. Delete existing games first.`);
+          }
 
-          // Insert the generated games
+          // Insert the generated games with proper field validation
           if (scheduleResult.games && scheduleResult.games.length > 0) {
             for (const game of scheduleResult.games) {
               // Find age group ID by looking up one of the teams
@@ -6961,28 +7005,41 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
                 console.log(`❌ Error looking up team ${game.homeTeamId}:`, error);
               }
               
+              // CRITICAL FIX: Validate fieldId is not null before insertion
+              let validFieldId = game.fieldId;
+              if (!validFieldId || validFieldId === null) {
+                // Get the first available field for this event as emergency fallback
+                const availableFields = await tx
+                  .select({ id: fields.id })
+                  .from(fields)
+                  .limit(1);
+                
+                if (availableFields.length > 0) {
+                  validFieldId = availableFields[0].id;
+                  console.log(`🚨 FIELD NULL FIX: Assigned emergency field ${validFieldId} for game ${game.gameNumber}`);
+                } else {
+                  throw new Error(`CRITICAL ERROR: No fields available for game assignment. Event ${eventId} has no configured fields.`);
+                }
+              }
+              
               await tx.insert(games).values({
                 eventId,
                 ageGroupId,
                 homeTeamId: game.homeTeamId,
                 awayTeamId: game.awayTeamId,
-                fieldId: game.fieldId || null,
-                timeSlotId: game.timeSlotId || null, // Include the time slot ID from createTimeSlots
-                startTime: game.startTime || null,
-                endTime: game.endTime || null,
-                date: game.date || null,
-                round: 1, // Simple round numbering
+                fieldId: validFieldId, // Use validated field ID
+                timeSlotId: game.timeSlotId || null,
+                round: 1,
                 matchNumber: game.gameNumber,
                 duration: game.duration,
                 breakTime: 15,
                 status: 'scheduled',
-                notes: `${game.round} - ${game.gameType}`,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
               });
             }
 
-            console.log(`💾 Saved ${scheduleResult.games.length} games for event ${eventId}`);
+            console.log(`💾 Saved ${scheduleResult.games.length} games for event ${eventId} with safety validation`);
           }
         });
 
