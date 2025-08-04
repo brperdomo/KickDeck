@@ -171,8 +171,7 @@ router.post('/:eventId/generate-complete-schedule', isAdmin, async (req, res) =>
     const warnings: string[] = [];
     const conflicts: string[] = [];
 
-    for (const flightKey of flightGroups.keys()) {
-      const flightTeams = flightGroups.get(flightKey)!;
+    for (const [flightKey, flightTeams] of flightGroups.entries()) {
       const [ageGroup, gender] = flightKey.split('_');
       
       console.log(`Processing flight: ${flightKey} with ${flightTeams.length} teams`);
@@ -377,8 +376,7 @@ router.post('/:eventId/generate-complete-schedule', isAdmin, async (req, res) =>
 
     // Build flight information
     const flights: GeneratedFlight[] = [];
-    for (const flightKey of flightGroups.keys()) {
-      const flightTeams = flightGroups.get(flightKey)!;
+    for (const [flightKey, flightTeams] of flightGroups.entries()) {
       const [ageGroup, gender] = flightKey.split('_');
       const flightGames = detailedGames.filter(g => g.ageGroup === ageGroup && g.gender === gender);
       
