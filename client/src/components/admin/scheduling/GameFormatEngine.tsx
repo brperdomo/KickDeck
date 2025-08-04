@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -75,6 +75,22 @@ export function GameFormatEngine({ eventId }: GameFormatEngineProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<{ [flightId: number]: number }>({});
   const [customFormats, setCustomFormats] = useState<{ [flightId: number]: GameFormat }>({});
   const [editingFlight, setEditingFlight] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("needs-config");
+
+  // Update active tab when flight data changes
+  useEffect(() => {
+    if (flightData) {
+      const configured = flightData.filter(f => f.currentFormat);
+      const unconfigured = flightData.filter(f => !f.currentFormat);
+      
+      // If we have configured flights and no unconfigured, show configured tab
+      if (configured.length > 0 && unconfigured.length === 0) {
+        setActiveTab("configured");
+      } else if (configured.length > 0 && activeTab === "needs-config" && unconfigured.length === 0) {
+        setActiveTab("configured");
+      }
+    }
+  }, [flightData, activeTab]);
 
   // Generate bracket structure based on team count
   const generateBracketStructure = (teamCount: number): BracketStructure => {
@@ -195,6 +211,8 @@ export function GameFormatEngine({ eventId }: GameFormatEngineProps) {
         delete updated[data.flightId || Object.keys(prev)[0]];
         return updated;
       });
+      // Switch to configured tab to show the newly saved format
+      setActiveTab("configured");
     },
     onError: (error) => {
       toast({
@@ -409,7 +427,7 @@ export function GameFormatEngine({ eventId }: GameFormatEngineProps) {
       </div>
 
       {/* Format Configuration */}
-      <Tabs defaultValue="needs-config" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="bg-slate-800 border-slate-600">
           <TabsTrigger value="needs-config" className="text-slate-200 data-[state=active]:bg-slate-700 data-[state=active]:text-white">
             <Settings className="h-4 w-4 mr-2" />
