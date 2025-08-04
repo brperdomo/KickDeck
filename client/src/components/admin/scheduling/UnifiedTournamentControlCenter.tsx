@@ -71,7 +71,7 @@ export function UnifiedTournamentControlCenter({ eventId }: TournamentControlCen
   // Auto-scheduling mutation
   const autoScheduleMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`/api/admin/tournaments/${eventId}/auto-schedule`, {
+      const response = await fetch(`/api/admin/events/${eventId}/generate-complete-schedule`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ includeReferees: true, includeFacilities: true })
