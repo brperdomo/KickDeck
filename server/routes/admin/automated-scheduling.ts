@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { requirePermission } from '../../middleware/auth.js';
 import { db } from '../../../db/index.js';
-import { teams, events, eventGameFormats, complexes, fields, games } from '../../../db/schema.js';
+import { teams, events, eventGameFormats, complexes, fields, games, eventBrackets } from '../../../db/schema.js';
 import { eq, and, inArray } from 'drizzle-orm';
 
 const router = Router();
@@ -630,8 +630,18 @@ async function generateSelectiveSchedule(eventId: string, flightIds: string[], o
         );
       }
 
-      // Use the known age group ID for this bracket (9955 from database query)
-      const ageGroupId = 9955; // U13 Boys age group
+      // Get the age group ID for the first bracket
+      const bracketAgeGroupQuery = await db.select({
+        ageGroupId: eventBrackets.ageGroupId
+      })
+      .from(eventBrackets)
+      .where(eq(eventBrackets.id, parseInt(flightIds[0])))
+      .limit(1);
+
+      const ageGroupId = bracketAgeGroupQuery[0]?.ageGroupId;
+      if (!ageGroupId) {
+        throw new Error(`No age group found for bracket ${flightIds[0]}`);
+      }
       console.log(`[Selective Scheduling] Using age group ID: ${ageGroupId} for bracket ${flightIds[0]}`);
 
       // Convert generated games to database format
