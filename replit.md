@@ -43,6 +43,15 @@ Preferred communication style: Simple, everyday language.
         - **ENHANCED**: Comprehensive pre-scheduling validation (event dates, teams, fields)
         - **CRITICAL FIX**: Quick Scheduler field size constraint validation - now respects field compatibility (7v7/9v9/11v11)
         - **CRITICAL FIX**: Game format persistence in Configured tab - saved formats now properly display
+        - **ENHANCED QUICK SCHEDULER (COMPREHENSIVE UPGRADE)**: Complete constraint validation and intelligent optimization system
+        - **Team Rest Period Enforcement**: Configurable minimum rest time between games with millisecond precision
+        - **Games Per Day Limits**: Strict enforcement of maximum games per team per day constraints
+        - **Coach Conflict Detection**: Intelligent prevention of scheduling conflicts for teams sharing coaches
+        - **Lighting Constraint Validation**: Automatic verification of field lighting requirements for evening games
+        - **Intelligent Slot Scoring**: Multi-factor optimization algorithm for optimal game assignment
+        - **Fair Game Distribution**: Balanced scheduling ensuring equitable game spacing and field utilization
+        - **Prime Time Optimization**: Preference for optimal playing hours (10 AM - 4 PM) with fallback scheduling
+        - **Schedule Efficiency Reporting**: Comprehensive metrics showing scheduling success rates and constraint compliance
         - Format-driven flight creation ensuring operational alignment with game requirements
         - Automated parameter configuration from existing tournament data
         - Flight-specific game generation using configured formats and timing
