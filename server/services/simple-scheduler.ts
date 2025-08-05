@@ -71,7 +71,7 @@ export class SimpleScheduler {
           // Generate realistic game times with proper rest time (will be resolved during async processing)
           startTime: '', // Will be set during async processing
           endTime: '', // Will be set during async processing
-          fieldId: null, // Will be assigned using field availability service
+          fieldId: SimpleScheduler.assignRealFieldIdSync(gameCounter - 1, bracketData.bracketName || 'Unknown', realComplexes), // Assign field based on age group requirements
           field: 'TBD', // Will be assigned using field availability service  
           complexName: 'TBD', // Will be assigned using field availability service
           // Add field size information for display
