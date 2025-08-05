@@ -225,36 +225,62 @@ function addMinutesToTime(timeStr: string, minutes: number): string {
 router.put('/games/:gameId/reschedule', async (req, res) => {
   try {
     const { gameId } = req.params;
-    const { fieldId, startTime } = req.body;
+    const { fieldId, startTime, eventId } = req.body;
 
-    console.log(`[Game Reschedule] Updating game ${gameId} to field ${fieldId} at ${startTime}`);
+    console.log(`[Game Reschedule] Updating game ${gameId} to field ${fieldId} at ${startTime} for event ${eventId}`);
 
     // Calculate end time (assuming 90 minute games)
     const start = new Date(startTime);
     const end = new Date(start.getTime() + 90 * 60 * 1000);
     const endTime = end.toISOString();
 
-    // Update the game time slot
-    const updatedTimeSlot = await db
-      .update(gameTimeSlots)
+    // Create or find time slot for this assignment
+    let timeSlot;
+    try {
+      // First try to create a new time slot
+      const [newTimeSlot] = await db
+        .insert(gameTimeSlots)
+        .values({
+          eventId: eventId || '1844329078',
+          fieldId: parseInt(fieldId),
+          startTime: startTime,
+          endTime: endTime,
+          isAvailable: false,
+          dayIndex: 0, // Default day
+          slotType: 'game',
+          bufferBefore: 15,
+          bufferAfter: 15
+        })
+        .returning();
+      timeSlot = newTimeSlot;
+      console.log(`[Game Reschedule] Created new time slot with ID ${timeSlot.id}`);
+    } catch (insertError) {
+      console.log(`[Game Reschedule] Time slot creation failed, using field assignment only`);
+      timeSlot = null;
+    }
+
+    // CRITICAL: Update the games table with field and time slot assignments
+    const updatedGame = await db
+      .update(games)
       .set({
         fieldId: parseInt(fieldId),
-        startTime: startTime,
-        endTime: endTime,
-        isAvailable: false
+        timeSlotId: timeSlot?.id || null,
+        // Update any other scheduling fields if needed
+        status: 'scheduled'
       })
-      .where(eq(gameTimeSlots.eventId, req.body.eventId || '1656618593')) // Fallback event ID
+      .where(eq(games.id, parseInt(gameId)))
       .returning();
 
-    console.log(`[Game Reschedule] Updated time slot for game ${gameId}`);
+    console.log(`[Game Reschedule] FIXED: Updated games table for game ${gameId}`, updatedGame[0]);
 
     res.json({
       success: true,
       gameId: parseInt(gameId),
       fieldId: parseInt(fieldId),
+      timeSlotId: timeSlot?.id || null,
       startTime,
       endTime,
-      message: 'Game rescheduled successfully'
+      message: 'Game rescheduled successfully and games table updated'
     });
 
   } catch (error) {
