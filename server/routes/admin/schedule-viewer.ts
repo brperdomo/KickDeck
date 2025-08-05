@@ -91,30 +91,44 @@ router.get('/:eventId/schedule', async (req, res) => {
       .leftJoin(complexes, eq(fields.complexId, complexes.id))
       .where(eq(games.eventId, eventId));
 
-    // Get time slots for each game separately to handle duplicates
+    // Get all time slots for the event
+    const allTimeSlots = await db
+      .select({
+        fieldId: gameTimeSlots.fieldId,
+        startTime: gameTimeSlots.startTime,
+        endTime: gameTimeSlots.endTime,
+        dayIndex: gameTimeSlots.dayIndex
+      })
+      .from(gameTimeSlots)
+      .where(eq(gameTimeSlots.eventId, eventId))
+      .orderBy(asc(gameTimeSlots.fieldId), asc(gameTimeSlots.startTime));
+
+    // Group time slots by field
+    const timeSlotsByField = new Map();
+    for (const slot of allTimeSlots) {
+      if (!timeSlotsByField.has(slot.fieldId)) {
+        timeSlotsByField.set(slot.fieldId, []);
+      }
+      timeSlotsByField.get(slot.fieldId).push(slot);
+    }
+
+    // Assign time slots to games - distribute games across available time slots for each field
     const gameTimeSlotMap = new Map();
-    
+    const fieldGameCounts = new Map(); // Track how many games assigned per field
+
     for (const game of actualGamesData) {
-      if (game.fieldId) {
-        const timeSlots = await db
-          .select({
-            startTime: gameTimeSlots.startTime,
-            endTime: gameTimeSlots.endTime,
-            dayIndex: gameTimeSlots.dayIndex
-          })
-          .from(gameTimeSlots)
-          .where(
-            and(
-              eq(gameTimeSlots.eventId, eventId),
-              eq(gameTimeSlots.fieldId, game.fieldId)
-            )
-          )
-          .orderBy(asc(gameTimeSlots.startTime))
-          .limit(1); // Get the earliest time slot for this field
+      if (game.fieldId && timeSlotsByField.has(game.fieldId)) {
+        const availableSlots = timeSlotsByField.get(game.fieldId);
+        const currentGameCount = fieldGameCounts.get(game.fieldId) || 0;
         
-        if (timeSlots.length > 0) {
-          gameTimeSlotMap.set(game.gameId, timeSlots[0]);
-        }
+        // Cycle through available time slots for this field
+        const slotIndex = currentGameCount % availableSlots.length;
+        const assignedSlot = availableSlots[slotIndex];
+        
+        gameTimeSlotMap.set(game.gameId, assignedSlot);
+        fieldGameCounts.set(game.fieldId, currentGameCount + 1);
+        
+        console.log(`[Schedule Viewer] Assigned game ${game.gameId} to field ${game.fieldId} slot ${slotIndex}: ${assignedSlot.startTime}`);
       }
     }
 
