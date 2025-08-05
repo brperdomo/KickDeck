@@ -6770,26 +6770,19 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             ageGroupId: item.ageGroup?.id || 0,
             bracket: `${item.ageGroup?.ageGroup || 'Unknown'} Flight A`,
             round: item.game.round || 'Pool Play',
-            homeTeam: item.homeTeam ? {
-              id: item.homeTeam.id,
-              name: item.homeTeam.name || 'TBD',
-              clubName: item.homeTeam.clubName || '',
-              coach: item.homeTeam.coachName || '',
-              status: item.homeTeam.status || 'approved',
-              referenceId: item.homeTeam.teamReferenceId || 'TEMP'
-            } : {
-              id: item.game.homeTeamId || 0,
-              name: `Team ${item.game.homeTeamId}` || 'TBD',
-              clubName: '',
-              coach: '',
-              status: 'approved',
-              referenceId: 'TEMP'
+            homeTeam: {
+              id: item.homeTeam?.id || item.game.homeTeamId || 0,
+              name: item.homeTeam?.name || `Team ${item.game.homeTeamId || 'Unknown'}`,
+              clubName: item.homeTeam?.clubName || '',
+              coach: item.homeTeam?.coachName || '',
+              status: item.homeTeam?.status || 'approved',
+              referenceId: item.homeTeam?.teamReferenceId || 'TEMP'
             },
             homeTeamId: item.homeTeam?.id || item.game.homeTeamId || 0,
             homeTeamRefId: item.homeTeam?.teamReferenceId || 'TEMP',
             awayTeam: {
               id: (item.awayTeam as any)?.id || item.game.awayTeamId || 0,
-              name: (item.awayTeam as { name: string })?.name || `Team ${item.game.awayTeamId}` || 'TBD',
+              name: (item.awayTeam as { name: string })?.name || `Team ${item.game.awayTeamId || 'Unknown'}`,
               clubName: (item.awayTeam as any)?.clubName || '',
               coach: (item.awayTeam as any)?.coachName || '',
               status: (item.awayTeam as any)?.status || 'approved',

@@ -107,30 +107,47 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
       console.log('Schedule API Response:', data);
       
       // Transform the API response to match the expected format
-      const transformedGames = data.games?.map((game: any) => ({
-        id: game.id,
-        homeTeam: game.homeTeam?.name || `Team ${game.homeTeamId}`,
-        awayTeam: game.awayTeam?.name || `Team ${game.awayTeamId}`,
-        ageGroup: game.ageGroup,
-        field: game.fieldName || 'Unassigned',
-        date: game.startTime ? new Date(game.startTime).toLocaleDateString() : 'TBD',
-        time: game.startTime ? new Date(game.startTime).toLocaleTimeString('en-US', { 
-          hour: '2-digit', 
-          minute: '2-digit',
-          hour12: false 
-        }) : 'TBD',
-        duration: game.duration || 90,
-        status: game.status || 'scheduled',
-        startTime: game.startTime,
-        endTime: game.endTime,
-        fieldName: game.fieldName
-      })) || [];
+      const transformedGames = data.games?.map((game: any) => {
+        // Handle team names - use the nested structure properly
+        const homeTeamName = game.homeTeam?.name || `Team ${game.homeTeamId || 'Unknown'}`;
+        const awayTeamName = game.awayTeam?.name || `Team ${game.awayTeamId || 'Unknown'}`;
+        
+        // Handle field names - check both fieldName and nested field structure
+        const fieldName = game.fieldName || game.field?.name || 'Unassigned';
+        
+        // Format times properly
+        const startTime = game.startTime ? new Date(game.startTime) : null;
+        const endTime = game.endTime ? new Date(game.endTime) : null;
+        
+        return {
+          id: game.id,
+          homeTeam: homeTeamName,
+          awayTeam: awayTeamName,
+          ageGroup: game.ageGroup || 'Unknown',
+          field: fieldName,
+          date: startTime ? startTime.toLocaleDateString() : 'TBD',
+          time: startTime ? startTime.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          }) : 'TBD',
+          duration: game.duration || 90,
+          status: game.status || 'scheduled',
+          startTime: game.startTime,
+          endTime: game.endTime,
+          fieldName: fieldName
+        };
+      }) || [];
 
       // Extract unique values for filters
-      const fields = [...new Set(transformedGames.map(g => g.field).filter(f => f && f !== 'Unassigned'))]
-        .map(name => ({ name, surface: 'grass', size: '11v11' }));
-      const ageGroups = [...new Set(transformedGames.map(g => g.ageGroup).filter(Boolean))];
-      const dates = [...new Set(transformedGames.map(g => g.date).filter(d => d !== 'TBD'))];
+      const uniqueFields = new Set(transformedGames.map((g: any) => g.field).filter((f: string) => f && f !== 'Unassigned'));
+      const fields = Array.from(uniqueFields).map((name: string) => ({ name, surface: 'grass', size: '11v11' }));
+      
+      const uniqueAgeGroups = new Set(transformedGames.map((g: any) => g.ageGroup).filter(Boolean));
+      const ageGroups = Array.from(uniqueAgeGroups) as string[];
+      
+      const uniqueDates = new Set(transformedGames.map((g: any) => g.date).filter((d: string) => d !== 'TBD'));
+      const dates = Array.from(uniqueDates) as string[];
 
       return {
         games: transformedGames,
