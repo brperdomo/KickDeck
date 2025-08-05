@@ -6953,6 +6953,24 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         });
 
         // Create time slots for the games before saving to database
+        // Field size determination function
+        function getFieldSizeForGame(game: any): string {
+          // Check if game has bracket or age group information
+          const bracketName = game.bracketName || game.bracket || '';
+          const ageMatch = bracketName.match(/U(\d+)/);
+          
+          if (ageMatch) {
+            const age = parseInt(ageMatch[1]);
+            if (age <= 7) return '4v4';
+            if (age <= 10) return '7v7';
+            if (age <= 12) return '9v9';
+            return '11v11';
+          }
+          
+          // Fallback to 11v11 for unknown age groups
+          return '11v11';
+        }
+
         // Create time slots BEFORE saving games to database so timeSlotId is available
         if (scheduleResult.games && scheduleResult.games.length > 0) {
           console.log('🕒 Creating time slots for generated games...');
@@ -7010,17 +7028,27 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
               // CRITICAL FIX: Validate fieldId is not null before insertion
               let validFieldId = game.fieldId;
               if (!validFieldId || validFieldId === null) {
-                // Get fields for this event through event_complexes relationship
+                // Get the required field size for this game
+                const requiredFieldSize = getFieldSizeForGame(game);
+                console.log(`🎯 Game ${game.gameNumber} requires ${requiredFieldSize} field`);
+                
+                // Get fields for this event through event_complexes relationship with size filtering
                 const eventFields = await tx
-                  .select({ fieldId: fields.id, fieldName: fields.name })
+                  .select({ fieldId: fields.id, fieldName: fields.name, fieldSize: fields.fieldSize })
                   .from(eventComplexes)
                   .innerJoin(fields, eq(fields.complexId, eventComplexes.id))
-                  .where(eq(eventComplexes.eventId, eventId))
-                  .limit(1);
+                  .where(eq(eventComplexes.eventId, eventId));
                 
-                if (eventFields.length > 0) {
+                // Filter by required field size first
+                const matchingFields = eventFields.filter(f => f.fieldSize === requiredFieldSize);
+                
+                if (matchingFields.length > 0) {
+                  validFieldId = matchingFields[0].fieldId;
+                  console.log(`🚨 FIELD NULL FIX: Assigned ${requiredFieldSize} field ${validFieldId} (${matchingFields[0].fieldName}) for game ${game.gameNumber}`);
+                } else if (eventFields.length > 0) {
+                  // Fallback to any event field if no matching size
                   validFieldId = eventFields[0].fieldId;
-                  console.log(`🚨 FIELD NULL FIX: Assigned event field ${validFieldId} (${eventFields[0].fieldName}) for game ${game.gameNumber}`);
+                  console.log(`⚠️ FIELD SIZE MISMATCH: Using ${eventFields[0].fieldSize} field ${validFieldId} for game requiring ${requiredFieldSize}`);
                 } else {
                   console.log(`❌ No event-specific fields found for event ${eventId}`);
                   // Last resort: try to find any available field
