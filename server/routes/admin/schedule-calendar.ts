@@ -214,6 +214,7 @@ function addMinutesToTime(timeStr: string, minutes: number): string {
 
 // PUT /api/admin/games/:gameId/reschedule - Update game field and time
 router.put('/games/:gameId/reschedule', async (req, res) => {
+  console.log(`[Game Reschedule] ROUTE HIT: PUT /games/${req.params.gameId}/reschedule`);
   try {
     const { gameId } = req.params;
     const { fieldId, startTime, eventId } = req.body;
