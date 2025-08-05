@@ -6720,7 +6720,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
       try {
         const eventId = req.params.id;
 
-        // Simplified query that ensures team names are properly retrieved
+        // Corrected query that matches actual database schema
         const schedule = await db.execute(sql`
           SELECT 
             g.id,
@@ -6748,18 +6748,27 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           LEFT JOIN event_age_groups eag ON g.age_group_id = eag.id
           LEFT JOIN game_time_slots ts ON g.time_slot_id = ts.id
           WHERE g.event_id = ${eventId}
-          ORDER BY ts.start_time NULLS LAST, g.id
+          ORDER BY COALESCE(ts.start_time, '9999-12-31'), g.id
         `);
 
         console.log(`Found ${schedule.rows.length} games for event ${eventId}`);
 
         // Format the schedule for frontend display with enhanced data
-        const formattedSchedule = schedule.rows.map((row: any, index: number) => ({
+        const formattedSchedule = schedule.rows.map((row: any, index: number) => {
+          // Handle missing time slots - show "TBD" for unscheduled games
+          const hasTimeSlot = row.start_time && row.end_time;
+          const startTime = hasTimeSlot ? row.start_time : 'TBD';
+          const endTime = hasTimeSlot ? row.end_time : 'TBD';
+          
+          // Handle missing field assignments - show proper "Unassigned" for unscheduled games
+          const fieldName = row.field_name || 'Unassigned';
+          
+          return {
             id: row.id,
             gameNumber: row.match_number || index + 1,
-            startTime: row.start_time || new Date().toISOString(),
-            endTime: row.end_time || new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-            fieldName: row.field_name || 'Unassigned',
+            startTime: startTime,
+            endTime: endTime,
+            fieldName: fieldName,
             fieldId: row.field_id || null,
             fieldSize: row.field_size || 'Unknown',
             complexId: row.complex_id || null,
@@ -6776,7 +6785,8 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             awayTeamId: row.away_team_id || 0,
             awayTeamRefId: 'TEMP',
             status: row.status || 'scheduled',
-          }));
+          };
+        });
 
         console.log(`Returning ${formattedSchedule.length} formatted games`);
         res.json({ games: formattedSchedule });
