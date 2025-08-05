@@ -107,19 +107,26 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
       console.log('Schedule API Response:', data);
       
       // Transform the API response to match the expected format
-      const transformedGames = data.games?.map((game: any) => {
-        // Handle team names - use the nested structure properly
-        const homeTeamName = game.homeTeam?.name || `Team ${game.homeTeamId || 'Unknown'}`;
-        const awayTeamName = game.awayTeam?.name || `Team ${game.awayTeamId || 'Unknown'}`;
+      const transformedGames = data.games?.map((game: any, index: number) => {
+        console.log(`Game ${index + 1} transformation debug:`, {
+          raw: game,
+          homeTeamStructure: game.homeTeam,
+          awayTeamStructure: game.awayTeam,
+          fieldStructure: game.fieldName || game.field
+        });
         
-        // Handle field names - check both fieldName and nested field structure
-        const fieldName = game.fieldName || game.field?.name || 'Unassigned';
+        // Handle team names - check all possible data structures
+        const homeTeamName = game.homeTeam?.name || game.homeTeamName || `Team ${game.homeTeamId || 'Unknown'}`;
+        const awayTeamName = game.awayTeam?.name || game.awayTeamName || `Team ${game.awayTeamId || 'Unknown'}`;
+        
+        // Handle field names - check all possible structures
+        const fieldName = game.fieldName || game.field?.name || game.field || 'Unassigned';
         
         // Format times properly
         const startTime = game.startTime ? new Date(game.startTime) : null;
         const endTime = game.endTime ? new Date(game.endTime) : null;
         
-        return {
+        const transformed = {
           id: game.id,
           homeTeam: homeTeamName,
           awayTeam: awayTeamName,
@@ -137,6 +144,9 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
           endTime: game.endTime,
           fieldName: fieldName
         };
+        
+        console.log(`Game ${index + 1} transformed:`, transformed);
+        return transformed;
       }) || [];
 
       // Extract unique values for filters
