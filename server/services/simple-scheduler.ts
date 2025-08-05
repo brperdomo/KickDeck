@@ -428,7 +428,11 @@ export class SimpleScheduler {
    * Assign real field ID based on age group requirements and availability (synchronous version)
    */
   static assignRealFieldIdSync(gameNumber: number, bracketName: string, realComplexes: any[]): number | null {
+    console.log(`🎯 assignRealFieldIdSync called: gameNumber=${gameNumber}, bracketName=${bracketName}`);
+    console.log(`🎯 realComplexes input:`, JSON.stringify(realComplexes, null, 2));
+    
     if (!realComplexes || realComplexes.length === 0) {
+      console.log(`❌ assignRealFieldIdSync: No complexes available`);
       return null;
     }
 
