@@ -197,4 +197,70 @@ router.delete('/:eventId/games/bulk', isAdmin, async (req, res) => {
   }
 });
 
+// Reschedule a specific game (drag and drop support)
+router.put('/:gameId/reschedule', isAdmin, async (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const { fieldId, startTime, eventId } = req.body;
+
+    console.log(`[Game Reschedule] Updating game ${gameId}: field=${fieldId}, time=${startTime}, event=${eventId}`);
+
+    // First, find or create the time slot
+    let timeSlot = await db.query.gameTimeSlots.findFirst({
+      where: and(
+        eq(gameTimeSlots.eventId, parseInt(eventId)),
+        eq(gameTimeSlots.startTime, startTime),
+        eq(gameTimeSlots.fieldId, fieldId)
+      )
+    });
+
+    if (!timeSlot) {
+      console.log(`[Game Reschedule] Creating new time slot for ${startTime} on field ${fieldId}`);
+      // Create time slot with 90-minute duration
+      const endTime = new Date(new Date(startTime).getTime() + 90 * 60 * 1000).toISOString();
+      
+      const [newTimeSlot] = await db.insert(gameTimeSlots).values({
+        eventId: parseInt(eventId),
+        fieldId: fieldId,
+        startTime: startTime,
+        endTime: endTime,
+        isAvailable: true,
+        slotType: 'regular',
+        dayIndex: Math.floor((new Date(startTime).getTime() - new Date('2025-08-16').getTime()) / (24 * 60 * 60 * 1000)),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }).returning();
+      
+      timeSlot = newTimeSlot;
+    }
+
+    // Update the game with new field and time slot
+    const [updatedGame] = await db
+      .update(games)
+      .set({
+        fieldId: fieldId,
+        timeSlotId: timeSlot.id,
+        updatedAt: new Date().toISOString()
+      })
+      .where(eq(games.id, parseInt(gameId)))
+      .returning();
+
+    console.log(`[Game Reschedule] Successfully updated game ${gameId}`);
+    
+    res.json({
+      success: true,
+      message: 'Game rescheduled successfully',
+      game: updatedGame,
+      timeSlot: timeSlot
+    });
+
+  } catch (error) {
+    console.error('[Game Reschedule] Error:', error);
+    res.status(500).json({ 
+      error: 'Failed to reschedule game',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default router;
