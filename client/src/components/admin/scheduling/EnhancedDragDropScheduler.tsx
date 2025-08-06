@@ -127,14 +127,14 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
     return minutes === 0 ? `${displayHours} ${period}` : `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
-  // Check if a time slot is occupied by an extending game from an earlier slot
+  // Check if a time slot is occupied by an extending game from an earlier slot (now horizontally)
   const isSlotOccupiedByExtendingGame = useCallback((fieldId: number, timeSlot: TimeSlot): boolean => {
     if (!scheduleData?.games) return false;
 
     const timeSlots = generateTimeSlots();
     const currentSlotIndex = timeSlots.findIndex(s => s.id === timeSlot.id);
     
-    // Check all previous time slots for games that might extend into this slot
+    // Check all previous time slots for games that might extend horizontally into this slot
     for (let i = 0; i < currentSlotIndex; i++) {
       const previousSlot = timeSlots[i];
       const gamesInPreviousSlot = scheduleData.games.filter((game: Game) => {
@@ -151,7 +151,7 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
         return gameDate === selectedDate && gameTime === previousSlot.startTime;
       });
 
-      // Check if any game from previous slot extends into current slot
+      // Check if any game from previous slot extends horizontally into current slot
       for (const game of gamesInPreviousSlot) {
         const gameSpanSlots = calculateGameSpanSlots(game);
         const slotsFromStart = currentSlotIndex - i;
@@ -473,36 +473,36 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
       <Card className="border-slate-600 bg-slate-800">
         <CardHeader>
           <CardTitle className="text-white">
-            Schedule Grid - {selectedDate} ({timeInterval} min intervals)
+            Schedule Grid - {selectedDate} ({timeInterval} min intervals) - Times Horizontal
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div ref={gridRef} className="overflow-auto max-h-[800px]">
-            <div className="grid gap-1" style={{ gridTemplateColumns: `150px repeat(${fields.length}, 1fr)` }}>
+            <div className="grid gap-1" style={{ gridTemplateRows: `60px repeat(${fields.length}, 60px)`, gridTemplateColumns: `150px repeat(${timeSlots.length}, 1fr)` }}>
               {/* Header Row */}
-              <div className="sticky top-0 bg-slate-700 p-3 border border-slate-600 font-medium text-slate-200">
-                Time
+              <div className="sticky left-0 bg-slate-700 p-3 border border-slate-600 font-medium text-slate-200">
+                Field
               </div>
-              {fields.map((field: Field) => (
+              {timeSlots.map((slot: TimeSlot) => (
                 <div
-                  key={field.id}
-                  className="sticky top-0 bg-slate-700 p-3 border border-slate-600 text-center"
+                  key={slot.id}
+                  className="sticky top-0 bg-slate-700 p-2 border border-slate-600 text-center"
                 >
-                  <div className="font-medium text-white">{field.name}</div>
-                  <div className="text-sm text-slate-300">{field.fieldSize}</div>
+                  <div className="font-medium text-white text-xs">{slot.displayTime}</div>
                 </div>
               ))}
 
-              {/* Time Slot Rows */}
-              {timeSlots.map((slot) => (
-                <React.Fragment key={slot.id}>
-                  {/* Time Label */}
-                  <div className="bg-slate-750 p-2 border border-slate-600 text-slate-300 text-sm font-medium">
-                    {slot.displayTime}
+              {/* Field Rows */}
+              {fields.map((field: Field) => (
+                <React.Fragment key={field.id}>
+                  {/* Field Label */}
+                  <div className="sticky left-0 bg-slate-750 p-2 border border-slate-600 text-slate-300 text-sm font-medium">
+                    <div className="font-medium text-white">{field.name}</div>
+                    <div className="text-xs text-slate-300">{field.fieldSize}</div>
                   </div>
 
-                  {/* Field Columns */}
-                  {fields.map((field: Field) => {
+                  {/* Time Slot Columns */}
+                  {timeSlots.map((slot: TimeSlot) => {
                     const games = getGamesForSlot(field.id, slot);
                     const isOccupiedByExtendingGame = isSlotOccupiedByExtendingGame(field.id, slot);
                     const hasConflict = conflicts.some(c => 
@@ -514,7 +514,7 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                       <div
                         key={`${field.id}-${slot.id}`}
                         className={`
-                          min-h-[60px] p-1 border border-slate-600 transition-colors relative
+                          min-w-[80px] h-[60px] p-1 border border-slate-600 transition-colors relative
                           ${games.length > 0 ? 'bg-blue-900/30' : isOccupiedByExtendingGame ? 'bg-blue-900/20' : 'bg-slate-800'}
                           ${hasConflict ? 'bg-red-900/30 border-red-500' : ''}
                           ${isDragOver ? 'bg-green-900/30 border-green-500 border-2' : ''}
@@ -531,9 +531,9 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                           const gameSpanSlots = calculateGameSpanSlots(game);
                           const totalDuration = calculateTotalGameDuration(game);
                           
-                          // Calculate the height to span multiple time slots
-                          const slotHeight = 60; // Base height of each time slot in pixels
-                          const gameHeight = (gameSpanSlots * slotHeight) - 4; // Subtract 4px for gap
+                          // Calculate the width to span multiple time slots horizontally
+                          const slotWidth = 80; // Base width of each time slot in pixels
+                          const gameWidth = (gameSpanSlots * slotWidth) - 4; // Subtract 4px for gap
                           
                           return (
                             <div
@@ -553,26 +553,26 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                                 hover:scale-105 hover:shadow-lg
                               `}
                               style={{
-                                height: `${gameHeight}px`,
-                                width: 'calc(100% - 8px)',
+                                width: `${gameWidth}px`,
+                                height: 'calc(100% - 8px)',
                                 top: '2px',
                                 left: '2px'
                               }}
                               title={`${game.homeTeamName} vs ${game.awayTeamName}\nAge Group: ${game.ageGroup}\nTotal Duration: ${totalDuration} minutes (${gameSpanSlots} slots)\nDrag to move`}
                             >
-                              <div className="font-medium truncate">
+                              <div className="font-medium truncate text-xs">
                                 {game.homeTeamName} vs {game.awayTeamName}
                               </div>
                               <div className="text-xs opacity-80 truncate">
-                                {game.ageGroup} • {game.bracketName}
+                                {game.ageGroup}
                               </div>
-                              <div className="text-xs opacity-70 mt-1">
-                                {totalDuration} min ({gameSpanSlots} slots)
+                              <div className="text-xs opacity-70">
+                                {totalDuration}min
                               </div>
                               {gameConflicts.length > 0 && (
-                                <div className="flex items-center gap-1 mt-1">
+                                <div className="flex items-center gap-1">
                                   <AlertTriangle className="h-3 w-3" />
-                                  <span className="text-xs">{gameConflicts.length} conflict{gameConflicts.length > 1 ? 's' : ''}</span>
+                                  <span className="text-xs">{gameConflicts.length}</span>
                                 </div>
                               )}
                             </div>
@@ -603,7 +603,8 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
               <h4 className="font-medium text-white mb-2">How to Use</h4>
               <ul className="space-y-1 text-slate-300">
                 <li>• Drag games between time slots and fields</li>
-                <li>• Game boxes span full duration (halves + rest + padding)</li>
+                <li>• Game boxes span horizontally across time duration</li>
+                <li>• Times run horizontally, fields are vertical</li>
                 <li>• Use 5/10/15 minute intervals for precise timing</li>
                 <li>• Conflicts are highlighted in red/yellow</li>
                 <li>• Changes are saved automatically</li>
