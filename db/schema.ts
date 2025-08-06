@@ -333,6 +333,10 @@ export const eventBrackets = pgTable("event_brackets", {
   level: text("level").notNull().default("middle_flight"), // Flight level: top_flight, middle_flight, bottom_flight, other
   eligibility: text("eligibility"), // Optional eligibility requirements
   sortOrder: integer("sort_order").notNull().default(0), // For ordering brackets in the UI
+  // Configurable tournament format for game generation
+  tournamentFormat: text("tournament_format").notNull().default("round_robin"), // round_robin, round_robin_final, single_elimination, double_elimination, pool_play, etc.
+  // Tournament settings JSON for format-specific configuration
+  tournamentSettings: jsonb("tournament_settings"), // {maxGamesPerTeam: 4, playoffFormat: "single_elimination", poolSize: 4}
   createdAt: text("created_at").notNull().default(new Date().toISOString()),
   updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
 });
@@ -341,6 +345,14 @@ export const insertEventBracketSchema = createInsertSchema(eventBrackets, {
   name: z.string().min(1, "Bracket name is required"),
   description: z.string().optional(),
   sortOrder: z.number().int().optional(),
+  tournamentFormat: z.enum(["round_robin", "round_robin_final", "single_elimination", "double_elimination", "pool_play", "swiss_system"]).default("round_robin"),
+  tournamentSettings: z.object({
+    maxGamesPerTeam: z.number().int().min(1).max(10).optional(),
+    playoffFormat: z.enum(["single_elimination", "double_elimination", "none"]).optional(),
+    poolSize: z.number().int().min(2).max(8).optional(),
+    enableChampionship: z.boolean().optional(),
+    restPeriodMinutes: z.number().int().min(0).max(120).optional(),
+  }).optional(),
 });
 
 export const selectEventBracketSchema = createSelectSchema(eventBrackets);

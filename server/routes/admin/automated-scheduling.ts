@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { requirePermission } from '../../middleware/auth.js';
 import { db } from '../../../db/index.js';
 import { teams, events, eventGameFormats, complexes, fields, games, eventBrackets } from '../../../db/schema.js';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and, inArray, sql } from 'drizzle-orm';
 import { validateSchedulingSafety, validateFieldCapacity, validateNoDuplicateGames } from '../../middleware/scheduling-safety.js';
 
 const router = Router();
@@ -384,13 +384,14 @@ async function createAutomaticBrackets(eventId: number, flights: any[], teams: a
     
     if (teamCount <= 4) {
       // Single bracket for small flights
-      // Use round_robin_final for Nike Classic to generate 6 pool + 1 championship
-      const format = flight.name.includes('Classic') ? 'round_robin_final' : 'round_robin';
+      // Get format from database or default to round_robin
+      const format = await getBracketFormat(eventId, flight.name) || 'round_robin';
       const bracket = {
         id: `bracket_${flight.id}`,
         flightId: flight.id,
         name: `${flight.name} Bracket`,
         format: format,
+        tournamentFormat: format, // Use configured format
         teams: flight.teams,
         teamCount,
         estimatedGames: format === 'round_robin_final' ? 
@@ -404,13 +405,14 @@ async function createAutomaticBrackets(eventId: number, flights: any[], teams: a
       const bracketsNeeded = Math.ceil(teamCount / 4);
       for (let i = 0; i < bracketsNeeded; i++) {
         const bracketTeams = flight.teams.slice(i * 4, (i + 1) * 4);
-        // Use round_robin_final for Nike Classic to generate 6 pool + 1 championship
-        const format = flight.name.includes('Classic') ? 'round_robin_final' : 'round_robin';
+        // Get format from database or default to round_robin
+        const format = await getBracketFormat(eventId, flight.name) || 'round_robin';
         const bracket = {
           id: `bracket_${flight.id}_${i + 1}`,
           flightId: flight.id,
           name: `${flight.name} Bracket ${i + 1}`,
           format: format,
+          tournamentFormat: format, // Use configured format
           teams: bracketTeams,
           teamCount: bracketTeams.length,
           estimatedGames: format === 'round_robin_final' ? 
@@ -780,6 +782,24 @@ async function saveAutomatedWorkflowData(eventId: number, workflowData: any) {
   console.log(`- Games: ${workflowData.schedule.games.length}`);
   
   return true;
+}
+
+// Helper function to get bracket format from database
+async function getBracketFormat(eventId: number, flightName: string): Promise<string | null> {
+  try {
+    // Look for existing bracket with matching name pattern
+    const bracket = await db.query.eventBrackets.findFirst({
+      where: and(
+        eq(eventBrackets.eventId, eventId.toString()),
+        sql`${eventBrackets.name} ILIKE ${`%${flightName.split(' ')[0]}%`}` // Match on first part of flight name
+      )
+    });
+    
+    return bracket?.tournamentFormat || null;
+  } catch (error) {
+    console.error('Error fetching bracket format:', error);
+    return null;
+  }
 }
 
 export default router;
