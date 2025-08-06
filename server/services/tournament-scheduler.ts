@@ -396,9 +396,9 @@ export class TournamentScheduler {
     // Add final: 1st from A vs 1st from B
     games.push({
       id: `${bracket.bracketId}_final_${gameCounter}`,
-      homeTeamId: null,
+      homeTeamId: 0, // Placeholder
       homeTeamName: '1st Place Bracket A',
-      awayTeamId: null,
+      awayTeamId: 0, // Placeholder
       awayTeamName: '1st Place Bracket B',
       bracketId: bracket.bracketId,
       bracketName: bracket.bracketName,
@@ -422,9 +422,9 @@ export class TournamentScheduler {
   ): Game {
     return {
       id: `${bracket.bracketId}_final_${gameNumber}`,
-      homeTeamId: null, // Placeholder for 1st place team
+      homeTeamId: 0, // Placeholder for 1st place team
       homeTeamName: '1st Place',
-      awayTeamId: null, // Placeholder for 2nd place team  
+      awayTeamId: 0, // Placeholder for 2nd place team  
       awayTeamName: '2nd Place',
       bracketId: bracket.bracketId,
       bracketName: bracket.bracketName,
@@ -785,7 +785,7 @@ export class TournamentScheduler {
                   startTime: slot.startTime,
                   endTime: slot.endTime,
                   date: this.formatDate(currentDay + dayAttempts),
-                  timeSlotId
+                  timeSlotId: timeSlotId.toString()
                 };
                 
                 scheduledGames.push(scheduledGame);
@@ -807,9 +807,6 @@ export class TournamentScheduler {
                 console.log(`⚠️ Failed to reserve time slot: ${error.message}`);
                 continue;
               }
-            } else {
-              console.log(`⚠️ Critical conflicts detected for game ${game.gameNumber}, trying next slot`);
-              continue;
             } else {
               console.log(`⚠️ Critical conflicts detected for game ${game.gameNumber}, trying next slot`);
               continue;
