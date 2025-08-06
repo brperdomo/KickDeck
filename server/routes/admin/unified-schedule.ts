@@ -314,15 +314,28 @@ router.post('/events/:eventId/unified-schedule', requireAuth, async (req, res) =
     
     const savedGames: any[] = [];
     for (const game of scheduledGames) {
-      console.log(`[Database Save] Saving game: ${game.team1} vs ${game.team2} → Field ${game.field} (ID: ${game.fieldId})`);
+      console.log(`[Database Save] Saving game: ${game.team1} vs ${game.team2} → Field ${game.field} (ID: ${game.fieldId}) at ${game.startTime}`);
       
-      // Save the game to database with the correct field_id
+      // CRITICAL FIX: Create time slot FIRST, then link the game to it
+      const timeSlot = await db.insert(gameTimeSlots).values({
+        eventId: eventId, // Keep as string to match schema
+        fieldId: game.fieldId, // Use the intelligently distributed field ID
+        startTime: game.startTime,
+        endTime: game.endTime,
+        dayIndex: game.dayIndex, // Use the actual day index from scheduling
+        isAvailable: false
+      }).returning();
+      
+      console.log(`[Database Save] Created time slot ID ${timeSlot[0].id} for field ${game.fieldId} at ${game.startTime}`);
+
+      // Now save the game with proper field_id and time_slot_id linkage
       const savedGame = await db.insert(games).values({
         eventId: eventId, // Keep as string to match schema
         ageGroupId: game.ageGroupId,
         homeTeamId: game.team1Id,
         awayTeamId: game.team2Id,
         fieldId: game.fieldId, // CRITICAL: Use the distributed field ID, not a fallback
+        timeSlotId: timeSlot[0].id, // Link to the created time slot
         status: 'scheduled',
         round: 1,
         matchNumber: savedGames.length + 1,
@@ -330,16 +343,7 @@ router.post('/events/:eventId/unified-schedule', requireAuth, async (req, res) =
         breakTime: restPeriod
       }).returning();
 
-      // Create a time slot for this game using the correctly distributed field ID
-      await db.insert(gameTimeSlots).values({
-        eventId: eventId, // Keep as string to match schema
-        fieldId: game.fieldId, // Use the intelligently distributed field ID
-        startTime: game.startTime,
-        endTime: game.endTime,
-        dayIndex: game.dayIndex, // Use the actual day index from scheduling
-        isAvailable: false
-      });
-
+      console.log(`[Database Save] Saved game ID ${savedGame[0].id} linked to time slot ${timeSlot[0].id} on field ${game.fieldId}`);
       savedGames.push(savedGame[0]);
     }
 

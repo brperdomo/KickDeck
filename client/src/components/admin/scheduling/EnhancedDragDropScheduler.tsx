@@ -208,10 +208,36 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
         return gameTime === slot.startTime;
       });
 
-      // Coach conflict detection
+      // Coach conflict detection with improved coach data extraction
       const coachGames = new Map<string, Game[]>();
       slotGames.forEach(game => {
-        const coach = game.homeTeamCoach || game.awayTeamCoach || 'Unknown';
+        // Try to extract coach information from multiple sources
+        let coachInfo = game.homeTeamCoach || game.awayTeamCoach;
+        
+        // If no direct coach info, try to extract from team data
+        if (!coachInfo && (game as any).homeTeam?.coach) {
+          try {
+            const coachData = typeof (game as any).homeTeam.coach === 'string' 
+              ? JSON.parse((game as any).homeTeam.coach) 
+              : (game as any).homeTeam.coach;
+            coachInfo = coachData.name || coachData.headCoachName;
+          } catch (e) {
+            // Silent fail - use fallback
+          }
+        }
+        
+        if (!coachInfo && (game as any).awayTeam?.coach) {
+          try {
+            const coachData = typeof (game as any).awayTeam.coach === 'string' 
+              ? JSON.parse((game as any).awayTeam.coach) 
+              : (game as any).awayTeam.coach;
+            coachInfo = coachData.name || coachData.headCoachName;
+          } catch (e) {
+            // Silent fail - use fallback
+          }
+        }
+        
+        const coach = coachInfo || `Team-${game.homeTeamName}`;
         if (!coachGames.has(coach)) coachGames.set(coach, []);
         coachGames.get(coach)!.push(game);
       });
