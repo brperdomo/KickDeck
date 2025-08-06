@@ -260,7 +260,7 @@ router.post('/:eventId/bracket-creation/auto-assign', async (req, res) => {
       .from(teams)
       .innerJoin(eventAgeGroups, eq(teams.ageGroupId, eventAgeGroups.id))
       .where(and(
-        eq(eventAgeGroups.eventId, eventId),
+        eq(eventAgeGroups.eventId, parseInt(eventId)),
         eq(teams.status, 'approved'),
         isNull(teams.bracketId)
       ));
@@ -311,7 +311,7 @@ router.post('/:eventId/bracket-creation/auto-assign', async (req, res) => {
       }
 
       // Sort flights by priority: Elite, Premier, Classic
-      const flightPriority = { 'Elite': 0, 'Premier': 1, 'Classic': 2 };
+      const flightPriority: Record<string, number> = { 'Elite': 0, 'Premier': 1, 'Classic': 2 };
       availableFlights.sort((a, b) => {
         const aPriority = flightPriority[a.name] ?? 999;
         const bPriority = flightPriority[b.name] ?? 999;
@@ -364,7 +364,7 @@ router.post('/:eventId/bracket-creation/lock', async (req, res) => {
       .from(teams)
       .innerJoin(eventAgeGroups, eq(teams.ageGroupId, eventAgeGroups.id))
       .where(and(
-        eq(eventAgeGroups.eventId, eventId),
+        eq(eventAgeGroups.eventId, parseInt(eventId)),
         eq(teams.status, 'approved'),
         isNull(teams.bracketId)
       ));
@@ -387,7 +387,6 @@ router.post('/:eventId/bracket-creation/lock', async (req, res) => {
     await db
       .update(events)
       .set({ 
-        status: 'brackets_locked',
         updatedAt: new Date().toISOString()
       })
       .where(eq(events.id, eventId));
