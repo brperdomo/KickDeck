@@ -11,7 +11,6 @@ import {
 import { UnifiedScheduleSetup } from '@/components/admin/scheduling/UnifiedScheduleSetup';
 import { UnifiedTournamentControlCenter } from '@/components/admin/scheduling/UnifiedTournamentControlCenter';
 import { ScheduleViewer } from '@/components/admin/scheduling/ScheduleViewerFixed';
-import DragDropCalendarScheduler from '@/components/admin/scheduling/DragDropCalendarScheduler';
 import EnhancedDragDropScheduler from '@/components/admin/scheduling/EnhancedDragDropScheduler';
 import GameCardsGenerator from '@/components/admin/scheduling/GameCardsGenerator';
 import AgeGroupManagementPanel from '@/components/admin/scheduling/AgeGroupManagementPanel';

@@ -7,6 +7,8 @@ MatchPro AI is a comprehensive sports event management platform for tournament o
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
+- **Enhanced Drag-and-Drop Calendar Consolidation**: Removed legacy DragDropCalendarScheduler and consolidated on EnhancedDragDropScheduler with comprehensive console logging for debugging. All drag-and-drop operations now use the enhanced interface with detailed operation tracking.
+- **Comprehensive Reschedule Endpoint Integration**: Fixed missing backend reschedule API endpoint (/api/admin/games/:gameId/reschedule) with proper database synchronization for persistent game moves.
 - **Field Size Validation Implementation Complete**: Fixed all game generation workflows to properly assign fields based on Age Groups tab configuration. Games now automatically appear on size-appropriate fields (7v7→B1/B2, 9v9→A1/A2, 11v11→f1-f6).
 - **Cloud Run Deployment Optimization**: Enhanced server startup for faster deployment with non-blocking database operations and proper health check endpoints.
 
@@ -31,6 +33,7 @@ Preferred communication style: Simple, everyday language.
     - **Payment Processing**: Full Stripe integration supporting Connect accounts, two-step payments (Setup Intents), refunds, and intelligent payment recovery. Handles complex fee structures and fund routing.
     - **Email Communication**: Dynamic template system via SendGrid for automated notifications.
     - **Administrative Features**: Role-based access, team approval/rejection, payment tracking, audit trails, and comprehensive user/team management.
+    - **Enhanced Calendar Interface**: Single consolidated drag-and-drop scheduler (EnhancedDragDropScheduler) with comprehensive operation logging, optimistic updates, conflict detection, and persistent backend synchronization.
     - **Tournament-Wide Flight Management**: Unified flight category system where changes apply to all age groups simultaneously. Flight templates (Top Flight, Middle Flight, Bottom Flight) are configured once at tournament level and propagate automatically.
         - **Nike Flight Classifications**: Nike Classic = bottom-flight, Nike Premier = middle-flight, Nike Elite = top-flight
     - **Enhanced Bracket Creation Engine**: Comprehensive team assignment interface with manual assignment, seeding functionality, and proper flight name formatting (e.g., "U10 Boys Middle Flight").
@@ -51,7 +54,7 @@ Preferred communication style: Simple, everyday language.
         - **Fair Game Distribution**: Balanced scheduling.
         - **Prime Time Optimization**: Preference for optimal playing hours.
         - **Schedule Efficiency Reporting**: Metrics showing scheduling success rates and constraint compliance.
-        - Drag-and-drop calendar for fine-tuning with visual conflict detection.
+        - **Enhanced Drag-and-Drop Calendar**: Comprehensive calendar interface with visual conflict detection, optimistic updates, comprehensive logging, and proper backend persistence via reschedule API endpoint.
         - Comprehensive game card PDF generation with QR code reporting.
     - **Field Intelligence System**: Integration of real field data, flexible time slots, buffer management, and field blackout system. Includes enhanced conflict detection and advanced constraint validation.
     - **Constraint Validation System**: Coach conflict detection, team rest period validation, field size matching, and travel time constraints (complex distance matrix).
