@@ -449,12 +449,37 @@ export function GameFormatEngine({ eventId }: GameFormatEngineProps) {
   };
 
   const handleCustomFormatChange = (flightId: number, field: keyof GameFormat, value: string | number) => {
+    // Special handling for matchupTemplateId to set corresponding templateName
+    let additionalUpdates: Partial<GameFormat> = {};
+    
+    if (field === 'matchupTemplateId') {
+      const template = matchupTemplates.find(t => t.id === value);
+      if (template) {
+        // Map matchupTemplateId to templateName based on team count
+        switch (template.teamCount) {
+          case 4:
+            additionalUpdates.templateName = 'group_of_4';
+            break;
+          case 6:
+            additionalUpdates.templateName = 'group_of_6';
+            break;
+          case 8:
+            additionalUpdates.templateName = 'group_of_8';
+            break;
+          default:
+            additionalUpdates.templateName = `${template.teamCount}_team_custom`;
+        }
+        console.log(`[Frontend] Setting matchupTemplateId ${value} -> templateName: ${additionalUpdates.templateName}`);
+      }
+    }
+    
     setCustomFormats(prev => ({
       ...prev,
       [flightId]: {
         ...prev[flightId],
         [field]: value,
-        // Preserve existing templateName when customizing
+        ...additionalUpdates,
+        // Preserve existing templateName when customizing other fields
       }
     }));
     setSelectedTemplate(prev => ({ ...prev, [flightId]: 0 })); // Clear template selection
