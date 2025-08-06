@@ -1,0 +1,122 @@
+8Fetch finished loading: GET "<URL>".
+out-4.5.44.js:1 XHR finished loading: POST "https://m.stripe.com/6".
+(anonymous) @ out-4.5.44.js:1
+i @ out-4.5.44.js:1
+s @ out-4.5.44.js:1
+(anonymous) @ out-4.5.44.js:1
+(anonymous) @ out-4.5.44.js:1
+Promise.then
+S @ out-4.5.44.js:1
+y @ out-4.5.44.js:1
+E @ out-4.5.44.js:1
+e.onload @ inner.html:1
+script
+(anonymous) @ inner.html:1
+(anonymous) @ inner.html:1
+out-4.5.44.js:1 XHR finished loading: POST "https://m.stripe.com/6".
+(anonymous) @ out-4.5.44.js:1
+i @ out-4.5.44.js:1
+s @ out-4.5.44.js:1
+h @ out-4.5.44.js:1
+e @ inner.html:1
+MasterSchedulePage-D9e7Cmne.js:243 [Frontend] Fetching flight formats for event 1844329078
+MasterSchedulePage-D9e7Cmne.js:243 [Frontend] Received 72 flights, configured: 1, unconfigured: 71
+index-ELKLWUqF.js:41 [Violation] 'setTimeout' handler took 77ms
+shared-eb945d82d4278aab36557dfc2f95c57f.js:1 Fetch finished loading: POST "https://r.stripe.com/b".
+(anonymous) @ shared-eb945d82d4278aab36557dfc2f95c57f.js:1
+e @ shared-eb945d82d4278aab36557dfc2f95c57f.js:1
+c @ shared-eb945d82d4278aab36557dfc2f95c57f.js:1
+value @ shared-eb945d82d4278aab36557dfc2f95c57f.js:1
+value @ shared-eb945d82d4278aab36557dfc2f95c57f.js:1
+value @ shared-eb945d82d4278aab36557dfc2f95c57f.js:1
+value @ shared-eb945d82d4278aab36557dfc2f95c57f.js:1
+value @ shared-eb945d82d4278aab36557dfc2f95c57f.js:1
+(anonymous) @ shared-eb945d82d4278aab36557dfc2f95c57f.js:1
+setTimeout
+value @ shared-eb945d82d4278aab36557dfc2f95c57f.js:1
+value @ shared-eb945d82d4278aab36557dfc2f95c57f.js:1
+value @ shared-eb945d82d4278aab36557dfc2f95c57f.js:1
+(anonymous) @ shared-eb945d82d4278aab36557dfc2f95c57f.js:1
+value @ shared-eb945d82d4278aab36557dfc2f95c57f.js:1
+log @ shared-eb945d82d4278aab36557dfc2f95c57f.js:1
+log @ controller-with-preconnect-eb3ebb678abb15a7a725cab7f1f80af3.js:1
+value @ controller-with-preconnect-eb3ebb678abb15a7a725cab7f1f80af3.js:1
+value @ controller-with-preconnect-eb3ebb678abb15a7a725cab7f1f80af3.js:1
+(anonymous) @ controller-with-preconnect-eb3ebb678abb15a7a725cab7f1f80af3.js:1
+[Violation] 'click' handler took 1200ms
+MasterSchedulePage-D9e7Cmne.js:243 Fetch finished loading: DELETE "https://app.matchpro.ai/api/admin/events/1844329078/flights/591/format".
+mutationFn @ MasterSchedulePage-D9e7Cmne.js:243
+fn @ index-ELKLWUqF.js:41
+f @ index-ELKLWUqF.js:41
+start @ index-ELKLWUqF.js:41
+execute @ index-ELKLWUqF.js:41
+await in execute
+mutate @ index-ELKLWUqF.js:41
+(anonymous) @ index-ELKLWUqF.js:41
+onClick @ MasterSchedulePage-D9e7Cmne.js:243
+_ue @ index-ELKLWUqF.js:38
+Due @ index-ELKLWUqF.js:38
+Iue @ index-ELKLWUqF.js:38
+pM @ index-ELKLWUqF.js:38
+Xq @ index-ELKLWUqF.js:38
+(anonymous) @ index-ELKLWUqF.js:38
+NO @ index-ELKLWUqF.js:41
+bq @ index-ELKLWUqF.js:38
+E2 @ index-ELKLWUqF.js:38
+X4 @ index-ELKLWUqF.js:38
+Xue @ index-ELKLWUqF.js:38
+MasterSchedulePage-D9e7Cmne.js:243 [Frontend] Fetching flight formats for event 1844329078
+MasterSchedulePage-D9e7Cmne.js:243 [Frontend] Received 72 flights, configured: 0, unconfigured: 72
+MasterSchedulePage-D9e7Cmne.js:243 Saving format for flight: 591 applying to brackets: [591] with data: {gameLength: 35, fieldSize: '9v9', bufferTime: 10, restPeriod: 90, maxGamesPerDay: 2, …}
+MasterSchedulePage-D9e7Cmne.js:243 Fetch finished loading: POST "https://app.matchpro.ai/api/admin/events/1844329078/flights/591/format".
+mutationFn @ MasterSchedulePage-D9e7Cmne.js:243
+fn @ index-ELKLWUqF.js:41
+f @ index-ELKLWUqF.js:41
+start @ index-ELKLWUqF.js:41
+execute @ index-ELKLWUqF.js:41
+await in execute
+mutate @ index-ELKLWUqF.js:41
+(anonymous) @ index-ELKLWUqF.js:41
+O @ MasterSchedulePage-D9e7Cmne.js:243
+onClick @ MasterSchedulePage-D9e7Cmne.js:243
+_ue @ index-ELKLWUqF.js:38
+Due @ index-ELKLWUqF.js:38
+Iue @ index-ELKLWUqF.js:38
+pM @ index-ELKLWUqF.js:38
+Xq @ index-ELKLWUqF.js:38
+(anonymous) @ index-ELKLWUqF.js:38
+NO @ index-ELKLWUqF.js:41
+bq @ index-ELKLWUqF.js:38
+E2 @ index-ELKLWUqF.js:38
+X4 @ index-ELKLWUqF.js:38
+Xue @ index-ELKLWUqF.js:38
+MasterSchedulePage-D9e7Cmne.js:243 Format saved successfully: {success: true, id: 34}
+MasterSchedulePage-D9e7Cmne.js:243 [Frontend] Invalidating and refetching flight-formats for event 1844329078
+MasterSchedulePage-D9e7Cmne.js:243 [Frontend] Fetching flight formats for event 1844329078
+MasterSchedulePage-D9e7Cmne.js:243 [Frontend] Fetching flight formats for event 1844329078
+2MasterSchedulePage-D9e7Cmne.js:243 [Frontend] Received 72 flights, configured: 1, unconfigured: 71
+MasterSchedulePage-D9e7Cmne.js:243 [BracketCreationEngine] Fetching bracket data for event: 1844329078
+MasterSchedulePage-D9e7Cmne.js:243 [BracketCreationEngine] Received flights: 76
+chunk-CVIZYB43.js:3 [Violation] 'setTimeout' handler took 50ms
+chunk-CVIZYB43.js:3 [Violation] 'setTimeout' handler took 117ms
+injected.js:5 [USO] Button detection aborting due to timeout.
+index-ELKLWUqF.js:49 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap
+p0 @ index-ELKLWUqF.js:49
+(anonymous) @ index-ELKLWUqF.js:49
+k1 @ index-ELKLWUqF.js:41
+Zh @ index-ELKLWUqF.js:41
+hhe @ index-ELKLWUqF.js:41
+Eu @ index-ELKLWUqF.js:41
+qM @ index-ELKLWUqF.js:41
+au @ index-ELKLWUqF.js:39
+(anonymous) @ index-ELKLWUqF.js:41Understand this warning
+index-ELKLWUqF.js:49 OTS parsing error: invalid sfntVersion: 791289955
+p0 @ index-ELKLWUqF.js:49
+(anonymous) @ index-ELKLWUqF.js:49
+k1 @ index-ELKLWUqF.js:41
+Zh @ index-ELKLWUqF.js:41
+hhe @ index-ELKLWUqF.js:41
+Eu @ index-ELKLWUqF.js:41
+qM @ index-ELKLWUqF.js:41
+au @ index-ELKLWUqF.js:39
+(anonymous) @ index-ELKLWUqF.js:41Understand this warning

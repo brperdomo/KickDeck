@@ -382,6 +382,12 @@ router.post('/events/:eventId/flights/:flightId/format', isAdmin, async (req, re
       matchupTemplateId: format.matchupTemplateId || null
     };
 
+    console.log(`[SAVE FORMAT DEBUG] Flight ${flightId}:`, {
+      templateName: format.templateName,
+      matchupTemplateId: format.matchupTemplateId,
+      formatData
+    });
+
     if (gameFormat) {
       // Update existing format
       await db.update(gameFormats)
