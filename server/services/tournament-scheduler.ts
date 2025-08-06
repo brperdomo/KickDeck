@@ -176,7 +176,10 @@ export class TournamentScheduler {
     
     console.log(`🎯 Generating games for ${teams.length} teams in ${bracket.format} format`);
     
-    switch (bracket.format) {
+    // Use the bracket's configured tournament format
+    const format = bracket.tournamentFormat || bracket.format || 'round_robin';
+    
+    switch (format) {
       case 'round_robin':
         games.push(...this.generateRoundRobinGames(bracket, teams, gameCounter));
         break;

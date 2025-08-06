@@ -7,11 +7,11 @@ MatchPro AI is a comprehensive sports event management platform for tournament o
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
-- **Championship Game Creation**: Added missing 7th championship game for Nike Classic bracket format (6 pool games + 1 final between 1st and 2nd place teams).
+- **Configurable Tournament Format System**: Eliminated hardcoded bracket rules and implemented database-driven tournament format configuration. Tournament directors can now assign any format (round_robin, round_robin_final, single_elimination, etc.) to any bracket, and the game generator creates games accordingly.
+- **Enhanced Bracket Schema**: Added tournament_format and tournament_settings columns to event_brackets table with comprehensive validation schema supporting multiple tournament types and configurations.
+- **Dynamic Format Detection**: Updated automated scheduling system to query database for bracket formats instead of using hardcoded rules based on names.
+- **Nike Classic Format Migration**: Updated all existing Nike Classic brackets to use 'round_robin_final' format, ensuring 6 pool games + 1 championship final generation.
 - **Schedule API Persistence Fix**: Corrected database schema type mismatches in schedule-calendar endpoint to properly load and display games with drag-and-drop persistence.
-- **Enhanced Drag-and-Drop Calendar Consolidation**: Removed legacy DragDropCalendarScheduler and consolidated on EnhancedDragDropScheduler with comprehensive console logging for debugging. All drag-and-drop operations now use the enhanced interface with detailed operation tracking.
-- **Comprehensive Reschedule Endpoint Integration**: Fixed missing backend reschedule API endpoint (/api/admin/games/:gameId/reschedule) with proper database synchronization for persistent game moves.
-- **Field Size Validation Implementation Complete**: Fixed all game generation workflows to properly assign fields based on Age Groups tab configuration. Games now automatically appear on size-appropriate fields (7v7→B1/B2, 9v9→A1/A2, 11v11→f1-f6).
 
 ## System Architecture
 
