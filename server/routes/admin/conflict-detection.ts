@@ -144,7 +144,7 @@ async function checkFieldConflicts(games: any[], conflicts: ConflictCheck[]) {
   }
 
   // Check for overlaps within each field
-  for (const [fieldId, fieldGames] of gamesByField) {
+  for (const [fieldId, fieldGames] of Array.from(gamesByField.entries())) {
     for (let i = 0; i < fieldGames.length; i++) {
       for (let j = i + 1; j < fieldGames.length; j++) {
         const game1 = fieldGames[i];
@@ -185,8 +185,8 @@ async function checkTeamRestConflicts(games: any[], conflicts: ConflictCheck[]) 
   }
 
   // Check rest periods for each team
-  for (const [teamId, teamGameList] of teamGames) {
-    const sortedGames = teamGameList.sort((a, b) => 
+  for (const [teamId, teamGameList] of Array.from(teamGames.entries())) {
+    const sortedGames = teamGameList.sort((a: any, b: any) => 
       new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime()
     );
 
@@ -225,10 +225,21 @@ async function checkCoachConflicts(games: any[], conflicts: ConflictCheck[], eve
     where: eq(teams.eventId, eventId)
   });
 
-  // Group teams by coach email (assuming coach conflicts based on same contact)
+  // Group teams by coach email (extract from JSON coach field)
   for (const team of eventTeams) {
-    const coachKey = team.coachEmail || team.contactEmail;
-    if (coachKey) {
+    let coachKey = null;
+    
+    // Extract coach email from JSON coach field
+    if (team.coach) {
+      try {
+        const coachData = typeof team.coach === 'string' ? JSON.parse(team.coach) : team.coach;
+        coachKey = coachData.email || coachData.headCoachEmail;
+      } catch (e) {
+        console.warn('Failed to parse coach data for team:', team.name, e);
+      }
+    }
+    
+    if (coachKey && coachKey.includes('@')) { // Basic email validation
       if (!teamsByContact.has(coachKey)) {
         teamsByContact.set(coachKey, []);
       }
@@ -237,9 +248,9 @@ async function checkCoachConflicts(games: any[], conflicts: ConflictCheck[], eve
   }
 
   // Check for simultaneous games with same coach
-  for (const [coachEmail, coachTeams] of teamsByContact) {
+  for (const [coachEmail, coachTeams] of Array.from(teamsByContact.entries())) {
     if (coachTeams.length > 1) {
-      const coachTeamIds = coachTeams.map(t => t.id);
+      const coachTeamIds = coachTeams.map((t: any) => t.id);
       
       for (const game of games) {
         if (!game.scheduledTime) continue;
@@ -287,7 +298,7 @@ async function checkRefereeConflicts(games: any[], conflicts: ConflictCheck[]) {
     }
   }
 
-  for (const [refereeId, refGames] of refereeGames) {
+  for (const [refereeId, refGames] of Array.from(refereeGames.entries())) {
     for (let i = 0; i < refGames.length; i++) {
       for (let j = i + 1; j < refGames.length; j++) {
         const game1 = refGames[i];
