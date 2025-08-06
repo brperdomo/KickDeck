@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Calendar, AlertTriangle, MoreVertical, CalendarDays } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Game {
@@ -60,6 +62,13 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const gridRef = useRef<HTMLDivElement>(null);
+  
+  // Available tournament days (this should come from event data)
+  const availableDays = [
+    { value: '2025-08-16', label: 'Saturday, Aug 16' },
+    { value: '2025-08-17', label: 'Sunday, Aug 17' },
+    { value: '2025-08-18', label: 'Monday, Aug 18' }
+  ];
 
   // Fetch games and fields data
   const { data: scheduleData, isLoading, error } = useQuery({
@@ -294,6 +303,39 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
     }
   });
 
+  // Function to move game to different day
+  const moveGameToDay = useCallback(async (game: Game, newDate: string) => {
+    try {
+      // Calculate new start time for the selected day at 8:00 AM
+      const newStartTime = `${newDate}T08:00:00.000Z`;
+      
+      // Find the first available field for this game
+      const firstAvailableField = fields.find(f => f.isOpen)?.id || game.fieldId;
+      
+      // Call the reschedule API with new date
+      updateGameMutation.mutate({
+        gameId: game.id,
+        fieldId: firstAvailableField,
+        startTime: newStartTime
+      });
+      
+      toast({
+        title: "Game Moved",
+        description: `${game.homeTeamName} vs ${game.awayTeamName} moved to ${availableDays.find(d => d.value === newDate)?.label}`
+      });
+      
+      // Switch to the new date to show the moved game
+      setSelectedDate(newDate);
+      
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to move game to new day",
+        variant: "destructive"
+      });
+    }
+  }, [fields, updateGameMutation, toast, availableDays, setSelectedDate]);
+
   // Handle drag start
   const handleDragStart = (e: React.DragEvent, game: Game) => {
     setDraggedGame(game);
@@ -402,8 +444,11 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="2025-08-16">Saturday, Aug 16</SelectItem>
-                  <SelectItem value="2025-08-17">Sunday, Aug 17</SelectItem>
+                  {availableDays.map((day) => (
+                    <SelectItem key={day.value} value={day.value}>
+                      {day.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -560,21 +605,56 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                               }}
                               title={`${game.homeTeamName} vs ${game.awayTeamName}\nAge Group: ${game.ageGroup}\nTotal Duration: ${totalDuration} minutes (${gameSpanSlots} slots)\nDrag to move`}
                             >
-                              <div className="font-medium truncate text-xs">
-                                {game.homeTeamName} vs {game.awayTeamName}
-                              </div>
-                              <div className="text-xs opacity-80 truncate">
-                                {game.ageGroup}
-                              </div>
-                              <div className="text-xs opacity-70">
-                                {totalDuration}min
-                              </div>
-                              {gameConflicts.length > 0 && (
-                                <div className="flex items-center gap-1">
-                                  <AlertTriangle className="h-3 w-3" />
-                                  <span className="text-xs">{gameConflicts.length}</span>
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <div className="font-medium truncate text-xs">
+                                    {game.homeTeamName} vs {game.awayTeamName}
+                                  </div>
+                                  <div className="text-xs opacity-80 truncate">
+                                    {game.ageGroup}
+                                  </div>
+                                  <div className="text-xs opacity-70">
+                                    {totalDuration}min
+                                  </div>
+                                  {gameConflicts.length > 0 && (
+                                    <div className="flex items-center gap-1">
+                                      <AlertTriangle className="h-3 w-3" />
+                                      <span className="text-xs">{gameConflicts.length}</span>
+                                    </div>
+                                  )}
                                 </div>
-                              )}
+                                
+                                {/* Day Change Dropdown */}
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0 text-white/70 hover:text-white hover:bg-white/20"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <CalendarDays className="h-3 w-3" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-48">
+                                    {availableDays
+                                      .filter(day => day.value !== selectedDate)
+                                      .map((day) => (
+                                        <DropdownMenuItem
+                                          key={day.value}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            moveGameToDay(game, day.value);
+                                          }}
+                                          className="cursor-pointer"
+                                        >
+                                          <CalendarDays className="h-4 w-4 mr-2" />
+                                          Move to {day.label}
+                                        </DropdownMenuItem>
+                                      ))}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
                             </div>
                           );
                         })}
