@@ -73,6 +73,23 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
     refetchOnWindowFocus: true
   });
 
+  // Calculate total game duration including halves, rest, and transition padding
+  const calculateTotalGameDuration = useCallback((game: Game) => {
+    // Default game structure: 2 halves + rest + transition padding
+    const gameLength = game.duration || 70; // Default 70 minutes (2 x 35 min halves)
+    const restPeriod = 5; // 5 minute halftime
+    const transitionPadding = 10; // 10 minutes for team movement to/from field
+    
+    return gameLength + restPeriod + transitionPadding;
+  }, []);
+
+  // Calculate how many time slot intervals a game should span
+  const calculateGameSpanSlots = useCallback((game: Game) => {
+    const totalDuration = calculateTotalGameDuration(game);
+    const slotsNeeded = Math.ceil(totalDuration / timeInterval);
+    return Math.max(1, slotsNeeded); // At least 1 slot
+  }, [calculateTotalGameDuration, timeInterval]);
+
   // Generate time slots with fine-grained intervals
   const generateTimeSlots = useCallback((): TimeSlot[] => {
     const slots: TimeSlot[] = [];
@@ -110,7 +127,44 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
     return minutes === 0 ? `${displayHours} ${period}` : `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
-  // Get games for a specific field and time slot
+  // Check if a time slot is occupied by an extending game from an earlier slot
+  const isSlotOccupiedByExtendingGame = useCallback((fieldId: number, timeSlot: TimeSlot): boolean => {
+    if (!scheduleData?.games) return false;
+
+    const timeSlots = generateTimeSlots();
+    const currentSlotIndex = timeSlots.findIndex(s => s.id === timeSlot.id);
+    
+    // Check all previous time slots for games that might extend into this slot
+    for (let i = 0; i < currentSlotIndex; i++) {
+      const previousSlot = timeSlots[i];
+      const gamesInPreviousSlot = scheduleData.games.filter((game: Game) => {
+        const position = gamePositions.get(game.id);
+        const effectiveFieldId = position?.fieldId ?? game.fieldId;
+        const effectiveStartTime = position?.startTime ?? game.startTime;
+
+        if (effectiveFieldId !== fieldId) return false;
+
+        const gameDate = effectiveStartTime?.split('T')[0] || effectiveStartTime?.split(' ')[0];
+        const gameTime = effectiveStartTime?.split('T')[1]?.split(':').slice(0, 2).join(':') || 
+                        effectiveStartTime?.split(' ')[1]?.split(':').slice(0, 2).join(':');
+
+        return gameDate === selectedDate && gameTime === previousSlot.startTime;
+      });
+
+      // Check if any game from previous slot extends into current slot
+      for (const game of gamesInPreviousSlot) {
+        const gameSpanSlots = calculateGameSpanSlots(game);
+        const slotsFromStart = currentSlotIndex - i;
+        if (slotsFromStart < gameSpanSlots) {
+          return true; // This slot is occupied by an extending game
+        }
+      }
+    }
+
+    return false;
+  }, [scheduleData?.games, selectedDate, gamePositions, generateTimeSlots, calculateGameSpanSlots]);
+
+  // Get games for a specific field and time slot (only games that START in this slot)
   const getGamesForSlot = useCallback((fieldId: number, timeSlot: TimeSlot): Game[] => {
     if (!scheduleData?.games) return [];
 
@@ -450,6 +504,7 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                   {/* Field Columns */}
                   {fields.map((field: Field) => {
                     const games = getGamesForSlot(field.id, slot);
+                    const isOccupiedByExtendingGame = isSlotOccupiedByExtendingGame(field.id, slot);
                     const hasConflict = conflicts.some(c => 
                       games.some(game => c.gameIds.includes(game.id))
                     );
@@ -460,9 +515,10 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                         key={`${field.id}-${slot.id}`}
                         className={`
                           min-h-[60px] p-1 border border-slate-600 transition-colors relative
-                          ${games.length > 0 ? 'bg-blue-900/30' : 'bg-slate-800'}
+                          ${games.length > 0 ? 'bg-blue-900/30' : isOccupiedByExtendingGame ? 'bg-blue-900/20' : 'bg-slate-800'}
                           ${hasConflict ? 'bg-red-900/30 border-red-500' : ''}
                           ${isDragOver ? 'bg-green-900/30 border-green-500 border-2' : ''}
+                          ${isOccupiedByExtendingGame ? 'border-blue-400/50' : ''}
                           hover:bg-slate-700/50
                         `}
                         onDragOver={(e) => handleDragOver(e, field.id, slot.startTime)}
@@ -472,6 +528,12 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                         {games.map((game) => {
                           const isBeingDragged = draggedGame?.id === game.id;
                           const gameConflicts = conflicts.filter(c => c.gameIds.includes(game.id));
+                          const gameSpanSlots = calculateGameSpanSlots(game);
+                          const totalDuration = calculateTotalGameDuration(game);
+                          
+                          // Calculate the height to span multiple time slots
+                          const slotHeight = 60; // Base height of each time slot in pixels
+                          const gameHeight = (gameSpanSlots * slotHeight) - 4; // Subtract 4px for gap
                           
                           return (
                             <div
@@ -480,7 +542,7 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                               onDragStart={(e) => handleDragStart(e, game)}
                               onDragEnd={handleDragEnd}
                               className={`
-                                p-2 rounded cursor-move text-xs transition-all
+                                p-2 rounded cursor-move text-xs transition-all absolute z-10
                                 ${isBeingDragged ? 'opacity-50 scale-95' : 'opacity-100'}
                                 ${gameConflicts.length > 0 
                                   ? gameConflicts.some(c => c.severity === 'error') 
@@ -490,13 +552,22 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                                 }
                                 hover:scale-105 hover:shadow-lg
                               `}
-                              title={`${game.homeTeamName} vs ${game.awayTeamName}\nAge Group: ${game.ageGroup}\nDrag to move`}
+                              style={{
+                                height: `${gameHeight}px`,
+                                width: 'calc(100% - 8px)',
+                                top: '2px',
+                                left: '2px'
+                              }}
+                              title={`${game.homeTeamName} vs ${game.awayTeamName}\nAge Group: ${game.ageGroup}\nTotal Duration: ${totalDuration} minutes (${gameSpanSlots} slots)\nDrag to move`}
                             >
                               <div className="font-medium truncate">
                                 {game.homeTeamName} vs {game.awayTeamName}
                               </div>
                               <div className="text-xs opacity-80 truncate">
                                 {game.ageGroup} • {game.bracketName}
+                              </div>
+                              <div className="text-xs opacity-70 mt-1">
+                                {totalDuration} min ({gameSpanSlots} slots)
                               </div>
                               {gameConflicts.length > 0 && (
                                 <div className="flex items-center gap-1 mt-1">
@@ -532,6 +603,7 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
               <h4 className="font-medium text-white mb-2">How to Use</h4>
               <ul className="space-y-1 text-slate-300">
                 <li>• Drag games between time slots and fields</li>
+                <li>• Game boxes span full duration (halves + rest + padding)</li>
                 <li>• Use 5/10/15 minute intervals for precise timing</li>
                 <li>• Conflicts are highlighted in red/yellow</li>
                 <li>• Changes are saved automatically</li>
