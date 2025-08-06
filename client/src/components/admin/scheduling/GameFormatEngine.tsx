@@ -241,11 +241,30 @@ export function GameFormatEngine({ eventId }: GameFormatEngineProps) {
     }
   });
 
-  // Update active tab when flight data changes
+  // Auto-initialize custom formats for unconfigured flights and update active tab
   useEffect(() => {
     if (flightData) {
       const configured = flightData.filter(f => f.currentFormat);
       const unconfigured = flightData.filter(f => !f.currentFormat);
+      
+      // Auto-initialize custom formats for unconfigured flights
+      const newCustomFormats: { [flightId: number]: GameFormat } = {};
+      unconfigured.forEach(flight => {
+        if (!customFormats[flight.flightId]) {
+          const defaultFieldSize = flight.ageGroupFieldSize || '9v9';
+          newCustomFormats[flight.flightId] = {
+            gameLength: 35,
+            fieldSize: defaultFieldSize,
+            bufferTime: 10,
+            restPeriod: 90,
+            maxGamesPerDay: 3
+          };
+        }
+      });
+      
+      if (Object.keys(newCustomFormats).length > 0) {
+        setCustomFormats(prev => ({ ...prev, ...newCustomFormats }));
+      }
       
       // If we have configured flights and no unconfigured, show configured tab
       if (configured.length > 0 && unconfigured.length === 0) {
@@ -583,84 +602,9 @@ export function GameFormatEngine({ eventId }: GameFormatEngineProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
-                    {/* Tournament Format Preview */}
-                    <div className="space-y-3">
-                      <Label className="text-slate-200">Recommended Tournament Format</Label>
-                      <Card className="border-blue-600/30 bg-blue-900/20">
-                        <CardContent className="p-4">
-                          {(() => {
-                            const structure = generateBracketStructure(flight.teamCount);
-                            return (
-                              <div className="space-y-3">
-                                <div className="flex items-start justify-between">
-                                  <div>
-                                    <h4 className="font-semibold text-blue-200">{structure.type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h4>
-                                    <p className="text-sm text-blue-300">{structure.description}</p>
-                                  </div>
-                                  <Badge variant="outline" className="border-blue-400 text-blue-200">
-                                    {structure.gameDistribution.total} games total
-                                  </Badge>
-                                </div>
-                                
-                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                  <div className="flex justify-between">
-                                    <span className="text-slate-300">Saturday:</span>
-                                    <span className="text-white">{structure.gameDistribution.saturday} games</span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-slate-300">Sunday:</span>
-                                    <span className="text-white">{structure.gameDistribution.sunday} games</span>
-                                  </div>
-                                </div>
-
-                                {structure.flightConfiguration && (
-                                  <div className="border-t border-blue-600/30 pt-3">
-                                    <div className="text-sm text-blue-200">
-                                      Flight A: {structure.flightConfiguration.flightA} teams • 
-                                      Flight B: {structure.flightConfiguration.flightB} teams
-                                    </div>
-                                  </div>
-                                )}
-                                
-                                <Button 
-                                  onClick={() => applyRecommendedFormat(flight.flightId, structure)}
-                                  className="w-full bg-blue-600 hover:bg-blue-700"
-                                >
-                                  Apply Recommended Format
-                                </Button>
-                              </div>
-                            );
-                          })()}
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    {/* Template Selection */}
-                    <div className="space-y-3">
-                      <Label className="text-slate-200">Quick Start Templates</Label>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        {templates?.map((template) => (
-                          <Button
-                            key={template.id}
-                            variant={selectedTemplate[flight.flightId] === template.id ? "default" : "outline"}
-                            className="justify-start h-auto p-4"
-                            onClick={() => handleTemplateApply(flight.flightId, template.id)}
-                          >
-                            <div className="text-left">
-                              <div className="font-semibold">{template.name}</div>
-                              <div className="text-xs text-slate-400">
-                                {template.fieldSize} • {template.gameLength}min • {template.maxGamesPerDay} games/day
-                              </div>
-                            </div>
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Custom Configuration */}
-                    {(customFormats[flight.flightId] || editingFlight === flight.flightId) && (
-                      <div className="border border-slate-600 rounded-lg p-4 space-y-4 bg-slate-700/50">
-                        <h4 className="font-semibold text-white">Custom Configuration</h4>
+                    {/* Custom Configuration - Always Visible */}
+                    <div className="border border-slate-600 rounded-lg p-4 space-y-4 bg-slate-700/50">
+                      <h4 className="font-semibold text-white">Game Format Configuration</h4>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {/* Game Length */}
@@ -807,32 +751,7 @@ export function GameFormatEngine({ eventId }: GameFormatEngineProps) {
                             Cancel
                           </Button>
                         </div>
-                      </div>
-                    )}
-
-                    {!customFormats[flight.flightId] && editingFlight !== flight.flightId && (
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setEditingFlight(flight.flightId);
-                          // Initialize custom format with age group defaults
-                          const defaultFieldSize = flight.ageGroupFieldSize || '9v9';
-                          setCustomFormats(prev => ({
-                            ...prev,
-                            [flight.flightId]: {
-                              gameLength: 35,
-                              fieldSize: defaultFieldSize, // Use age group field size as default
-                              bufferTime: 10,
-                              restPeriod: 90,
-                              maxGamesPerDay: 3
-                            }
-                          }));
-                        }}
-                      >
-                        <Settings className="h-4 w-4 mr-2" />
-                        Custom Configuration
-                      </Button>
-                    )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
