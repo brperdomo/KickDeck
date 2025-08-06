@@ -300,7 +300,7 @@ router.post('/:eventId/generate-complete-schedule', isAdmin, async (req, res) =>
       .from(fields)
       .where(eq(fields.isOpen, true));
 
-    // Get available time slots for this event
+    // Get available time slots for this event (exclude already assigned ones)
     const availableTimeSlots = await db
       .select({
         id: gameTimeSlots.id,
@@ -314,7 +314,8 @@ router.post('/:eventId/generate-complete-schedule', isAdmin, async (req, res) =>
       .leftJoin(fields, eq(gameTimeSlots.fieldId, fields.id))
       .where(and(
         eq(gameTimeSlots.eventId, eventId.toString()),
-        eq(gameTimeSlots.isAvailable, true)
+        eq(gameTimeSlots.isAvailable, true),
+        sql`${gameTimeSlots.id} NOT IN (SELECT time_slot_id FROM games WHERE event_id = ${eventId.toString()} AND time_slot_id IS NOT NULL)`
       ))
       .orderBy(gameTimeSlots.startTime);
 

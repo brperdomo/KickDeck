@@ -1,0 +1,990 @@
+Google Maps JavaScript API has been loaded directly without loading=async. This can result in suboptimal performance. For best-practice loading patterns please see https://goo.gle/js-api-loading
+jda @ js?libraries=places&v=beta&callback=Function.prototype:1377Understand this warning
+chunk-FLCULYKI.js:31 orchestration: Initializing config store with state Object
+chunk-FLCULYKI.js:31 orchestration: Initializing feature flag store with state Object
+index-BqXeKt2T.js:847 Google Maps API key length: 0 characters
+index-BqXeKt2T.js:847 Mapbox API key length: 93 characters
+index-BqXeKt2T.js:847 Google Maps API already loaded
+chunk-FLCULYKI.js:31 orchestration: Initializing user store with state Object
+chunk-FLCULYKI.js:31 orchestration: Updating combined state Object
+index-BqXeKt2T.js:672 Current route location (Wouter): /admin/events/1844329078/master-schedule
+index-BqXeKt2T.js:672 Current URL: https://app.matchpro.ai/admin/events/1844329078/master-schedule
+index-BqXeKt2T.js:672 Current pathname: /admin/events/1844329078/master-schedule
+index-BqXeKt2T.js:672 Current search: 
+index-BqXeKt2T.js:672 Fetching user with emulation token: not present
+index-BqXeKt2T.js:672 User data fetched: Object
+master-schedule:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swapUnderstand this warning
+master-schedule:1 OTS parsing error: invalid sfntVersion: 791289955Understand this warning
+UnifiedTournamentControlCenter-DYfab0LL.js:1 Flight configs loaded: 72 flights
+UnifiedTournamentControlCenter-DYfab0LL.js:1 Configured flights: 10 of 72
+ScheduleViewerFixed-D8fZY5pM.js:6 Schedule API Response: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 1 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 1 API data: {
+  "id": 6992,
+  "homeTeam": "Empire Surf B2013/2014 Academy-1",
+  "awayTeam": "Empire surf N. B2013 A",
+  "homeTeamClub": "Empire Surf",
+  "awayTeamClub": "Empire Surf",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 1 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 2 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 2 API data: {
+  "id": 6991,
+  "homeTeam": "Vista Storm B2013 Elite",
+  "awayTeam": "Empire surf N. B2013 A",
+  "homeTeamClub": "Vista Storm",
+  "awayTeamClub": "Empire Surf",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 2 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 3 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 3 API data: {
+  "id": 6990,
+  "homeTeam": "Vista Storm B2013 Elite",
+  "awayTeam": "Empire Surf B2013/2014 Academy-1",
+  "homeTeamClub": "Vista Storm",
+  "awayTeamClub": "Empire Surf",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 3 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 4 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 4 API data: {
+  "id": 6989,
+  "homeTeam": "Temecula FC B2013",
+  "awayTeam": "Empire surf N. B2013 A",
+  "homeTeamClub": "Temecula FC",
+  "awayTeamClub": "Empire Surf",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 4 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 5 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 5 API data: {
+  "id": 6988,
+  "homeTeam": "Temecula FC B2013",
+  "awayTeam": "Empire Surf B2013/2014 Academy-1",
+  "homeTeamClub": "Temecula FC",
+  "awayTeamClub": "Empire Surf",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 5 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 6 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 6 API data: {
+  "id": 6987,
+  "homeTeam": "Temecula FC B2013",
+  "awayTeam": "Vista Storm B2013 Elite",
+  "homeTeamClub": "Temecula FC",
+  "awayTeamClub": "Vista Storm",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 6 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 7 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 7 API data: {
+  "id": 6986,
+  "homeTeam": "City SC Southwest B2013 LE Premier",
+  "awayTeam": "Empire surf N. B2013 A",
+  "homeTeamClub": "City SC Southwest",
+  "awayTeamClub": "Empire Surf",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 7 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 8 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 8 API data: {
+  "id": 6985,
+  "homeTeam": "City SC Southwest B2013 LE Premier",
+  "awayTeam": "Empire Surf B2013/2014 Academy-1",
+  "homeTeamClub": "City SC Southwest",
+  "awayTeamClub": "Empire Surf",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 8 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 9 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 9 API data: {
+  "id": 6984,
+  "homeTeam": "City SC Southwest B2013 LE Premier",
+  "awayTeam": "Vista Storm B2013 Elite",
+  "homeTeamClub": "City SC Southwest",
+  "awayTeamClub": "Vista Storm",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 9 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 10 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 10 API data: {
+  "id": 6983,
+  "homeTeam": "City SC Southwest B2013 LE Premier",
+  "awayTeam": "Temecula FC B2013",
+  "homeTeamClub": "City SC Southwest",
+  "awayTeamClub": "Temecula FC",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 10 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 11 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 11 API data: {
+  "id": 6982,
+  "homeTeam": "Rebels ECNL/RL B2013",
+  "awayTeam": "Empire surf N. B2013 A",
+  "homeTeamClub": "Rebels SC",
+  "awayTeamClub": "Empire Surf",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 11 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 12 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 12 API data: {
+  "id": 6981,
+  "homeTeam": "Rebels ECNL/RL B2013",
+  "awayTeam": "Empire Surf B2013/2014 Academy-1",
+  "homeTeamClub": "Rebels SC",
+  "awayTeamClub": "Empire Surf",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 12 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 13 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 13 API data: {
+  "id": 6980,
+  "homeTeam": "Rebels ECNL/RL B2013",
+  "awayTeam": "Vista Storm B2013 Elite",
+  "homeTeamClub": "Rebels SC",
+  "awayTeamClub": "Vista Storm",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 13 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 14 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 14 API data: {
+  "id": 6979,
+  "homeTeam": "Rebels ECNL/RL B2013",
+  "awayTeam": "Temecula FC B2013",
+  "homeTeamClub": "Rebels SC",
+  "awayTeamClub": "Temecula FC",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 14 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 15 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 15 API data: {
+  "id": 6978,
+  "homeTeam": "Rebels ECNL/RL B2013",
+  "awayTeam": "City SC Southwest B2013 LE Premier",
+  "homeTeamClub": "Rebels SC",
+  "awayTeamClub": "City SC Southwest",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 15 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 16 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 16 API data: {
+  "id": 6977,
+  "homeTeam": "Sporting CA USA Perris B13 White",
+  "awayTeam": "Empire surf N. B2013 A",
+  "homeTeamClub": "Sporting California USA",
+  "awayTeamClub": "Empire Surf",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 16 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 17 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 17 API data: {
+  "id": 6976,
+  "homeTeam": "Sporting CA USA Perris B13 White",
+  "awayTeam": "Empire Surf B2013/2014 Academy-1",
+  "homeTeamClub": "Sporting California USA",
+  "awayTeamClub": "Empire Surf",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 17 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 18 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 18 API data: {
+  "id": 6975,
+  "homeTeam": "Sporting CA USA Perris B13 White",
+  "awayTeam": "Vista Storm B2013 Elite",
+  "homeTeamClub": "Sporting California USA",
+  "awayTeamClub": "Vista Storm",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 18 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 19 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 19 API data: {
+  "id": 6974,
+  "homeTeam": "Sporting CA USA Perris B13 White",
+  "awayTeam": "Temecula FC B2013",
+  "homeTeamClub": "Sporting California USA",
+  "awayTeamClub": "Temecula FC",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 19 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 20 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 20 API data: {
+  "id": 6973,
+  "homeTeam": "Sporting CA USA Perris B13 White",
+  "awayTeam": "City SC Southwest B2013 LE Premier",
+  "homeTeamClub": "Sporting California USA",
+  "awayTeamClub": "City SC Southwest",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 20 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 21 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 21 API data: {
+  "id": 6972,
+  "homeTeam": "Sporting CA USA Perris B13 White",
+  "awayTeam": "Rebels ECNL/RL B2013",
+  "homeTeamClub": "Sporting California USA",
+  "awayTeamClub": "Rebels SC",
+  "ageGroup": "U13",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 21 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 22 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 22 API data: {
+  "id": 6971,
+  "homeTeam": "Boys 2010 Force Premier",
+  "awayTeam": "Desert Empire B10 Academy",
+  "homeTeamClub": "San Diego Force FC",
+  "awayTeamClub": "Desert Empire Surf Soccer Club",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 22 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 23 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 23 API data: {
+  "id": 6970,
+  "homeTeam": "Club Tijuana Xoloitzcuincles B2011",
+  "awayTeam": "Desert Empire B10 Academy",
+  "homeTeamClub": "",
+  "awayTeamClub": "Desert Empire Surf Soccer Club",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 23 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 24 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 24 API data: {
+  "id": 6969,
+  "homeTeam": "Club Tijuana Xoloitzcuincles B2011",
+  "awayTeam": "Boys 2010 Force Premier",
+  "homeTeamClub": "",
+  "awayTeamClub": "San Diego Force FC",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 24 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 25 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 25 API data: {
+  "id": 6968,
+  "homeTeam": "Vista Storm B2010",
+  "awayTeam": "Desert Empire B10 Academy",
+  "homeTeamClub": "Vista Storm",
+  "awayTeamClub": "Desert Empire Surf Soccer Club",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 25 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 26 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 26 API data: {
+  "id": 6967,
+  "homeTeam": "Vista Storm B2010",
+  "awayTeam": "Boys 2010 Force Premier",
+  "homeTeamClub": "Vista Storm",
+  "awayTeamClub": "San Diego Force FC",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 26 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 27 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 27 API data: {
+  "id": 6966,
+  "homeTeam": "Vista Storm B2010",
+  "awayTeam": "Club Tijuana Xoloitzcuincles B2011",
+  "homeTeamClub": "Vista Storm",
+  "awayTeamClub": "",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 27 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 28 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 28 API data: {
+  "id": 6965,
+  "homeTeam": "Cal Elite SC B2010 / Charlie",
+  "awayTeam": "Desert Empire B10 Academy",
+  "homeTeamClub": "California Elite Soccer Club",
+  "awayTeamClub": "Desert Empire Surf Soccer Club",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 28 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 29 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 29 API data: {
+  "id": 6964,
+  "homeTeam": "Cal Elite SC B2010 / Charlie",
+  "awayTeam": "Boys 2010 Force Premier",
+  "homeTeamClub": "California Elite Soccer Club",
+  "awayTeamClub": "San Diego Force FC",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 29 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 30 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 30 API data: {
+  "id": 6963,
+  "homeTeam": "Cal Elite SC B2010 / Charlie",
+  "awayTeam": "Club Tijuana Xoloitzcuincles B2011",
+  "homeTeamClub": "California Elite Soccer Club",
+  "awayTeamClub": "",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 30 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 31 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 31 API data: {
+  "id": 6962,
+  "homeTeam": "Cal Elite SC B2010 / Charlie",
+  "awayTeam": "Vista Storm B2010",
+  "homeTeamClub": "California Elite Soccer Club",
+  "awayTeamClub": "Vista Storm",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 31 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 32 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 32 API data: {
+  "id": 6961,
+  "homeTeam": "Empire Surf NPL B2010 Academy ",
+  "awayTeam": "Desert Empire B10 Academy",
+  "homeTeamClub": "Empire Surf",
+  "awayTeamClub": "Desert Empire Surf Soccer Club",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 32 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 33 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 33 API data: {
+  "id": 6960,
+  "homeTeam": "Empire Surf NPL B2010 Academy ",
+  "awayTeam": "Boys 2010 Force Premier",
+  "homeTeamClub": "Empire Surf",
+  "awayTeamClub": "San Diego Force FC",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 33 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 34 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 34 API data: {
+  "id": 6959,
+  "homeTeam": "Empire Surf NPL B2010 Academy ",
+  "awayTeam": "Club Tijuana Xoloitzcuincles B2011",
+  "homeTeamClub": "Empire Surf",
+  "awayTeamClub": "",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 34 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 35 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 35 API data: {
+  "id": 6958,
+  "homeTeam": "Empire Surf NPL B2010 Academy ",
+  "awayTeam": "Vista Storm B2010",
+  "homeTeamClub": "Empire Surf",
+  "awayTeamClub": "Vista Storm",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 35 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 36 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 36 API data: {
+  "id": 6957,
+  "homeTeam": "Empire Surf NPL B2010 Academy ",
+  "awayTeam": "Cal Elite SC B2010 / Charlie",
+  "homeTeamClub": "Empire Surf",
+  "awayTeamClub": "California Elite Soccer Club",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 36 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 37 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 37 API data: {
+  "id": 6956,
+  "homeTeam": "Future B2010 White",
+  "awayTeam": "Desert Empire B10 Academy",
+  "homeTeamClub": "Future FC",
+  "awayTeamClub": "Desert Empire Surf Soccer Club",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 37 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 38 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 38 API data: {
+  "id": 6955,
+  "homeTeam": "Future B2010 White",
+  "awayTeam": "Boys 2010 Force Premier",
+  "homeTeamClub": "Future FC",
+  "awayTeamClub": "San Diego Force FC",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 38 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 39 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 39 API data: {
+  "id": 6954,
+  "homeTeam": "Future B2010 White",
+  "awayTeam": "Club Tijuana Xoloitzcuincles B2011",
+  "homeTeamClub": "Future FC",
+  "awayTeamClub": "",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 39 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 40 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 40 API data: {
+  "id": 6953,
+  "homeTeam": "Future B2010 White",
+  "awayTeam": "Vista Storm B2010",
+  "homeTeamClub": "Future FC",
+  "awayTeamClub": "Vista Storm",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 40 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 41 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 41 API data: {
+  "id": 6952,
+  "homeTeam": "Future B2010 White",
+  "awayTeam": "Cal Elite SC B2010 / Charlie",
+  "homeTeamClub": "Future FC",
+  "awayTeamClub": "California Elite Soccer Club",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 41 transformed: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 42 transformation debug: Object
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 42 API data: {
+  "id": 6951,
+  "homeTeam": "Future B2010 White",
+  "awayTeam": "Empire Surf NPL B2010 Academy ",
+  "homeTeamClub": "Future FC",
+  "awayTeamClub": "Empire Surf",
+  "ageGroup": "U16",
+  "field": "Unassigned",
+  "fieldName": "Unassigned",
+  "complexName": "",
+  "complexAddress": "",
+  "fieldSize": "",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "TBD",
+  "endTime": "TBD",
+  "duration": 75,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-D8fZY5pM.js:6 Game 42 transformed: Object
+util.js:31 Google Maps JavaScript API warning: NoApiKeys https://developers.google.com/maps/documentation/javascript/error-messages#no-api-keys
+Yxa @ util.js:31Understand this warning
+master-schedule:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swapUnderstand this warning
+master-schedule:1 OTS parsing error: invalid sfntVersion: 791289955Understand this warning
