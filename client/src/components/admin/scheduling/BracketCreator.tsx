@@ -62,6 +62,75 @@ export function BracketCreator({ eventId, workflowData, onComplete, onError }: B
     flights.forEach((flight: any) => {
       const flightTeams = flight.teams || [];
       
+      // Check if this flight has 8 teams and uses dual bracket format
+      const totalTeams = flightTeams.length;
+      const shouldUseDualBrackets = totalTeams === 8 && (
+        flight.gameFormat?.tournamentFormat === 'dual_bracket_8_teams' ||
+        flight.gameFormat?.bracketStructure?.type === 'dual_flight_championship' ||
+        flight.selectedMatchupTemplate?.name === '8-Team Dual Brackets' ||
+        flight.selectedMatchupTemplate?.teamCount === 8
+      );
+      
+      if (shouldUseDualBrackets) {
+        console.log(`[BracketCreator] Creating dual brackets for ${flight.name} with ${totalTeams} teams`);
+        // Automatically create dual brackets for 8-team flight
+        const teamsPerBracket = 4;
+        
+        // Create Bracket A (first 4 teams)
+        const bracketATeams = flightTeams.slice(0, teamsPerBracket);
+        const gameCalcA = calculateDualBracketGames(teamsPerBracket);
+        
+        brackets.push({
+          id: `${flight.id}_bracket_A`,
+          flightId: flight.id,
+          flightName: `${flight.name} A`,
+          teamCount: teamsPerBracket,
+          format: format as any,
+          poolCount: 1, // Single pool within each bracket
+          teamsPerPool: teamsPerBracket,
+          poolPlayGames: gameCalcA.poolPlayGames,
+          finalGames: 0, // No finals within individual brackets
+          totalGames: gameCalcA.poolPlayGames, // Only pool games within bracket
+          estimatedDuration: gameCalcA.poolPlayGames * 65
+        });
+        
+        // Create Bracket B (next 4 teams)
+        const bracketBTeams = flightTeams.slice(teamsPerBracket, totalTeams);
+        const gameCalcB = calculateDualBracketGames(teamsPerBracket);
+        
+        brackets.push({
+          id: `${flight.id}_bracket_B`,
+          flightId: flight.id,
+          flightName: `${flight.name} B`,
+          teamCount: teamsPerBracket,
+          format: format as any,
+          poolCount: 1, // Single pool within each bracket
+          teamsPerPool: teamsPerBracket,
+          poolPlayGames: gameCalcB.poolPlayGames,
+          finalGames: 0, // No finals within individual brackets
+          totalGames: gameCalcB.poolPlayGames, // Only pool games within bracket
+          estimatedDuration: gameCalcB.poolPlayGames * 65
+        });
+        
+        // Add the championship final between bracket winners
+        brackets.push({
+          id: `${flight.id}_championship`,
+          flightId: flight.id,
+          flightName: `${flight.name} Championship`,
+          teamCount: 2, // Winner of A vs Winner of B
+          format: 'knockout' as any,
+          poolCount: 0,
+          teamsPerPool: 0,
+          poolPlayGames: 0,
+          finalGames: 1,
+          totalGames: 1,
+          estimatedDuration: 65
+        });
+        
+        return; // Skip the regular bracket creation logic for this flight
+      }
+      
+      // Regular bracket creation logic for non-8-team flights
       // Group teams by their bracket selection
       const teamsByBracket = flightTeams.reduce((acc: any, team: any) => {
         let bracketKey = 'unassigned';
@@ -142,6 +211,18 @@ export function BracketCreator({ eventId, workflowData, onComplete, onError }: B
       finalGames: gameCalc.finalGames,
       totalGames: gameCalc.totalGames,
       estimatedDuration: gameCalc.totalGames * 65 // 65 minutes per game (including buffer)
+    };
+  };
+
+  const calculateDualBracketGames = (teamCount: number): GameCalculation => {
+    // For dual bracket system: 4 teams in round robin = 6 games per bracket
+    const poolPlayGames = (teamCount * (teamCount - 1)) / 2;
+    return {
+      teamCount,
+      poolPlayGames,
+      finalGames: 0, // No finals within individual brackets
+      totalGames: poolPlayGames,
+      description: `${poolPlayGames} pool games within bracket`
     };
   };
 
@@ -396,7 +477,12 @@ export function BracketCreator({ eventId, workflowData, onComplete, onError }: B
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="font-medium text-lg">{bracket.flightName}</h3>
-                    <p className="text-sm text-gray-600">{bracket.teamCount} teams</p>
+                    <p className="text-sm text-gray-600">
+                      {bracket.teamCount} teams
+                      {bracket.id.includes('championship') && ' (Championship Final)'}
+                      {bracket.id.includes('bracket_A') && ' (Pool A)'}
+                      {bracket.id.includes('bracket_B') && ' (Pool B)'}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     {getFormatBadge(bracket.format)}
