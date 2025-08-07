@@ -1,0 +1,108 @@
+33Fetch finished loading: GET "<URL>".
+index-B-Y22BVp.js:672 Current route location (Wouter): /admin/events
+index-B-Y22BVp.js:672 Current URL: https://app.matchpro.ai/admin/events
+index-B-Y22BVp.js:672 Current pathname: /admin/events
+index-B-Y22BVp.js:672 Current search: 
+index-B-Y22BVp.js:41 Fetch failed loading: GET "https://app.matchpro.ai/api/admin/organization-settings".
+queryFn @ index-B-Y22BVp.js:41
+i @ index-B-Y22BVp.js:41
+f @ index-B-Y22BVp.js:41
+start @ index-B-Y22BVp.js:41
+fetch @ index-B-Y22BVp.js:41
+ng @ index-B-Y22BVp.js:41
+onSubscribe @ index-B-Y22BVp.js:41
+subscribe @ index-B-Y22BVp.js:41
+(anonymous) @ index-B-Y22BVp.js:41
+hW @ index-B-Y22BVp.js:39
+k1 @ index-B-Y22BVp.js:41
+Zh @ index-B-Y22BVp.js:41
+hhe @ index-B-Y22BVp.js:41
+Eu @ index-B-Y22BVp.js:41
+qM @ index-B-Y22BVp.js:41
+au @ index-B-Y22BVp.js:39
+(anonymous) @ index-B-Y22BVp.js:41
+13Invalid keyframe value for property filter: blur(-0.08136px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.16063px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.22707px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.28173px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.32564px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.3598px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.38521px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.40278px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.41343px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.41799px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.41726px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.41199px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.40286px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.39052px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.37556px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.35849px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.33982px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.31996px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.2993px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.27819px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.25693px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.23576px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.21492px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.19459px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.17493px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.15606px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.13808px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.12106px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.10507px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.09014px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.07628px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.0635px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.0518px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.04115px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.03153px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.02289px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.01521px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.00842px)Understand this warning
+13Invalid keyframe value for property filter: blur(-0.00249px)Understand this warning
+index-B-Y22BVp.js:41 Fetch failed loading: GET "https://app.matchpro.ai/api/admin/organization-settings".
+queryFn @ index-B-Y22BVp.js:41
+i @ index-B-Y22BVp.js:41
+f @ index-B-Y22BVp.js:41
+start @ index-B-Y22BVp.js:41
+fetch @ index-B-Y22BVp.js:41
+ng @ index-B-Y22BVp.js:41
+onSubscribe @ index-B-Y22BVp.js:41
+subscribe @ index-B-Y22BVp.js:41
+(anonymous) @ index-B-Y22BVp.js:41
+hW @ index-B-Y22BVp.js:39
+k1 @ index-B-Y22BVp.js:41
+Zh @ index-B-Y22BVp.js:41
+qM @ index-B-Y22BVp.js:41
+au @ index-B-Y22BVp.js:39
+hhe @ index-B-Y22BVp.js:41
+Eu @ index-B-Y22BVp.js:41
+qW @ index-B-Y22BVp.js:41
+w @ index-B-Y22BVp.js:26
+T @ index-B-Y22BVp.js:26
+chunk-FLCULYKI.js:31 orchestration: Initializing config store with state {anonymous-site-visit-logging: {…}, chatgpt: {…}, context-menus: {…}, debugger: {…}, docs-support: {…}, …}
+chunk-FLCULYKI.js:31 orchestration: Initializing feature flag store with state {anonymous-site-visit-logging: {…}, chatgpt: {…}, context-menus: {…}, debugger: {…}, docs-support: {…}, …}
+chunk-FLCULYKI.js:31 orchestration: Initializing user store with state {pill-player: {…}}
+chunk-FLCULYKI.js:31 orchestration: Updating combined state {anonymous-site-visit-logging: {…}, chatgpt: {…}, context-menus: {…}, debugger: {…}, docs-support: {…}, …}
+index-B-Y22BVp.js:672 Current route location (Wouter): /admin/events/1844329078/master-schedule
+index-B-Y22BVp.js:672 Current URL: https://app.matchpro.ai/admin/events/1844329078/master-schedule
+index-B-Y22BVp.js:672 Current pathname: /admin/events/1844329078/master-schedule
+index-B-Y22BVp.js:672 Current search: 
+UnifiedTournamentControlCenter-C4oZ8_V0.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-C4oZ8_V0.js:1 Configured flights: 1 of 76
+UnifiedTournamentControlCenter-C4oZ8_V0.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-C4oZ8_V0.js:1 Configured flights: 1 of 76
+UnifiedTournamentControlCenter-C4oZ8_V0.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-C4oZ8_V0.js:1 Configured flights: 1 of 76
+UnifiedTournamentControlCenter-C4oZ8_V0.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-C4oZ8_V0.js:1 Configured flights: 1 of 76
+UnifiedTournamentControlCenter-C4oZ8_V0.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-C4oZ8_V0.js:1 Configured flights: 1 of 76
+UnifiedTournamentControlCenter-C4oZ8_V0.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-C4oZ8_V0.js:1 Configured flights: 1 of 76
+UnifiedTournamentControlCenter-C4oZ8_V0.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-C4oZ8_V0.js:1 Configured flights: 1 of 76
+UnifiedTournamentControlCenter-C4oZ8_V0.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-C4oZ8_V0.js:1 Configured flights: 1 of 76
+UnifiedTournamentControlCenter-C4oZ8_V0.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-C4oZ8_V0.js:1 Configured flights: 1 of 76
