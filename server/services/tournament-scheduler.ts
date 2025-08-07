@@ -187,7 +187,10 @@ export class TournamentScheduler {
       case 'single_bracket_4_teams':
       case 'crossover_bracket_6_teams': 
       case 'dual_bracket_8_teams':
-        // Use smart bracket generation based on team count
+      case 'group_of_4':
+      case 'group_of_6':
+      case 'group_of_8':
+        // Use smart bracket generation based on team count and template
         const smartBracketGames = this.generateSmartBracketGames(bracket, teams, gameCounter);
         games.push(...smartBracketGames);
         break;
@@ -244,18 +247,37 @@ export class TournamentScheduler {
     startingGameNumber: number
   ): Game[] {
     const teamCount = teams.length;
+    const templateName = bracket.templateName || bracket.format;
     
-    // Use your three specified tournament scenarios based on team count
-    if (teamCount === 4) {
-      return this.generate4TeamBracket(bracket, teams, startingGameNumber);
-    } else if (teamCount === 6) {
-      return this.generate6TeamCrossover(bracket, teams, startingGameNumber);
-    } else if (teamCount === 8) {
-      return this.generate8TeamDualBracket(bracket, teams, startingGameNumber);
-    } else {
-      // Fallback to standard round robin
-      console.log(`⚠️  No specific format for ${teamCount} teams, using standard round robin`);
-      return this.generateRoundRobinGames(bracket, teams, startingGameNumber);
+    console.log(`🎯 Smart bracket generation: ${teamCount} teams, template: ${templateName}`);
+    
+    // Match template names to specific tournament scenarios
+    switch (templateName) {
+      case 'group_of_4':
+        console.log(`📋 Using group_of_4 template for ${teamCount} teams`);
+        return this.generate4TeamBracket(bracket, teams, startingGameNumber);
+      
+      case 'group_of_6':
+        console.log(`📋 Using group_of_6 template for ${teamCount} teams`);
+        return this.generate6TeamCrossover(bracket, teams, startingGameNumber);
+      
+      case 'group_of_8':
+        console.log(`📋 Using group_of_8 template for ${teamCount} teams`);
+        return this.generate8TeamDualBracket(bracket, teams, startingGameNumber);
+      
+      default:
+        // Fallback based on team count for legacy support
+        if (teamCount === 4) {
+          return this.generate4TeamBracket(bracket, teams, startingGameNumber);
+        } else if (teamCount === 6) {
+          return this.generate6TeamCrossover(bracket, teams, startingGameNumber);
+        } else if (teamCount === 8) {
+          return this.generate8TeamDualBracket(bracket, teams, startingGameNumber);
+        } else {
+          // Fallback to standard round robin
+          console.log(`⚠️  No specific format for ${teamCount} teams, using standard round robin`);
+          return this.generateRoundRobinGames(bracket, teams, startingGameNumber);
+        }
     }
   }
 
@@ -405,11 +427,11 @@ export class TournamentScheduler {
       round: 'Championship',
       gameType: 'final',
       gameNumber: gameCounter,
-      duration: 90,
-      isPlaceholder: true
+      duration: 90
     });
     
-    console.log(`🏆 8-team dual bracket: 12 pool + 1 final for ${bracket.bracketName}`);
+    console.log(`🏆 8-team dual bracket: 12 pool + 1 final = 13 total games for ${bracket.bracketName}`);
+    console.log(`📊 Generated games breakdown: ${games.length} total (6 Pool A + 6 Pool B + 1 Championship)`);
     return games;
   }
 
@@ -431,8 +453,7 @@ export class TournamentScheduler {
       round: 'Championship',
       gameType: 'final',
       gameNumber: gameNumber,
-      duration: 90,
-      isPlaceholder: true // Mark as placeholder game
+      duration: 90
     };
   }
 
@@ -846,11 +867,17 @@ export class TournamentScheduler {
     // Extract age from bracket name or use default
     const bracketName = game.bracketName || '';
     
-    if (bracketName.includes('U8') || bracketName.includes('U9') || bracketName.includes('U10')) {
-      return '7v7';
-    } else if (bracketName.includes('U11') || bracketName.includes('U12')) {
-      return '9v9';
+    // Comprehensive field size validation based on age groups
+    if (bracketName.includes('U7') || bracketName.includes('U8') || bracketName.includes('U9') || bracketName.includes('U10')) {
+      return '7v7'; // Maps to fields B1, B2
+    } else if (bracketName.includes('U11') || bracketName.includes('U12') || (bracketName.includes('U13') && bracketName.includes('Boys'))) {
+      return '9v9'; // Maps to fields A1, A2
+    } else if (bracketName.includes('U13') && bracketName.includes('Girls')) {
+      return '11v11'; // U13 Girls MUST use 11v11 fields (f1-f6)
+    } else if (bracketName.match(/U1[4-9]/)) { // U14-U19
+      return '11v11'; // Maps to fields f1-f6
     } else {
+      console.log(`⚠️  Could not determine field size for bracket: ${bracketName}, defaulting to 11v11`);
       return '11v11';
     }
   }
