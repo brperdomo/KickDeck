@@ -463,6 +463,16 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
 
   const timeSlots = generateTimeSlots();
   const fields = scheduleData?.fields || [];
+  const games = scheduleData?.games || [];
+
+  console.log('🎯 [ENHANCED DRAG DROP] Debug Info:', {
+    isLoading,
+    error,
+    scheduleData,
+    fieldsCount: fields.length,
+    gamesCount: games.length,
+    selectedDate
+  });
 
   if (isLoading) {
     return (
@@ -478,6 +488,7 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
   }
 
   if (error) {
+    console.error('🚨 [ENHANCED DRAG DROP] API Error:', error);
     return (
       <Card className="w-full">
         <CardContent className="p-6">
@@ -485,6 +496,22 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
             <AlertTriangle className="h-8 w-8 mx-auto mb-2" />
             <p>Error loading schedule data</p>
             <p className="text-sm mt-2">{error.message}</p>
+            <p className="text-xs mt-1 text-slate-400">Check console for details</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show message if no data but not loading
+  if (!isLoading && (!scheduleData || (fields.length === 0 && games.length === 0))) {
+    return (
+      <Card className="w-full">
+        <CardContent className="p-6">
+          <div className="text-center text-yellow-600">
+            <Calendar className="h-8 w-8 mx-auto mb-2" />
+            <p>No schedule data available</p>
+            <p className="text-sm mt-2">Generate some games first using the Quick Generator</p>
           </div>
         </CardContent>
       </Card>
