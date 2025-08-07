@@ -1,0 +1,529 @@
+ScheduleViewerFixed-DIeofLTW.js:6  DELETE https://app.matchpro.ai/api/admin/events/1844329078/games/bulk 500 (Internal Server Error)
+mutationFn @ ScheduleViewerFixed-DIeofLTW.js:6
+fn @ index-7KI011nV.js:41
+f @ index-7KI011nV.js:41
+start @ index-7KI011nV.js:41
+execute @ index-7KI011nV.js:41
+await in execute
+mutate @ index-7KI011nV.js:41
+(anonymous) @ index-7KI011nV.js:41
+xe @ ScheduleViewerFixed-DIeofLTW.js:6
+_ue @ index-7KI011nV.js:38
+Due @ index-7KI011nV.js:38
+Iue @ index-7KI011nV.js:38
+pM @ index-7KI011nV.js:38
+Xq @ index-7KI011nV.js:38
+(anonymous) @ index-7KI011nV.js:38
+NO @ index-7KI011nV.js:41
+bq @ index-7KI011nV.js:38
+E2 @ index-7KI011nV.js:38
+X4 @ index-7KI011nV.js:38
+Xue @ index-7KI011nV.js:38Understand this error
+ScheduleViewerFixed-DIeofLTW.js:6 Delete all games failed: 500 {"error":"Failed to delete game","details":"update or delete on table \"game_time_slots\" violates foreign key constraint \"games_time_slot_id_fkey\" on table \"games\""}
+mutationFn @ ScheduleViewerFixed-DIeofLTW.js:6
+await in mutationFn
+fn @ index-7KI011nV.js:41
+f @ index-7KI011nV.js:41
+start @ index-7KI011nV.js:41
+execute @ index-7KI011nV.js:41
+await in execute
+mutate @ index-7KI011nV.js:41
+(anonymous) @ index-7KI011nV.js:41
+xe @ ScheduleViewerFixed-DIeofLTW.js:6
+_ue @ index-7KI011nV.js:38
+Due @ index-7KI011nV.js:38
+Iue @ index-7KI011nV.js:38
+pM @ index-7KI011nV.js:38
+Xq @ index-7KI011nV.js:38
+(anonymous) @ index-7KI011nV.js:38
+NO @ index-7KI011nV.js:41
+bq @ index-7KI011nV.js:38
+E2 @ index-7KI011nV.js:38
+X4 @ index-7KI011nV.js:38
+Xue @ index-7KI011nV.js:38Understand this error
+ScheduleViewerFixed-DIeofLTW.js:6 Delete all games mutation error: Error: Failed to delete all games: 500
+    at Object.mutationFn (ScheduleViewerFixed-DIeofLTW.js:6:4652)
+onError @ ScheduleViewerFixed-DIeofLTW.js:6
+execute @ index-7KI011nV.js:41
+await in execute
+mutate @ index-7KI011nV.js:41
+(anonymous) @ index-7KI011nV.js:41
+xe @ ScheduleViewerFixed-DIeofLTW.js:6
+_ue @ index-7KI011nV.js:38
+Due @ index-7KI011nV.js:38
+Iue @ index-7KI011nV.js:38
+pM @ index-7KI011nV.js:38
+Xq @ index-7KI011nV.js:38
+(anonymous) @ index-7KI011nV.js:38
+NO @ index-7KI011nV.js:41
+bq @ index-7KI011nV.js:38
+E2 @ index-7KI011nV.js:38
+X4 @ index-7KI011nV.js:38
+Xue @ index-7KI011nV.js:38Understand this error
+ScheduleViewerFixed-DIeofLTW.js:6 Fetch failed loading: DELETE "https://app.matchpro.ai/api/admin/events/1844329078/games/bulk".
+mutationFn @ ScheduleViewerFixed-DIeofLTW.js:6
+fn @ index-7KI011nV.js:41
+f @ index-7KI011nV.js:41
+start @ index-7KI011nV.js:41
+execute @ index-7KI011nV.js:41
+await in execute
+mutate @ index-7KI011nV.js:41
+(anonymous) @ index-7KI011nV.js:41
+xe @ ScheduleViewerFixed-DIeofLTW.js:6
+_ue @ index-7KI011nV.js:38
+Due @ index-7KI011nV.js:38
+Iue @ index-7KI011nV.js:38
+pM @ index-7KI011nV.js:38
+Xq @ index-7KI011nV.js:38
+(anonymous) @ index-7KI011nV.js:38
+NO @ index-7KI011nV.js:41
+bq @ index-7KI011nV.js:38
+E2 @ index-7KI011nV.js:38
+X4 @ index-7KI011nV.js:38
+Xue @ index-7KI011nV.js:38
+ScheduleViewerFixed-DIeofLTW.js:6 Fetch finished loading: DELETE "https://app.matchpro.ai/api/admin/events/1844329078/games/bulk".
+mutationFn @ ScheduleViewerFixed-DIeofLTW.js:6
+fn @ index-7KI011nV.js:41
+f @ index-7KI011nV.js:41
+start @ index-7KI011nV.js:41
+execute @ index-7KI011nV.js:41
+await in execute
+mutate @ index-7KI011nV.js:41
+(anonymous) @ index-7KI011nV.js:41
+xe @ ScheduleViewerFixed-DIeofLTW.js:6
+_ue @ index-7KI011nV.js:38
+Due @ index-7KI011nV.js:38
+Iue @ index-7KI011nV.js:38
+pM @ index-7KI011nV.js:38
+Xq @ index-7KI011nV.js:38
+(anonymous) @ index-7KI011nV.js:38
+NO @ index-7KI011nV.js:41
+bq @ index-7KI011nV.js:38
+E2 @ index-7KI011nV.js:38
+X4 @ index-7KI011nV.js:38
+Xue @ index-7KI011nV.js:38
+Navigated to https://app.matchpro.ai/admin/events/1844329078/master-schedule
+js?libraries=places&v=beta&callback=Function.prototype:1377 Google Maps JavaScript API has been loaded directly without loading=async. This can result in suboptimal performance. For best-practice loading patterns please see https://goo.gle/js-api-loading
+jda @ js?libraries=places&v=beta&callback=Function.prototype:1377
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622Understand this warning
+master-schedule:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swapUnderstand this warning
+master-schedule:1 OTS parsing error: invalid sfntVersion: 791289955Understand this warning
+js?libraries=places&v=beta&callback=Function.prototype:1409 XHR finished loading: GET "https://maps.googleapis.com/maps/api/mapsjs/gen_204?csp_test=true".
+_.B.send @ js?libraries=places&v=beta&callback=Function.prototype:1409
+hda @ js?libraries=places&v=beta&callback=Function.prototype:1386
+jda @ js?libraries=places&v=beta&callback=Function.prototype:1378
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622
+chunk-FLCULYKI.js:31 orchestration: Initializing config store with state {anonymous-site-visit-logging: {…}, chatgpt: {…}, context-menus: {…}, debugger: {…}, docs-support: {…}, …}
+chunk-FLCULYKI.js:31 orchestration: Initializing feature flag store with state {anonymous-site-visit-logging: {…}, chatgpt: {…}, context-menus: {…}, debugger: {…}, docs-support: {…}, …}
+chunk-FLCULYKI.js:31 orchestration: Initializing user store with state {pill-player: {…}}
+chunk-FLCULYKI.js:31 orchestration: Updating combined state {anonymous-site-visit-logging: {…}, chatgpt: {…}, context-menus: {…}, debugger: {…}, docs-support: {…}, …}
+index-7KI011nV.js:863 Google Maps API key length: 0 characters
+index-7KI011nV.js:863 Mapbox API key length: 93 characters
+index-7KI011nV.js:863 Google Maps API already loaded
+index-7KI011nV.js:672 Current route location (Wouter): /admin/events/1844329078/master-schedule
+index-7KI011nV.js:672 Current URL: https://app.matchpro.ai/admin/events/1844329078/master-schedule
+index-7KI011nV.js:672 Current pathname: /admin/events/1844329078/master-schedule
+index-7KI011nV.js:672 Current search: 
+index-7KI011nV.js:672 Fetching user with emulation token: not present
+14Fetch finished loading: GET "<URL>".
+index-7KI011nV.js:672 User data fetched: {id: 24, email: 'bperdomo@zoho.com', username: 'bperdomo@zoho.com', password: '$2b$12$d6n1CBWgsWFm0fh77F1OX.YxDZy7/O3aLSuJOuq4QkvOtFmSit7BC', firstName: 'Bryan', …}
+6Fetch finished loading: GET "<URL>".
+index-7KI011nV.js:664 Fetch failed loading: GET "https://app.matchpro.ai/api/user".
+queryFn @ index-7KI011nV.js:664
+i @ index-7KI011nV.js:41
+f @ index-7KI011nV.js:41
+start @ index-7KI011nV.js:41
+fetch @ index-7KI011nV.js:41
+ng @ index-7KI011nV.js:41
+onSubscribe @ index-7KI011nV.js:41
+subscribe @ index-7KI011nV.js:41
+(anonymous) @ index-7KI011nV.js:41
+hW @ index-7KI011nV.js:39
+k1 @ index-7KI011nV.js:41
+Zh @ index-7KI011nV.js:41
+qM @ index-7KI011nV.js:41
+au @ index-7KI011nV.js:39
+hhe @ index-7KI011nV.js:41
+Eu @ index-7KI011nV.js:41
+qW @ index-7KI011nV.js:41
+w @ index-7KI011nV.js:26
+T @ index-7KI011nV.js:26
+UnifiedTournamentControlCenter-BgX8FSxC.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-BgX8FSxC.js:1 Configured flights: 2 of 76
+9Fetch finished loading: POST "<URL>".
+util.js:31 Google Maps JavaScript API warning: NoApiKeys https://developers.google.com/maps/documentation/javascript/error-messages#no-api-keys
+Yxa @ util.js:31
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1379
+Promise.then
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1379
+setTimeout
+jda @ js?libraries=places&v=beta&callback=Function.prototype:1379
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622Understand this warning
+6XHR finished loading: POST "<URL>".
+UnifiedTournamentControlCenter-BgX8FSxC.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-BgX8FSxC.js:1 Configured flights: 2 of 76
+MasterSchedulePage-BspitBRF.js:243 [Frontend] Fetching flight formats for event 1844329078
+MasterSchedulePage-BspitBRF.js:243 [Frontend] Received 72 flights, configured: 2, unconfigured: 70
+index-7KI011nV.js:41 [Violation] 'setTimeout' handler took 107ms
+chunk-CVIZYB43.js:3 [Violation] 'setTimeout' handler took 50ms
+[Violation] 'click' handler took 952ms
+MasterSchedulePage-BspitBRF.js:243 Fetch finished loading: DELETE "https://app.matchpro.ai/api/admin/events/1844329078/flights/573/format".
+mutationFn @ MasterSchedulePage-BspitBRF.js:243
+fn @ index-7KI011nV.js:41
+f @ index-7KI011nV.js:41
+start @ index-7KI011nV.js:41
+execute @ index-7KI011nV.js:41
+await in execute
+mutate @ index-7KI011nV.js:41
+(anonymous) @ index-7KI011nV.js:41
+onClick @ MasterSchedulePage-BspitBRF.js:243
+_ue @ index-7KI011nV.js:38
+Due @ index-7KI011nV.js:38
+Iue @ index-7KI011nV.js:38
+pM @ index-7KI011nV.js:38
+Xq @ index-7KI011nV.js:38
+(anonymous) @ index-7KI011nV.js:38
+NO @ index-7KI011nV.js:41
+bq @ index-7KI011nV.js:38
+E2 @ index-7KI011nV.js:38
+X4 @ index-7KI011nV.js:38
+Xue @ index-7KI011nV.js:38
+MasterSchedulePage-BspitBRF.js:243 [Frontend] Fetching flight formats for event 1844329078
+MasterSchedulePage-BspitBRF.js:243 [Frontend] Received 72 flights, configured: 1, unconfigured: 71
+Navigated to https://app.matchpro.ai/admin/events/1844329078/master-schedule
+js?libraries=places&v=beta&callback=Function.prototype:1377 Google Maps JavaScript API has been loaded directly without loading=async. This can result in suboptimal performance. For best-practice loading patterns please see https://goo.gle/js-api-loading
+jda @ js?libraries=places&v=beta&callback=Function.prototype:1377
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622Understand this warning
+js?libraries=places&v=beta&callback=Function.prototype:1409 XHR finished loading: GET "https://maps.googleapis.com/maps/api/mapsjs/gen_204?csp_test=true".
+_.B.send @ js?libraries=places&v=beta&callback=Function.prototype:1409
+hda @ js?libraries=places&v=beta&callback=Function.prototype:1386
+jda @ js?libraries=places&v=beta&callback=Function.prototype:1378
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622
+master-schedule:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swapUnderstand this warning
+master-schedule:1 OTS parsing error: invalid sfntVersion: 791289955Understand this warning
+chunk-FLCULYKI.js:31 orchestration: Initializing config store with state {anonymous-site-visit-logging: {…}, chatgpt: {…}, context-menus: {…}, debugger: {…}, docs-support: {…}, …}
+chunk-FLCULYKI.js:31 orchestration: Initializing feature flag store with state {anonymous-site-visit-logging: {…}, chatgpt: {…}, context-menus: {…}, debugger: {…}, docs-support: {…}, …}
+chunk-FLCULYKI.js:31 orchestration: Initializing user store with state {pill-player: {…}}
+chunk-FLCULYKI.js:31 orchestration: Updating combined state {anonymous-site-visit-logging: {…}, chatgpt: {…}, context-menus: {…}, debugger: {…}, docs-support: {…}, …}
+index-7KI011nV.js:863 Google Maps API key length: 0 characters
+index-7KI011nV.js:863 Mapbox API key length: 93 characters
+index-7KI011nV.js:863 Google Maps API already loaded
+index-7KI011nV.js:672 Current route location (Wouter): /admin/events/1844329078/master-schedule
+index-7KI011nV.js:672 Current URL: https://app.matchpro.ai/admin/events/1844329078/master-schedule
+index-7KI011nV.js:672 Current pathname: /admin/events/1844329078/master-schedule
+index-7KI011nV.js:672 Current search: 
+index-7KI011nV.js:672 Fetching user with emulation token: not present
+15Fetch finished loading: GET "<URL>".
+index-7KI011nV.js:672 User data fetched: {id: 24, email: 'bperdomo@zoho.com', username: 'bperdomo@zoho.com', password: '$2b$12$d6n1CBWgsWFm0fh77F1OX.YxDZy7/O3aLSuJOuq4QkvOtFmSit7BC', firstName: 'Bryan', …}
+index-7KI011nV.js:664 Fetch failed loading: GET "https://app.matchpro.ai/api/user".
+queryFn @ index-7KI011nV.js:664
+i @ index-7KI011nV.js:41
+f @ index-7KI011nV.js:41
+start @ index-7KI011nV.js:41
+fetch @ index-7KI011nV.js:41
+ng @ index-7KI011nV.js:41
+onSubscribe @ index-7KI011nV.js:41
+subscribe @ index-7KI011nV.js:41
+(anonymous) @ index-7KI011nV.js:41
+hW @ index-7KI011nV.js:39
+k1 @ index-7KI011nV.js:41
+Zh @ index-7KI011nV.js:41
+qM @ index-7KI011nV.js:41
+au @ index-7KI011nV.js:39
+hhe @ index-7KI011nV.js:41
+Eu @ index-7KI011nV.js:41
+qW @ index-7KI011nV.js:41
+w @ index-7KI011nV.js:26
+T @ index-7KI011nV.js:26
+UnifiedTournamentControlCenter-BgX8FSxC.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-BgX8FSxC.js:1 Configured flights: 1 of 76
+5[Violation] 'setTimeout' handler took <N>ms
+util.js:31 Google Maps JavaScript API warning: NoApiKeys https://developers.google.com/maps/documentation/javascript/error-messages#no-api-keys
+Yxa @ util.js:31
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1379
+Promise.then
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1379
+setTimeout
+jda @ js?libraries=places&v=beta&callback=Function.prototype:1379
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622Understand this warning
+UnifiedTournamentControlCenter-BgX8FSxC.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-BgX8FSxC.js:1 Configured flights: 1 of 76
+UnifiedTournamentControlCenter-BgX8FSxC.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-BgX8FSxC.js:1 Configured flights: 1 of 76
+master-schedule:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swapUnderstand this warning
+master-schedule:1 OTS parsing error: invalid sfntVersion: 791289955Understand this warning
+MasterSchedulePage-BspitBRF.js:243 Fetch finished loading: PATCH "https://app.matchpro.ai/api/admin/events/1844329078/flight-configurations/573".
+mutationFn @ MasterSchedulePage-BspitBRF.js:243
+fn @ index-7KI011nV.js:41
+f @ index-7KI011nV.js:41
+start @ index-7KI011nV.js:41
+execute @ index-7KI011nV.js:41
+await in execute
+mutate @ index-7KI011nV.js:41
+(anonymous) @ index-7KI011nV.js:41
+p @ MasterSchedulePage-BspitBRF.js:243
+_ue @ index-7KI011nV.js:38
+Due @ index-7KI011nV.js:38
+Iue @ index-7KI011nV.js:38
+pM @ index-7KI011nV.js:38
+Xq @ index-7KI011nV.js:38
+(anonymous) @ index-7KI011nV.js:38
+NO @ index-7KI011nV.js:41
+bq @ index-7KI011nV.js:38
+E2 @ index-7KI011nV.js:38
+X4 @ index-7KI011nV.js:38
+Xue @ index-7KI011nV.js:38
+UnifiedTournamentControlCenter-BgX8FSxC.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-BgX8FSxC.js:1 Configured flights: 2 of 76
+Navigated to https://app.matchpro.ai/admin/events/1844329078/master-schedule
+js?libraries=places&v=beta&callback=Function.prototype:1377 Google Maps JavaScript API has been loaded directly without loading=async. This can result in suboptimal performance. For best-practice loading patterns please see https://goo.gle/js-api-loading
+jda @ js?libraries=places&v=beta&callback=Function.prototype:1377
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622Understand this warning
+master-schedule:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swapUnderstand this warning
+master-schedule:1 OTS parsing error: invalid sfntVersion: 791289955Understand this warning
+js?libraries=places&v=beta&callback=Function.prototype:1409 XHR finished loading: GET "https://maps.googleapis.com/maps/api/mapsjs/gen_204?csp_test=true".
+_.B.send @ js?libraries=places&v=beta&callback=Function.prototype:1409
+hda @ js?libraries=places&v=beta&callback=Function.prototype:1386
+jda @ js?libraries=places&v=beta&callback=Function.prototype:1378
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622
+index-7KI011nV.js:863 Google Maps API key length: 0 characters
+index-7KI011nV.js:863 Mapbox API key length: 93 characters
+index-7KI011nV.js:863 Google Maps API already loaded
+index-7KI011nV.js:672 Current route location (Wouter): /admin/events/1844329078/master-schedule
+index-7KI011nV.js:672 Current URL: https://app.matchpro.ai/admin/events/1844329078/master-schedule
+index-7KI011nV.js:672 Current pathname: /admin/events/1844329078/master-schedule
+index-7KI011nV.js:672 Current search: 
+index-7KI011nV.js:672 Fetching user with emulation token: not present
+chunk-FLCULYKI.js:31 orchestration: Initializing config store with state {anonymous-site-visit-logging: {…}, chatgpt: {…}, context-menus: {…}, debugger: {…}, docs-support: {…}, …}
+chunk-FLCULYKI.js:31 orchestration: Initializing user store with state {pill-player: {…}}
+chunk-FLCULYKI.js:31 orchestration: Initializing feature flag store with state {anonymous-site-visit-logging: {…}, chatgpt: {…}, context-menus: {…}, debugger: {…}, docs-support: {…}, …}
+chunk-FLCULYKI.js:31 orchestration: Updating combined state {anonymous-site-visit-logging: {…}, chatgpt: {…}, context-menus: {…}, debugger: {…}, docs-support: {…}, …}
+index-7KI011nV.js:672 User data fetched: {id: 24, email: 'bperdomo@zoho.com', username: 'bperdomo@zoho.com', password: '$2b$12$d6n1CBWgsWFm0fh77F1OX.YxDZy7/O3aLSuJOuq4QkvOtFmSit7BC', firstName: 'Bryan', …}
+17Fetch finished loading: GET "<URL>".
+index-7KI011nV.js:664 Fetch failed loading: GET "https://app.matchpro.ai/api/user".
+queryFn @ index-7KI011nV.js:664
+i @ index-7KI011nV.js:41
+f @ index-7KI011nV.js:41
+start @ index-7KI011nV.js:41
+fetch @ index-7KI011nV.js:41
+ng @ index-7KI011nV.js:41
+onSubscribe @ index-7KI011nV.js:41
+subscribe @ index-7KI011nV.js:41
+(anonymous) @ index-7KI011nV.js:41
+hW @ index-7KI011nV.js:39
+k1 @ index-7KI011nV.js:41
+Zh @ index-7KI011nV.js:41
+qM @ index-7KI011nV.js:41
+au @ index-7KI011nV.js:39
+hhe @ index-7KI011nV.js:41
+Eu @ index-7KI011nV.js:41
+qW @ index-7KI011nV.js:41
+w @ index-7KI011nV.js:26
+T @ index-7KI011nV.js:26
+UnifiedTournamentControlCenter-BgX8FSxC.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-BgX8FSxC.js:1 Configured flights: 2 of 76
+5[Violation] 'setTimeout' handler took <N>ms
+MasterSchedulePage-BspitBRF.js:243 [Frontend] Fetching flight formats for event 1844329078
+MasterSchedulePage-BspitBRF.js:243 [Frontend] Received 72 flights, configured: 2, unconfigured: 70
+util.js:31 Google Maps JavaScript API warning: NoApiKeys https://developers.google.com/maps/documentation/javascript/error-messages#no-api-keys
+Yxa @ util.js:31
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1379
+Promise.then
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1379
+setTimeout
+jda @ js?libraries=places&v=beta&callback=Function.prototype:1379
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1622Understand this warning
+MasterSchedulePage-BspitBRF.js:243 [BracketCreationEngine] Fetching bracket data for event: 1844329078
+MasterSchedulePage-BspitBRF.js:243 [BracketCreationEngine] Received flights: 76
+UnifiedTournamentControlCenter-BgX8FSxC.js:1 Fetch finished loading: POST "https://app.matchpro.ai/api/admin/events/1844329078/generate-selective-schedule".
+mutationFn @ UnifiedTournamentControlCenter-BgX8FSxC.js:1
+fn @ index-7KI011nV.js:41
+f @ index-7KI011nV.js:41
+start @ index-7KI011nV.js:41
+execute @ index-7KI011nV.js:41
+await in execute
+mutate @ index-7KI011nV.js:41
+(anonymous) @ index-7KI011nV.js:41
+Q @ UnifiedTournamentControlCenter-BgX8FSxC.js:1
+_ue @ index-7KI011nV.js:38
+Due @ index-7KI011nV.js:38
+Iue @ index-7KI011nV.js:38
+pM @ index-7KI011nV.js:38
+Xq @ index-7KI011nV.js:38
+(anonymous) @ index-7KI011nV.js:38
+NO @ index-7KI011nV.js:41
+bq @ index-7KI011nV.js:38
+E2 @ index-7KI011nV.js:38
+X4 @ index-7KI011nV.js:38
+Xue @ index-7KI011nV.js:38
+UnifiedTournamentControlCenter-BgX8FSxC.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-BgX8FSxC.js:1 Configured flights: 2 of 76
+ScheduleViewerFixed-DIeofLTW.js:6 Schedule API Response: {games: Array(10), fields: Array(28), ageGroups: Array(1), dates: Array(1), totalGames: 10, …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 1 transformation debug: {raw: {…}, homeTeamStructure: 'Empire Surf North G2012 Academy', awayTeamStructure: 'Future FC G12', fieldStructure: '1', rawFieldName: undefined, …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 1 API data: {
+  "id": 8313,
+  "homeTeam": "Empire Surf North G2012 Academy",
+  "awayTeam": "Future FC G12",
+  "ageGroup": "U14 Girls",
+  "field": "1",
+  "date": "TBD",
+  "time": "TBD",
+  "duration": 90,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 1 transformed: {id: 8313, homeTeam: 'Empire Surf North G2012 Academy', awayTeam: 'Future FC G12', ageGroup: 'U14 Girls', field: '1', …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 2 transformation debug: {raw: {…}, homeTeamStructure: 'Empire Surf North G2012 Academy', awayTeamStructure: 'ALBION SC Riverside G12 DPL', fieldStructure: '1', rawFieldName: undefined, …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 2 API data: {
+  "id": 8314,
+  "homeTeam": "Empire Surf North G2012 Academy",
+  "awayTeam": "ALBION SC Riverside G12 DPL",
+  "ageGroup": "U14 Girls",
+  "field": "1",
+  "date": "TBD",
+  "time": "TBD",
+  "duration": 90,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 2 transformed: {id: 8314, homeTeam: 'Empire Surf North G2012 Academy', awayTeam: 'ALBION SC Riverside G12 DPL', ageGroup: 'U14 Girls', field: '1', …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 3 transformation debug: {raw: {…}, homeTeamStructure: 'Empire Surf North G2012 Academy', awayTeamStructure: 'Cal Elite SC G2012', fieldStructure: '1', rawFieldName: undefined, …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 3 API data: {
+  "id": 8315,
+  "homeTeam": "Empire Surf North G2012 Academy",
+  "awayTeam": "Cal Elite SC G2012",
+  "ageGroup": "U14 Girls",
+  "field": "1",
+  "date": "TBD",
+  "time": "TBD",
+  "duration": 90,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 3 transformed: {id: 8315, homeTeam: 'Empire Surf North G2012 Academy', awayTeam: 'Cal Elite SC G2012', ageGroup: 'U14 Girls', field: '1', …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 4 transformation debug: {raw: {…}, homeTeamStructure: 'Empire Surf North G2012 Academy', awayTeamStructure: 'Sporting California Girls 2012 ECNL RL SoCal', fieldStructure: '1', rawFieldName: undefined, …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 4 API data: {
+  "id": 8316,
+  "homeTeam": "Empire Surf North G2012 Academy",
+  "awayTeam": "Sporting California Girls 2012 ECNL RL SoCal",
+  "ageGroup": "U14 Girls",
+  "field": "1",
+  "date": "TBD",
+  "time": "TBD",
+  "duration": 90,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 4 transformed: {id: 8316, homeTeam: 'Empire Surf North G2012 Academy', awayTeam: 'Sporting California Girls 2012 ECNL RL SoCal', ageGroup: 'U14 Girls', field: '1', …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 5 transformation debug: {raw: {…}, homeTeamStructure: 'Future FC G12', awayTeamStructure: 'ALBION SC Riverside G12 DPL', fieldStructure: '1', rawFieldName: undefined, …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 5 API data: {
+  "id": 8317,
+  "homeTeam": "Future FC G12",
+  "awayTeam": "ALBION SC Riverside G12 DPL",
+  "ageGroup": "U14 Girls",
+  "field": "1",
+  "date": "TBD",
+  "time": "TBD",
+  "duration": 90,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 5 transformed: {id: 8317, homeTeam: 'Future FC G12', awayTeam: 'ALBION SC Riverside G12 DPL', ageGroup: 'U14 Girls', field: '1', …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 6 transformation debug: {raw: {…}, homeTeamStructure: 'Future FC G12', awayTeamStructure: 'Cal Elite SC G2012', fieldStructure: '1', rawFieldName: undefined, …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 6 API data: {
+  "id": 8318,
+  "homeTeam": "Future FC G12",
+  "awayTeam": "Cal Elite SC G2012",
+  "ageGroup": "U14 Girls",
+  "field": "1",
+  "date": "TBD",
+  "time": "TBD",
+  "duration": 90,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 6 transformed: {id: 8318, homeTeam: 'Future FC G12', awayTeam: 'Cal Elite SC G2012', ageGroup: 'U14 Girls', field: '1', …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 7 transformation debug: {raw: {…}, homeTeamStructure: 'Future FC G12', awayTeamStructure: 'Sporting California Girls 2012 ECNL RL SoCal', fieldStructure: '1', rawFieldName: undefined, …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 7 API data: {
+  "id": 8319,
+  "homeTeam": "Future FC G12",
+  "awayTeam": "Sporting California Girls 2012 ECNL RL SoCal",
+  "ageGroup": "U14 Girls",
+  "field": "1",
+  "date": "TBD",
+  "time": "TBD",
+  "duration": 90,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 7 transformed: {id: 8319, homeTeam: 'Future FC G12', awayTeam: 'Sporting California Girls 2012 ECNL RL SoCal', ageGroup: 'U14 Girls', field: '1', …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 8 transformation debug: {raw: {…}, homeTeamStructure: 'ALBION SC Riverside G12 DPL', awayTeamStructure: 'Cal Elite SC G2012', fieldStructure: '1', rawFieldName: undefined, …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 8 API data: {
+  "id": 8320,
+  "homeTeam": "ALBION SC Riverside G12 DPL",
+  "awayTeam": "Cal Elite SC G2012",
+  "ageGroup": "U14 Girls",
+  "field": "1",
+  "date": "TBD",
+  "time": "TBD",
+  "duration": 90,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 8 transformed: {id: 8320, homeTeam: 'ALBION SC Riverside G12 DPL', awayTeam: 'Cal Elite SC G2012', ageGroup: 'U14 Girls', field: '1', …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 9 transformation debug: {raw: {…}, homeTeamStructure: 'ALBION SC Riverside G12 DPL', awayTeamStructure: 'Sporting California Girls 2012 ECNL RL SoCal', fieldStructure: '1', rawFieldName: undefined, …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 9 API data: {
+  "id": 8321,
+  "homeTeam": "ALBION SC Riverside G12 DPL",
+  "awayTeam": "Sporting California Girls 2012 ECNL RL SoCal",
+  "ageGroup": "U14 Girls",
+  "field": "1",
+  "date": "TBD",
+  "time": "TBD",
+  "duration": 90,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 9 transformed: {id: 8321, homeTeam: 'ALBION SC Riverside G12 DPL', awayTeam: 'Sporting California Girls 2012 ECNL RL SoCal', ageGroup: 'U14 Girls', field: '1', …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 10 transformation debug: {raw: {…}, homeTeamStructure: 'Cal Elite SC G2012', awayTeamStructure: 'Sporting California Girls 2012 ECNL RL SoCal', fieldStructure: '1', rawFieldName: undefined, …}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 10 API data: {
+  "id": 8322,
+  "homeTeam": "Cal Elite SC G2012",
+  "awayTeam": "Sporting California Girls 2012 ECNL RL SoCal",
+  "ageGroup": "U14 Girls",
+  "field": "1",
+  "date": "TBD",
+  "time": "TBD",
+  "duration": 90,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null
+}
+ScheduleViewerFixed-DIeofLTW.js:6 Game 10 transformed: {id: 8322, homeTeam: 'Cal Elite SC G2012', awayTeam: 'Sporting California Girls 2012 ECNL RL SoCal', ageGroup: 'U14 Girls', field: '1', …}

@@ -697,6 +697,7 @@ async function generateSelectiveSchedule(eventId: string, flightIds: string[], o
       });
       
       console.log(`[Selective Scheduling] Processing ${bracket.tournamentFormat} format for ${flightTeams.length} teams`);
+      console.log(`[Selective Scheduling] CRITICAL DEBUG: bracket.tournamentFormat="${bracket.tournamentFormat}", teams=${flightTeams.length}, will use group_of_4 logic: ${bracket.tournamentFormat === 'group_of_4' && flightTeams.length === 4}`);
       
       let bracketGames = [];
       
@@ -771,20 +772,24 @@ async function generateSelectiveSchedule(eventId: string, flightIds: string[], o
         }
         
         console.log(`[Selective Scheduling] Generated ${bracketGames.length} games using ${formatTemplate.name} template`);
-      } else if (bracket.tournamentFormat === 'group_of_4' && flightTeams.length === 4) {
-        // Handle group_of_4 format - 6 pool games + 1 championship = 7 total
-        console.log(`[Selective Scheduling] Using group_of_4 format for 4 teams - generating 6 pool + 1 championship`);
+      } else if (bracket.tournamentFormat === 'group_of_4') {
+        // Handle group_of_4 format - ALWAYS generate 6 pool games + 1 championship = 7 total (regardless of team count)
+        console.log(`[Selective Scheduling] USING group_of_4 format - generating 6 pool + 1 championship regardless of actual team count (${flightTeams.length} teams)`);
         let gameNumber = 1;
         
-        // Generate 6 pool play games (round-robin)
-        for (let i = 0; i < flightTeams.length; i++) {
-          for (let j = i + 1; j < flightTeams.length; j++) {
+        // Take only first 4 teams for group_of_4 format
+        const selectedTeams = flightTeams.slice(0, 4);
+        console.log(`[Selective Scheduling] Selected first 4 teams from ${flightTeams.length} available teams: ${selectedTeams.map(t => t.name).join(', ')}`);
+        
+        // Generate 6 pool play games (round-robin among 4 teams)
+        for (let i = 0; i < selectedTeams.length; i++) {
+          for (let j = i + 1; j < selectedTeams.length; j++) {
             bracketGames.push({
               id: `${flightId}-${gameNumber}`,
-              homeTeamId: flightTeams[i].id,
-              homeTeamName: flightTeams[i].name,
-              awayTeamId: flightTeams[j].id,
-              awayTeamName: flightTeams[j].name,
+              homeTeamId: selectedTeams[i].id,
+              homeTeamName: selectedTeams[i].name,
+              awayTeamId: selectedTeams[j].id,
+              awayTeamName: selectedTeams[j].name,
               bracketId: parseInt(flightId),
               bracketName: bracket.name,
               round: 1, // Pool play is round 1
@@ -812,8 +817,9 @@ async function generateSelectiveSchedule(eventId: string, flightIds: string[], o
           isPending: true
         });
         
-        console.log(`[Selective Scheduling] Generated 6 pool + 1 championship = ${bracketGames.length} games for group_of_4`);
+        console.log(`[Selective Scheduling] SUCCESS: Generated 6 pool + 1 championship = ${bracketGames.length} games for group_of_4 (used ${selectedTeams.length} of ${flightTeams.length} teams)`);
       } else if (bracket.tournamentFormat === 'round_robin' && flightTeams.length >= 2) {
+        console.log(`[Selective Scheduling] FALLBACK: Using round_robin for ${bracket.tournamentFormat} with ${flightTeams.length} teams - THIS CREATES 10 GAMES!`);
         // Fallback to simple round-robin for legacy formats
         let gameNumber = 1;
         for (let i = 0; i < flightTeams.length; i++) {
