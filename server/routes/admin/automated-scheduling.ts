@@ -598,7 +598,41 @@ router.post('/schedule-selected-flights', requirePermission('manage_events'), as
   }
 });
 
-// REMOVED DUPLICATE ROUTE - CONSOLIDATED INTO SINGLE ENDPOINT ABOVE
+// Add the missing route that frontend expects
+router.post('/events/:eventId/generate-selective-schedule', requirePermission('manage_events'), async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const { flightIds } = req.body;
+
+    console.log(`[Frontend Route] Selective schedule generation for event ${eventId}, flights: ${flightIds?.join(', ') || 'none'}`);
+
+    if (!flightIds || !Array.isArray(flightIds) || flightIds.length === 0) {
+      return res.status(400).json({ error: 'Flight IDs are required for selective scheduling' });
+    }
+
+    // Call the existing selective scheduling function
+    const result = await generateSelectiveSchedule(eventId, flightIds, {
+      includeReferees: true,
+      includeFacilities: true
+    });
+
+    res.json({
+      success: result.success,
+      message: result.message || `Schedule generated successfully for ${flightIds.length} selected flights`,
+      selectedFlights: result.selectedFlights || flightIds.length,
+      totalGames: result.totalGames || 0,
+      flightNames: flightIds,
+      games: result.games || []
+    });
+
+  } catch (error) {
+    console.error('Frontend selective scheduling error:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate selective schedule',
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
 
 // Simplified selective scheduling implementation
 async function generateSelectiveSchedule(eventId: string, flightIds: string[], options: any) {
