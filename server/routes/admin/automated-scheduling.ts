@@ -779,18 +779,24 @@ async function generateSelectiveSchedule(eventId: string, flightIds: string[], o
         });
         
         console.log(`[Selective Scheduling] SUCCESS: Generated 6 pool + 1 championship = ${bracketGames.length} games for group_of_4 (used ${selectedTeams.length} of ${flightTeams.length} teams)`);
-      } else if (bracket.tournamentFormat === 'round_robin' && flightTeams.length >= 2) {
-        console.log(`[Selective Scheduling] FALLBACK: Using round_robin for ${bracket.tournamentFormat} with ${flightTeams.length} teams - THIS CREATES 10 GAMES!`);
-        // Fallback to simple round-robin for legacy formats
+      } else if (flightTeams.length >= 6 && flightTeams.length <= 8) {
+        // Smart fallback: Use group_of_6 or group_of_8 based on team count
+        const smartFormat = flightTeams.length <= 6 ? 'group_of_6' : 'group_of_8';
+        console.log(`[Selective Scheduling] SMART FALLBACK: ${bracket.tournamentFormat} not handled, using ${smartFormat} for ${flightTeams.length} teams`);
+        
+        // Generate appropriate games based on team count
         let gameNumber = 1;
-        for (let i = 0; i < flightTeams.length; i++) {
-          for (let j = i + 1; j < flightTeams.length; j++) {
+        const selectedTeams = flightTeams.slice(0, smartFormat === 'group_of_6' ? 6 : 8);
+        
+        // Generate round-robin pool games
+        for (let i = 0; i < selectedTeams.length; i++) {
+          for (let j = i + 1; j < selectedTeams.length; j++) {
             bracketGames.push({
               id: `${flightId}-${gameNumber}`,
-              homeTeamId: flightTeams[i].id,
-              homeTeamName: flightTeams[i].name,
-              awayTeamId: flightTeams[j].id,
-              awayTeamName: flightTeams[j].name,
+              homeTeamId: selectedTeams[i].id,
+              homeTeamName: selectedTeams[i].name,
+              awayTeamId: selectedTeams[j].id,
+              awayTeamName: selectedTeams[j].name,
               bracketId: parseInt(flightId),
               bracketName: bracket.name,
               round: 1, // Pool play round number
@@ -800,9 +806,73 @@ async function generateSelectiveSchedule(eventId: string, flightIds: string[], o
             });
           }
         }
-        console.log(`[Selective Scheduling] Generated ${bracketGames.length} round-robin games (fallback)`);
+        
+        // Add championship final for larger groups
+        if (selectedTeams.length >= 6) {
+          bracketGames.push({
+            id: `${flightId}-${gameNumber}`,
+            homeTeamId: null,
+            homeTeamName: '1st Place',
+            awayTeamId: null,
+            awayTeamName: '2nd Place',
+            bracketId: parseInt(flightId),
+            bracketName: bracket.name,
+            round: 2,
+            gameType: 'championship',
+            duration: 90,
+            gameNumber: gameNumber++,
+            notes: 'Championship Final - Teams TBD based on pool standings',
+            isPending: true
+          });
+        }
+        
+        console.log(`[Selective Scheduling] Generated ${bracketGames.length} games using smart ${smartFormat} fallback`);
+      } else if (flightTeams.length === 4 || flightTeams.length === 5) {
+        // Smart fallback: Use group_of_4 for 4-5 teams
+        console.log(`[Selective Scheduling] SMART FALLBACK: ${bracket.tournamentFormat} not handled, using group_of_4 for ${flightTeams.length} teams`);
+        
+        let gameNumber = 1;
+        const selectedTeams = flightTeams.slice(0, 4);
+        
+        // Generate 6 pool play games (round-robin among 4 teams)
+        for (let i = 0; i < selectedTeams.length; i++) {
+          for (let j = i + 1; j < selectedTeams.length; j++) {
+            bracketGames.push({
+              id: `${flightId}-${gameNumber}`,
+              homeTeamId: selectedTeams[i].id,
+              homeTeamName: selectedTeams[i].name,
+              awayTeamId: selectedTeams[j].id,
+              awayTeamName: selectedTeams[j].name,
+              bracketId: parseInt(flightId),
+              bracketName: bracket.name,
+              round: 1,
+              gameType: 'pool_play',
+              duration: 90,
+              gameNumber: gameNumber++
+            });
+          }
+        }
+        
+        // Add championship final (7th game)
+        bracketGames.push({
+          id: `${flightId}-${gameNumber}`,
+          homeTeamId: null,
+          homeTeamName: '1st Place',
+          awayTeamId: null,
+          awayTeamName: '2nd Place',
+          bracketId: parseInt(flightId),
+          bracketName: bracket.name,
+          round: 2,
+          gameType: 'championship',
+          duration: 90,
+          gameNumber: gameNumber++,
+          notes: 'Championship Final - Teams TBD based on pool standings',
+          isPending: true
+        });
+        
+        console.log(`[Selective Scheduling] Generated ${bracketGames.length} games using smart group_of_4 fallback`);
       } else {
-        console.log(`[Selective Scheduling] *** UNEXPECTED PATH! *** Cannot generate games: format=${bracket.tournamentFormat}, teams=${flightTeams.length}, template found=${!!formatTemplate}`);
+        console.log(`[Selective Scheduling] Cannot generate games: format=${bracket.tournamentFormat}, teams=${flightTeams.length} (not enough teams or unsupported count), template found=${!!formatTemplate}`);
       }
       
       console.log(`[Selective Scheduling] Generated ${bracketGames.length} games for bracket ${bracket.name} (template: ${bracket.tournamentFormat})`);
