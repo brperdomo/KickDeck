@@ -7,7 +7,8 @@ import {
   games,
   gameTimeSlots,
   fields,
-  complexes
+  complexes,
+  eventBrackets
 } from '@db/schema';
 import { eq, and, inArray } from 'drizzle-orm';
 
@@ -19,6 +20,7 @@ interface TeamData {
   gender: string;
   coach: any; // JSON field with coach info
   coachNames: string[]; // Extracted coach names for conflict detection
+  bracketId?: number | null; // Associated bracket ID for rest period lookup
 }
 
 interface GameFormat {
@@ -61,6 +63,7 @@ export class IntelligentSchedulingEngine {
   private availableFields: FieldData[] = [];
   private tournamentDates: Date[] = [];
   private coachConflicts: Map<string, number[]> = new Map(); // coach name -> team IDs
+  private teamRestPeriods: Map<number, number> = new Map(); // team ID -> rest period in minutes
 
   constructor(eventId: number) {
     this.eventId = eventId;
@@ -99,6 +102,9 @@ export class IntelligentSchedulingEngine {
     // Load available fields
     await this.loadFields();
 
+    // Load bracket-specific rest periods
+    await this.loadTeamRestPeriods();
+
     // Analyze coach conflicts
     this.analyzeCoachConflicts();
 
@@ -114,6 +120,7 @@ export class IntelligentSchedulingEngine {
       id: teams.id,
       name: teams.name,
       ageGroupId: teams.ageGroupId,
+      bracketId: teams.bracketId,
       status: teams.status,
       coach: teams.coach
     })
@@ -146,6 +153,7 @@ export class IntelligentSchedulingEngine {
         id: team.id,
         name: team.name,
         ageGroupId: team.ageGroupId,
+        bracketId: team.bracketId,
         ageGroup,
         gender,
         coach: team.coach,
@@ -235,6 +243,59 @@ export class IntelligentSchedulingEngine {
     }));
 
     console.log(`Loaded ${this.availableFields.length} available fields`);
+  }
+
+  /**
+   * Load team-specific rest periods from their associated brackets
+   */
+  private async loadTeamRestPeriods(): Promise<void> {
+    console.log('Loading bracket-specific rest periods for teams...');
+    
+    // Get all brackets for this event with their tournament settings
+    const brackets = await db.select({
+      id: eventBrackets.id,
+      name: eventBrackets.name,
+      tournamentSettings: eventBrackets.tournamentSettings
+    })
+    .from(eventBrackets)
+    .where(eq(eventBrackets.eventId, this.eventId.toString()));
+
+    console.log(`Found ${brackets.length} brackets for event ${this.eventId}`);
+
+    // Map each team to its bracket's rest period
+    for (const team of this.teams) {
+      if (team.bracketId) {
+        const bracket = brackets.find(b => b.id === team.bracketId);
+        if (bracket && bracket.tournamentSettings) {
+          let restPeriod = 90; // Default rest period from the screenshot (90 minutes)
+          
+          try {
+            const settings = typeof bracket.tournamentSettings === 'string' 
+              ? JSON.parse(bracket.tournamentSettings) 
+              : bracket.tournamentSettings;
+            
+            if (settings.restPeriodMinutes && typeof settings.restPeriodMinutes === 'number') {
+              restPeriod = settings.restPeriodMinutes;
+            }
+          } catch (e) {
+            console.log(`Could not parse tournament settings for bracket ${bracket.name}, using default rest period`);
+          }
+          
+          this.teamRestPeriods.set(team.id, restPeriod);
+          console.log(`Team ${team.name} (Bracket: ${bracket.name}) → Rest Period: ${restPeriod} minutes`);
+        } else {
+          // Use global constraint as fallback
+          this.teamRestPeriods.set(team.id, this.constraints.minTimeBetweenGames);
+          console.log(`Team ${team.name} → Using global rest period: ${this.constraints.minTimeBetweenGames} minutes`);
+        }
+      } else {
+        // No bracket assigned, use global constraint
+        this.teamRestPeriods.set(team.id, this.constraints.minTimeBetweenGames);
+        console.log(`Team ${team.name} (No bracket) → Using global rest period: ${this.constraints.minTimeBetweenGames} minutes`);
+      }
+    }
+    
+    console.log(`Loaded rest periods for ${this.teamRestPeriods.size} teams`);
   }
 
   /**
@@ -577,12 +638,15 @@ export class IntelligentSchedulingEngine {
     return conflicts;
   }
 
-  // Check if teams are available (respect rest time)
+  // Check if teams are available (respect rest time based on flight-specific rest periods)
   private checkTeamConflicts(teamIds: number[], timeSlot: {startTime: Date, endTime: Date}, teamSchedule: Map<number, Array<{start: Date, end: Date, gameIndex: number}>>): string[] {
     const conflicts: string[] = [];
     
     for (const teamId of teamIds) {
       const teamGames = teamSchedule.get(teamId) || [];
+      
+      // Get team-specific rest period (defaults to global constraint if not found)
+      const teamRestPeriod = this.teamRestPeriods.get(teamId) || this.constraints.minTimeBetweenGames;
       
       for (const game of teamGames) {
         // Check for overlap
@@ -591,17 +655,23 @@ export class IntelligentSchedulingEngine {
           continue;
         }
         
-        // Check minimum rest time between games
-        const timeBetween = Math.min(
-          Math.abs(timeSlot.startTime.getTime() - game.end.getTime()),
-          Math.abs(game.start.getTime() - timeSlot.endTime.getTime())
-        );
+        // CRITICAL FIX: Calculate rest time from END of previous game to START of new game
+        // This enforces the requirement that "the team's next game should start 90 minutes after their first game ENDS"
+        const timeSinceGameEnded = timeSlot.startTime.getTime() - game.end.getTime();
+        const minRestMs = teamRestPeriod * 60 * 1000;
         
-        const minRestMs = this.constraints.minTimeBetweenGames * 60 * 1000;
+        if (timeSinceGameEnded < minRestMs && timeSinceGameEnded >= 0) {
+          const restMinutes = Math.round(timeSinceGameEnded / (60 * 1000));
+          const teamName = this.teams.find(t => t.id === teamId)?.name || `Team ${teamId}`;
+          conflicts.push(`${teamName} insufficient rest: ${restMinutes}min < ${teamRestPeriod}min required (from game end to new game start)`);
+        }
         
-        if (timeBetween < minRestMs) {
-          const restMinutes = Math.round(timeBetween / (60 * 1000));
-          conflicts.push(`Team ${teamId} insufficient rest: ${restMinutes}min < ${this.constraints.minTimeBetweenGames}min required`);
+        // Also check the reverse: new game ending before previous game starts
+        const timeBeforeGameStarts = game.start.getTime() - timeSlot.endTime.getTime();
+        if (timeBeforeGameStarts < minRestMs && timeBeforeGameStarts >= 0) {
+          const restMinutes = Math.round(timeBeforeGameStarts / (60 * 1000));
+          const teamName = this.teams.find(t => t.id === teamId)?.name || `Team ${teamId}`;
+          conflicts.push(`${teamName} insufficient rest: ${restMinutes}min < ${teamRestPeriod}min required (from new game end to existing game start)`);
         }
       }
     }
