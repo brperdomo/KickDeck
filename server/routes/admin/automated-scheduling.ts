@@ -4,6 +4,8 @@ import { db } from '../../../db/index.js';
 import { teams, events, eventGameFormats, complexes, fields, games, eventBrackets } from '../../../db/schema.js';
 import { eq, and, inArray, sql } from 'drizzle-orm';
 import { validateSchedulingSafety, validateFieldCapacity, validateNoDuplicateGames } from '../../middleware/scheduling-safety.js';
+import { TournamentScheduler } from '../../services/tournament-scheduler.js';
+import { TournamentScheduler } from '../../services/tournament-scheduler.js';
 
 const router = Router();
 
@@ -195,132 +197,136 @@ router.post('/events/:eventId/scheduling/validate', requirePermission('manage_ev
   }
 });
 
-// Generate complete automated schedule
+// Generate complete automated schedule (FIXED: Only for properly configured flights)
 router.post('/events/:eventId/scheduling/auto-generate', requirePermission('manage_events'), async (req, res) => {
   try {
     const { eventId } = req.params;
-    const {
-      includeApprovedTeams,
-      autoCreateFlights,
-      autoGenerateBrackets,
-      autoSeedTeams,
-      optimizeFieldUsage,
-      detectConflicts,
-      respectGameFormatRules,
-      targetFlightIds,
-      targetBracketIds,
-      forceGeneration = false // Override safety checks (admin only)
-    } = req.body;
+    const { forceGeneration = false } = req.body;
 
-    console.log(`[Automated Scheduling] Starting automated schedule generation for event ${eventId}`);
+    console.log(`[Schedule All] Starting schedule generation for event ${eventId}`);
 
-    // MANDATORY SAFETY CHECK: Validate before generating any games
-    if (!forceGeneration) {
-      console.log(`[Automated Scheduling] Running mandatory safety checks`);
+    // STEP 1: Find brackets with proper flight format configurations
+    const configuredBrackets = await db.query.eventBrackets.findMany({
+      where: eq(eventBrackets.eventId, eventId),
+      with: {
+        teams: {
+          where: eq(teams.status, 'approved')
+        }
+      }
+    });
+
+    console.log(`[Schedule All] Found ${configuredBrackets.length} total brackets in event`);
+
+    // STEP 2: Check which brackets have flight format configurations
+    const gameFormats = await db.query.eventGameFormats.findMany({
+      where: eq(eventGameFormats.eventId, parseInt(eventId))
+    });
+
+    console.log(`[Schedule All] Found ${gameFormats.length} flight format configurations`);
+
+    // STEP 3: Filter brackets that have sufficient teams and format configurations
+    const eligibleBrackets = configuredBrackets.filter(bracket => {
+      const hasEnoughTeams = bracket.teams.length >= 2;
+      const hasFormat = bracket.tournamentFormat && bracket.tournamentFormat !== null;
       
-      // Quick estimate of games needed for validation
-      const estimatedGames = 50; // Will be calculated more precisely below
+      if (!hasEnoughTeams) {
+        console.log(`[Schedule All] Skipping bracket ${bracket.name} - only ${bracket.teams.length} teams`);
+        return false;
+      }
       
-      const safetyCheck = await validateSchedulingSafety(
-        eventId,
-        estimatedGames,
-        targetFlightIds,
-        targetBracketIds
-      );
+      if (!hasFormat) {
+        console.log(`[Schedule All] Skipping bracket ${bracket.name} - no tournament format configured`);
+        return false;
+      }
+      
+      console.log(`[Schedule All] ✓ Bracket ${bracket.name} eligible: ${bracket.teams.length} teams, format: ${bracket.tournamentFormat}`);
+      return true;
+    });
 
-      if (!safetyCheck.canProceed) {
-        console.log(`[Automated Scheduling] BLOCKED: Safety check failed`);
-        return res.status(400).json({
-          error: 'Cannot proceed with scheduling - critical safety issues detected',
-          safetyCheck,
-          solution: 'Resolve the listed errors before attempting to generate games'
+    console.log(`[Schedule All] ${eligibleBrackets.length} of ${configuredBrackets.length} brackets are eligible for scheduling`);
+
+    if (eligibleBrackets.length === 0) {
+      return res.status(400).json({ 
+        error: 'No eligible brackets found for scheduling',
+        details: `Found ${configuredBrackets.length} brackets but none have both sufficient teams (≥2) and proper format configurations. Configure flight formats first.`,
+        configured_brackets: configuredBrackets.length,
+        format_configurations: gameFormats.length
+      });
+    }
+
+    // STEP 4: Generate games for each eligible bracket using actual database formats
+    let totalGames = 0;
+    const schedulingResults = [];
+
+    for (const bracket of eligibleBrackets) {
+      console.log(`[Schedule All] Processing bracket: ${bracket.name} (${bracket.teams.length} teams, format: ${bracket.tournamentFormat})`);
+      
+      try {
+        // Use the existing selective scheduling logic with actual database bracket data
+        const bracketData = [{
+          bracketId: bracket.id,
+          bracketName: bracket.name,
+          format: bracket.tournamentFormat,
+          tournamentFormat: bracket.tournamentFormat,
+          templateName: bracket.tournamentFormat,
+          teams: bracket.teams.map(team => ({
+            id: team.id,
+            name: team.name,
+            bracketId: team.bracketId
+          }))
+        }];
+
+        // Generate games using the tournament scheduler with real database formats
+        const scheduleResult = await TournamentScheduler.generateSchedule(eventId, bracketData);
+        const bracketGames = scheduleResult.games;
+        
+        console.log(`[Schedule All] Generated ${bracketGames.length} games for bracket ${bracket.name}`);
+        totalGames += bracketGames.length;
+        
+        schedulingResults.push({
+          bracketId: bracket.id,
+          bracketName: bracket.name,
+          format: bracket.tournamentFormat,
+          gamesGenerated: bracketGames.length,
+          teams: bracket.teams.length
+        });
+
+      } catch (error) {
+        console.error(`[Schedule All] Error processing bracket ${bracket.name}:`, error);
+        schedulingResults.push({
+          bracketId: bracket.id,
+          bracketName: bracket.name,
+          format: bracket.tournamentFormat,
+          error: error.message,
+          teams: bracket.teams.length
         });
       }
-
-      console.log(`[Automated Scheduling] Safety checks passed - proceeding with generation`);
-    } else {
-      console.log(`[Automated Scheduling] WARNING: Force generation enabled - bypassing safety checks`);
     }
 
-    // Step 1: Analyze approved teams
-    const approvedTeams = await db.query.teams.findMany({
-      where: and(
-        eq(teams.eventId, eventId),
-        eq(teams.status, 'approved')
-      ),
-      with: {
-        ageGroup: true
-      }
-    });
-
-    console.log(`[Automated Scheduling] Found ${approvedTeams.length} approved teams`);
-
-    if (approvedTeams.length === 0) {
-      return res.status(400).json({ error: 'No approved teams found for scheduling' });
-    }
-
-    // Step 2: Auto-create flights
-    const flightData = await createAutomaticFlights(parseInt(eventId), approvedTeams);
-    console.log(`[Automated Scheduling] Created ${flightData.flights.length} flights`);
-
-    // Step 3: Auto-generate brackets
-    const bracketData = await createAutomaticBrackets(parseInt(eventId), flightData.flights, approvedTeams);
-    console.log(`[Automated Scheduling] Generated ${bracketData.brackets.length} brackets`);
-
-    // Step 4: Auto-seed teams
-    const seedingData = await createAutomaticSeeding(bracketData.brackets, approvedTeams);
-    console.log(`[Automated Scheduling] Completed automatic seeding for all brackets`);
-
-    // Step 5: Field capacity analysis and time block generation
-    const fieldData = await analyzeFieldCapacity(parseInt(eventId));
-    const timeBlockData = await generateOptimalTimeBlocks(parseInt(eventId), fieldData, bracketData.totalGames);
-    console.log(`[Automated Scheduling] Generated ${timeBlockData.timeBlocks.length} time blocks`);
-
-    // Step 6: Conflict detection
-    const conflictAnalysis = await detectSchedulingConflicts(approvedTeams, seedingData, timeBlockData);
-    console.log(`[Automated Scheduling] Detected ${conflictAnalysis.conflicts.length} conflicts`);
-
-    // Step 7: Generate final schedule
-    const finalSchedule = await generateCompleteSchedule({
-      eventId: parseInt(eventId),
-      flights: flightData.flights,
-      brackets: bracketData.brackets,
-      seeding: seedingData,
-      timeBlocks: timeBlockData.timeBlocks,
-      fields: fieldData.fields,
-      conflicts: conflictAnalysis
-    });
-
-    console.log(`[Automated Scheduling] Generated complete schedule with ${finalSchedule.games.length} games`);
-
-    // Save the complete workflow data
-    await saveAutomatedWorkflowData(parseInt(eventId), {
-      flights: flightData,
-      brackets: bracketData,
-      seeding: seedingData,
-      timeBlocks: timeBlockData,
-      schedule: finalSchedule,
-      conflicts: conflictAnalysis
-    });
+    console.log(`[Schedule All] COMPLETED: Generated ${totalGames} total games for ${eligibleBrackets.length} brackets`);
 
     res.json({
       success: true,
-      totalGames: finalSchedule.games.length,
-      totalDays: timeBlockData.daysRequired,
-      conflictsDetected: conflictAnalysis.conflicts.length,
-      warningsDetected: conflictAnalysis.warnings.length,
-      schedule: finalSchedule,
+      message: `Schedule generated successfully for ${eligibleBrackets.length} properly configured brackets`,
+      totalGames,
+      eligibleBrackets: eligibleBrackets.length,
+      totalBrackets: configuredBrackets.length,
+      flightFormatConfigurations: gameFormats.length,
+      schedulingResults,
       summary: {
-        flights: flightData.flights.length,
-        brackets: bracketData.brackets.length,
-        timeBlocks: timeBlockData.timeBlocks.length,
-        fieldsUsed: fieldData.fields.length
+        eligible_for_scheduling: eligibleBrackets.length,
+        total_brackets_in_event: configuredBrackets.length,
+        flight_format_configs_found: gameFormats.length,
+        games_generated: totalGames
       }
     });
 
   } catch (error) {
-    console.error('Automated scheduling generation error:', error);
-    res.status(500).json({ error: 'Failed to generate automated schedule' });
+    console.error('[Schedule All] Error:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate schedule',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 
