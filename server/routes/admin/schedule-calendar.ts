@@ -316,6 +316,20 @@ router.put('/games/:gameId/reschedule', async (req, res) => {
       .returning();
 
     console.log(`[Game Reschedule] FIXED: Updated games table for game ${gameId}`, updatedGame[0]);
+    
+    // Verify the update by querying the database again
+    const verificationQuery = await db
+      .select({
+        id: games.id,
+        fieldId: games.fieldId,
+        scheduledDate: games.scheduledDate,
+        scheduledTime: games.scheduledTime,
+        status: games.status
+      })
+      .from(games)
+      .where(eq(games.id, parseInt(gameId)));
+      
+    console.log(`[Game Reschedule] DATABASE VERIFICATION - Game ${gameId} current state:`, verificationQuery[0]);
 
     res.json({
       success: true,
