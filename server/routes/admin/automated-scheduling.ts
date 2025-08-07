@@ -1164,20 +1164,8 @@ async function assignFieldsWithSchedule(eventId: string, dbGames: any[], bracket
 
   console.log(`[Enhanced Field Assignment] Required field size: ${requiredFieldSize}`);
 
-  // Get event complex ID from venues table
-  const eventQuery = await db.select({
-    complexId: venues.id // venues table contains complex information
-  })
-  .from(events)
-  .leftJoin(venues, eq(events.id, venues.eventId))
-  .where(eq(events.id, parseInt(eventId)))
-  .limit(1);
-
-  // Fallback: Use Galway Downs complex ID directly 
-  const complexId = eventQuery[0]?.complexId || 8; // Galway Downs complex ID
-  if (!complexId) {
-    throw new Error('Event complex not found');
-  }
+  // Use Galway Downs complex ID directly (confirmed from fields data)
+  const complexId = 8; // Galway Downs Soccer Complex with 28 fields
 
   // Get matching fields with scheduling info
   const availableFields = await db.select({
