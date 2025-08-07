@@ -6,13 +6,17 @@ import {
   resendPaymentConfirmation,
   getCurrentUserRegistrations,
   updateMemberEmail,
-  mergeMembers
+  mergeMembers,
+  exportContacts
 } from './members';
 
 const membersRouter = express.Router();
 
 // Get all members with search and pagination
 membersRouter.get('/', getAllMembers);
+
+// Export contacts to CSV
+membersRouter.get('/export-contacts', exportContacts);
 
 // Get team registration details
 membersRouter.get('/registrations/:teamId', getTeamRegistrationDetails);
