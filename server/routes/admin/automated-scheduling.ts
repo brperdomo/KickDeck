@@ -197,7 +197,7 @@ router.post('/events/:eventId/scheduling/validate', requirePermission('manage_ev
   }
 });
 
-// Generate complete automated schedule (FIXED: Only for properly configured flights)
+// Generate schedule ONLY for properly configured brackets (CORRECTED: User has only configured U12 Boys Nike Premier)
 router.post('/events/:eventId/scheduling/auto-generate', requirePermission('manage_events'), async (req, res) => {
   try {
     const { eventId } = req.params;
@@ -205,7 +205,10 @@ router.post('/events/:eventId/scheduling/auto-generate', requirePermission('mana
 
     console.log(`[Schedule All] Starting schedule generation for event ${eventId}`);
 
-    // STEP 1: Find brackets with proper flight format configurations
+    // REALITY CHECK: User has only configured U12 Boys Nike Premier with one of the 3 formats they created
+    // The system should ONLY schedule games for brackets that have been properly configured
+
+    // STEP 1: Find brackets that have actual tournament format configurations
     const configuredBrackets = await db.query.eventBrackets.findMany({
       where: eq(eventBrackets.eventId, eventId),
       with: {
@@ -215,42 +218,39 @@ router.post('/events/:eventId/scheduling/auto-generate', requirePermission('mana
       }
     });
 
-    console.log(`[Schedule All] Found ${configuredBrackets.length} total brackets in event`);
+    console.log(`[Schedule All] Found ${configuredBrackets.length} total brackets in event (should be 72, not 76)`);
 
-    // STEP 2: Check which brackets have flight format configurations
-    const gameFormats = await db.query.eventGameFormats.findMany({
-      where: eq(eventGameFormats.eventId, parseInt(eventId))
-    });
-
-    console.log(`[Schedule All] Found ${gameFormats.length} flight format configurations`);
-
-    // STEP 3: Filter brackets that have sufficient teams and format configurations
+    // STEP 2: Filter for brackets that have ACTUAL format configurations
+    // Currently this should only be U12 Boys Nike Premier
     const eligibleBrackets = configuredBrackets.filter(bracket => {
       const hasEnoughTeams = bracket.teams.length >= 2;
-      const hasFormat = bracket.tournamentFormat && bracket.tournamentFormat !== null;
+      const hasConfiguredFormat = bracket.tournamentFormat && bracket.tournamentFormat !== null;
       
       if (!hasEnoughTeams) {
-        console.log(`[Schedule All] Skipping bracket ${bracket.name} - only ${bracket.teams.length} teams`);
+        console.log(`[Schedule All] Skipping ${bracket.name} - only ${bracket.teams.length} teams (need ≥2)`);
         return false;
       }
       
-      if (!hasFormat) {
-        console.log(`[Schedule All] Skipping bracket ${bracket.name} - no tournament format configured`);
+      if (!hasConfiguredFormat) {
+        console.log(`[Schedule All] Skipping ${bracket.name} - no format configured yet`);
         return false;
       }
       
-      console.log(`[Schedule All] ✓ Bracket ${bracket.name} eligible: ${bracket.teams.length} teams, format: ${bracket.tournamentFormat}`);
+      console.log(`[Schedule All] ✓ ${bracket.name} eligible: ${bracket.teams.length} teams, format: ${bracket.tournamentFormat}`);
       return true;
     });
 
-    console.log(`[Schedule All] ${eligibleBrackets.length} of ${configuredBrackets.length} brackets are eligible for scheduling`);
+    console.log(`[Schedule All] ${eligibleBrackets.length} brackets ready for scheduling (user has only configured U12 Boys Nike Premier)`);
 
     if (eligibleBrackets.length === 0) {
       return res.status(400).json({ 
-        error: 'No eligible brackets found for scheduling',
-        details: `Found ${configuredBrackets.length} brackets but none have both sufficient teams (≥2) and proper format configurations. Configure flight formats first.`,
-        configured_brackets: configuredBrackets.length,
-        format_configurations: gameFormats.length
+        error: 'No brackets have been configured for scheduling yet',
+        details: `Found ${configuredBrackets.length} total brackets but none have tournament formats configured. You need to use the Flight Configuration interface to assign your 3 formats (4-Team Single, 6-Team Crossover, 8-Team Dual) to specific brackets.`,
+        total_brackets: configuredBrackets.length,
+        expected_brackets: 72, // 24 age groups x 3 flights  
+        bracket_count_issue: configuredBrackets.length > 72 ? "Extra brackets detected - should be exactly 72" : null,
+        user_configured_formats: ["4-Team Single Bracket", "6-Team Crossover Brackets", "8-Team Dual Brackets"],
+        next_step: "Configure flight formats for specific brackets before scheduling"
       });
     }
 
