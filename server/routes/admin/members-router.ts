@@ -7,7 +7,8 @@ import {
   getCurrentUserRegistrations,
   updateMemberEmail,
   mergeMembers,
-  exportContacts
+  exportContacts,
+  exportMembersToCSV
 } from './members';
 
 const membersRouter = express.Router();
@@ -17,6 +18,9 @@ membersRouter.get('/', getAllMembers);
 
 // Export contacts to CSV
 membersRouter.get('/export-contacts', exportContacts);
+
+// Export members to CSV with event filtering
+membersRouter.get('/export-csv', exportMembersToCSV);
 
 // Get team registration details
 membersRouter.get('/registrations/:teamId', getTeamRegistrationDetails);

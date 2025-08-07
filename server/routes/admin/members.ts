@@ -5,6 +5,7 @@ import { passwordResetTokens } from '@db/schema/passwordReset';
 import { eq, like, and, or, desc, asc, inArray } from 'drizzle-orm';
 import { sendTemplatedEmail } from '../../services/emailService';
 import { SQL, sql } from 'drizzle-orm';
+import { stringify } from 'csv-stringify/sync';
 
 /**
  * Get all members in the system with search and pagination
@@ -1012,5 +1013,139 @@ export async function updateMemberEmail(req: Request, res: Response) {
   } catch (error) {
     console.error('Error updating member email:', error);
     res.status(500).json({ error: 'Failed to update member email' });
+  }
+}
+
+/**
+ * Export members to CSV with event filtering
+ */
+export async function exportMembersToCSV(req: Request, res: Response) {
+  try {
+    const { eventId, search } = req.query;
+    
+    console.log('CSV Export - eventId:', eventId, 'search:', search);
+    
+    // Build search conditions
+    let whereClause: SQL<unknown> | undefined;
+    const conditions = [];
+    
+    if (search) {
+      const searchTerm = `%${search}%`;
+      conditions.push(
+        or(
+          like(users.firstName, searchTerm),
+          like(users.lastName, searchTerm),
+          like(users.email, searchTerm),
+          like(users.username, searchTerm)
+        )
+      );
+    }
+    
+    let membersWithEventData: any[] = [];
+    
+    if (eventId && eventId !== 'all') {
+      // Get members associated with a specific event
+      const eventTeams = await db
+        .select({ 
+          managerEmail: teams.managerEmail,
+          submitterEmail: teams.submitterEmail,
+          coach: teams.coach,
+          eventId: teams.eventId
+        })
+        .from(teams)
+        .where(eq(teams.eventId, eventId as string));
+      
+      const eventEmails = new Set<string>();
+      eventTeams.forEach(team => {
+        if (team.managerEmail) eventEmails.add(team.managerEmail);
+        if (team.submitterEmail) eventEmails.add(team.submitterEmail);
+        if (team.coach) {
+          try {
+            const coachData = JSON.parse(team.coach);
+            if (coachData.headCoachEmail) eventEmails.add(coachData.headCoachEmail);
+          } catch (e) {
+            // Ignore JSON parse errors
+          }
+        }
+      });
+      
+      if (eventEmails.size > 0) {
+        conditions.push(inArray(users.email, Array.from(eventEmails)));
+      } else {
+        // No members found for this event
+        return res.json({ members: [], csv: '' });
+      }
+      
+      // Build final where clause
+      if (conditions.length > 0) {
+        whereClause = and(...conditions);
+      }
+      
+      // Get members with event info
+      const members = whereClause
+        ? await db.select().from(users).where(whereClause).orderBy(asc(users.lastName))
+        : await db.select().from(users).orderBy(asc(users.lastName));
+      
+      // Get event details
+      const [eventDetails] = await db
+        .select()
+        .from(events)
+        .where(eq(events.id, eventId as string))
+        .limit(1);
+      
+      membersWithEventData = members.map(member => ({
+        name: `${member.firstName} ${member.lastName}`,
+        phone: member.phone || '',
+        email: member.email,
+        eventId: eventId,
+        eventName: eventDetails?.name || 'Unknown Event'
+      }));
+      
+    } else {
+      // Get all members (no event filter)
+      if (conditions.length > 0) {
+        whereClause = and(...conditions);
+      }
+      
+      const members = whereClause
+        ? await db.select().from(users).where(whereClause).orderBy(asc(users.lastName))
+        : await db.select().from(users).orderBy(asc(users.lastName));
+      
+      membersWithEventData = members.map(member => ({
+        name: `${member.firstName} ${member.lastName}`,
+        phone: member.phone || '',
+        email: member.email,
+        eventId: 'All Events',
+        eventName: 'All Events'
+      }));
+    }
+    
+    // Generate CSV
+    const csvHeaders = ['Name', 'Phone', 'Email', 'EventID', 'Event Name'];
+    const csvData = [
+      csvHeaders,
+      ...membersWithEventData.map(member => [
+        member.name,
+        member.phone,
+        member.email,
+        member.eventId,
+        member.eventName
+      ])
+    ];
+    
+    const csvString = stringify(csvData);
+    
+    // Set CSV headers
+    const fileName = eventId && eventId !== 'all' 
+      ? `members-event-${eventId}-${new Date().toISOString().split('T')[0]}.csv`
+      : `all-members-${new Date().toISOString().split('T')[0]}.csv`;
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.send(csvString);
+    
+  } catch (error) {
+    console.error('Error exporting members to CSV:', error);
+    res.status(500).json({ error: 'Failed to export members to CSV' });
   }
 }
