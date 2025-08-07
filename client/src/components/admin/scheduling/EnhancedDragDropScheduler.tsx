@@ -305,10 +305,23 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
           });
 
           if (conflictGames.length > 0) {
+            // Get the specific teams that have conflicts
+            const conflictingTeams = new Set<string>();
+            teams.forEach(team => {
+              if (conflictGames.some(g => g.homeTeamName === team || g.awayTeamName === team)) {
+                conflictingTeams.add(team);
+              }
+            });
+            
+            const teamList = Array.from(conflictingTeams);
+            const teamNames = teamList.length > 2 
+              ? `${teamList.slice(0, 2).join(', ')} and ${teamList.length - 2} other teams`
+              : teamList.join(' and ');
+            
             conflicts.push({
               type: 'team_rest',
               severity: 'warning',
-              message: `Teams have insufficient rest between ${slot.displayTime} and ${conflictSlot.displayTime}`,
+              message: `${teamNames} have insufficient rest between ${slot.displayTime} and ${conflictSlot.displayTime}`,
               gameIds: [game.id, ...conflictGames.map(g => g.id)]
             });
           }
