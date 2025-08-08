@@ -477,14 +477,14 @@ router.get('/events/:eventId/quick-gap-analysis', isAdmin, async (req, res) => {
       .select({
         id: games.id,
         fieldId: games.fieldId,
-        startTime: games.startTime,
+        scheduledDate: games.scheduledDate,
+        scheduledTime: games.scheduledTime,
         duration: games.duration
       })
       .from(games)
       .where(and(
-        eq(games.eventId, eventId),
-        gte(games.startTime, date),
-        lte(games.startTime, date + ' 23:59:59')
+        eq(games.eventId, eventId.toString()),
+        eq(games.scheduledDate, date)
       ));
     
     console.log(`🏟️ Found ${fieldsData.length} fields and ${gamesData.length} games on ${date}`);
@@ -505,17 +505,18 @@ router.get('/events/:eventId/quick-gap-analysis', isAdmin, async (req, res) => {
     
     // Map games to their time slots
     gamesData.forEach(game => {
-      const startTime = new Date(game.startTime);
-      const timeKey = `${startTime.getHours()}:${startTime.getMinutes().toString().padStart(2, '0')}`;
-      
-      if (!timeSlotMap.has(timeKey)) {
-        timeSlotMap.set(timeKey, new Set());
+      if (game.scheduledTime) {
+        const timeKey = game.scheduledTime; // Time is already in HH:MM format
+        
+        if (!timeSlotMap.has(timeKey)) {
+          timeSlotMap.set(timeKey, new Set());
+        }
+        timeSlotMap.get(timeKey).add(game.fieldId);
       }
-      timeSlotMap.get(timeKey).add(game.fieldId);
     });
     
     // Calculate gaps: prime time slots with unused fields
-    const primeTimeSlots = ['08:00', '09:30', '11:00', '12:30', '14:00', '15:30', '17:00'];
+    const primeTimeSlots = ['08:00:00', '09:30:00', '11:00:00', '12:30:00', '14:00:00', '15:30:00', '17:00:00'];
     let gapOpportunities = 0;
     
     primeTimeSlots.forEach(timeSlot => {
@@ -556,23 +557,21 @@ router.post('/events/:eventId/optimize-schedule', isAdmin, async (req, res) => {
     
     console.log(`🚀 Starting schedule optimization for Event ${eventId} on ${targetDate}`);
     
-    // Step 1: Find games that can be optimized
+    // Step 1: Find games that can be optimized  
     const gamesForOptimization = await db
       .select({
         id: games.id,
         homeTeamId: games.homeTeamId,
         awayTeamId: games.awayTeamId,
         fieldId: games.fieldId,
-        startTime: games.startTime,
-        endTime: games.endTime,
-        duration: games.duration,
-        fieldSize: games.fieldSize
+        scheduledDate: games.scheduledDate,
+        scheduledTime: games.scheduledTime,
+        duration: games.duration
       })
       .from(games)
       .where(and(
-        eq(games.eventId, eventId),
-        gte(games.startTime, targetDate),
-        lte(games.startTime, targetDate + ' 23:59:59')
+        eq(games.eventId, eventId.toString()),
+        eq(games.scheduledDate, targetDate)
       ));
 
     console.log(`📋 Found ${gamesForOptimization.length} games for optimization analysis`);
@@ -597,13 +596,14 @@ router.post('/events/:eventId/optimize-schedule', isAdmin, async (req, res) => {
     // Build time slot usage map for gap analysis
     const timeSlotUsage = new Map();
     gamesForOptimization.forEach(game => {
-      const startTime = new Date(game.startTime);
-      const timeKey = `${startTime.getHours()}:${startTime.getMinutes().toString().padStart(2, '0')}`;
-      
-      if (!timeSlotUsage.has(timeKey)) {
-        timeSlotUsage.set(timeKey, new Set());
+      if (game.scheduledTime) {
+        const timeKey = game.scheduledTime; // Already in HH:MM:SS format
+        
+        if (!timeSlotUsage.has(timeKey)) {
+          timeSlotUsage.set(timeKey, new Set());
+        }
+        timeSlotUsage.get(timeKey).add(game.fieldId);
       }
-      timeSlotUsage.get(timeKey).add(game.fieldId);
     });
 
     console.log(`🎯 Time slot analysis:`, Array.from(timeSlotUsage.entries()).map(([time, fields]) => 
@@ -611,40 +611,33 @@ router.post('/events/:eventId/optimize-schedule', isAdmin, async (req, res) => {
     
     // Find games that can be moved to fill gaps
     for (const game of gamesForOptimization) {
-      const currentTime = new Date(game.startTime);
-      const currentTimeKey = `${currentTime.getHours()}:${currentTime.getMinutes().toString().padStart(2, '0')}`;
+      if (!game.scheduledTime) continue;
+      
+      const currentTimeKey = game.scheduledTime;
       
       // Look for earlier time slots with available fields (gap-filling)
       const possibleEarlierSlots = [
-        '09:30', '11:00', '12:30'  // Common gap periods after 8 AM games
+        '09:30:00', '11:00:00', '12:30:00'  // Common gap periods after 8 AM games
       ];
       
       for (const earlierSlot of possibleEarlierSlots) {
-        const [hours, minutes] = earlierSlot.split(':').map(Number);
-        const earlierTime = new Date(currentTime);
-        earlierTime.setHours(hours, minutes, 0, 0);
-        
         // Only move to earlier slots that create better utilization
-        if (earlierTime < currentTime) {
+        if (earlierSlot < currentTimeKey) {
           const usedFieldsInSlot = timeSlotUsage.get(earlierSlot) || new Set();
           
           // Find optimal field based on proximity and availability
           const optimalField = availableFields
-            .filter(f => f.fieldSize === game.fieldSize || !game.fieldSize)
             .filter(f => !usedFieldsInSlot.has(f.id)) // Field must be available in target slot
             .sort((a, b) => (a.sortOrder || 999) - (b.sortOrder || 999))[0];
           
           if (optimalField) {
-            const optimizedTimeString = earlierTime.toISOString();
-            
             try {
               // Use the SAME reschedule API that drag-and-drop uses
               await db
                 .update(games)
                 .set({
                   fieldId: optimalField.id,
-                  startTime: optimizedTimeString,
-                  endTime: new Date(earlierTime.getTime() + (game.duration * 60000)).toISOString(),
+                  scheduledTime: earlierSlot,
                   updatedAt: new Date().toISOString()
                 })
                 .where(eq(games.id, game.id));
@@ -660,8 +653,8 @@ router.post('/events/:eventId/optimize-schedule', isAdmin, async (req, res) => {
               
               optimizations.push({
                 gameId: game.id,
-                oldTime: currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-                newTime: earlierTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                oldTime: currentTimeKey,
+                newTime: earlierSlot,
                 fieldName: optimalField.name,
                 oldFieldName: currentField?.name || 'Unknown',
                 improvement: 'Gap-filling optimization'
