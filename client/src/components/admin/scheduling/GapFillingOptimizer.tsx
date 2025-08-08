@@ -167,19 +167,19 @@ export function GapFillingOptimizer({ eventId, selectedDate }: GapFillingOptimiz
               <div className="grid grid-cols-1 gap-1 text-xs">
                 <div className="flex items-center gap-1">
                   <CheckCircle className="h-3 w-3 text-green-400" />
-                  <span>Fill gaps between existing games</span>
+                  <span>Consolidate games to fields 12, 13 first</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <CheckCircle className="h-3 w-3 text-green-400" />
-                  <span>Proximity-based field assignment</span>
+                  <span>Move games from fields 14, 15, 20 to priority fields</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <CheckCircle className="h-3 w-3 text-green-400" />
-                  <span>Resolve scheduling conflicts</span>
+                  <span>Fill fields to capacity before expanding</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <CheckCircle className="h-3 w-3 text-green-400" />
-                  <span>Maintain rest period constraints</span>
+                  <span>Minimize total fields in use</span>
                 </div>
               </div>
             </div>

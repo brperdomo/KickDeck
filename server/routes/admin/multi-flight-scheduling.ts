@@ -622,84 +622,105 @@ router.post('/events/:eventId/optimize-schedule', isAdmin, async (req, res) => {
     console.log(`🎯 Time slot analysis:`, Array.from(timeSlotUsage.entries()).map(([time, fields]) => 
       `${time}: ${fields.size} fields used`));
     
-    // Find games that can be moved to fill gaps
+    // FIELD CONSOLIDATION STRATEGY: Fill fields 12, 13 first, then expand
+    const fieldPriorityOrder = [12, 13, 14, 15, 20]; // Priority order for field consolidation
+    const fieldCapacityHours = 12; // Approximate operating hours per day
+    const gameSlotDuration = 1.5; // 90 minutes per game
+    const maxGamesPerField = Math.floor(fieldCapacityHours / gameSlotDuration); // ~8 games per field
+    
+    // Track games per field to determine capacity
+    const gamesPerField = new Map();
+    gamesForOptimization.forEach(game => {
+      if (game.fieldId) {
+        gamesPerField.set(game.fieldId, (gamesPerField.get(game.fieldId) || 0) + 1);
+      }
+    });
+    
+    console.log(`🎯 Current field usage:`, Array.from(gamesPerField.entries()).map(([fieldId, count]) => 
+      `Field ${fieldId}: ${count} games`));
+    
+    // Find games on lower-priority fields that can be moved to higher-priority fields
     for (const game of gamesForOptimization) {
-      if (!game.scheduledTime) continue;
+      if (!game.scheduledTime || !game.fieldId) continue;
+      
+      const currentFieldName = availableFields.find(f => f.id === game.fieldId)?.name;
+      const currentFieldNum = parseInt(currentFieldName || '999');
+      
+      // Only move games from lower-priority fields (14, 15, 20) to higher-priority fields (12, 13)
+      if (!fieldPriorityOrder.includes(currentFieldNum) || currentFieldNum <= 13) continue;
       
       const currentTimeKey = game.scheduledTime;
       
-      // Look for earlier time slots with available fields (gap-filling)
-      const possibleEarlierSlots = [
-        '09:30:00', '11:00:00', '12:30:00'  // Common gap periods after 8 AM games
+      // Look for available time slots across all possible times
+      const allTimeSlots = [
+        '08:00:00', '09:30:00', '11:00:00', '12:30:00', '14:00:00', '15:30:00', '17:00:00', '18:30:00'
       ];
       
-      for (const earlierSlot of possibleEarlierSlots) {
-        // Only move to earlier slots that create better utilization
-        if (earlierSlot < currentTimeKey) {
-          const usedFieldsInSlot = timeSlotUsage.get(earlierSlot) || new Set();
+      for (const targetSlot of allTimeSlots) {
+        const usedFieldsInSlot = timeSlotUsage.get(targetSlot) || new Set();
+        
+        // Find the highest-priority field that has capacity and is available
+        for (const priorityFieldNum of fieldPriorityOrder) {
+          const priorityField = availableFields.find(f => f.name === priorityFieldNum.toString());
+          if (!priorityField) continue;
           
-          // Get fields that already have some usage (prioritized)
-          const fieldsWithUsage = new Set();
-          timeSlotUsage.forEach((fields, timeSlot) => {
-            fields.forEach(fieldId => fieldsWithUsage.add(fieldId));
-          });
+          const currentGamesOnField = gamesPerField.get(priorityField.id) || 0;
+          const fieldHasCapacity = currentGamesOnField < maxGamesPerField;
+          const fieldAvailableInSlot = !usedFieldsInSlot.has(priorityField.id);
           
-          // Find optimal field - prioritize fields that already have usage
-          let optimalField = availableFields
-            .filter(f => !usedFieldsInSlot.has(f.id)) // Field must be available in target slot
-            .filter(f => fieldsWithUsage.has(f.id)) // PRIORITIZE: Only fields that already have games
-            .sort((a, b) => (a.sortOrder || 999) - (b.sortOrder || 999))[0];
+          // Only consolidate to higher-priority fields (12, 13 first)
+          if (priorityFieldNum >= currentFieldNum) break; // Don't move to same or lower priority
           
-          // Fallback: if no fields with usage are available, use any available field
-          if (!optimalField) {
-            optimalField = availableFields
-              .filter(f => !usedFieldsInSlot.has(f.id))
-              .sort((a, b) => (a.sortOrder || 999) - (b.sortOrder || 999))[0];
-          }
+          if (fieldHasCapacity && fieldAvailableInSlot) {
+            console.log(`🎯 Consolidating Game ${game.id}: Field ${currentFieldNum} → Field ${priorityFieldNum} at ${targetSlot}`)
           
-          console.log(`🎯 Gap-filling for Game ${game.id}: Fields with usage [${Array.from(fieldsWithUsage).join(', ')}], Target field: ${optimalField?.name || 'none'}`)
-          
-          if (optimalField) {
             try {
-              // Use the SAME reschedule API that drag-and-drop uses
+              // Use the same reschedule API that drag-and-drop uses
               await db
                 .update(games)
                 .set({
-                  fieldId: optimalField.id,
-                  scheduledTime: earlierSlot,
+                  fieldId: priorityField.id,
+                  scheduledTime: targetSlot,
                   updatedAt: new Date().toISOString()
                 })
                 .where(eq(games.id, game.id));
               
-              // Update time slot usage for future iterations
+              // Update tracking for future iterations
               timeSlotUsage.get(currentTimeKey)?.delete(game.fieldId);
-              if (!timeSlotUsage.has(earlierSlot)) {
-                timeSlotUsage.set(earlierSlot, new Set());
+              if (!timeSlotUsage.has(targetSlot)) {
+                timeSlotUsage.set(targetSlot, new Set());
               }
-              timeSlotUsage.get(earlierSlot).add(optimalField.id);
+              timeSlotUsage.get(targetSlot).add(priorityField.id);
               
-              const currentField = availableFields.find(f => f.id === game.fieldId);
+              // Update games per field count
+              gamesPerField.set(game.fieldId, (gamesPerField.get(game.fieldId) || 1) - 1);
+              gamesPerField.set(priorityField.id, (gamesPerField.get(priorityField.id) || 0) + 1);
               
               optimizations.push({
                 gameId: game.id,
                 oldTime: currentTimeKey,
-                newTime: earlierSlot,
-                fieldName: optimalField.name,
-                oldFieldName: currentField?.name || 'Unknown',
-                improvement: 'Gap-filling optimization'
+                newTime: targetSlot,
+                fieldName: priorityField.name,
+                oldFieldName: currentFieldName || 'Unknown',
+                improvement: `Field consolidation: ${currentFieldName} → ${priorityField.name}`
               });
               
               optimizationsApplied++;
-              fieldUtilizationImproved += 10; // Gap-filling provides better utilization improvement
+              fieldUtilizationImproved += 15; // Field consolidation provides significant improvement
               
-              console.log(`✅ Gap-Filled Game ${game.id}: ${currentTimeKey} → ${earlierSlot} on ${optimalField.name}`);
-              break; // Move to next game after successful optimization
+              console.log(`✅ Consolidated Game ${game.id}: Field ${currentFieldName} → ${priorityField.name} at ${targetSlot}`);
+              
+              // Break out of both loops after successful optimization
+              break;
               
             } catch (updateError) {
-              console.error(`❌ Failed to gap-fill Game ${game.id}:`, updateError);
+              console.error(`❌ Failed to consolidate Game ${game.id}:`, updateError);
             }
           }
         }
+        
+        // If we successfully moved this game, break out of time slot loop
+        if (optimizations.some(opt => opt.gameId === game.id)) break;
       }
     }
     
