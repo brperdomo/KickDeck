@@ -70,13 +70,26 @@ export function PublishSchedules({ eventId }: PublishSchedulesProps) {
   const queryClient = useQueryClient();
 
   // Fetch current schedule data for preview
-  const { data: schedulePreview, isLoading: loadingPreview } = useQuery({
+  const { data: schedulePreview, isLoading: loadingPreview, error: previewError } = useQuery({
     queryKey: ['schedule-preview', eventId],
     queryFn: async () => {
       const response = await fetch(`/api/admin/events/${eventId}/schedule-preview`);
-      if (!response.ok) throw new Error('Failed to fetch schedule preview');
-      return response.json() as ScheduleData;
-    }
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Return empty data structure if no schedule exists yet
+          return {
+            games: [],
+            standings: [],
+            ageGroups: [],
+            eventInfo: { name: 'Event', startDate: '', endDate: '' }
+          };
+        }
+        throw new Error('Failed to fetch schedule preview');
+      }
+      return response.json();
+    },
+    retry: false,
+    staleTime: 30000 // Cache for 30 seconds
   });
 
   // Fetch published schedules status
@@ -84,9 +97,15 @@ export function PublishSchedules({ eventId }: PublishSchedulesProps) {
     queryKey: ['published-schedules', eventId],
     queryFn: async () => {
       const response = await fetch(`/api/admin/events/${eventId}/published-schedules`);
-      if (!response.ok) throw new Error('Failed to fetch published schedules');
-      return response.json() as { schedules: PublishedSchedule[] };
-    }
+      if (!response.ok) {
+        if (response.status === 404) {
+          return { schedules: [] };
+        }
+        throw new Error('Failed to fetch published schedules');
+      }
+      return response.json();
+    },
+    retry: false
   });
 
   // Publish schedules mutation
@@ -158,7 +177,7 @@ export function PublishSchedules({ eventId }: PublishSchedulesProps) {
     });
   };
 
-  const currentPublishedSchedule = publishedSchedules?.schedules?.find(s => s.isActive);
+  const currentPublishedSchedule = publishedSchedules?.schedules?.find((s: PublishedSchedule) => s.isActive);
   const publicUrl = currentPublishedSchedule ? `/public/schedules/${eventId}` : null;
 
   if (loadingPreview || loadingPublished) {
@@ -211,7 +230,7 @@ export function PublishSchedules({ eventId }: PublishSchedulesProps) {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => window.open(publicUrl, '_blank')}
+                      onClick={() => publicUrl && window.open(publicUrl, '_blank')}
                       className="border-slate-600 text-slate-200 hover:bg-slate-600"
                     >
                       <ExternalLink className="h-4 w-4" />
@@ -250,14 +269,38 @@ export function PublishSchedules({ eventId }: PublishSchedulesProps) {
                 <span className="text-slate-400">Schedules are not currently public</span>
               </div>
               
-              <Button
-                onClick={handlePublish}
-                disabled={isPublishing || !schedulePreview}
-                className="bg-green-600 hover:bg-green-500 text-white"
-              >
-                <Globe className="h-4 w-4 mr-2" />
-                {isPublishing ? 'Publishing...' : 'Publish Schedules'}
-              </Button>
+              <div className="space-y-3">
+                <Button
+                  onClick={handlePublish}
+                  disabled={isPublishing || loadingPreview}
+                  className="bg-green-600 hover:bg-green-500 text-white w-full"
+                >
+                  <Globe className="h-4 w-4 mr-2" />
+                  {isPublishing ? 'Publishing...' : loadingPreview ? 'Loading...' : 'Publish Schedules'}
+                </Button>
+                
+                {previewError && (
+                  <Alert className="bg-yellow-900/50 border-yellow-600">
+                    <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                    <AlertDescription className="text-yellow-200">
+                      No schedule data available yet. You can still publish, but the public page will show "No games scheduled yet."
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Share2 className="h-4 w-4 text-blue-400" />
+                    <span className="text-blue-200 font-medium">Public URL Preview:</span>
+                  </div>
+                  <p className="text-blue-300 font-mono text-sm">
+                    {window.location.origin}/public/schedules/{eventId}
+                  </p>
+                  <p className="text-blue-200/70 text-xs mt-1">
+                    This URL will be accessible once you publish the schedules
+                  </p>
+                </div>
+              </div>
             </div>
           )}
         </CardContent>
@@ -307,7 +350,7 @@ export function PublishSchedules({ eventId }: PublishSchedulesProps) {
               <div>
                 <h4 className="text-white font-medium mb-3">Age Groups & Flights</h4>
                 <div className="grid gap-3">
-                  {schedulePreview.ageGroups.map((ageGroup, index) => (
+                  {schedulePreview.ageGroups.map((ageGroup: any, index: number) => (
                     <div key={index} className="bg-slate-700 p-3 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-white font-medium">{ageGroup.ageGroup}</span>
@@ -316,7 +359,7 @@ export function PublishSchedules({ eventId }: PublishSchedulesProps) {
                         </Badge>
                       </div>
                       <div className="space-y-1">
-                        {ageGroup.flights.map((flight, flightIndex) => (
+                        {ageGroup.flights.map((flight: any, flightIndex: number) => (
                           <div key={flightIndex} className="flex items-center justify-between text-sm">
                             <span className="text-slate-300">{flight.flightName}</span>
                             <div className="flex gap-4 text-slate-400">
