@@ -31,6 +31,7 @@ router.get('/events/:eventId/flight-configurations', isAdmin, async (req, res) =
         ageGroup: eventAgeGroups.ageGroup,
         gender: eventAgeGroups.gender,
         level: eventBrackets.level,
+        tournamentSettings: eventBrackets.tournamentSettings,
         // Game format data
         gameFormatId: gameFormats.id,
         gameLength: gameFormats.gameLength,
@@ -71,6 +72,20 @@ router.get('/events/:eventId/flight-configurations', isAdmin, async (req, res) =
     const result = flightsWithFormats.map(flight => {
       const teamCountData = teamCounts.find(tc => tc.bracketId === flight.flightId);
       
+      // Parse tournament_settings to get the correct rest period
+      let restPeriodFromSettings = 90; // default
+      if (flight.tournamentSettings) {
+        try {
+          const settings = typeof flight.tournamentSettings === 'string' ? 
+            JSON.parse(flight.tournamentSettings) : flight.tournamentSettings;
+          if (settings.restPeriodMinutes) {
+            restPeriodFromSettings = settings.restPeriodMinutes;
+          }
+        } catch (e) {
+          console.log(`Could not parse tournament settings for flight ${flight.flightId}, using default rest period`);
+        }
+      }
+      
       // Check if the game format has all required values for scheduling
       const isCompletelyConfigured = flight.gameFormatId !== null && 
                                    flight.gameLength !== null && 
@@ -83,7 +98,8 @@ router.get('/events/:eventId/flight-configurations', isAdmin, async (req, res) =
       const halfLength = Math.floor((flight.gameLength || 90) / 2);
       const breakTime = 5; // Standard halftime break
       const paddingTime = flight.bufferTime || 15;
-      const restPeriod = flight.restPeriod || 90; // Rest period between games
+      // Use the rest period from tournament_settings (preferred) or fall back to game_formats table
+      const restPeriod = restPeriodFromSettings || flight.restPeriod || 90; // Rest period between games
       const calculatedTotalTime = halfLength * 2 + breakTime + paddingTime;
 
       return {
