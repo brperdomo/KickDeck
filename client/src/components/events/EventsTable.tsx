@@ -119,7 +119,9 @@ export function EventsTable() {
   const eventsQuery = useQuery<EventsResponse>({
     queryKey: ["/api/admin/events", currentPage, pageSize, showArchived, searchQuery, statusFilter, sortField, sortDirection, isTournamentDirector],
     queryFn: async () => {
-      const response = await fetch(`/api/admin/events?page=${currentPage}&pageSize=${pageSize}&showArchived=${showArchived}&search=${encodeURIComponent(searchQuery)}&statusFilter=${statusFilter}&sortField=${sortField}&sortDirection=${sortDirection}`);
+      const response = await fetch(`/api/admin/events?page=${currentPage}&pageSize=${pageSize}&showArchived=${showArchived}&search=${encodeURIComponent(searchQuery)}&statusFilter=${statusFilter}&sortField=${sortField}&sortDirection=${sortDirection}`, {
+        credentials: 'include' // Include cookies for authentication
+      });
       if (!response.ok) {
         throw new Error("Failed to fetch events");
       }
@@ -152,6 +154,7 @@ export function EventsTable() {
     mutationFn: async (eventId: number | bigint) => {
       const response = await fetch(`/api/admin/events/${eventId.toString()}`, {
         method: 'DELETE',
+        credentials: 'include' // Include cookies for authentication
       });
       if (!response.ok) {
         const error = await response.json();
