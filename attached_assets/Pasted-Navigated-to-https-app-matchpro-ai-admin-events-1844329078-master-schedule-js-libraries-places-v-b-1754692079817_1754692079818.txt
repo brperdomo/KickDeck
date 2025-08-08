@@ -1,0 +1,327 @@
+Navigated to https://app.matchpro.ai/admin/events/1844329078/master-schedule
+js?libraries=places&v=beta&callback=Function.prototype:1382 Google Maps JavaScript API has been loaded directly without loading=async. This can result in suboptimal performance. For best-practice loading patterns please see https://goo.gle/js-api-loading
+Tda @ js?libraries=places&v=beta&callback=Function.prototype:1382
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641Understand this warning
+js?libraries=places&v=beta&callback=Function.prototype:1414 XHR finished loading: GET "https://maps.googleapis.com/maps/api/mapsjs/gen_204?csp_test=true".
+_.B.send @ js?libraries=places&v=beta&callback=Function.prototype:1414
+Qda @ js?libraries=places&v=beta&callback=Function.prototype:1391
+Tda @ js?libraries=places&v=beta&callback=Function.prototype:1383
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641
+chunk-FLCULYKI.js:31 orchestration: Initializing config store with state {anonymous-site-visit-logging: {…}, chatgpt: {…}, context-menus: {…}, debugger: {…}, docs-support: {…}, …}
+chunk-FLCULYKI.js:31 orchestration: Initializing feature flag store with state {anonymous-site-visit-logging: {…}, chatgpt: {…}, context-menus: {…}, debugger: {…}, docs-support: {…}, …}
+chunk-FLCULYKI.js:31 orchestration: Initializing user store with state {pill-player: {…}}
+chunk-FLCULYKI.js:31 orchestration: Updating combined state {anonymous-site-visit-logging: {…}, chatgpt: {…}, context-menus: {…}, debugger: {…}, docs-support: {…}, …}
+master-schedule:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swapUnderstand this warning
+master-schedule:1 OTS parsing error: invalid sfntVersion: 791289955Understand this warning
+index-CAAFxwEO.js:848 Google Maps API key length: 0 characters
+index-CAAFxwEO.js:848 Mapbox API key length: 93 characters
+index-CAAFxwEO.js:848 Google Maps API already loaded
+index-CAAFxwEO.js:657 Current route location (Wouter): /admin/events/1844329078/master-schedule
+index-CAAFxwEO.js:657 Current URL: https://app.matchpro.ai/admin/events/1844329078/master-schedule
+index-CAAFxwEO.js:657 Current pathname: /admin/events/1844329078/master-schedule
+index-CAAFxwEO.js:657 Current search: 
+index-CAAFxwEO.js:657 Fetching user with emulation token: not present
+13Fetch finished loading: GET "<URL>".
+index-CAAFxwEO.js:657 User data fetched: {id: 24, email: 'bperdomo@zoho.com', username: 'bperdomo@zoho.com', password: '$2b$12$d6n1CBWgsWFm0fh77F1OX.YxDZy7/O3aLSuJOuq4QkvOtFmSit7BC', firstName: 'Bryan', …}
+index-CAAFxwEO.js:649 Fetch failed loading: GET "https://app.matchpro.ai/api/user".
+queryFn @ index-CAAFxwEO.js:649
+i @ index-CAAFxwEO.js:41
+f @ index-CAAFxwEO.js:41
+start @ index-CAAFxwEO.js:41
+fetch @ index-CAAFxwEO.js:41
+ng @ index-CAAFxwEO.js:41
+onSubscribe @ index-CAAFxwEO.js:41
+subscribe @ index-CAAFxwEO.js:41
+(anonymous) @ index-CAAFxwEO.js:41
+iW @ index-CAAFxwEO.js:39
+SS @ index-CAAFxwEO.js:41
+Jh @ index-CAAFxwEO.js:41
+BM @ index-CAAFxwEO.js:41
+iu @ index-CAAFxwEO.js:39
+rhe @ index-CAAFxwEO.js:41
+ku @ index-CAAFxwEO.js:41
+$W @ index-CAAFxwEO.js:41
+w @ index-CAAFxwEO.js:26
+T @ index-CAAFxwEO.js:26
+shared-df7789195bf09b6f338558bdd92c931a.js:1 Fetch finished loading: GET "https://js.stripe.com/v3/.deploy_status_henson.json".
+(anonymous) @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+e @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+c @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+g @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+e @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+value @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+e @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+16720 @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+e @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+(anonymous) @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+e.O @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+(anonymous) @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+(anonymous) @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+shared-df7789195bf09b6f338558bdd92c931a.js:1 Fetch finished loading: GET "https://js.stripe.com/v3/.deploy_status_henson.json".
+(anonymous) @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+e @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+c @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+g @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+log @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+log @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+e @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+16720 @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+e @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+(anonymous) @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+e.O @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+(anonymous) @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+(anonymous) @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+UnifiedTournamentControlCenter-BqNZwlCH.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-BqNZwlCH.js:1 Configured flights: 8 of 76
+shared-df7789195bf09b6f338558bdd92c931a.js:1 Fetch finished loading: POST "https://r.stripe.com/b".
+(anonymous) @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+e @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+c @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+(anonymous) @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+setTimeout
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+(anonymous) @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+(anonymous) @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+Promise.then
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+e @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+value @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+e @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+16720 @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+e @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+(anonymous) @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+e.O @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+(anonymous) @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+(anonymous) @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+shared-df7789195bf09b6f338558bdd92c931a.js:1 Fetch finished loading: POST "https://r.stripe.com/b".
+(anonymous) @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+e @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+c @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+(anonymous) @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+setTimeout
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+(anonymous) @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+(anonymous) @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+Promise.then
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+log @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+log @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+e @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+16720 @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+e @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+(anonymous) @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+e.O @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+(anonymous) @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+(anonymous) @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+chunk-CVIZYB43.js:3 [Violation] 'setTimeout' handler took 71ms
+util.js:33 Google Maps JavaScript API warning: NoApiKeys https://developers.google.com/maps/documentation/javascript/error-messages#no-api-keys
+$Aa @ util.js:33
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1384
+Promise.then
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1384
+setTimeout
+Tda @ js?libraries=places&v=beta&callback=Function.prototype:1384
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641Understand this warning
+out-4.5.44.js:1 XHR finished loading: POST "https://m.stripe.com/6".
+(anonymous) @ out-4.5.44.js:1
+i @ out-4.5.44.js:1
+s @ out-4.5.44.js:1
+(anonymous) @ out-4.5.44.js:1
+(anonymous) @ out-4.5.44.js:1
+Promise.then
+S @ out-4.5.44.js:1
+y @ out-4.5.44.js:1
+E @ out-4.5.44.js:1
+e.onload @ inner.html:1
+script
+(anonymous) @ inner.html:1
+(anonymous) @ inner.html:1
+out-4.5.44.js:1 XHR finished loading: POST "https://m.stripe.com/6".
+(anonymous) @ out-4.5.44.js:1
+i @ out-4.5.44.js:1
+s @ out-4.5.44.js:1
+h @ out-4.5.44.js:1
+e @ inner.html:1
+UnifiedTournamentControlCenter-BqNZwlCH.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-BqNZwlCH.js:1 Configured flights: 8 of 76
+chunk-CVIZYB43.js:3 [Violation] 'setTimeout' handler took 63ms
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] All available fields: []
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] Fields with games assigned: []
+index-CAAFxwEO.js:824 🎯 [ENHANCED DRAG DROP] Debug Info: {isLoading: true, error: null, scheduleData: undefined, fieldsCount: 0, gamesCount: 0, …}
+shared-df7789195bf09b6f338558bdd92c931a.js:1 Fetch finished loading: POST "https://r.stripe.com/b".
+(anonymous) @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+e @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+c @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+(anonymous) @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+setTimeout
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+(anonymous) @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+log @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+log @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+value @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+value @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+(anonymous) @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+index-CAAFxwEO.js:823 🎯 [ENHANCED DRAG DROP] Transformed games for calendar: (14) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CAAFxwEO.js:823 🎯 [ENHANCED DRAG DROP] Fields data: (28) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9922: fieldId=34, fieldName="15", startTime="2025-08-16T08:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9917: fieldId=35, fieldName="20", startTime="2025-08-16T08:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9921: fieldId=33, fieldName="14", startTime="2025-08-16T14:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9918: fieldId=34, fieldName="15", startTime="2025-08-16T14:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9920: fieldId=33, fieldName="14", startTime="2025-08-17T08:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9919: fieldId=34, fieldName="15", startTime="2025-08-17T08:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9923: fieldId=31, fieldName="12", startTime="2025-08-16T08:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9915: fieldId=32, fieldName="13", startTime="2025-08-16T08:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9910: fieldId=33, fieldName="14", startTime="2025-08-16T08:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9914: fieldId=31, fieldName="12", startTime="2025-08-16T14:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9911: fieldId=32, fieldName="13", startTime="2025-08-16T14:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9913: fieldId=31, fieldName="12", startTime="2025-08-17T08:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9912: fieldId=32, fieldName="13", startTime="2025-08-17T08:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9916: fieldId=32, fieldName="13", startTime="2025-08-17T10:30:00"
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] All available fields: (28) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] Fields with games assigned: (5) [34, 35, 33, 31, 32]
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] Field 31 (12) has 3 games
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] Field 32 (13) has 4 games
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] Field 33 (14) has 3 games
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] Field 34 (15) has 3 games
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] Field 35 (20) has 1 games
+index-CAAFxwEO.js:824 🎯 [ENHANCED DRAG DROP] Debug Info: {isLoading: false, error: null, scheduleData: {…}, fieldsCount: 28, gamesCount: 14, …}
+index-CAAFxwEO.js:823 🔍 [CONFLICT DETECTION] Starting conflict detection for 14 games
+index-CAAFxwEO.js:823 🔍 [CONFLICT DETECTION] Time slots: 48
+index-CAAFxwEO.js:823 🔍 [CONFLICT DETECTION] Sample games: (3) [{…}, {…}, {…}]
+index-CAAFxwEO.js:823 🚨 [TEAM CONFLICT] TBD has 2 games at 8 AM: (2) [{…}, {…}]
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] All available fields: (28) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] Fields with games assigned: (5) [34, 35, 33, 31, 32]
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] Field 31 (12) has 3 games
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] Field 32 (13) has 4 games
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] Field 33 (14) has 3 games
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] Field 34 (15) has 3 games
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] Field 35 (20) has 1 games
+index-CAAFxwEO.js:824 🎯 [ENHANCED DRAG DROP] Debug Info: {isLoading: false, error: null, scheduleData: {…}, fieldsCount: 28, gamesCount: 14, …}
+chunk-FLCULYKI.js:31 orchestration: Initializing user store with state {pill-player: {…}}
+chunk-FLCULYKI.js:31 orchestration: Updating combined state {anonymous-site-visit-logging: {…}, chatgpt: {…}, context-menus: {…}, debugger: {…}, docs-support: {…}, …}
+index-CAAFxwEO.js:823 🎯 [ENHANCED DRAG DROP] Transformed games for calendar: (14) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CAAFxwEO.js:823 🎯 [ENHANCED DRAG DROP] Fields data: (28) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9922: fieldId=34, fieldName="15", startTime="2025-08-16T08:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9917: fieldId=35, fieldName="20", startTime="2025-08-16T08:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9921: fieldId=33, fieldName="14", startTime="2025-08-16T14:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9918: fieldId=34, fieldName="15", startTime="2025-08-16T14:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9920: fieldId=33, fieldName="14", startTime="2025-08-17T08:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9919: fieldId=34, fieldName="15", startTime="2025-08-17T08:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9923: fieldId=31, fieldName="12", startTime="2025-08-16T08:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9915: fieldId=32, fieldName="13", startTime="2025-08-16T08:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9910: fieldId=33, fieldName="14", startTime="2025-08-16T08:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9914: fieldId=31, fieldName="12", startTime="2025-08-16T14:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9911: fieldId=32, fieldName="13", startTime="2025-08-16T14:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9913: fieldId=31, fieldName="12", startTime="2025-08-17T08:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9912: fieldId=32, fieldName="13", startTime="2025-08-17T08:00:00"
+index-CAAFxwEO.js:823 🎯 [GAME-FIELD DEBUG] Game 9916: fieldId=32, fieldName="13", startTime="2025-08-17T10:30:00"
+shared-df7789195bf09b6f338558bdd92c931a.js:1 Fetch finished loading: POST "https://r.stripe.com/b".
+(anonymous) @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+e @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+c @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+(anonymous) @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+setTimeout
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+(anonymous) @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+value @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+log @ shared-df7789195bf09b6f338558bdd92c931a.js:1
+log @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+fe @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+(anonymous) @ controller-with-preconnect-094733b229cbd8ab28cfe11deb2ab484.js:1
+index-CAAFxwEO.js:823  POST https://app.matchpro.ai/api/admin/events/1844329078/optimize-schedule 500 (Internal Server Error)
+mutationFn @ index-CAAFxwEO.js:823
+fn @ index-CAAFxwEO.js:41
+f @ index-CAAFxwEO.js:41
+start @ index-CAAFxwEO.js:41
+execute @ index-CAAFxwEO.js:41
+await in execute
+mutate @ index-CAAFxwEO.js:41
+(anonymous) @ index-CAAFxwEO.js:41
+h @ index-CAAFxwEO.js:823
+wue @ index-CAAFxwEO.js:38
+Sue @ index-CAAFxwEO.js:38
+Cue @ index-CAAFxwEO.js:38
+dM @ index-CAAFxwEO.js:38
+V7 @ index-CAAFxwEO.js:38
+(anonymous) @ index-CAAFxwEO.js:38
+yO @ index-CAAFxwEO.js:41
+f7 @ index-CAAFxwEO.js:38
+N2 @ index-CAAFxwEO.js:38
+H4 @ index-CAAFxwEO.js:38
+zue @ index-CAAFxwEO.js:38Understand this error
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] All available fields: (28) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] Fields with games assigned: (5) [34, 35, 33, 31, 32]
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] Field 31 (12) has 3 games
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] Field 32 (13) has 4 games
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] Field 33 (14) has 3 games
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] Field 34 (15) has 3 games
+index-CAAFxwEO.js:824 🎯 [FIELD DEBUG] Field 35 (20) has 1 games
+index-CAAFxwEO.js:824 🎯 [ENHANCED DRAG DROP] Debug Info: {isLoading: false, error: null, scheduleData: {…}, fieldsCount: 28, gamesCount: 14, …}
+index-CAAFxwEO.js:823 Fetch failed loading: POST "https://app.matchpro.ai/api/admin/events/1844329078/optimize-schedule".
+mutationFn @ index-CAAFxwEO.js:823
+fn @ index-CAAFxwEO.js:41
+f @ index-CAAFxwEO.js:41
+start @ index-CAAFxwEO.js:41
+execute @ index-CAAFxwEO.js:41
+await in execute
+mutate @ index-CAAFxwEO.js:41
+(anonymous) @ index-CAAFxwEO.js:41
+h @ index-CAAFxwEO.js:823
+wue @ index-CAAFxwEO.js:38
+Sue @ index-CAAFxwEO.js:38
+Cue @ index-CAAFxwEO.js:38
+dM @ index-CAAFxwEO.js:38
+V7 @ index-CAAFxwEO.js:38
+(anonymous) @ index-CAAFxwEO.js:38
+yO @ index-CAAFxwEO.js:41
+f7 @ index-CAAFxwEO.js:38
+N2 @ index-CAAFxwEO.js:38
+H4 @ index-CAAFxwEO.js:38
+zue @ index-CAAFxwEO.js:38
