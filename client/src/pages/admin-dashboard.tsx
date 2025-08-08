@@ -3384,7 +3384,9 @@ function TeamsView() {
   const eventsQuery = useQuery({
     queryKey: ['admin', 'events'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/events');
+      const response = await fetch('/api/admin/events', {
+        credentials: 'include' // Include cookies for authentication
+      });
       if (!response.ok) throw new Error('Failed to fetch events');
       return response.json();
     }
@@ -3394,7 +3396,9 @@ function TeamsView() {
   const importEligibleEventsQuery = useQuery({
     queryKey: ['admin', 'import-eligible-events'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/import-eligible-events');
+      const response = await fetch('/api/admin/import-eligible-events', {
+        credentials: 'include' // Include cookies for authentication
+      });
       if (!response.ok) throw new Error('Failed to fetch import-eligible events');
       const data = await response.json();
       console.log('Import eligible events:', data);
@@ -3414,7 +3418,9 @@ function TeamsView() {
       
       if (params.toString()) url += `?${params.toString()}`;
       
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        credentials: 'include' // Include cookies for authentication
+      });
       if (!response.ok) throw new Error('Failed to fetch teams');
       const data = await response.json();
       console.log('Teams data received:', data);
@@ -4151,6 +4157,50 @@ function TeamsView() {
     }
   };
 
+  // Handle team data export
+  const handleExportTeamData = async () => {
+    if (selectedEvent === 'all' || !selectedEvent) {
+      toast({
+        title: "Select Event",
+        description: "Please select a specific event to export team data.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/manager-reports/${selectedEvent}/csv`, {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Export failed: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `team-data-event-${selectedEvent}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Export Successful",
+        description: "Team data has been exported successfully.",
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Export Failed", 
+        description: `Failed to export team data. ${error instanceof Error ? error.message : 'Please try again.'}`,
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <>
       <AnimatedContainer animation="slideUp" delay={0.1}>
@@ -4163,16 +4213,30 @@ function TeamsView() {
           >
             Team Registrations
           </motion.h2>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button 
-              variant="default"
-              onClick={() => setIsTeamCsvImportDialogOpen(true)}
-              className="flex items-center gap-2"
-            >
-              <FileText className="h-4 w-4" />
-              Import Teams
-            </Button>
-          </motion.div>
+          <div className="flex gap-3">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button 
+                variant="default"
+                onClick={() => setIsTeamCsvImportDialogOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                Import Teams
+              </Button>
+            </motion.div>
+            
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                variant="outline"
+                onClick={handleExportTeamData}
+                disabled={selectedEvent === 'all' || !selectedEvent}
+                className="flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Export Team Data
+              </Button>
+            </motion.div>
+          </div>
         </div>
       </AnimatedContainer>
       
