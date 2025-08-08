@@ -149,6 +149,39 @@ router.patch('/events/:eventId/flight-configurations/:flightId', isAdmin, async 
       console.log(`[FLIGHT CONFIG] Updated existing game format for bracketId ${parseInt(flightId)}:`, updateData);
       console.log(`[FLIGHT CONFIG] Template name set to: "${updates.formatName}" -> "${updateData.templateName}"`);
 
+      // BIDIRECTIONAL SYNC: Update the corresponding event_brackets.tournament_settings
+      // This ensures the scheduling engine gets the updated rest period values
+      if (updates.restPeriod !== undefined) {
+        const bracket = await db.query.eventBrackets.findFirst({
+          where: eq(eventBrackets.id, parseInt(flightId))
+        });
+
+        if (bracket) {
+          let currentSettings: any = {};
+          try {
+            currentSettings = bracket.tournamentSettings ? 
+              (typeof bracket.tournamentSettings === 'string' ? 
+                JSON.parse(bracket.tournamentSettings) : 
+                bracket.tournamentSettings) : {};
+          } catch (e) {
+            console.log('Could not parse existing tournament settings, using empty object');
+          }
+
+          const updatedSettings = {
+            ...currentSettings,
+            restPeriodMinutes: updates.restPeriod,
+            maxGamesPerTeam: currentSettings.maxGamesPerTeam || 4,
+            enableChampionship: currentSettings.enableChampionship || true
+          };
+
+          await db.update(eventBrackets)
+            .set({ tournamentSettings: JSON.stringify(updatedSettings) })
+            .where(eq(eventBrackets.id, parseInt(flightId)));
+
+          console.log(`[FLIGHT CONFIG] Updated tournament_settings for bracket ${flightId}:`, updatedSettings);
+        }
+      }
+
       // Also update the corresponding event_game_formats if it exists
       if (updates.matchTime !== undefined || updates.breakTime !== undefined || updates.paddingTime !== undefined) {
         const eventGameFormat = await db.query.eventGameFormats.findFirst({
@@ -187,6 +220,38 @@ router.patch('/events/:eventId/flight-configurations/:flightId', isAdmin, async 
       await db.insert(gameFormats).values(newFormatData);
       console.log(`[FLIGHT CONFIG] Created new game format for bracketId ${parseInt(flightId)}:`, newFormatData);
       console.log(`[FLIGHT CONFIG] Template name set to: "${updates.formatName}" -> "${newFormatData.templateName}"`);
+
+      // BIDIRECTIONAL SYNC: Also update event_brackets.tournament_settings for new format
+      if (updates.restPeriod !== undefined) {
+        const bracket = await db.query.eventBrackets.findFirst({
+          where: eq(eventBrackets.id, parseInt(flightId))
+        });
+
+        if (bracket) {
+          let currentSettings: any = {};
+          try {
+            currentSettings = bracket.tournamentSettings ? 
+              (typeof bracket.tournamentSettings === 'string' ? 
+                JSON.parse(bracket.tournamentSettings) : 
+                bracket.tournamentSettings) : {};
+          } catch (e) {
+            console.log('Could not parse existing tournament settings, using empty object');
+          }
+
+          const updatedSettings = {
+            ...currentSettings,
+            restPeriodMinutes: updates.restPeriod,
+            maxGamesPerTeam: currentSettings.maxGamesPerTeam || 4,
+            enableChampionship: currentSettings.enableChampionship || true
+          };
+
+          await db.update(eventBrackets)
+            .set({ tournamentSettings: JSON.stringify(updatedSettings) })
+            .where(eq(eventBrackets.id, parseInt(flightId)));
+
+          console.log(`[FLIGHT CONFIG] Updated tournament_settings for new bracket ${flightId}:`, updatedSettings);
+        }
+      }
     }
     
     res.json({ success: true, message: 'Flight configuration updated successfully' });
