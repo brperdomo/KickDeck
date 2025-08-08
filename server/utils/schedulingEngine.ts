@@ -764,6 +764,75 @@ export class IntelligentSchedulingEngine {
   }
 
   /**
+   * Schedule Games - Main entry point for scheduling games with constraints
+   * This is the method called by selective scheduling
+   */
+  async scheduleGames(gamesData: any[]): Promise<any[]> {
+    console.log(`[IntelligentSchedulingEngine] scheduleGames called with ${gamesData.length} games`);
+    
+    if (gamesData.length === 0) {
+      console.log(`[IntelligentSchedulingEngine] No games to schedule`);
+      return [];
+    }
+
+    // Convert the input format to our internal format
+    const gamesToSchedule = gamesData.map((game, index) => ({
+      homeTeam: {
+        id: game.homeTeam.id,
+        name: game.homeTeam.name,
+        ageGroupId: game.homeTeam.ageGroupId,
+        bracketId: game.homeTeam.bracketId,
+        ageGroup: 'U14 Girls', // Default for now
+        gender: 'Female',
+        coach: null,
+        coachNames: []
+      },
+      awayTeam: {
+        id: game.awayTeam.id,
+        name: game.awayTeam.name,
+        ageGroupId: game.awayTeam.ageGroupId,
+        bracketId: game.awayTeam.bracketId,
+        ageGroup: 'U14 Girls', // Default for now
+        gender: 'Female',
+        coach: null,
+        coachNames: []
+      },
+      gameFormat: {
+        ageGroup: 'U14 Girls',
+        gameLength: game.gameFormat.gameLength || 90,
+        halfLength: 45,
+        halfTimeBreak: 10,
+        bufferTime: game.gameFormat.bufferTime || 15,
+        fieldSize: game.gameFormat.fieldSize || '11v11'
+      },
+      ageGroupId: game.homeTeam.ageGroupId || 1,
+      isPending: game.isPending || false
+    }));
+
+    console.log(`[IntelligentSchedulingEngine] Converted ${gamesToSchedule.length} games for scheduling`);
+
+    // Get suitable fields for the game format
+    const gameFormat = gamesToSchedule[0].gameFormat;
+    const suitableFields = this.availableFields.filter(field => 
+      field.fieldSize === gameFormat.fieldSize
+    );
+
+    console.log(`[IntelligentSchedulingEngine] Found ${suitableFields.length} suitable fields of size ${gameFormat.fieldSize}`);
+
+    if (suitableFields.length === 0) {
+      console.log(`[IntelligentSchedulingEngine] ERROR: No suitable fields found for field size ${gameFormat.fieldSize}`);
+      return [];
+    }
+
+    // Schedule the games using constraint-aware scheduling
+    const scheduledGames = this.scheduleGamesWithConstraints(gamesToSchedule, suitableFields);
+    
+    console.log(`[IntelligentSchedulingEngine] Successfully scheduled ${scheduledGames.length}/${gamesToSchedule.length} games`);
+    
+    return scheduledGames;
+  }
+
+  /**
    * Generate tournament date range
    */
   private generateTournamentDates(startDate: string, endDate: string): void {
