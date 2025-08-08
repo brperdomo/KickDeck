@@ -14,6 +14,42 @@ import {
 
 const router = Router();
 
+// Helper function to sync game format changes back to tournament settings
+async function syncGameFormatToTournamentSettings(bracketId: number, restPeriod: number) {
+  try {
+    const bracket = await db.query.eventBrackets.findFirst({
+      where: eq(eventBrackets.id, bracketId)
+    });
+
+    if (bracket) {
+      let currentSettings: any = {};
+      try {
+        currentSettings = bracket.tournamentSettings ? 
+          (typeof bracket.tournamentSettings === 'string' ? 
+            JSON.parse(bracket.tournamentSettings) : 
+            bracket.tournamentSettings) : {};
+      } catch (e) {
+        console.log('Could not parse existing tournament settings, using empty object');
+      }
+
+      const updatedSettings = {
+        ...currentSettings,
+        restPeriodMinutes: restPeriod,
+        maxGamesPerTeam: currentSettings.maxGamesPerTeam || 4,
+        enableChampionship: currentSettings.enableChampionship || true
+      };
+
+      await db.update(eventBrackets)
+        .set({ tournamentSettings: JSON.stringify(updatedSettings) })
+        .where(eq(eventBrackets.id, bracketId));
+
+      console.log(`[BIDIRECTIONAL SYNC] Updated tournament_settings for bracket ${bracketId}:`, updatedSettings);
+    }
+  } catch (error) {
+    console.error('Error syncing game format to tournament settings:', error);
+  }
+}
+
 // Interface for bracket structure
 interface BracketStructure {
   type: 'round_robin_final' | 'cross_flight_play' | 'dual_flight_championship';
@@ -394,12 +430,22 @@ router.post('/events/:eventId/flights/:flightId/format', isAdmin, async (req, re
         .set(formatData)
         .where(eq(gameFormats.id, gameFormat.id));
       
+      console.log(`[GAME FORMAT] Updated existing format for bracketId ${parseInt(flightId)}:`, formatData);
+      
+      // BIDIRECTIONAL SYNC: Update event_brackets.tournament_settings to sync with Flight Configuration
+      await syncGameFormatToTournamentSettings(parseInt(flightId), format.restPeriod);
+      
       res.json({ success: true, id: gameFormat.id });
     } else {
       // Create new format
       const [newFormat] = await db.insert(gameFormats)
         .values(formatData)
         .returning();
+      
+      console.log(`[GAME FORMAT] Created new format for bracketId ${parseInt(flightId)}:`, formatData);
+      
+      // BIDIRECTIONAL SYNC: Update event_brackets.tournament_settings to sync with Flight Configuration
+      await syncGameFormatToTournamentSettings(parseInt(flightId), format.restPeriod);
       
       res.json({ success: true, id: newFormat.id });
     }
