@@ -1107,9 +1107,84 @@ async function generateSelectiveSchedule(eventId: string, flightIds: string[], o
       const realFields = await FieldAvailabilityService.getAvailableFields(eventId);
       console.log(`[Selective Scheduling] Found ${realFields.length} real fields available for event ${eventId}`);
       
-      // Apply enhanced field assignment with time scheduling
-      const fieldAssignments = await assignFieldsWithSchedule(eventId, dbGames, flightIds[0]);
-      console.log(`[Enhanced Field Assignment] Successfully assigned ${fieldAssignments.totalAssignments} games to fields with scheduling`);
+      // CRITICAL: Use the improved IntelligentSchedulingEngine for proper rest period enforcement
+      console.log(`[Selective Scheduling] Using IntelligentSchedulingEngine for proper rest period enforcement`);
+      
+      try {
+        // Initialize the improved scheduling engine
+        const { IntelligentSchedulingEngine } = await import('../../utils/schedulingEngine');
+        const schedulingEngine = new IntelligentSchedulingEngine(parseInt(eventId));
+        await schedulingEngine.initialize();
+        
+        // Convert dbGames to format expected by scheduling engine
+        const gamesForScheduling = dbGames.map(game => ({
+          homeTeam: { 
+            id: game.homeTeamId, 
+            name: generatedGames.find(g => g.homeTeamId === game.homeTeamId)?.homeTeam || 'TBD',
+            ageGroupId: game.ageGroupId,
+            bracketId: game.groupId
+          },
+          awayTeam: { 
+            id: game.awayTeamId, 
+            name: generatedGames.find(g => g.awayTeamId === game.awayTeamId)?.awayTeam || 'TBD',
+            ageGroupId: game.ageGroupId,
+            bracketId: game.groupId
+          },
+          gameFormat: {
+            gameLength: game.duration,
+            fieldSize: '11v11', // Default for U14 Girls
+            bufferTime: 15
+          },
+          id: game.homeTeamId && game.awayTeamId ? `${game.homeTeamId}-${game.awayTeamId}` : 'championship',
+          isPending: !game.homeTeamId || !game.awayTeamId
+        }));
+        
+        console.log(`[Intelligent Scheduling] Attempting to schedule ${gamesForScheduling.length} games with 90-minute rest period enforcement`);
+        
+        // Schedule games with proper rest period enforcement
+        const scheduledGames = await schedulingEngine.scheduleGames(gamesForScheduling);
+        
+        console.log(`[Intelligent Scheduling] Successfully scheduled ${scheduledGames.length}/${gamesForScheduling.length} games`);
+        
+        // Update database with scheduled times and fields
+        let successfullyScheduled = 0;
+        for (let i = 0; i < Math.min(scheduledGames.length, dbGames.length); i++) {
+          const scheduledGame = scheduledGames[i];
+          const dbGame = dbGames[i];
+          
+          if (scheduledGame.field && scheduledGame.timeSlot) {
+            const scheduledDate = scheduledGame.timeSlot.startTime.toISOString().split('T')[0];
+            const scheduledTime = scheduledGame.timeSlot.startTime.toTimeString().slice(0, 5);
+            
+            console.log(`[Intelligent Scheduling] Game ${i + 1}: ${scheduledGame.homeTeam.name} vs ${scheduledGame.awayTeam.name} at ${scheduledTime} on ${scheduledGame.field.name}`);
+            
+            // Update the game with intelligent scheduling results
+            await db.update(games)
+              .set({ 
+                fieldId: scheduledGame.field.id,
+                scheduledDate: scheduledDate,
+                scheduledTime: scheduledTime
+              })
+              .where(and(
+                eq(games.eventId, eventId),
+                eq(games.homeTeamId, dbGame.homeTeamId || -1),
+                eq(games.awayTeamId, dbGame.awayTeamId || -1),
+                eq(games.round, dbGame.round)
+              ));
+            
+            successfullyScheduled++;
+          } else {
+            console.log(`[Intelligent Scheduling] Could not schedule game ${i + 1}: ${scheduledGame.homeTeam.name || 'TBD'} vs ${scheduledGame.awayTeam.name || 'TBD'}`);
+          }
+        }
+        
+        console.log(`[Intelligent Scheduling] Successfully scheduled ${successfullyScheduled}/${dbGames.length} games with proper rest period enforcement`);
+      } catch (schedulingError) {
+        console.error(`[Intelligent Scheduling] Error using scheduling engine, falling back to basic assignment:`, schedulingError);
+        // Fallback to basic field assignment if intelligent scheduling fails
+        const fieldAssignments = await assignFieldsWithSchedule(eventId, dbGames, flightIds[0]);
+        console.log(`[Enhanced Field Assignment] Fallback: Successfully assigned ${fieldAssignments.totalAssignments} games to fields`);
+      }
       
       console.log(`[Selective Scheduling] Applied real field assignments with size validation for ${realFields.length} fields`);
     }
