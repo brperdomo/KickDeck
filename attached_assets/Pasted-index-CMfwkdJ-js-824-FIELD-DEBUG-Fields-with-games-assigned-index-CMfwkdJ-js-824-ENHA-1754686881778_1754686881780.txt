@@ -1,0 +1,88 @@
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Fields with games assigned: []
+index-CMfwkdJ_.js:824 🎯 [ENHANCED DRAG DROP] Debug Info: {isLoading: true, error: null, scheduleData: undefined, fieldsCount: 0, gamesCount: 0, …}
+index-CMfwkdJ_.js:823 Fetch finished loading: GET "https://app.matchpro.ai/api/admin/events/1844329078/schedule-calendar".
+queryFn @ index-CMfwkdJ_.js:823
+i @ index-CMfwkdJ_.js:41
+f @ index-CMfwkdJ_.js:41
+start @ index-CMfwkdJ_.js:41
+fetch @ index-CMfwkdJ_.js:41
+ng @ index-CMfwkdJ_.js:41
+onSubscribe @ index-CMfwkdJ_.js:41
+subscribe @ index-CMfwkdJ_.js:41
+(anonymous) @ index-CMfwkdJ_.js:41
+iW @ index-CMfwkdJ_.js:39
+SS @ index-CMfwkdJ_.js:41
+Jh @ index-CMfwkdJ_.js:41
+rhe @ index-CMfwkdJ_.js:41
+ku @ index-CMfwkdJ_.js:41
+BM @ index-CMfwkdJ_.js:41
+au @ index-CMfwkdJ_.js:39
+(anonymous) @ index-CMfwkdJ_.js:41
+index-CMfwkdJ_.js:823 🎯 [ENHANCED DRAG DROP] Transformed games for calendar: (7) [{…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CMfwkdJ_.js:823 🎯 [ENHANCED DRAG DROP] Fields data: (28) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CMfwkdJ_.js:823 🎯 [GAME-FIELD DEBUG] Game 9889: fieldId=31, fieldName="12", startTime="2025-08-16T08:00:00"
+index-CMfwkdJ_.js:823 🎯 [GAME-FIELD DEBUG] Game 9888: fieldId=32, fieldName="13", startTime="2025-08-16T08:00:00"
+index-CMfwkdJ_.js:823 🎯 [GAME-FIELD DEBUG] Game 9883: fieldId=33, fieldName="14", startTime="2025-08-16T08:00:00"
+index-CMfwkdJ_.js:823 🎯 [GAME-FIELD DEBUG] Game 9887: fieldId=31, fieldName="12", startTime="2025-08-16T14:00:00"
+index-CMfwkdJ_.js:823 🎯 [GAME-FIELD DEBUG] Game 9884: fieldId=32, fieldName="13", startTime="2025-08-16T14:00:00"
+index-CMfwkdJ_.js:823 🎯 [GAME-FIELD DEBUG] Game 9886: fieldId=31, fieldName="12", startTime="2025-08-17T08:00:00"
+index-CMfwkdJ_.js:823 🎯 [GAME-FIELD DEBUG] Game 9885: fieldId=32, fieldName="13", startTime="2025-08-17T08:00:00"
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] All available fields: (28) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Fields with games assigned: (3) [31, 32, 33]
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 31 (12) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 32 (13) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 33 (14) has 1 games
+index-CMfwkdJ_.js:824 🎯 [ENHANCED DRAG DROP] Debug Info: {isLoading: false, error: null, scheduleData: {…}, fieldsCount: 28, gamesCount: 7, …}
+index-CMfwkdJ_.js:823 🔍 [CONFLICT DETECTION] Starting conflict detection for 7 games
+index-CMfwkdJ_.js:823 🔍 [CONFLICT DETECTION] Time slots: 48
+index-CMfwkdJ_.js:823 🔍 [CONFLICT DETECTION] Sample games: (3) [{…}, {…}, {…}]
+index-CMfwkdJ_.js:823 🚨 [TEAM CONFLICT] TBD has 2 games at 8 AM: (2) [{…}, {…}]
+index-CMfwkdJ_.js:41 [Violation] 'setTimeout' handler took 53ms
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] All available fields: (28) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Fields with games assigned: (3) [31, 32, 33]
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 31 (12) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 32 (13) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 33 (14) has 1 games
+index-CMfwkdJ_.js:824 🎯 [ENHANCED DRAG DROP] Debug Info: {isLoading: false, error: null, scheduleData: {…}, fieldsCount: 28, gamesCount: 7, …}
+index-CMfwkdJ_.js:823 Fetch finished loading: GET "https://app.matchpro.ai/api/admin/events/1844329078/game-metadata".
+queryFn @ index-CMfwkdJ_.js:823
+i @ index-CMfwkdJ_.js:41
+f @ index-CMfwkdJ_.js:41
+start @ index-CMfwkdJ_.js:41
+fetch @ index-CMfwkdJ_.js:41
+ng @ index-CMfwkdJ_.js:41
+onSubscribe @ index-CMfwkdJ_.js:41
+subscribe @ index-CMfwkdJ_.js:41
+(anonymous) @ index-CMfwkdJ_.js:41
+iW @ index-CMfwkdJ_.js:39
+SS @ index-CMfwkdJ_.js:41
+Jh @ index-CMfwkdJ_.js:41
+rhe @ index-CMfwkdJ_.js:41
+ku @ index-CMfwkdJ_.js:41
+BM @ index-CMfwkdJ_.js:41
+au @ index-CMfwkdJ_.js:39
+(anonymous) @ index-CMfwkdJ_.js:41
+setTimeout
+whe @ index-CMfwkdJ_.js:41
+o @ index-CMfwkdJ_.js:41
+batch @ index-CMfwkdJ_.js:41
+ac @ index-CMfwkdJ_.js:41
+setData @ index-CMfwkdJ_.js:41
+onSuccess @ index-CMfwkdJ_.js:41
+m @ index-CMfwkdJ_.js:41
+Promise.then
+f @ index-CMfwkdJ_.js:41
+start @ index-CMfwkdJ_.js:41
+fetch @ index-CMfwkdJ_.js:41
+ng @ index-CMfwkdJ_.js:41
+onSubscribe @ index-CMfwkdJ_.js:41
+subscribe @ index-CMfwkdJ_.js:41
+(anonymous) @ index-CMfwkdJ_.js:41
+iW @ index-CMfwkdJ_.js:39
+SS @ index-CMfwkdJ_.js:41
+Jh @ index-CMfwkdJ_.js:41
+rhe @ index-CMfwkdJ_.js:41
+ku @ index-CMfwkdJ_.js:41
+BM @ index-CMfwkdJ_.js:41
+au @ index-CMfwkdJ_.js:39
+(anonymous) @ index-CMfwkdJ_.js:41
