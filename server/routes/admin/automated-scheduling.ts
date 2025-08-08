@@ -1347,171 +1347,150 @@ async function assignFieldsWithSchedule(eventId: string, dbGames: any[], bracket
     }
   });
 
-  // CRITICAL: Schedule games with 90-minute rest period enforcement
-  for (let i = 0; i < dbGames.length; i++) {
-    const game = dbGames[i];
-    console.log(`[Enhanced Field Assignment] Scheduling game ${i + 1}: Team ${game.homeTeamId} vs Team ${game.awayTeamId}`);
+  // CRITICAL: CONCURRENT SCHEDULING - Allow multiple games at same time when no team conflicts
+  console.log(`[Enhanced Field Assignment] CONCURRENT SCHEDULING: Processing ${dbGames.length} games with dynamic rest period enforcement`);
+  
+  // Create unscheduled games list for concurrent processing
+  const unscheduledGames = dbGames.map((game, index) => ({ ...game, originalIndex: index }));
+  let currentTimeSlot = new Date(eventStartDate);
+  currentTimeSlot.setHours(8, 0, 0, 0); // Start at 8:00 AM
+  
+  while (unscheduledGames.length > 0) {
+    console.log(`\n[Enhanced Field Assignment] === TIME SLOT: ${currentTimeSlot.toLocaleString()} ===`);
+    console.log(`[Enhanced Field Assignment] Remaining games to schedule: ${unscheduledGames.length}`);
     
-    let bestField = null;
-    let bestTime = null;
-    let currentFieldIndex = 0;
+    const scheduledThisRound: any[] = [];
+    const availableFieldsThisSlot = [...availableFields];
     
-    // Try to find a field/time that respects rest periods
-    while (!bestField && currentFieldIndex < availableFields.length * 10) { // Max 10 cycles through fields
-      const field = availableFields[currentFieldIndex % availableFields.length];
-      let proposedTime = new Date(fieldSchedules[field.id]);
+    // Try to schedule as many games as possible at this time slot
+    for (let gameIndex = unscheduledGames.length - 1; gameIndex >= 0; gameIndex--) {
+      const game = unscheduledGames[gameIndex];
       
-      // Check if this time violates team rest periods
-      let violatesRestPeriod = false;
+      // Check if this game can be scheduled at current time slot
+      let canSchedule = true;
+      let teamConflictReason = '';
       
-      // Check home team rest period and calculate required time
-      let earliestValidTime = proposedTime;
-      if (game.homeTeamId && teamSchedules[game.homeTeamId]) {
-        const homeTeamGames = teamSchedules[game.homeTeamId];
-        for (const gameEndTime of homeTeamGames) {
-          const requiredStartTime = new Date(gameEndTime.getTime() + restPeriodMs);
-          if (requiredStartTime > earliestValidTime) {
-            earliestValidTime = requiredStartTime;
-            console.log(`[Enhanced Field Assignment] Game ${i + 1} home team needs ${restPeriodMinutes}min rest, earliest valid time: ${earliestValidTime.toLocaleTimeString()}`);
-          }
+      // CRITICAL: Rest period check - only applies AFTER teams have already played
+      if (game.homeTeamId && teamSchedules[game.homeTeamId]?.length > 0) {
+        const homeTeamLastGameEnd = Math.max(...teamSchedules[game.homeTeamId].map(time => time.getTime()));
+        const timeSinceLastGame = currentTimeSlot.getTime() - homeTeamLastGameEnd;
+        if (timeSinceLastGame < restPeriodMs) {
+          canSchedule = false;
+          const remainingRest = Math.ceil((restPeriodMs - timeSinceLastGame) / (60 * 1000));
+          teamConflictReason = `Home team needs ${remainingRest} more minutes rest (${restPeriodMinutes}min required)`;
         }
       }
       
-      // Check away team rest period and update earliest valid time
-      if (game.awayTeamId && teamSchedules[game.awayTeamId]) {
-        const awayTeamGames = teamSchedules[game.awayTeamId];
-        for (const gameEndTime of awayTeamGames) {
-          const requiredStartTime = new Date(gameEndTime.getTime() + restPeriodMs);
-          if (requiredStartTime > earliestValidTime) {
-            earliestValidTime = requiredStartTime;
-            console.log(`[Enhanced Field Assignment] Game ${i + 1} away team needs ${restPeriodMinutes}min rest, earliest valid time: ${earliestValidTime.toLocaleTimeString()}`);
-          }
+      if (game.awayTeamId && teamSchedules[game.awayTeamId]?.length > 0) {
+        const awayTeamLastGameEnd = Math.max(...teamSchedules[game.awayTeamId].map(time => time.getTime()));
+        const timeSinceLastGame = currentTimeSlot.getTime() - awayTeamLastGameEnd;
+        if (timeSinceLastGame < restPeriodMs) {
+          canSchedule = false;
+          const remainingRest = Math.ceil((restPeriodMs - timeSinceLastGame) / (60 * 1000));
+          teamConflictReason = `Away team needs ${remainingRest} more minutes rest (${restPeriodMinutes}min required)`;
         }
       }
       
-      // Update proposed time if rest period requires it
-      if (earliestValidTime > proposedTime) {
-        // Update the field's available time to the earliest valid time
-        fieldSchedules[field.id] = new Date(earliestValidTime);
-        proposedTime = new Date(earliestValidTime);
-        console.log(`[Enhanced Field Assignment] Advanced Field ${field.name} to ${earliestValidTime.toLocaleTimeString()} for rest period`);
-      }
-      
-      // Check if proposed time still violates rest periods after adjustment
-      if (earliestValidTime.getTime() !== fieldSchedules[field.id].getTime()) {
-        violatesRestPeriod = true;
-      }
-      
-      // Check max 2 games per team per day constraint
-      if (!violatesRestPeriod) {
-        const proposedDate = proposedTime.toDateString();
+      // Check max games per day constraint
+      if (canSchedule) {
+        const currentDate = currentTimeSlot.toDateString();
         const homeTeamGamesOnDay = game.homeTeamId ? teamSchedules[game.homeTeamId]?.filter(gameTime => 
-          gameTime.toDateString() === proposedDate
+          gameTime.toDateString() === currentDate
         ).length || 0 : 0;
         const awayTeamGamesOnDay = game.awayTeamId ? teamSchedules[game.awayTeamId]?.filter(gameTime => 
-          gameTime.toDateString() === proposedDate
+          gameTime.toDateString() === currentDate
         ).length || 0 : 0;
         
         if (homeTeamGamesOnDay >= maxGamesPerDay || awayTeamGamesOnDay >= maxGamesPerDay) {
-          violatesRestPeriod = true;
-          console.log(`[Enhanced Field Assignment] Game ${i + 1} violates max games per day: Home team has ${homeTeamGamesOnDay}, Away team has ${awayTeamGamesOnDay} games on ${proposedDate} (max: ${maxGamesPerDay})`);
+          canSchedule = false;
+          teamConflictReason = `Max games per day exceeded (${maxGamesPerDay})`;
         }
       }
       
-      // Also check that the calculated time doesn't exceed event end date
-      if (!violatesRestPeriod && proposedTime <= eventEndDate) {
-        bestField = field;
-        bestTime = proposedTime;
-        // Update field schedule to after this game ends
-        fieldSchedules[field.id] = new Date(proposedTime.getTime() + gameDurationMs + bufferMs);
-        break;
+      // Check for team conflicts with other games scheduled this round
+      if (canSchedule) {
+        for (const scheduledGame of scheduledThisRound) {
+          if ((game.homeTeamId && (game.homeTeamId === scheduledGame.homeTeamId || game.homeTeamId === scheduledGame.awayTeamId)) ||
+              (game.awayTeamId && (game.awayTeamId === scheduledGame.homeTeamId || game.awayTeamId === scheduledGame.awayTeamId))) {
+            canSchedule = false;
+            teamConflictReason = `Team conflict with concurrent game at ${scheduledGame.fieldName}`;
+            break;
+          }
+        }
+      }
+      
+      // Find available field
+      if (canSchedule && availableFieldsThisSlot.length > 0) {
+        const assignedField = availableFieldsThisSlot.shift()!; // Take first available field (guaranteed to exist)
+        
+        const scheduledDateTime = new Date(currentTimeSlot);
+        const scheduledDate = scheduledDateTime.toISOString().split('T')[0];
+        const scheduledTime = scheduledDateTime.toTimeString().substring(0, 5);
+
+        // Record this game as scheduled
+        const assignment = {
+          gameIndex: game.originalIndex,
+          fieldId: assignedField.id,
+          fieldName: assignedField.name,
+          scheduledDate,
+          scheduledTime,
+          scheduledDateTime: scheduledDateTime.toISOString(),
+          homeTeamId: game.homeTeamId,
+          awayTeamId: game.awayTeamId
+        };
+        
+        assignments.push(assignment);
+        scheduledThisRound.push(assignment);
+
+        // Update database with field and schedule assignment
+        try {
+          await db.execute(sql`
+            UPDATE games 
+            SET field_id = ${assignedField.id},
+                scheduled_date = ${scheduledDate},
+                scheduled_time = ${scheduledTime}
+            WHERE event_id = ${eventId}
+              AND home_team_id = ${game.homeTeamId || -1}
+              AND away_team_id = ${game.awayTeamId || -1}
+              AND round = ${game.round}
+          `);
+          console.log(`[Enhanced Field Assignment] ✅ CONCURRENT: Game ${game.originalIndex + 1} scheduled at ${scheduledTime} on ${assignedField.name}`);
+        } catch (updateError) {
+          console.error(`[Enhanced Field Assignment] Error updating game ${game.originalIndex + 1}:`, updateError);
+        }
+
+        // Record game end times for team rest period tracking
+        const gameEndTime = new Date(scheduledDateTime.getTime() + gameDurationMs);
+        if (game.homeTeamId) {
+          if (!teamSchedules[game.homeTeamId]) teamSchedules[game.homeTeamId] = [];
+          teamSchedules[game.homeTeamId].push(gameEndTime);
+        }
+        if (game.awayTeamId) {
+          if (!teamSchedules[game.awayTeamId]) teamSchedules[game.awayTeamId] = [];
+          teamSchedules[game.awayTeamId].push(gameEndTime);
+        }
+
+        // Remove from unscheduled list
+        unscheduledGames.splice(gameIndex, 1);
+      } else if (!canSchedule) {
+        console.log(`[Enhanced Field Assignment] ⏳ Game ${game.originalIndex + 1} cannot be scheduled at ${currentTimeSlot.toLocaleTimeString()}: ${teamConflictReason}`);
       } else {
-        // Move this field's next available slot forward by the rest period or buffer time
-        const advanceTime = violatesRestPeriod ? restPeriodMs : bufferMs;
-        fieldSchedules[field.id] = new Date(fieldSchedules[field.id].getTime() + advanceTime);
-      }
-      
-      currentFieldIndex++;
-    }
-
-    // If we couldn't find a valid slot, use the earliest available field anyway
-    if (!bestField) {
-      console.log(`[Enhanced Field Assignment] WARNING: Could not find ideal slot for game ${i + 1}, using earliest available field`);
-      bestField = availableFields[0];
-      bestTime = fieldSchedules[bestField.id];
-      
-      // Ensure it's within event dates
-      if (bestTime > eventEndDate) {
-        const nextDayStart = new Date(eventStartDate);
-        nextDayStart.setDate(nextDayStart.getDate() + 1);
-        const [hours, minutes] = (bestField.openTime || '08:00').split(':');
-        nextDayStart.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-        if (nextDayStart <= eventEndDate) {
-          bestTime = nextDayStart;
-        }
+        console.log(`[Enhanced Field Assignment] 🏟️ Game ${game.originalIndex + 1} waiting for available field at ${currentTimeSlot.toLocaleTimeString()}`);
       }
     }
-
-    const scheduledDateTime = new Date(bestTime || fieldSchedules[bestField.id]);
     
-    const scheduledDate = scheduledDateTime.toISOString().split('T')[0];
-    const scheduledTime = scheduledDateTime.toTimeString().substring(0, 5);
-
-    assignments.push({
-      gameIndex: i,
-      fieldId: bestField.id,
-      fieldName: bestField.name,
-      scheduledDate,
-      scheduledTime,
-      scheduledDateTime: scheduledDateTime.toISOString()
-    });
-
-    // Update database with field and schedule assignment
-    try {
-      // Use raw SQL to update with date/time since Drizzle schema may not have these columns yet
-      await db.execute(sql`
-        UPDATE games 
-        SET field_id = ${bestField.id},
-            scheduled_date = ${scheduledDate},
-            scheduled_time = ${scheduledTime}
-        WHERE event_id = ${eventId}
-          AND home_team_id = ${game.homeTeamId || -1}
-          AND away_team_id = ${game.awayTeamId || -1}
-          AND round = ${game.round}
-      `);
-      console.log(`[Enhanced Field Assignment] Updated game ${i + 1}: Field ${bestField.name} at ${scheduledDate} ${scheduledTime}`);
-    } catch (updateError) {
-      console.error(`[Enhanced Field Assignment] Error updating game ${i + 1}:`, updateError);
-      // Fallback: Just update field ID
-      try {
-        await db.update(games)
-          .set({ fieldId: bestField.id })
-          .where(
-            and(
-              eq(games.eventId, eventId),
-              eq(games.homeTeamId, game.homeTeamId || -1),
-              eq(games.awayTeamId, game.awayTeamId || -1),
-              eq(games.round, game.round)
-            )
-          );
-        console.log(`[Enhanced Field Assignment] Fallback: Updated game ${i + 1} with field ${bestField.name} only`);
-      } catch (fallbackError) {
-        console.error(`[Enhanced Field Assignment] Fallback failed for game ${i + 1}:`, fallbackError);
-      }
-    }
-
-    // Field schedule was already updated when we found the bestTime
+    console.log(`[Enhanced Field Assignment] SCHEDULED ${scheduledThisRound.length} concurrent games at ${currentTimeSlot.toLocaleTimeString()}`);
     
-    // Record game end times for team rest period tracking
-    const gameEndTime = new Date(scheduledDateTime.getTime() + gameDurationMs);
-    if (game.homeTeamId) {
-      teamSchedules[game.homeTeamId].push(gameEndTime);
+    // Advance to next time slot (15-minute intervals for better scheduling flexibility)
+    currentTimeSlot = new Date(currentTimeSlot.getTime() + (15 * 60 * 1000)); // Advance 15 minutes
+    
+    // Safety check: don't go beyond event end date + 1 day
+    const maxEndTime = new Date(eventEndDate);
+    maxEndTime.setDate(maxEndTime.getDate() + 1);
+    if (currentTimeSlot > maxEndTime) {
+      console.log(`[Enhanced Field Assignment] WARNING: Reached maximum scheduling time, ${unscheduledGames.length} games remain unscheduled`);
+      break;
     }
-    if (game.awayTeamId) {
-      teamSchedules[game.awayTeamId].push(gameEndTime);
-    }
-
-    console.log(`[Enhanced Field Assignment] Game ${i + 1}: Field ${bestField.name} at ${scheduledDate} ${scheduledTime} (90-min rest enforced)`);
   }
 
   // Summary
