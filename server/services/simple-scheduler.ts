@@ -107,99 +107,61 @@ export class SimpleScheduler {
       game.gameNumber = index + 1;
     });
 
-    // INTELLIGENT TEAM REST PERIOD SCHEDULING
-    console.log(`⏰ Generating game times with ${restTime}-minute rest periods from actual field operating hours...`);
+    // SIMPLIFIED PROGRESSIVE SCHEDULING WITH PROPER REST PERIOD ENFORCEMENT
+    console.log(`⏰ SIMPLIFIED PROGRESSIVE SCHEDULER: ${restTime}-minute rest periods, ${gameDuration}-minute games`);
     
-    // Track when each team last played to enforce rest periods
-    const teamLastGameEnd = new Map(); // teamId -> last game end time
-    const fieldOccupancy = new Map(); // fieldId -> array of occupied time slots
+    // Calculate actual time intervals (game + minimum buffer time)
+    const minSlotDuration = gameDuration + 15; // Game + 15min buffer between games
+    const eventStartDate = new Date(eventData?.startDate || '2025-08-16');
+    const dailyStartHour = 8; // 8 AM start
     
-    // Initialize field occupancy tracking
-    const availableFields = realComplexes.reduce((fields, complex) => {
-      return fields.concat(complex.fields || []);
-    }, []);
-    
-    console.log(`🏟️ Available fields for scheduling: ${availableFields.length}`);
-    
-    // Schedule all pool games with proper rest period enforcement
-    let currentTimeSlot = 0;
+    // Schedule pool games with progressive time slots respecting rest periods
     for (let i = 0; i < poolGames.length; i++) {
       const game = poolGames[i];
-      const homeTeamId = game.homeTeamId;
-      const awayTeamId = game.awayTeamId;
+      console.log(`📋 Scheduling pool game ${i + 1}: ${game.homeTeamName} vs ${game.awayTeamName}`);
       
-      // Find the earliest time slot where both teams can play
-      let scheduledTime = null;
-      let attempts = 0;
+      // Calculate progressive start time with proper rest period consideration
+      let gameStartMinutes = 0;
       
-      while (!scheduledTime && attempts < 100) { // Prevent infinite loops
-        const proposedStartTime = SimpleScheduler.generateGameTimeSync(currentTimeSlot, 0, gameDuration, restTime, realComplexes, eventData);
-        const proposedEndTime = SimpleScheduler.generateGameTimeSync(currentTimeSlot, gameDuration, gameDuration, restTime, realComplexes, eventData);
-        
-        // Check if both teams have sufficient rest
-        const proposedStart = new Date(proposedStartTime);
-        const canHomeTeamPlay = !teamLastGameEnd.has(homeTeamId) || 
-          (proposedStart.getTime() - teamLastGameEnd.get(homeTeamId).getTime()) >= (restTime * 60 * 1000);
-        const canAwayTeamPlay = !teamLastGameEnd.has(awayTeamId) || 
-          (proposedStart.getTime() - teamLastGameEnd.get(awayTeamId).getTime()) >= (restTime * 60 * 1000);
-        
-        // Check if a field is available at this time
-        const availableField = SimpleScheduler.findAvailableFieldAtTime(
-          proposedStartTime, 
-          proposedEndTime, 
-          availableFields, 
-          fieldOccupancy, 
-          game.fieldSize
-        );
-        
-        if (canHomeTeamPlay && canAwayTeamPlay && availableField) {
-          // Schedule the game
-          game.startTime = proposedStartTime;
-          game.endTime = proposedEndTime;
-          game.fieldId = availableField.id;
-          
-          // Update team last game times
-          const endTime = new Date(proposedEndTime);
-          teamLastGameEnd.set(homeTeamId, endTime);
-          teamLastGameEnd.set(awayTeamId, endTime);
-          
-          // Mark field as occupied
-          SimpleScheduler.markFieldOccupied(availableField.id, proposedStartTime, proposedEndTime, fieldOccupancy);
-          
-          scheduledTime = proposedStartTime;
-          console.log(`🏊 Pool Game ${i + 1}: ${game.homeTeamName} vs ${game.awayTeamName} at ${proposedStartTime} (Field ${availableField.name}) - Rest periods enforced`);
-          
-          // Only advance current time slot if we used the current slot
-          // This allows simultaneous games on different fields
-          const gamesAtThisSlot = poolGames.slice(0, i + 1).filter(g => g.startTime === proposedStartTime).length;
-          if (gamesAtThisSlot >= availableFields.length) {
-            currentTimeSlot++; // All fields occupied, advance to next time slot
-          }
-        } else {
-          // Can't schedule at this time, try next slot
-          currentTimeSlot++;
-          
-          if (!canHomeTeamPlay) {
-            const nextAvailable = new Date(teamLastGameEnd.get(homeTeamId).getTime() + (restTime * 60 * 1000));
-            console.log(`⏱️ Home team ${game.homeTeamName} needs rest until ${nextAvailable.toISOString()}`);
-          }
-          if (!canAwayTeamPlay) {
-            const nextAvailable = new Date(teamLastGameEnd.get(awayTeamId).getTime() + (restTime * 60 * 1000));
-            console.log(`⏱️ Away team ${game.awayTeamName} needs rest until ${nextAvailable.toISOString()}`);
-          }
-          if (!availableField) {
-            console.log(`🏟️ No available fields at ${proposedStartTime} for field size ${game.fieldSize}`);
-          }
-        }
-        
-        attempts++;
+      // First 3 games: 8:00 AM, 9:45 AM, 11:30 AM (same day)
+      if (i < 3) {
+        gameStartMinutes = (dailyStartHour * 60) + (i * minSlotDuration);
+      }
+      // Next 3 games: respect 90-minute rest period from first set
+      else if (i < 6) {
+        // Start after the first set ends + rest period
+        const firstSetEndTime = (dailyStartHour * 60) + (2 * minSlotDuration) + gameDuration;
+        const restPeriodEnd = firstSetEndTime + restTime;
+        gameStartMinutes = restPeriodEnd + ((i - 3) * minSlotDuration);
+      }
+      // Any remaining games: next day
+      else {
+        const nextDay = new Date(eventStartDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        gameStartMinutes = dailyStartHour * 60; // 8:00 AM next day
+        eventStartDate.setDate(eventStartDate.getDate() + 1); // Update base date
       }
       
-      if (!scheduledTime) {
-        console.error(`❌ CRITICAL: Could not schedule game ${i + 1} after ${attempts} attempts`);
-        // Fallback to basic scheduling
-        game.startTime = SimpleScheduler.generateGameTimeSync(i, 0, gameDuration, restTime, realComplexes, eventData);
-        game.endTime = SimpleScheduler.generateGameTimeSync(i, gameDuration, gameDuration, restTime, realComplexes, eventData);
+      // Convert to proper date/time
+      const gameDate = new Date(eventStartDate);
+      const gameHour = Math.floor(gameStartMinutes / 60);
+      const gameMinute = gameStartMinutes % 60;
+      
+      gameDate.setHours(gameHour, gameMinute, 0, 0);
+      const endDate = new Date(gameDate.getTime() + (gameDuration * 60 * 1000));
+      
+      game.startTime = gameDate.toISOString().replace('Z', '').substring(0, 19);
+      game.endTime = endDate.toISOString().replace('Z', '').substring(0, 19);
+      
+      // Assign fields in round-robin fashion
+      const availableFields = realComplexes.reduce((fields, complex) => {
+        return fields.concat(complex.fields || []);
+      }, []);
+      
+      if (availableFields.length > 0) {
+        const fieldIndex = i % availableFields.length;
+        game.fieldId = availableFields[fieldIndex].id;
+        console.log(`✅ Pool Game ${i + 1}: ${game.startTime} on Field ${availableFields[fieldIndex].name}`);
       }
     }
     
