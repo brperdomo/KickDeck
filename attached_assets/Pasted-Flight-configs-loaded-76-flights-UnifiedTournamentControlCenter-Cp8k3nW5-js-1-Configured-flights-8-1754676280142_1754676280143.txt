@@ -1,0 +1,236 @@
+Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-Cp8k3nW5.js:1 Configured flights: 8 of 76
+UnifiedTournamentControlCenter-Cp8k3nW5.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-Cp8k3nW5.js:1 Configured flights: 8 of 76
+chunk-CVIZYB43.js:3 [Violation] 'setTimeout' handler took 51ms
+UnifiedTournamentControlCenter-Cp8k3nW5.js:1 Fetch finished loading: POST "https://app.matchpro.ai/api/admin/events/1844329078/generate-selective-schedule".
+mutationFn @ UnifiedTournamentControlCenter-Cp8k3nW5.js:1
+fn @ index-CMfwkdJ_.js:41
+f @ index-CMfwkdJ_.js:41
+start @ index-CMfwkdJ_.js:41
+execute @ index-CMfwkdJ_.js:41
+await in execute
+mutate @ index-CMfwkdJ_.js:41
+(anonymous) @ index-CMfwkdJ_.js:41
+Q @ UnifiedTournamentControlCenter-Cp8k3nW5.js:1
+wue @ index-CMfwkdJ_.js:38
+Sue @ index-CMfwkdJ_.js:38
+Cue @ index-CMfwkdJ_.js:38
+dM @ index-CMfwkdJ_.js:38
+V7 @ index-CMfwkdJ_.js:38
+(anonymous) @ index-CMfwkdJ_.js:38
+yO @ index-CMfwkdJ_.js:41
+f7 @ index-CMfwkdJ_.js:38
+N2 @ index-CMfwkdJ_.js:38
+H4 @ index-CMfwkdJ_.js:38
+zue @ index-CMfwkdJ_.js:38
+UnifiedTournamentControlCenter-Cp8k3nW5.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-Cp8k3nW5.js:1 Configured flights: 8 of 76
+chunk-CVIZYB43.js:3 [Violation] 'setTimeout' handler took 62ms
+ScheduleViewerFixed-Du7luKn1.js:6 Schedule API Response: {games: Array(7), fields: Array(28), ageGroups: Array(1), dates: Array(2), totalGames: 7, …}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 1 transformation debug: {raw: {…}, homeTeamStructure: 'TBD', awayTeamStructure: 'TBD', fieldStructure: '12', rawFieldName: '12', …}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 1 API data: {
+  "id": 9875,
+  "homeTeam": "TBD",
+  "awayTeam": "TBD",
+  "ageGroup": "U19 Boys",
+  "field": "12",
+  "fieldId": 31,
+  "fieldName": "12",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "2025-08-16T08:00:00",
+  "duration": 90,
+  "status": "pending",
+  "homeScore": null,
+  "awayScore": null,
+  "homeTeamName": "TBD",
+  "awayTeamName": "TBD"
+}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 1 transformed: {id: 9875, homeTeam: 'TBD', awayTeam: 'TBD', ageGroup: 'U19 Boys', field: '12', …}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 2 transformation debug: {raw: {…}, homeTeamStructure: "Tiffiny's B07- Jose ", awayTeamStructure: 'Pro Alliance B07 Academy', fieldStructure: '13', rawFieldName: '13', …}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 2 API data: {
+  "id": 9874,
+  "homeTeam": "Tiffiny's B07- Jose ",
+  "awayTeam": "Pro Alliance B07 Academy",
+  "ageGroup": "U19 Boys",
+  "field": "13",
+  "fieldId": 32,
+  "fieldName": "13",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "2025-08-16T08:00:00",
+  "duration": 90,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null,
+  "homeTeamName": "Tiffiny's B07- Jose ",
+  "awayTeamName": "Pro Alliance B07 Academy"
+}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 2 transformed: {id: 9874, homeTeam: "Tiffiny's B07- Jose ", awayTeam: 'Pro Alliance B07 Academy', ageGroup: 'U19 Boys', field: '13', …}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 3 transformation debug: {raw: {…}, homeTeamStructure: 'City SC Southwest B07/08', awayTeamStructure: 'Cal Elite SC B2007', fieldStructure: '14', rawFieldName: '14', …}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 3 API data: {
+  "id": 9869,
+  "homeTeam": "City SC Southwest B07/08",
+  "awayTeam": "Cal Elite SC B2007",
+  "ageGroup": "U19 Boys",
+  "field": "14",
+  "fieldId": 33,
+  "fieldName": "14",
+  "date": "2025-08-16",
+  "time": "08:00",
+  "startTime": "2025-08-16T08:00:00",
+  "duration": 90,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null,
+  "homeTeamName": "City SC Southwest B07/08",
+  "awayTeamName": "Cal Elite SC B2007"
+}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 3 transformed: {id: 9869, homeTeam: 'City SC Southwest B07/08', awayTeam: 'Cal Elite SC B2007', ageGroup: 'U19 Boys', field: '14', …}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 4 transformation debug: {raw: {…}, homeTeamStructure: 'Cal Elite SC B2007', awayTeamStructure: 'Pro Alliance B07 Academy', fieldStructure: '12', rawFieldName: '12', …}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 4 API data: {
+  "id": 9873,
+  "homeTeam": "Cal Elite SC B2007",
+  "awayTeam": "Pro Alliance B07 Academy",
+  "ageGroup": "U19 Boys",
+  "field": "12",
+  "fieldId": 31,
+  "fieldName": "12",
+  "date": "2025-08-16",
+  "time": "14:00",
+  "startTime": "2025-08-16T14:00:00",
+  "duration": 90,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null,
+  "homeTeamName": "Cal Elite SC B2007",
+  "awayTeamName": "Pro Alliance B07 Academy"
+}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 4 transformed: {id: 9873, homeTeam: 'Cal Elite SC B2007', awayTeam: 'Pro Alliance B07 Academy', ageGroup: 'U19 Boys', field: '12', …}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 5 transformation debug: {raw: {…}, homeTeamStructure: 'City SC Southwest B07/08', awayTeamStructure: "Tiffiny's B07- Jose ", fieldStructure: '13', rawFieldName: '13', …}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 5 API data: {
+  "id": 9870,
+  "homeTeam": "City SC Southwest B07/08",
+  "awayTeam": "Tiffiny's B07- Jose ",
+  "ageGroup": "U19 Boys",
+  "field": "13",
+  "fieldId": 32,
+  "fieldName": "13",
+  "date": "2025-08-16",
+  "time": "14:00",
+  "startTime": "2025-08-16T14:00:00",
+  "duration": 90,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null,
+  "homeTeamName": "City SC Southwest B07/08",
+  "awayTeamName": "Tiffiny's B07- Jose "
+}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 5 transformed: {id: 9870, homeTeam: 'City SC Southwest B07/08', awayTeam: "Tiffiny's B07- Jose ", ageGroup: 'U19 Boys', field: '13', …}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 6 transformation debug: {raw: {…}, homeTeamStructure: 'Cal Elite SC B2007', awayTeamStructure: "Tiffiny's B07- Jose ", fieldStructure: '12', rawFieldName: '12', …}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 6 API data: {
+  "id": 9872,
+  "homeTeam": "Cal Elite SC B2007",
+  "awayTeam": "Tiffiny's B07- Jose ",
+  "ageGroup": "U19 Boys",
+  "field": "12",
+  "fieldId": 31,
+  "fieldName": "12",
+  "date": "2025-08-17",
+  "time": "08:00",
+  "startTime": "2025-08-17T08:00:00",
+  "duration": 90,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null,
+  "homeTeamName": "Cal Elite SC B2007",
+  "awayTeamName": "Tiffiny's B07- Jose "
+}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 6 transformed: {id: 9872, homeTeam: 'Cal Elite SC B2007', awayTeam: "Tiffiny's B07- Jose ", ageGroup: 'U19 Boys', field: '12', …}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 7 transformation debug: {raw: {…}, homeTeamStructure: 'City SC Southwest B07/08', awayTeamStructure: 'Pro Alliance B07 Academy', fieldStructure: '13', rawFieldName: '13', …}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 7 API data: {
+  "id": 9871,
+  "homeTeam": "City SC Southwest B07/08",
+  "awayTeam": "Pro Alliance B07 Academy",
+  "ageGroup": "U19 Boys",
+  "field": "13",
+  "fieldId": 32,
+  "fieldName": "13",
+  "date": "2025-08-17",
+  "time": "08:00",
+  "startTime": "2025-08-17T08:00:00",
+  "duration": 90,
+  "status": "scheduled",
+  "homeScore": null,
+  "awayScore": null,
+  "homeTeamName": "City SC Southwest B07/08",
+  "awayTeamName": "Pro Alliance B07 Academy"
+}
+ScheduleViewerFixed-Du7luKn1.js:6 Game 7 transformed: {id: 9871, homeTeam: 'City SC Southwest B07/08', awayTeam: 'Pro Alliance B07 Academy', ageGroup: 'U19 Boys', field: '13', …}
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] All available fields: (28) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Fields with games assigned: (6) [31, 32, 33, 34, 35, 8]
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 31 (12) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 32 (13) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 33 (14) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 34 (15) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 35 (20) has 1 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 8 (f1) has 1 games
+index-CMfwkdJ_.js:824 🎯 [ENHANCED DRAG DROP] Debug Info: {isLoading: false, error: null, scheduleData: {…}, fieldsCount: 28, gamesCount: 14, …}
+index-CMfwkdJ_.js:823 🔍 [CONFLICT DETECTION] Starting conflict detection for 14 games
+index-CMfwkdJ_.js:823 🔍 [CONFLICT DETECTION] Time slots: 48
+index-CMfwkdJ_.js:823 🔍 [CONFLICT DETECTION] Sample games: (3) [{…}, {…}, {…}]
+index-CMfwkdJ_.js:823 🚨 [TEAM CONFLICT] TBD has 4 games at 8 AM: (4) [{…}, {…}, {…}, {…}]
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] All available fields: (28) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Fields with games assigned: (6) [31, 32, 33, 34, 35, 8]
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 31 (12) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 32 (13) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 33 (14) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 34 (15) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 35 (20) has 1 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 8 (f1) has 1 games
+index-CMfwkdJ_.js:824 🎯 [ENHANCED DRAG DROP] Debug Info: {isLoading: false, error: null, scheduleData: {…}, fieldsCount: 28, gamesCount: 14, …}
+index-CMfwkdJ_.js:823 🎯 [ENHANCED DRAG DROP] Transformed games for calendar: (7) [{…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CMfwkdJ_.js:823 🎯 [ENHANCED DRAG DROP] Fields data: (28) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CMfwkdJ_.js:823 🎯 [GAME-FIELD DEBUG] Game 9875: fieldId=31, fieldName="12", startTime="2025-08-16T08:00:00"
+index-CMfwkdJ_.js:823 🎯 [GAME-FIELD DEBUG] Game 9874: fieldId=32, fieldName="13", startTime="2025-08-16T08:00:00"
+index-CMfwkdJ_.js:823 🎯 [GAME-FIELD DEBUG] Game 9869: fieldId=33, fieldName="14", startTime="2025-08-16T08:00:00"
+index-CMfwkdJ_.js:823 🎯 [GAME-FIELD DEBUG] Game 9873: fieldId=31, fieldName="12", startTime="2025-08-16T14:00:00"
+index-CMfwkdJ_.js:823 🎯 [GAME-FIELD DEBUG] Game 9870: fieldId=32, fieldName="13", startTime="2025-08-16T14:00:00"
+index-CMfwkdJ_.js:823 🎯 [GAME-FIELD DEBUG] Game 9872: fieldId=31, fieldName="12", startTime="2025-08-17T08:00:00"
+index-CMfwkdJ_.js:823 🎯 [GAME-FIELD DEBUG] Game 9871: fieldId=32, fieldName="13", startTime="2025-08-17T08:00:00"
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] All available fields: (28) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Fields with games assigned: (3) [31, 32, 33]
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 31 (12) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 32 (13) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 33 (14) has 1 games
+index-CMfwkdJ_.js:824 🎯 [ENHANCED DRAG DROP] Debug Info: {isLoading: false, error: null, scheduleData: {…}, fieldsCount: 28, gamesCount: 7, …}
+index-CMfwkdJ_.js:823 🔍 [CONFLICT DETECTION] Starting conflict detection for 7 games
+index-CMfwkdJ_.js:823 🔍 [CONFLICT DETECTION] Time slots: 48
+index-CMfwkdJ_.js:823 🔍 [CONFLICT DETECTION] Sample games: (3) [{…}, {…}, {…}]
+index-CMfwkdJ_.js:823 🚨 [TEAM CONFLICT] TBD has 2 games at 8 AM: (2) [{…}, {…}]
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] All available fields: (28) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Fields with games assigned: (3) [31, 32, 33]
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 31 (12) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 32 (13) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 33 (14) has 1 games
+index-CMfwkdJ_.js:824 🎯 [ENHANCED DRAG DROP] Debug Info: {isLoading: false, error: null, scheduleData: {…}, fieldsCount: 28, gamesCount: 7, …}
+[Violation] Forced reflow while executing JavaScript took 46ms
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] All available fields: (28) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Fields with games assigned: (3) [31, 32, 33]
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 31 (12) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 32 (13) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 33 (14) has 1 games
+index-CMfwkdJ_.js:824 🎯 [ENHANCED DRAG DROP] Debug Info: {isLoading: false, error: null, scheduleData: {…}, fieldsCount: 28, gamesCount: 7, …}
+index-CMfwkdJ_.js:823 🔍 [CONFLICT DETECTION] Starting conflict detection for 7 games
+index-CMfwkdJ_.js:823 🔍 [CONFLICT DETECTION] Time slots: 24
+index-CMfwkdJ_.js:823 🔍 [CONFLICT DETECTION] Sample games: (3) [{…}, {…}, {…}]
+index-CMfwkdJ_.js:823 🚨 [TEAM CONFLICT] TBD has 2 games at 8 AM: (2) [{…}, {…}]
+master-schedule:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swapUnderstand this warning
+master-schedule:1 OTS parsing error: invalid sfntVersion: 791289955Understand this warning
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] All available fields: (28) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Fields with games assigned: (3) [31, 32, 33]
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 31 (12) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 32 (13) has 3 games
+index-CMfwkdJ_.js:824 🎯 [FIELD DEBUG] Field 33 (14) has 1 games
+index-CMfwkdJ_.js:824 🎯 [ENHANCED DRAG DROP] Debug Info: {isLoading: false, error: null, scheduleData: {…}, fieldsCount: 28, gamesCount: 7, …}

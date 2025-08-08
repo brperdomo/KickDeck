@@ -721,22 +721,37 @@ export class SimpleScheduler {
       timezone = (firstComplex as any).timezone || 'America/Los_Angeles';
     }
     
-    // CRITICAL FIX: Calculate proper time intervals with enforced rest periods
-    // Each game slot needs: game duration + rest time + buffer
-    const bufferTime = 15; // 15-minute buffer for cleanup/setup
-    const timeInterval = gameDuration + restTime + bufferTime; // Total time per game slot including rest
+    // CRITICAL FIX: Proper time interval calculation
+    // Only include game duration + buffer time for general scheduling
+    // Rest periods are enforced separately per team, not per game slot
+    const bufferTime = 15; // 15-minute buffer for cleanup/setup between games on same field
+    const baseTimeInterval = gameDuration + bufferTime; // 90 + 15 = 105 minutes per game slot
     
-    console.log(`⏰ REST TIME FIX: Game ${gameNumber} - Duration: ${gameDuration}min + Rest: ${restTime}min + Buffer: ${bufferTime}min = ${timeInterval}min total per slot`);
+    console.log(`⏰ SCHEDULING FIX: Game ${gameNumber} - Duration: ${gameDuration}min + Buffer: ${bufferTime}min = ${baseTimeInterval}min per slot (rest periods handled separately)`);
+    
+    // Calculate available fields for simultaneous games
+    const availableFields = realComplexes.reduce((total, complex) => {
+      return total + (complex.fields ? complex.fields.length : 0);
+    }, 0);
+    
+    const fieldsToUse = Math.max(1, availableFields); // At least 1 field
+    
+    // IMPROVED LOGIC: Multiple games can run simultaneously on different fields
+    // Only advance time when all available fields are occupied
+    const simultaneousGames = Math.min(fieldsToUse, 4); // Limit to 4 simultaneous games for practical scheduling
+    const timeSlot = Math.floor(gameNumber / simultaneousGames);
+    
+    console.log(`⏰ SCHEDULING FIX: ${simultaneousGames} simultaneous games possible, game ${gameNumber} in time slot ${timeSlot}`);
     
     // Calculate available hours per day for games
     const dailyOperatingMinutes = (fieldClosingHour - fieldOpeningHour) * 60;
-    const gamesPerDay = Math.floor(dailyOperatingMinutes / timeInterval);
+    const timeSlotsPerDay = Math.floor(dailyOperatingMinutes / baseTimeInterval);
     
-    console.log(`⏰ REST TIME FIX: Daily capacity: ${dailyOperatingMinutes}min ÷ ${timeInterval}min = ${gamesPerDay} games per day`);
+    console.log(`⏰ SCHEDULING FIX: Daily capacity: ${dailyOperatingMinutes}min ÷ ${baseTimeInterval}min = ${timeSlotsPerDay} time slots per day × ${simultaneousGames} games = ${timeSlotsPerDay * simultaneousGames} games per day`);
     
     // Determine which day and time slot for this game
-    const dayNumber = Math.floor(gameNumber / gamesPerDay);
-    const gameSlotInDay = gameNumber % gamesPerDay;
+    const dayNumber = Math.floor(timeSlot / timeSlotsPerDay);
+    const slotInDay = timeSlot % timeSlotsPerDay;
     
     // Use event start date instead of calculating from current date
     let targetDate;
@@ -754,15 +769,15 @@ export class SimpleScheduler {
     // Format date as YYYY-MM-DD
     const dateStr = targetDate.toISOString().split('T')[0];
     
-    // CRITICAL FIX: Calculate game start time with proper rest period enforcement
-    const gameStartMinutes = (gameSlotInDay * timeInterval) + additionalMinutes;
+    // CRITICAL FIX: Calculate game start time based on time slots, not rest periods
+    const gameStartMinutes = (slotInDay * baseTimeInterval) + additionalMinutes;
     const totalGameHour = fieldOpeningHour + Math.floor(gameStartMinutes / 60);
     const totalGameMinute = gameStartMinutes % 60;
     
     // Create time string in HH:MM:SS format
     const timeStr = `${totalGameHour.toString().padStart(2, '0')}:${totalGameMinute.toString().padStart(2, '0')}:00`;
     
-    console.log(`⏰ REST TIME FIX: Game ${gameNumber} scheduled at ${timeStr} (Day ${dayNumber}, Slot ${gameSlotInDay})`);
+    console.log(`⏰ SCHEDULING FIX: Game ${gameNumber} scheduled at ${timeStr} (Day ${dayNumber}, Time Slot ${slotInDay}) - Rest periods enforced separately for teams`);
     
     // Return as YYYY-MM-DDTHH:MM:SS (without timezone to avoid UTC conversion)
     return `${dateStr}T${timeStr}`;
