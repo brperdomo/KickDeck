@@ -30,7 +30,7 @@ router.get('/:eventId/csv', isAdmin, async (req, res) => {
       .leftJoin(eventBrackets, eq(teams.bracketId, eventBrackets.id))
       .where(
         and(
-          eq(teams.eventId, parseInt(eventId)),
+          eq(teams.eventId, eventId.toString()),
           eq(teams.status, 'approved') // Only include approved teams
         )
       )

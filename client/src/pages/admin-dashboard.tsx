@@ -6385,6 +6385,15 @@ function AdminDashboard({ initialView = 'events' }: AdminDashboardProps) {
       // Prefetch events data which is shown on the default dashboard view
       queryClient.prefetchQuery({
         queryKey: ['/api/admin/events'],
+        queryFn: async () => {
+          const response = await fetch('/api/admin/events', {
+            credentials: 'include' // Include cookies for authentication
+          });
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        },
         staleTime: 5 * 60 * 1000 // 5 minutes - match server cache time
       }).catch(error => console.error('Failed to prefetch events:', error));
     }

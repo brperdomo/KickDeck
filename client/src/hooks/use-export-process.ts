@@ -13,7 +13,9 @@ export function useExportProcess() {
     try {
       if (type === 'manager' && eventId) {
         // Handle manager reports CSV export
-        const response = await fetch(`/api/admin/manager-reports/${eventId}/csv`);
+        const response = await fetch(`/api/admin/manager-reports/${eventId}/csv`, {
+          credentials: 'include' // Include cookies for authentication
+        });
         
         if (!response.ok) {
           const errorData = await response.json();
