@@ -515,14 +515,27 @@ router.get('/events/:eventId/quick-gap-analysis', isAdmin, async (req, res) => {
       }
     });
     
-    // Calculate gaps: prime time slots with unused fields
+    // Calculate gaps: focus on fields that already have some usage
     const primeTimeSlots = ['08:00:00', '09:30:00', '11:00:00', '12:30:00', '14:00:00', '15:30:00', '17:00:00'];
     let gapOpportunities = 0;
     
+    // Find fields that have existing games (fields with usage)
+    const fieldsWithUsage = new Set();
+    timeSlotMap.forEach((fields, timeSlot) => {
+      fields.forEach(fieldId => fieldsWithUsage.add(fieldId));
+    });
+    
+    console.log(`🎯 Fields with existing usage: [${Array.from(fieldsWithUsage).join(', ')}]`);
+    
     primeTimeSlots.forEach(timeSlot => {
       const usedFields = timeSlotMap.get(timeSlot) || new Set();
-      const availableFields = totalFields - usedFields.size;
-      gapOpportunities += availableFields;
+      
+      // Only count gaps in fields that have existing usage
+      fieldsWithUsage.forEach(fieldId => {
+        if (!usedFields.has(fieldId)) {
+          gapOpportunities++; // This field has usage but is empty in this time slot
+        }
+      });
     });
     
     console.log(`📈 Analysis: ${scheduledSlots}/${totalAvailableSlots} slots used (${currentUtilization}%), ${gapOpportunities} gaps found`);
@@ -625,10 +638,26 @@ router.post('/events/:eventId/optimize-schedule', isAdmin, async (req, res) => {
         if (earlierSlot < currentTimeKey) {
           const usedFieldsInSlot = timeSlotUsage.get(earlierSlot) || new Set();
           
-          // Find optimal field based on proximity and availability
-          const optimalField = availableFields
+          // Get fields that already have some usage (prioritized)
+          const fieldsWithUsage = new Set();
+          timeSlotUsage.forEach((fields, timeSlot) => {
+            fields.forEach(fieldId => fieldsWithUsage.add(fieldId));
+          });
+          
+          // Find optimal field - prioritize fields that already have usage
+          let optimalField = availableFields
             .filter(f => !usedFieldsInSlot.has(f.id)) // Field must be available in target slot
+            .filter(f => fieldsWithUsage.has(f.id)) // PRIORITIZE: Only fields that already have games
             .sort((a, b) => (a.sortOrder || 999) - (b.sortOrder || 999))[0];
+          
+          // Fallback: if no fields with usage are available, use any available field
+          if (!optimalField) {
+            optimalField = availableFields
+              .filter(f => !usedFieldsInSlot.has(f.id))
+              .sort((a, b) => (a.sortOrder || 999) - (b.sortOrder || 999))[0];
+          }
+          
+          console.log(`🎯 Gap-filling for Game ${game.id}: Fields with usage [${Array.from(fieldsWithUsage).join(', ')}], Target field: ${optimalField?.name || 'none'}`)
           
           if (optimalField) {
             try {
