@@ -1472,12 +1472,9 @@ async function assignFieldsWithSchedule(eventId: string, dbGames: any[], bracket
       const duration = existingGame.duration || 90; // Default 90 minutes
       const gameEndTime = new Date(gameStartTime.getTime() + (duration * 60 * 1000));
       
-      // CRITICAL FIX: Mark field as occupied for game duration + BUFFER TIME
-      const FIELD_BUFFER_MINUTES = 15; // 15-minute buffer between games on same field
-      const gameEndTimeWithBuffer = new Date(gameEndTime.getTime() + (FIELD_BUFFER_MINUTES * 60 * 1000));
-      
+      // CRITICAL FIX: Mark field as occupied for EXACT game duration to prevent overlaps
       let occupancyTime = new Date(gameStartTime);
-      while (occupancyTime < gameEndTimeWithBuffer) {
+      while (occupancyTime < gameEndTime) {
         const occupancyKey = occupancyTime.toISOString();
         if (fieldOccupancy[existingGame.fieldId]) {
           fieldOccupancy[existingGame.fieldId][occupancyKey] = true;
@@ -1485,7 +1482,7 @@ async function assignFieldsWithSchedule(eventId: string, dbGames: any[], bracket
         occupancyTime = new Date(occupancyTime.getTime() + (15 * 60 * 1000)); // Mark every 15 minutes
       }
       
-      console.log(`[Enhanced Field Assignment] 🔒 EXISTING GAME: Field ${existingGame.fieldId} occupied ${existingGame.scheduledTime} to ${gameEndTimeWithBuffer.toTimeString().substring(0, 5)} (includes 15min buffer)`);
+      console.log(`[Enhanced Field Assignment] 🔒 EXISTING GAME: Field ${existingGame.fieldId} occupied ${existingGame.scheduledTime} to ${gameEndTime.toTimeString().substring(0, 5)}`);
     }
   });
   
@@ -1507,10 +1504,21 @@ async function assignFieldsWithSchedule(eventId: string, dbGames: any[], bracket
     const scheduledThisRound: any[] = [];
     const currentTimeSlotKey = currentTimeSlot.toISOString();
     
-    // Get available fields for this specific time slot (not occupied)
-    const availableFieldsThisSlot = availableFields.filter(field => 
-      !fieldOccupancy[field.id][currentTimeSlotKey]
-    );
+    // CRITICAL FIX: Get fields available for ENTIRE GAME DURATION, not just start time
+    const availableFieldsThisSlot = availableFields.filter(field => {
+      // Check if field is available for the entire game duration (90 minutes)
+      let checkTime = new Date(currentTimeSlot);
+      const gameEndTime = new Date(currentTimeSlot.getTime() + gameDurationMs);
+      
+      while (checkTime < gameEndTime) {
+        const checkTimeKey = checkTime.toISOString();
+        if (fieldOccupancy[field.id][checkTimeKey]) {
+          return false; // Field is occupied during game duration
+        }
+        checkTime = new Date(checkTime.getTime() + (15 * 60 * 1000)); // Check every 15 minutes
+      }
+      return true; // Field is available for entire game duration
+    });
     
     console.log(`[Enhanced Field Assignment] Available fields for ${currentTimeSlot.toLocaleTimeString()}: ${availableFieldsThisSlot.length}/${availableFields.length} (${availableFieldsThisSlot.map(f => f.name).join(', ')})`);
     
@@ -1590,18 +1598,17 @@ async function assignFieldsWithSchedule(eventId: string, dbGames: any[], bracket
         const scheduledDate = scheduledDateTime.toISOString().split('T')[0];
         const scheduledTime = scheduledDateTime.toTimeString().substring(0, 5);
 
-        // CRITICAL FIX: Mark field as occupied for game duration + BUFFER TIME to prevent overlaps
-        const FIELD_BUFFER_MINUTES = 15; // 15-minute buffer between games on same field for cleanup/setup
-        const gameEndTimeWithBuffer = new Date(currentTimeSlot.getTime() + gameDurationMs + (FIELD_BUFFER_MINUTES * 60 * 1000));
+        // CRITICAL FIX: Mark field as occupied for EXACT game duration to prevent overlaps
+        const gameEndTimeForMarking = new Date(currentTimeSlot.getTime() + gameDurationMs);
         
         let occupancyTime = new Date(currentTimeSlot);
-        while (occupancyTime < gameEndTimeWithBuffer) {
+        while (occupancyTime < gameEndTimeForMarking) {
           const occupancyKey = occupancyTime.toISOString();
           fieldOccupancy[assignedField.id][occupancyKey] = true;
           occupancyTime = new Date(occupancyTime.getTime() + (15 * 60 * 1000)); // Mark every 15 minutes
         }
         
-        console.log(`[Enhanced Field Assignment] 🔒 FIELD OCCUPIED: Field ${assignedField.name} from ${scheduledTime} to ${gameEndTimeWithBuffer.toTimeString().substring(0, 5)} (includes 15min buffer)`);
+        console.log(`[Enhanced Field Assignment] 🔒 FIELD OCCUPIED: Field ${assignedField.name} from ${scheduledTime} to ${gameEndTimeForMarking.toTimeString().substring(0, 5)}`);
 
         // Record this game as scheduled
         const assignment = {
