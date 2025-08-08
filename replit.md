@@ -6,6 +6,9 @@ MatchPro AI is a comprehensive sports event management platform designed for tou
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Recent Critical Fixes (August 2025)
+- **90-Minute Rest Period Enforcement**: Resolved critical scheduling bug where all games were scheduled at 8:00 AM instead of respecting rest periods. System now properly enforces "teams cannot play another match until at least 90 minutes AFTER their previous match ends" with granular 15-minute time slot generation and comprehensive conflict detection.
+
 **CRITICAL DATA STRUCTURE (User Emphasis)**:
 - AGE GROUP → FLIGHTS → BRACKETS → Teams
 - Tournament formats are assigned to FLIGHTS (represented as event_brackets in database)
@@ -36,8 +39,10 @@ Preferred communication style: Simple, everyday language.
     - **Enhanced Calendar Interface**: Consolidated drag-and-drop scheduler with operation logging, optimistic updates, conflict detection, and persistent backend synchronization, supporting real-time schedule updates.
     - **Tournament-Wide Flight Management**: Unified flight category system allowing tournament-level configuration of flight templates (e.g., Nike Classic, Premier, Elite) that propagate to all age groups.
     - **Enhanced Bracket Creation Engine**: Comprehensive team assignment interface with manual assignment, seeding, and proper flight name formatting.
-    - **Scheduling Engine**: Advanced multi-tier system with constraint-aware optimization. Supports various scheduling approaches (TournamentScheduler, SimpleScheduler, OpenAI-Service, SwissSystemScheduler) and comprehensive game generation for formats like round-robin, pool play, single/double elimination, Swiss system, and hybrid. Includes dynamic advancement logic with tiebreaker systems. Key features include:
+    - **Intelligent Scheduling Engine**: Advanced multi-tier system with constraint-aware optimization and **CRITICAL 90-minute rest period enforcement**. Supports various scheduling approaches with comprehensive game generation for formats like round-robin, pool play, single/double elimination, Swiss system, and hybrid. **Latest Enhancement (Aug 2025)**: Fixed scheduling bug where all games were assigned to 8:00 AM - now properly enforces "90 minutes AFTER game ends" rule with 15-minute time slot intervals for maximum flexibility. Key features include:
         - **Constraint Validation**: Strict field size filtering, prevention of simultaneous scheduling, and comprehensive pre-scheduling validation (e.g., team rest periods, games per day limits, coach conflict detection, lighting constraints).
+        - **Rest Period Enforcement**: Teams cannot play another match until at least 90 minutes AFTER their previous match ends (not starts).
+        - **Granular Time Slots**: 15-minute interval scheduling for optimal game distribution throughout tournament days.
         - **Intelligent Optimization**: Multi-objective optimization for field utilization, team fairness, travel minimization, and prime time optimization.
         - **Dynamic Configuration**: Database-driven tournament format configuration, allowing directors to assign any format to any bracket dynamically.
         - **Field Assignment**: Intelligent field size matching and assignment, integrating real event dates and times.

@@ -522,15 +522,19 @@ export class IntelligentSchedulingEngine {
           const timeSlots = this.generateTimeSlots(tournamentDate, game.gameFormat);
           
           for (const timeSlot of timeSlots) {
-            // Check field availability
+            // Check field availability with detailed logging
             const fieldConflicts = this.checkFieldConflicts(field.id, timeSlot, fieldSchedule);
             if (fieldConflicts.length > 0) {
+              console.log(`  ❌ Field conflicts at ${timeSlot.startTime.toLocaleTimeString()} on ${field.name}:`);
+              fieldConflicts.forEach(conflict => console.log(`     - ${conflict}`));
               continue;
             }
             
-            // Check team availability (rest time constraints)
+            // Check team availability (rest time constraints) with detailed logging
             const teamConflicts = this.checkTeamConflicts([game.homeTeam.id, game.awayTeam.id], timeSlot, teamSchedule);
             if (teamConflicts.length > 0) {
+              console.log(`  ❌ Team conflicts at ${timeSlot.startTime.toLocaleTimeString()} on ${field.name}:`);
+              teamConflicts.forEach(conflict => console.log(`     - ${conflict}`));
               continue;
             }
             
@@ -538,14 +542,15 @@ export class IntelligentSchedulingEngine {
             game.field = field;
             game.timeSlot = timeSlot;
             
-            // Record field usage
+            // Record field usage with buffer time
+            const bufferMs = 15 * 60 * 1000; // 15 minutes
             fieldSchedule.get(field.id)!.push({
-              start: timeSlot.startTime,
-              end: timeSlot.endTime,
+              start: new Date(timeSlot.startTime.getTime() - bufferMs),
+              end: new Date(timeSlot.endTime.getTime() + bufferMs),
               gameIndex
             });
             
-            // Record team usage
+            // Record team usage (actual game time for rest period calculations)
             teamSchedule.get(game.homeTeam.id)!.push({
               start: timeSlot.startTime,
               end: timeSlot.endTime,
@@ -593,7 +598,7 @@ export class IntelligentSchedulingEngine {
     return scheduledGames;
   }
 
-  // Generate time slots for a given day
+  // Generate time slots for a given day - CREATE MORE GRANULAR TIME SLOTS
   private generateTimeSlots(date: Date, gameFormat: GameFormat): Array<{startTime: Date, endTime: Date}> {
     const slots: Array<{startTime: Date, endTime: Date}> = [];
     
@@ -606,32 +611,40 @@ export class IntelligentSchedulingEngine {
     const dayEnd = new Date(date);
     dayEnd.setHours(endHour, endMinute, 0, 0);
     
-    const gameLength = gameFormat.gameLength + 15; // Game + 15 min buffer time
+    const gameLength = gameFormat.gameLength; // Just the game time (no buffer in slot generation)
+    const slotIncrement = 15; // Generate slots every 15 minutes for more flexibility
     
     let currentTime = new Date(dayStart);
     
+    // Generate slots every 15 minutes to allow more scheduling flexibility
     while (currentTime.getTime() + (gameLength * 60 * 1000) <= dayEnd.getTime()) {
       const startTime = new Date(currentTime);
-      const endTime = new Date(currentTime.getTime() + (gameFormat.gameLength * 60 * 1000)); // Actual game time
+      const endTime = new Date(currentTime.getTime() + (gameLength * 60 * 1000)); // Game end time
       
       slots.push({ startTime, endTime });
       
-      // Move to next slot (add full game length + buffer time)
-      currentTime = new Date(currentTime.getTime() + (gameLength * 60 * 1000));
+      // Move to next slot (increment by 15 minutes)
+      currentTime = new Date(currentTime.getTime() + (slotIncrement * 60 * 1000));
     }
     
+    console.log(`Generated ${slots.length} time slots for ${date.toDateString()} (${slots[0]?.startTime.toLocaleTimeString()} - ${slots[slots.length-1]?.startTime.toLocaleTimeString()})`);
     return slots;
   }
 
-  // Check if field is available during time slot
+  // Check if field is available during time slot with buffer time
   private checkFieldConflicts(fieldId: number, timeSlot: {startTime: Date, endTime: Date}, fieldSchedule: Map<number, Array<{start: Date, end: Date, gameIndex: number}>>): string[] {
     const conflicts: string[] = [];
     const fieldGames = fieldSchedule.get(fieldId) || [];
     
+    // Add 15-minute buffer time around the game
+    const bufferMs = 15 * 60 * 1000; // 15 minutes
+    const bufferedStartTime = new Date(timeSlot.startTime.getTime() - bufferMs);
+    const bufferedEndTime = new Date(timeSlot.endTime.getTime() + bufferMs);
+    
     for (const game of fieldGames) {
       // Check for overlap (including buffer time)
-      if (timeSlot.startTime < game.end && timeSlot.endTime > game.start) {
-        conflicts.push(`Field conflict with game ${game.gameIndex} (${game.start.toLocaleTimeString()} - ${game.end.toLocaleTimeString()})`);
+      if (bufferedStartTime < game.end && bufferedEndTime > game.start) {
+        conflicts.push(`Field conflict with game ${game.gameIndex} (${game.start.toLocaleTimeString()} - ${game.end.toLocaleTimeString()}) - need 15min buffer`);
       }
     }
     
@@ -663,7 +676,7 @@ export class IntelligentSchedulingEngine {
         if (timeSinceGameEnded < minRestMs && timeSinceGameEnded >= 0) {
           const restMinutes = Math.round(timeSinceGameEnded / (60 * 1000));
           const teamName = this.teams.find(t => t.id === teamId)?.name || `Team ${teamId}`;
-          conflicts.push(`${teamName} insufficient rest: ${restMinutes}min < ${teamRestPeriod}min required (from game end to new game start)`);
+          conflicts.push(`${teamName} insufficient rest: ${restMinutes}min < ${teamRestPeriod}min required (previous game ended ${game.end.toLocaleTimeString()}, new game starts ${timeSlot.startTime.toLocaleTimeString()})`);
         }
         
         // Also check the reverse: new game ending before previous game starts
