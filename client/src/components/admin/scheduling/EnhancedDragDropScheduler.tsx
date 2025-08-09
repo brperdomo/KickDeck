@@ -301,6 +301,32 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
             });
           }
         }
+        
+        // Check for rest period violations (even if games don't overlap)
+        const MIN_REST_PERIOD_MINUTES = 90; // Default, will be overridden by database settings
+        const teams1 = [game1.homeTeamName, game1.awayTeamName].filter(t => t && t !== 'TBD');
+        const teams2 = [game2.homeTeamName, game2.awayTeamName].filter(t => t && t !== 'TBD');
+        
+        const teamRestViolation = teams1.some(team => teams2.includes(team));
+        
+        if (teamRestViolation && !hasTimeOverlap) {
+          // Calculate time between games
+          const timeBetween = Math.abs(gameEndMinutes1 - gameStartMinutes2);
+          const timeBetweenReverse = Math.abs(gameEndMinutes2 - gameStartMinutes1);
+          const shortestGap = Math.min(timeBetween, timeBetweenReverse);
+          
+          if (shortestGap < MIN_REST_PERIOD_MINUTES) {
+            const violatingTeams = teams1.filter(team => teams2.includes(team));
+            
+            console.log(`⚠️ [REST PERIOD] Rest period violation between games ${game1.id} and ${game2.id}:`, violatingTeams, `Gap: ${shortestGap}min`);
+            conflicts.push({
+              type: 'rest_period',
+              severity: 'warning',
+              message: `${violatingTeams.join(', ')} has insufficient rest period: ${shortestGap}min between games (minimum: ${MIN_REST_PERIOD_MINUTES}min)`,
+              gameIds: [game1.id, game2.id]
+            });
+          }
+        }
       });
     });
 
