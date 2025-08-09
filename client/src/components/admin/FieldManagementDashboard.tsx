@@ -19,12 +19,22 @@ interface FieldManagementDashboardProps {
 
 export default function FieldManagementDashboard({ eventId }: FieldManagementDashboardProps) {
   // Fetch event fields
-  const { data: fieldsData, isLoading, refetch } = useQuery({
+  const { data: fieldsData, isLoading, error, refetch } = useQuery({
     queryKey: ['event-fields', eventId],
     queryFn: async () => {
+      console.log(`[DEBUG] Fetching fields for event: ${eventId}`);
       const response = await fetch(`/api/admin/events/${eventId}/fields`);
-      if (!response.ok) throw new Error('Failed to fetch fields');
-      return response.json();
+      console.log(`[DEBUG] Response status: ${response.status}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[DEBUG] API error:`, errorText);
+        throw new Error(`Failed to fetch fields: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log(`[DEBUG] Fields response:`, data);
+      return data;
     }
   });
 
@@ -42,6 +52,14 @@ export default function FieldManagementDashboard({ eventId }: FieldManagementDas
   }
 
   const fields = fieldsData?.fields || [];
+  
+  console.log(`[DEBUG] Fields data:`, fieldsData);
+  console.log(`[DEBUG] Fields array:`, fields);
+  console.log(`[DEBUG] Fields length:`, fields.length);
+  
+  if (error) {
+    console.error(`[DEBUG] Query error:`, error);
+  }
 
   return (
     <div className="space-y-6">
