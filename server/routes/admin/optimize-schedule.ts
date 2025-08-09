@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { db } from '@db';
 import { games, fields } from '@db/schema';
 import { eq, and } from 'drizzle-orm';
-import { isAdmin, hasEventAccess } from '../../middleware/auth';
+import { isAdmin, hasEventAccess } from '../../middleware';
 
 const router = Router();
 
