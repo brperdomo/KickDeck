@@ -1347,7 +1347,72 @@ export function registerRoutes(app: Express): Server {
           console.log(`📅 Field 13 first few slots:`, field13AvailableSlots.slice(0, 5));
         }
 
-        // INTELLIGENT GAP-FILLING: Move games from outer fields to fill gaps in priority fields
+        // Get team data for rest period validation
+        const teamGameData = await db
+          .select({
+            gameId: games.id,
+            homeTeamId: games.homeTeamId,
+            awayTeamId: games.awayTeamId,
+            homeTeamName: games.homeTeam,
+            awayTeamName: games.awayTeam,
+            scheduledTime: games.scheduledTime,
+            scheduledDate: games.scheduledDate,
+            fieldId: games.fieldId
+          })
+          .from(games)
+          .where(eq(games.eventId, eventId.toString()));
+
+        console.log(`📊 Loaded ${teamGameData.length} total games for rest period validation`);
+
+        // Helper function to validate rest periods between games for a team
+        const validateRestPeriod = (gameToMove, newTimeSlot, teamId, teamName) => {
+          const minRestMinutes = 90; // 90-minute rest period requirement
+          const gameLength = 85; // 85-minute game duration
+          
+          const newGameStart = new Date(`${targetDate}T${newTimeSlot.substring(11)}`);
+          const newGameEnd = new Date(newGameStart.getTime() + gameLength * 60000);
+          
+          console.log(`🔍 Checking rest period for ${teamName} (ID: ${teamId})`);
+          console.log(`🔍 Proposed new game: ${newGameStart.toLocaleTimeString()} - ${newGameEnd.toLocaleTimeString()}`);
+
+          const teamGames = teamGameData.filter(g => 
+            (g.homeTeamId === teamId || g.awayTeamId === teamId) && 
+            g.scheduledDate === targetDate &&
+            g.gameId !== gameToMove.id // Exclude the game we're trying to move
+          );
+
+          for (const existingGame of teamGames) {
+            const existingStart = new Date(`${targetDate}T${existingGame.scheduledTime}`);
+            const existingEnd = new Date(existingStart.getTime() + gameLength * 60000);
+            
+            console.log(`🔍 Existing game: ${existingStart.toLocaleTimeString()} - ${existingEnd.toLocaleTimeString()}`);
+            
+            // Check rest period from existing game end to new game start
+            const restAfterExisting = (newGameStart.getTime() - existingEnd.getTime()) / (60 * 1000);
+            if (restAfterExisting >= 0 && restAfterExisting < minRestMinutes) {
+              console.log(`❌ REST VIOLATION: ${teamName} only has ${Math.round(restAfterExisting)}min rest (need ${minRestMinutes}min)`);
+              return false;
+            }
+            
+            // Check rest period from new game end to existing game start
+            const restBeforeExisting = (existingStart.getTime() - newGameEnd.getTime()) / (60 * 1000);
+            if (restBeforeExisting >= 0 && restBeforeExisting < minRestMinutes) {
+              console.log(`❌ REST VIOLATION: ${teamName} only has ${Math.round(restBeforeExisting)}min rest (need ${minRestMinutes}min)`);
+              return false;
+            }
+            
+            // Check for direct overlap
+            if (newGameStart < existingEnd && newGameEnd > existingStart) {
+              console.log(`❌ TIME OVERLAP: ${teamName} games overlap directly`);
+              return false;
+            }
+          }
+          
+          console.log(`✅ Rest period validation PASSED for ${teamName}`);
+          return true;
+        };
+
+        // INTELLIGENT GAP-FILLING WITH REST PERIOD VALIDATION
         const gamesToMove = gamesForOptimization.filter(game => 
           game.fieldId && game.scheduledTime && targetFields.has(game.fieldId)
         );
@@ -1358,51 +1423,77 @@ export function registerRoutes(app: Express): Server {
           const currentFieldName = targetFields.get(game.fieldId);
           console.log(`🔄 Analyzing Game ${game.id} on Field ${currentFieldName} at ${game.scheduledTime}`);
 
+          // Get team data for this game
+          const gameData = teamGameData.find(g => g.gameId === game.id);
+          if (!gameData) {
+            console.log(`⚠️ Could not find team data for game ${game.id}`);
+            continue;
+          }
+
           // Try field 12 first, then field 13
           let moved = false;
           
           if (field12AvailableSlots.length > 0) {
-            const newTimeSlot = field12AvailableSlots.shift(); // Take first available slot
-            // Extract just the time portion for database storage - must be HH:MM:SS format
+            const newTimeSlot = field12AvailableSlots[0]; // Peek at first available slot (don't remove yet)
             const timeOnly = newTimeSlot.substring(11); // Extract time after "2025-08-16T"
-            console.log(`✅ MOVING Game ${game.id}: Field ${currentFieldName} → Field 12`);
-            console.log(`🔧 Time change: ${game.scheduledTime} → ${timeOnly}`);
-            console.log(`🔧 DEBUG: newTimeSlot="${newTimeSlot}", timeOnly="${timeOnly}"`);
             
-            await db
-              .update(games)
-              .set({ 
-                fieldId: priorityFields.get('12'),
-                scheduledTime: timeOnly,
-                updatedAt: new Date().toISOString()
-              })
-              .where(eq(games.id, game.id));
+            // Validate rest periods for both teams
+            const homeTeamValid = validateRestPeriod(game, newTimeSlot, gameData.homeTeamId, gameData.homeTeamName);
+            const awayTeamValid = validateRestPeriod(game, newTimeSlot, gameData.awayTeamId, gameData.awayTeamName);
             
-            optimizationsApplied++;
-            moved = true;
-            
-            // Remove this slot from field 13 as well (in case of overlap)
-            const slotIndex = field13AvailableSlots.indexOf(newTimeSlot);
-            if (slotIndex > -1) field13AvailableSlots.splice(slotIndex, 1);
+            if (homeTeamValid && awayTeamValid) {
+              field12AvailableSlots.shift(); // Now remove the slot since we're using it
+              console.log(`✅ MOVING Game ${game.id}: Field ${currentFieldName} → Field 12`);
+              console.log(`🔧 Time change: ${game.scheduledTime} → ${timeOnly}`);
+              console.log(`✅ Rest period validation passed for both teams`);
+              
+              await db
+                .update(games)
+                .set({ 
+                  fieldId: priorityFields.get('12'),
+                  scheduledTime: timeOnly,
+                  updatedAt: new Date().toISOString()
+                })
+                .where(eq(games.id, game.id));
+              
+              optimizationsApplied++;
+              moved = true;
+              
+              // Remove this slot from field 13 as well (in case of overlap)
+              const slotIndex = field13AvailableSlots.indexOf(newTimeSlot);
+              if (slotIndex > -1) field13AvailableSlots.splice(slotIndex, 1);
+            } else {
+              console.log(`❌ BLOCKED: Game ${game.id} move to Field 12 violates rest period requirements`);
+            }
             
           } else if (field13AvailableSlots.length > 0) {
-            const newTimeSlot = field13AvailableSlots.shift(); // Take first available slot
-            // Extract just the time portion for database storage - must be HH:MM:SS format
+            const newTimeSlot = field13AvailableSlots[0]; // Peek at first available slot (don't remove yet)
             const timeOnly = newTimeSlot.substring(11); // Extract time after "2025-08-16T"
-            console.log(`✅ MOVING Game ${game.id}: Field ${currentFieldName} → Field 13`);
-            console.log(`🔧 Time change: ${game.scheduledTime} → ${timeOnly}`);
             
-            await db
-              .update(games)
-              .set({ 
-                fieldId: priorityFields.get('13'),
-                scheduledTime: timeOnly,
-                updatedAt: new Date().toISOString()
-              })
-              .where(eq(games.id, game.id));
+            // Validate rest periods for both teams
+            const homeTeamValid = validateRestPeriod(game, newTimeSlot, gameData.homeTeamId, gameData.homeTeamName);
+            const awayTeamValid = validateRestPeriod(game, newTimeSlot, gameData.awayTeamId, gameData.awayTeamName);
             
-            optimizationsApplied++;
-            moved = true;
+            if (homeTeamValid && awayTeamValid) {
+              field13AvailableSlots.shift(); // Now remove the slot since we're using it
+              console.log(`✅ MOVING Game ${game.id}: Field ${currentFieldName} → Field 13`);
+              console.log(`🔧 Time change: ${game.scheduledTime} → ${timeOnly}`);
+              console.log(`✅ Rest period validation passed for both teams`);
+              
+              await db
+                .update(games)
+                .set({ 
+                  fieldId: priorityFields.get('13'),
+                  scheduledTime: timeOnly,
+                  updatedAt: new Date().toISOString()
+                })
+                .where(eq(games.id, game.id));
+              
+              optimizationsApplied++;
+              moved = true;
+            } else {
+              console.log(`❌ BLOCKED: Game ${game.id} move to Field 13 violates rest period requirements`);
+            }
           }
           
           if (!moved) {
