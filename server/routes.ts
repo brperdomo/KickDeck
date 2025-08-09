@@ -5,7 +5,7 @@ import { setupWebSocketServer } from "./websocket";
 import { log } from "./vite";
 import { crypto } from "./crypto";
 import { db } from "@db";
-import { emailTemplates, insertPlayerSchema, fields, complexes, games, eventFieldSizes, eventFieldConfigurations } from "@db/schema";
+import { emailTemplates, insertPlayerSchema, fields, complexes, games, eventFieldSizes, eventFieldConfigurations, eventComplexes } from "@db/schema";
 import { sql, eq, and, inArray, asc } from "drizzle-orm";
 import Stripe from 'stripe';
 import { isAdmin, hasEventAccess } from "./middleware";
@@ -5646,19 +5646,25 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
       try {
         const eventId = req.params.eventId;
         
+        console.log(`[DEBUG] Fetching fields for event: ${eventId}`);
+        
         // First get the complexes selected for this event
         const selectedComplexes = await db
           .select({
             complexId: eventComplexes.complexId
           })
           .from(eventComplexes)
-          .where(eq(eventComplexes.eventId, eventId));
+          .where(eq(eventComplexes.eventId, parseInt(eventId)));
+        
+        console.log(`[DEBUG] Selected complexes:`, selectedComplexes);
         
         if (selectedComplexes.length === 0) {
+          console.log(`[DEBUG] No complexes found for event ${eventId}`);
           return res.json({ fields: [] });
         }
         
         const complexIds = selectedComplexes.map(ec => ec.complexId);
+        console.log(`[DEBUG] Complex IDs to query:`, complexIds);
         
         // Get all fields from those complexes with event-specific configurations
         const eventFields = await db
@@ -5675,10 +5681,12 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           .leftJoin(complexes, eq(fields.complexId, complexes.id))
           .leftJoin(eventFieldConfigurations, and(
             eq(eventFieldConfigurations.fieldId, fields.id),
-            eq(eventFieldConfigurations.eventId, eventId)
+            eq(eventFieldConfigurations.eventId, parseInt(eventId))
           ))
           .where(inArray(fields.complexId, complexIds))
           .orderBy(asc(sql`COALESCE(${eventFieldConfigurations.sortOrder}, ${fields.sortOrder})`), asc(fields.name));
+        
+        console.log(`[DEBUG] Found ${eventFields.length} fields:`, eventFields.slice(0, 3));
         
         res.json({ fields: eventFields });
       } catch (error) {
@@ -5693,12 +5701,14 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         const { eventId } = req.params;
         const { fieldId, fieldSize } = req.body;
 
+        const eventIdInt = parseInt(eventId);
+
         // First, try to update existing configuration
         const existingConfig = await db
           .select()
           .from(eventFieldConfigurations)
           .where(and(
-            eq(eventFieldConfigurations.eventId, eventId),
+            eq(eventFieldConfigurations.eventId, eventIdInt),
             eq(eventFieldConfigurations.fieldId, fieldId)
           ))
           .limit(1);
@@ -5712,7 +5722,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
               updatedAt: new Date().toISOString()
             })
             .where(and(
-              eq(eventFieldConfigurations.eventId, eventId),
+              eq(eventFieldConfigurations.eventId, eventIdInt),
               eq(eventFieldConfigurations.fieldId, fieldId)
             ));
         } else {
@@ -5720,7 +5730,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           await db
             .insert(eventFieldConfigurations)
             .values({
-              eventId,
+              eventId: eventIdInt,
               fieldId,
               fieldSize,
               sortOrder: 0,
@@ -5740,6 +5750,8 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         const { eventId } = req.params;
         const { fieldUpdates } = req.body;
 
+        const eventIdInt = parseInt(eventId);
+
         for (const update of fieldUpdates) {
           const { id: fieldId, sortOrder, fieldSize } = update;
 
@@ -5748,7 +5760,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             .select()
             .from(eventFieldConfigurations)
             .where(and(
-              eq(eventFieldConfigurations.eventId, eventId),
+              eq(eventFieldConfigurations.eventId, eventIdInt),
               eq(eventFieldConfigurations.fieldId, fieldId)
             ))
             .limit(1);
@@ -5763,7 +5775,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
                 updatedAt: new Date().toISOString()
               })
               .where(and(
-                eq(eventFieldConfigurations.eventId, eventId),
+                eq(eventFieldConfigurations.eventId, eventIdInt),
                 eq(eventFieldConfigurations.fieldId, fieldId)
               ));
           } else {
@@ -5771,7 +5783,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             await db
               .insert(eventFieldConfigurations)
               .values({
-                eventId,
+                eventId: eventIdInt,
                 fieldId,
                 fieldSize,
                 sortOrder,
