@@ -75,61 +75,74 @@ router.get('/:eventId', async (req: Request, res: Response) => {
 
     console.log(`[Public Schedules] Found ${teamsData.length} teams`);
 
-    // Get age groups and flights
+    // Get age groups
     const ageGroupsData = await db
       .select({
         ageGroupId: eventAgeGroups.id,
         ageGroup: eventAgeGroups.ageGroup,
         gender: eventAgeGroups.gender,
-        divisionCode: eventAgeGroups.divisionCode,
-        flightId: eventBrackets.id,
-        flightName: eventBrackets.flightName
+        divisionCode: eventAgeGroups.divisionCode
       })
       .from(eventAgeGroups)
-      .leftJoin(eventBrackets, eq(eventBrackets.ageGroupId, eventAgeGroups.id))
       .where(eq(eventAgeGroups.eventId, eventId));
 
-    console.log(`[Public Schedules] Found ${ageGroupsData.length} age group/flight combinations`);
+    // Get flights separately to avoid join issues
+    const flightsData = await db
+      .select({
+        flightId: eventBrackets.id,
+        flightName: eventBrackets.name,
+        ageGroupId: eventBrackets.ageGroupId
+      })
+      .from(eventBrackets)
+      .where(eq(eventBrackets.eventId, eventId));
+
+    console.log(`[Public Schedules] Found ${ageGroupsData.length} age groups`);
+    console.log(`[Public Schedules] Found ${flightsData.length} flights`);
 
     // Create teams lookup
     const teamsMap = new Map();
     teamsData.forEach(team => teamsMap.set(team.id, team));
 
+    // Create flights lookup
+    const flightsMap = new Map();
+    flightsData.forEach(flight => {
+      flightsMap.set(flight.ageGroupId, flight);
+    });
+
     // Create age groups and flights structure
     const ageGroupsMap = new Map();
-    ageGroupsData.forEach(item => {
-      if (!item.ageGroupId) return;
+    ageGroupsData.forEach(ageGroup => {
+      const ageGroupKey = `${ageGroup.ageGroup}-${ageGroup.gender}`;
+      const flight = flightsMap.get(ageGroup.ageGroupId);
       
-      const ageGroupKey = `${item.ageGroup}-${item.gender}`;
       if (!ageGroupsMap.has(ageGroupKey)) {
         ageGroupsMap.set(ageGroupKey, {
-          ageGroup: item.ageGroup,
-          gender: item.gender,
-          divisionCode: item.divisionCode,
-          displayName: `${item.ageGroup} ${item.gender}`,
+          ageGroup: ageGroup.ageGroup,
+          gender: ageGroup.gender,
+          divisionCode: ageGroup.divisionCode,
+          displayName: `${ageGroup.ageGroup} ${ageGroup.gender}`,
           flights: new Map()
         });
       }
       
-      if (item.flightId && item.flightName) {
+      if (flight) {
         const ageGroupData = ageGroupsMap.get(ageGroupKey);
-        const flightKey = item.flightName;
         
-        if (!ageGroupData.flights.has(flightKey)) {
+        if (!ageGroupData.flights.has(flight.flightName)) {
           // Count teams in this flight
           const teamsInFlight = teamsData.filter(t => 
-            t.ageGroupId === item.ageGroupId && t.bracketId === item.flightId
+            t.ageGroupId === ageGroup.ageGroupId && t.bracketId === flight.flightId
           ).length;
           
           // Count games in this flight
           const gamesInFlight = gamesData.filter(g => {
             const homeTeam = teamsMap.get(g.homeTeamId);
             const awayTeam = teamsMap.get(g.awayTeamId);
-            return homeTeam?.bracketId === item.flightId || awayTeam?.bracketId === item.flightId;
+            return homeTeam?.bracketId === flight.flightId || awayTeam?.bracketId === flight.flightId;
           }).length;
           
-          ageGroupData.flights.set(flightKey, {
-            flightName: item.flightName,
+          ageGroupData.flights.set(flight.flightName, {
+            flightName: flight.flightName,
             teamCount: teamsInFlight,
             gameCount: gamesInFlight
           });
@@ -159,9 +172,7 @@ router.get('/:eventId', async (req: Request, res: Response) => {
         const ageGroupData = ageGroupsData.find(ag => ag.ageGroupId === homeTeam.ageGroupId);
         if (ageGroupData) {
           ageGroupName = `${ageGroupData.ageGroup} ${ageGroupData.gender}`;
-          const flightData = ageGroupsData.find(ag => 
-            ag.ageGroupId === homeTeam.ageGroupId && ag.flightId === homeTeam.bracketId
-          );
+          const flightData = flightsData.find(f => f.flightId === homeTeam.bracketId);
           if (flightData) {
             flightName = flightData.flightName;
           }
