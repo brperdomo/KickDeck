@@ -119,6 +119,7 @@ import scheduleConflictsRouter from "./routes/admin/schedule-conflicts";
 import managerReportsRouter from "./routes/admin/manager-reports";
 import publishedSchedulesRouter from "./routes/admin/published-schedules";
 import publicSchedulesRouter from "./routes/public/schedules";
+import ageGroupScheduleRouter from "./routes/public/age-group-schedule";
 
 import gamesRouter from "./routes/admin/games";
 import fieldsRouter from "./routes/admin/fields";
@@ -3245,6 +3246,7 @@ export function registerRoutes(app: Express): Server {
     app.use('/api/admin/manager-reports', isAdmin, managerReportsRouter);
     app.use('/api/admin', publishedSchedulesRouter); // Published schedules router
     app.use('/api/public/schedules', publicSchedulesRouter); // Public schedules (no auth required)
+    app.use('/api/public/schedules', ageGroupScheduleRouter); // Age group schedules (no auth required)
 
     // Endpoint to clone an event
     app.post('/api/admin/events/:id/clone', isAdmin, async (req, res) => {

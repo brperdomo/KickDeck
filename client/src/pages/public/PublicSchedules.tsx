@@ -241,9 +241,12 @@ export default function PublicSchedules() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-4">
-                          <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                          <a 
+                            href={`/public/schedules/${eventId}/age-group/${ageGroup.ageGroupId}`}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
                             Schedules
-                          </button>
+                          </a>
                           <span className="text-gray-400">|</span>
                           <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
                             Standings
@@ -286,9 +289,12 @@ export default function PublicSchedules() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-4">
-                          <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                          <a 
+                            href={`/public/schedules/${eventId}/age-group/${ageGroup.ageGroupId}`}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
                             Schedules
-                          </button>
+                          </a>
                           <span className="text-gray-400">|</span>
                           <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
                             Standings

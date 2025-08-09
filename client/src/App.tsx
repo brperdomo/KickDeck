@@ -70,6 +70,7 @@ import MemberDashboard from "@/pages/member-dashboard";
 import ComplexLocationsMapPage from "@/pages/complex-locations-map";
 // Public schedules (no auth required)
 import PublicSchedules from "@/pages/public/PublicSchedules";
+import AgeGroupSchedule from "@/pages/public/AgeGroupSchedule";
 
 // Create placeholder components for missing pages
 const ScoreReportPage = () => <NotFound />;
@@ -221,6 +222,11 @@ function Router() {
       {/* Public schedules - no auth required */}
       <Route path="/public/schedules/:eventId">
         {(params) => <PublicSchedules />}
+      </Route>
+      
+      {/* Age group specific schedules - no auth required */}
+      <Route path="/public/schedules/:eventId/age-group/:ageGroupId">
+        {(params) => <AgeGroupSchedule />}
       </Route>
       
       {/* Handle other routes based on auth status */}
