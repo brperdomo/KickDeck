@@ -207,10 +207,7 @@ export default function MasterSchedulePage() {
               <FlightConfigurationTable eventId={eventId} />
             </div>
             
-            {/* Master Schedule Conflict Detection Panel */}
-            <div className="mt-8">
-              <MasterScheduleConflictDetection eventId={eventId} />
-            </div>
+
             
             {/* Add Data Flow Demo Button */}
             <div className="mt-6 text-center">
