@@ -178,7 +178,7 @@ export const selectFieldSchema = createSelectSchema(fields);
 // Tournament-specific field configurations
 export const eventFieldConfigurations = pgTable("event_field_configurations", {
   id: serial("id").primaryKey(),
-  eventId: text("event_id").notNull().references(() => events.id),
+  eventId: integer("event_id").notNull(),
   fieldId: integer("field_id").notNull().references(() => fields.id),
   fieldSize: text("field_size").notNull().default("11v11"), // Tournament-specific field size
   sortOrder: integer("sort_order").default(0).notNull(), // Tournament-specific display order
@@ -188,7 +188,7 @@ export const eventFieldConfigurations = pgTable("event_field_configurations", {
 });
 
 export const insertEventFieldConfigurationSchema = createInsertSchema(eventFieldConfigurations, {
-  eventId: z.string().min(1, "Event ID is required"),
+  eventId: z.number().min(1, "Event ID is required"),
   fieldId: z.number().min(1, "Field ID is required"),
   fieldSize: z.enum(["3v3", "4v4", "5v5", "6v6", "7v7", "8v8", "9v9", "10v10", "11v11", "N/A"]).default("11v11"),
   sortOrder: z.number().min(0).default(0),
