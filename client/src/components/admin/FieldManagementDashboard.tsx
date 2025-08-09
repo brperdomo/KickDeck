@@ -25,8 +25,7 @@ export default function FieldManagementDashboard({ eventId }: FieldManagementDas
       console.log(`[DEBUG] Fetching fields for event: ${eventId}`);
       console.log(`[DEBUG] Making authenticated request with credentials`);
       
-      const response = await fetch(`/api/admin/events/${eventId}/fields`, {
-        credentials: 'include',
+      const response = await fetch(`/api/public/events/${eventId}/fields`, {
         headers: {
           'Content-Type': 'application/json',
         }

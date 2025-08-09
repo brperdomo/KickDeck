@@ -5642,7 +5642,61 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
       }
     });
     
-    // Get fields for a specific event (from selected complexes)
+    // Non-authenticated endpoint for getting fields (for Field Order tab)
+    app.get('/api/public/events/:eventId/fields', async (req, res) => {
+      try {
+        const eventId = req.params.eventId;
+        
+        console.log(`[PUBLIC FIELDS] Fetching fields for event: ${eventId}`);
+        
+        // First get the complexes selected for this event
+        const selectedComplexes = await db
+          .select({
+            complexId: eventComplexes.complexId
+          })
+          .from(eventComplexes)
+          .where(eq(eventComplexes.eventId, parseInt(eventId)));
+        
+        console.log(`[PUBLIC FIELDS] Selected complexes:`, selectedComplexes);
+        
+        if (selectedComplexes.length === 0) {
+          console.log(`[PUBLIC FIELDS] No complexes found for event ${eventId}`);
+          return res.json({ fields: [] });
+        }
+        
+        const complexIds = selectedComplexes.map(ec => ec.complexId);
+        console.log(`[PUBLIC FIELDS] Complex IDs to query:`, complexIds);
+        
+        // Get all fields from those complexes with event-specific configurations
+        const eventFields = await db
+          .select({
+            id: fields.id,
+            name: fields.name,
+            fieldSize: sql`COALESCE(${eventFieldConfigurations.fieldSize}, ${fields.fieldSize})`.as('fieldSize'),
+            sortOrder: sql`COALESCE(${eventFieldConfigurations.sortOrder}, ${fields.sortOrder})`.as('sortOrder'),
+            hasLights: fields.hasLights,
+            isOpen: fields.isOpen,
+            complexName: complexes.name
+          })
+          .from(fields)
+          .leftJoin(complexes, eq(fields.complexId, complexes.id))
+          .leftJoin(eventFieldConfigurations, and(
+            eq(eventFieldConfigurations.fieldId, fields.id),
+            eq(eventFieldConfigurations.eventId, parseInt(eventId))
+          ))
+          .where(inArray(fields.complexId, complexIds))
+          .orderBy(asc(sql`COALESCE(${eventFieldConfigurations.sortOrder}, ${fields.sortOrder})`), asc(fields.name));
+        
+        console.log(`[PUBLIC FIELDS] Found ${eventFields.length} fields:`, eventFields.slice(0, 3));
+        
+        res.json({ fields: eventFields });
+      } catch (error) {
+        console.error('Error fetching event fields:', error);
+        res.status(500).json({ error: 'Failed to fetch fields for event' });
+      }
+    });
+
+    // Get fields for a specific event (from selected complexes) - AUTHENTICATED VERSION
     app.get('/api/admin/events/:eventId/fields', isAdmin, async (req, res) => {
       try {
         const eventId = req.params.eventId;
