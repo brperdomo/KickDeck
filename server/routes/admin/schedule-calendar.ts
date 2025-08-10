@@ -131,6 +131,15 @@ router.get('/:eventId/schedule-calendar', async (req, res) => {
     console.log(`[Schedule Calendar Direct] Found ${allTimeSlots.length} time slots`);
     console.log(`[Schedule Calendar Direct] Using event start date: ${eventStartDate}`);
     
+    // Get all teams for this event at once to avoid N+1 query problem
+    const allTeams = await db.query.teams.findMany({
+      where: eq(teams.eventId, eventId)
+    });
+    
+    // Create a map for fast team lookups
+    const teamMap = new Map();
+    allTeams.forEach(team => teamMap.set(team.id, team));
+    
     // Only process real games that exist in the database
     for (let i = 0; i < gamesWithDetails.length; i++) {
       const game = gamesWithDetails[i];
@@ -139,38 +148,11 @@ router.get('/:eventId/schedule-calendar', async (req, res) => {
       const timeSlot = allTimeSlots.find(ts => ts.id === game.timeSlotId);
       const assignedField = allFields.find(f => f.id === game.fieldId);
       
-      // Process games even without time slots or field assignments for now
-      // This allows us to see the games in the calendar interface
-      if (!timeSlot) {
-        console.log(`[Schedule Calendar Direct] Game ${game.gameId} has no time slot assigned`);
-      }
-      if (!assignedField) {
-        console.log(`[Schedule Calendar Direct] Game ${game.gameId} has no field assigned`);
-      }
-      
       console.log(`[Schedule Calendar Direct] Processing game ${game.gameId}: ${timeSlot?.startTime || 'No time'} on ${assignedField?.name || 'No field'}`);
 
-      // Get team names and coach info - only from approved teams for this event
-      let homeTeam = null;
-      let awayTeam = null;
-      
-      if (game.homeTeamId) {
-        homeTeam = await db.query.teams.findFirst({
-          where: and(
-            eq(teams.id, game.homeTeamId),
-            eq(teams.eventId, eventId)
-          )
-        });
-      }
-      
-      if (game.awayTeamId) {
-        awayTeam = await db.query.teams.findFirst({
-          where: and(
-            eq(teams.id, game.awayTeamId),
-            eq(teams.eventId, eventId)
-          )
-        });
-      }
+      // Get team names from the team map (much faster than individual queries)
+      const homeTeam = game.homeTeamId ? teamMap.get(game.homeTeamId) : null;
+      const awayTeam = game.awayTeamId ? teamMap.get(game.awayTeamId) : null;
 
       // Extract coach information from teams
       let homeTeamCoach = '';
@@ -277,7 +259,7 @@ router.get('/:eventId/schedule-calendar', async (req, res) => {
         scheduleType: 'generated'
       },
       teamsList: [],
-      eventId: parseInt(eventId),
+      eventId: Number(eventId),
       eventDetails: {
         name: event.name || 'Tournament',
         startDate: event.startDate,
@@ -336,7 +318,7 @@ router.put('/games/:gameId/reschedule', async (req, res) => {
         .insert(gameTimeSlots)
         .values({
           eventId: eventId || '1844329078',
-          fieldId: parseInt(fieldId),
+          fieldId: Number(fieldId),
           startTime: startTime,
           endTime: endTime,
           isAvailable: false,
