@@ -11,8 +11,6 @@ MatchPro AI is a comprehensive sports event management platform for tournament o
 - **Pool Separation Logic**: Implemented robust Pool A (first 3 teams) vs Pool B (next 3 teams) separation with comprehensive logging for 6-team crossplay groups
 - **Tournament Format Validation**: Eliminated inappropriate `round_robin` format usage system-wide to prevent crossplay format integrity issues
 - **Bulk Format Correction**: Fixed 60+ brackets using improper round_robin formats to appropriate group formats (group_of_4, group_of_6, group_of_8)
-- **PLACEHOLDER TEAM SYSTEM**: Added comprehensive placeholder team functionality enabling pre-scheduling workflows with seamless real team replacement while preserving all game assignments
-- **ENHANCED SCHEDULE GRID UX**: Implemented instant hover tooltips without browser delay and full team name display for improved schedule readability
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.

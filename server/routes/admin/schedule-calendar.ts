@@ -110,7 +110,7 @@ router.get('/:eventId/schedule-calendar', async (req, res) => {
       if (game.homeTeamId) {
         homeTeam = await db.query.teams.findFirst({
           where: and(
-            eq(teams.id, Number(game.homeTeamId)),
+            eq(teams.id, game.homeTeamId),
             eq(teams.eventId, eventId)
           )
         });
@@ -119,7 +119,7 @@ router.get('/:eventId/schedule-calendar', async (req, res) => {
       if (game.awayTeamId) {
         awayTeam = await db.query.teams.findFirst({
           where: and(
-            eq(teams.id, Number(game.awayTeamId)),
+            eq(teams.id, game.awayTeamId),
             eq(teams.eventId, eventId)
           )
         });
