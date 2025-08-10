@@ -123,7 +123,7 @@ router.get('/events/:eventId/flight-review', async (req, res) => {
 });
 
 // Bulk assign teams to flights
-router.post('/events/:eventId/teams/bulk-flight-assign', async (req, res) => {
+router.post('/events/:eventId/teams/bulk-assign', async (req, res) => {
   try {
     const { eventId } = req.params;
     const { assignments } = req.body;
@@ -132,18 +132,27 @@ router.post('/events/:eventId/teams/bulk-flight-assign', async (req, res) => {
       return res.status(400).json({ error: 'Assignments array is required' });
     }
 
-    // Update team flight assignments
+    console.log(`FLIGHT ASSIGNMENT DEBUG: Assigning ${assignments.length} teams to flights:`, assignments);
+
+    // Validate that teams exist
+    const teamIds = assignments.map(a => a.teamId);
+    console.log(`FLIGHT ASSIGNMENT DEBUG: Validating teams:`, teamIds);
+
+    // Update team flight assignments (bracketId is the flight assignment)
     await Promise.all(
-      assignments.map(async ({ teamId, bracketId }) => {
+      assignments.map(async ({ teamId, flightId }) => {
+        console.log(`FLIGHT ASSIGNMENT DEBUG: Assigning team ${teamId} to flight ${flightId}`);
+        
         await db
           .update(teams)
           .set({ 
-            bracketId: bracketId
+            bracketId: flightId // bracketId represents the flight assignment
           })
           .where(eq(teams.id, teamId));
       })
     );
 
+    console.log(`FLIGHT ASSIGNMENT DEBUG: Successfully assigned ${assignments.length} teams to flights`);
     res.json({ success: true, message: 'Teams assigned to flights successfully' });
   } catch (error) {
     console.error('Error assigning teams to flights:', error);
