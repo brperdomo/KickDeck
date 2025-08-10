@@ -1,4 +1,4 @@
-# CROSSPLAY SCHEDULE COMPLETION - BOTH ISSUES FIXED
+# CROSSPLAY SCHEDULE COMPLETION - ALL ISSUES FIXED
 
 ## Issues Resolved
 
@@ -37,6 +37,57 @@ const isIntervalMatch = slotMinutes === expectedSlotMinutes &&
                        gameMinutes < slotMinutes + intervalMinutes;
 
 return isExactMatch || isIntervalMatch;
+```
+
+### ✅ Issue 3: Drag-and-Drop Glitches with Occupied Slots
+**Problem**: When dragging games to slots covered by extended game duration, the drop would fail and require moving to a different field first.
+
+**Root Cause**: The collision detection didn't properly account for multi-slot games when calculating drop availability.
+
+**Solution**: Enhanced collision detection with span-aware checking:
+
+```javascript
+// FIXED: Better collision detection for occupied slots
+const draggedGameSpanSlots = calculateGameSpanSlots(draggedGame);
+const currentSlotIndex = timeSlots.findIndex(s => s.id === timeSlotObj.id);
+
+// Check if ALL required slots for the dragged game are available
+let canDrop = true;
+for (let i = 0; i < draggedGameSpanSlots; i++) {
+  const checkSlotIndex = currentSlotIndex + i;
+  const checkSlot = timeSlots[checkSlotIndex];
+  const checkGames = getGamesForSlot(fieldId, checkSlot).filter(g => g.id !== draggedGame.id);
+  const checkOccupied = isSlotOccupiedByExtendingGame(fieldId, checkSlot);
+  
+  // If any slot in the span is occupied, can't drop
+  if (checkGames.length > 0 || checkOccupied) {
+    canDrop = false;
+    break;
+  }
+}
+```
+
+### ✅ Issue 4: Verbose Game Cards with Long Text
+**Problem**: Game cards displayed full team names and details making them cluttered and hard to read.
+
+**Solution**: Replaced verbose display with clean cards and comprehensive hover tooltips:
+
+**New Clean Display:**
+- Shortened team names (first word only)
+- Age group abbreviation (U16 instead of U16 Boys)
+- Visual status indicators (🏆 for championship games, ⚽ for regular games)
+
+**Enhanced Hover Tooltips:**
+```
+Teams: Cal Elite B2010 - Charlie vs Empire Surf B2010 E64
+Field: Galway Downs Field A2
+Age Group: U16 Boys
+Birth Year: 2010
+Flight: Nike Elite
+Duration: 85 minutes (6 slots)
+Status: scheduled
+
+Drag to move to a different time slot or field
 ```
 
 ## Complete Bracket 576 Schedule
