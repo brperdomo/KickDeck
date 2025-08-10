@@ -111,8 +111,8 @@ router.get('/:eventId/schedule-calendar', async (req, res) => {
 
     console.log(`[Schedule Calendar] Found ${allTimeSlots.length} time slots`);
 
-    // Get all fields
-    const allFields = await db
+    // Get all fields, excluding unwanted fields and sorting in sequential order
+    const allFieldsRaw = await db
       .select({
         id: fields.id,
         name: fields.name,
@@ -121,6 +121,44 @@ router.get('/:eventId/schedule-calendar', async (req, res) => {
       })
       .from(fields)
       .leftJoin(complexes, eq(fields.complexId, complexes.id));
+
+    // Filter out unwanted fields and sort in sequential order
+    const allFields = allFieldsRaw
+      .filter(field => {
+        // Remove Small1, Small2, and f1-f6 fields as requested
+        const excludeFields = ['Small1', 'Small2', 'f1', 'f2', 'f3', 'f4', 'f5', 'f6'];
+        return !excludeFields.includes(field.name);
+      })
+      .sort((a, b) => {
+        // Extract field numbers for proper sequential sorting
+        const extractFieldNumber = (name: string): number => {
+          // Handle "Galway Downs Field X" format
+          const galwayMatch = name.match(/Galway Downs Field (\d+)/);
+          if (galwayMatch) return parseInt(galwayMatch[1]);
+          
+          // Handle "Birdsall Field X" format  
+          const birdsallMatch = name.match(/Birdsall Field (\d+)/);
+          if (birdsallMatch) return parseInt(birdsallMatch[1]);
+          
+          // Handle "Sommersbend X" format
+          const sommersbendMatch = name.match(/Sommersbend (\d+)/);
+          if (sommersbendMatch) return parseInt(sommersbendMatch[1]);
+          
+          // Handle other numbered fields (A1, A2, B1, B2, etc.)
+          const otherMatch = name.match(/(\d+)/);
+          if (otherMatch) return parseInt(otherMatch[1]);
+          
+          // Default to 999 for fields without numbers (sort to end)
+          return 999;
+        };
+
+        const aNum = extractFieldNumber(a.name);
+        const bNum = extractFieldNumber(b.name);
+        
+        // Sort by field number first, then alphabetically if same number
+        if (aNum !== bNum) return aNum - bNum;
+        return a.name.localeCompare(b.name);
+      });
 
 
     
