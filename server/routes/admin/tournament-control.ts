@@ -548,10 +548,12 @@ async function generateGamesForFlight(eventId: string, flight: any) {
       columns: { type: true }
     });
     isCrossplayFormat = firstBracket?.type === 'crossplay';
+    console.log(`[Generate Games] CROSSPLAY DEBUG: Detected crossplay format: ${isCrossplayFormat}`);
   }
   
   if (!isCrossplayFormat) {
     // Standard brackets: generate round-robin within each bracket
+    console.log(`[Generate Games] STANDARD FORMAT: Creating intra-bracket pool play games`);
     for (const [bracketId, bracketTeams] of Array.from(teamsByBracket.entries())) {
       console.log(`[Generate Games] Creating pool play for bracket ${bracketId} (${bracketTeams.length} teams)`);
       
@@ -581,7 +583,7 @@ async function generateGamesForFlight(eventId: string, flight: any) {
       }
     }
   } else {
-    console.log(`[Generate Games] Skipping intra-pool games for crossplay format - will generate crossplay games only`);
+    console.log(`[Generate Games] CROSSPLAY FORMAT: Skipping ALL intra-pool games - will generate ONLY crossplay games between different brackets`);
   }
 
   // PHASE 2: Generate crossplay/championship games based on bracket type
@@ -603,9 +605,21 @@ async function generateGamesForFlight(eventId: string, flight: any) {
       // Only crossplay games between brackets (teams from Pool A vs teams from Pool B)
       const [bracket1Teams, bracket2Teams] = [bracketsWithTeams[0][1], bracketsWithTeams[1][1]];
       
-      // Each team in bracket 1 plays each team in bracket 2 (9 total games for 3v3 crossplay)
+      // CRITICAL CROSSPLAY VALIDATION: Each team in bracket 1 plays each team in bracket 2 (9 total games for 3v3 crossplay)
+      console.log(`[Generate Games] CROSSPLAY VALIDATION: Pool A has ${bracket1Teams.length} teams, Pool B has ${bracket2Teams.length} teams`);
+      console.log(`[Generate Games] CROSSPLAY VALIDATION: Pool A teams: ${bracket1Teams.map(t => t.name).join(', ')}`);
+      console.log(`[Generate Games] CROSSPLAY VALIDATION: Pool B teams: ${bracket2Teams.map(t => t.name).join(', ')}`);
+      
       for (const team1 of bracket1Teams) {
         for (const team2 of bracket2Teams) {
+          // CRITICAL VALIDATION: Ensure teams are from different brackets
+          if (team1.groupId === team2.groupId) {
+            console.error(`[Generate Games] CRITICAL ERROR: Teams ${team1.name} and ${team2.name} are both in bracket ${team1.groupId} - THIS SHOULD NEVER HAPPEN IN CROSSPLAY!`);
+            throw new Error(`CROSSPLAY VIOLATION: Teams from same bracket cannot play each other`);
+          }
+          
+          console.log(`[Generate Games] CROSSPLAY GAME: ${team1.name} (Bracket ${team1.groupId}) vs ${team2.name} (Bracket ${team2.groupId})`);
+          
           // Randomize Home/Away team assignments for game card generation
           const randomizeHomeAway = Math.random() < 0.5;
           const homeTeamId = randomizeHomeAway ? team1.id : team2.id;
@@ -774,6 +788,70 @@ export async function assignFieldsToGames(eventId: string) {
 }
 
 
+
+// CRITICAL: Fix crossplay game generation bug
+router.post('/tournaments/:eventId/fix-crossplay-games', isAdmin, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const { ageGroupId, flightId } = req.body;
+    
+    console.log(`[CROSSPLAY FIX] Starting critical crossplay fix for event ${eventId}, age group ${ageGroupId}`);
+    
+    // Find the flight and verify it's crossplay format
+    const flight = await db.query.eventBrackets.findFirst({
+      where: and(
+        eq(eventBrackets.id, flightId),
+        eq(eventBrackets.eventId, eventId)
+      )
+    });
+    
+    if (!flight) {
+      return res.status(404).json({ error: 'Flight not found' });
+    }
+    
+    // Get tournament groups for this flight
+    const brackets = await db.query.tournamentGroups.findMany({
+      where: and(
+        eq(tournamentGroups.eventId, eventId),
+        eq(tournamentGroups.ageGroupId, ageGroupId)
+      )
+    });
+    
+    const crossplayBrackets = brackets.filter(b => b.type === 'crossplay');
+    if (crossplayBrackets.length === 0) {
+      return res.status(400).json({ error: 'No crossplay brackets found for this flight' });
+    }
+    
+    console.log(`[CROSSPLAY FIX] Found ${crossplayBrackets.length} crossplay brackets`);
+    
+    // DELETE all existing games for this age group (they're corrupted)
+    const deletedGames = await db
+      .delete(games)
+      .where(and(
+        eq(games.eventId, eventId),
+        eq(games.ageGroupId, ageGroupId)
+      ))
+      .returning();
+    
+    console.log(`[CROSSPLAY FIX] DELETED ${deletedGames.length} corrupted games`);
+    
+    // Regenerate games using the fixed logic
+    const result = await generateFlightGames(eventId, flight);
+    
+    console.log(`[CROSSPLAY FIX] REGENERATED ${result.gamesCreated} correct crossplay games`);
+    
+    res.json({
+      success: true,
+      message: `Fixed crossplay games: deleted ${deletedGames.length} corrupted games, regenerated ${result.gamesCreated} correct games`,
+      deletedGames: deletedGames.length,
+      regeneratedGames: result.gamesCreated
+    });
+    
+  } catch (error: any) {
+    console.error('[CROSSPLAY FIX] Critical error:', error);
+    res.status(500).json({ error: 'Failed to fix crossplay games: ' + error.message });
+  }
+});
 
 function isFieldSizeCompatible(gameFieldSize: string, availableFieldSize: string): boolean {
   // Field size compatibility matrix
