@@ -877,62 +877,40 @@ async function generateSelectiveSchedule(eventId: string, flightIds: string[], o
         
         console.log(`🎯 CROSSPLAY FIX: Generated ${bracketGames.length} crossplay games (Pool A vs Pool B only)`);
       } else if (flightTeams.length === 6) {
-        // Standard group_of_6 (non-crossplay): dual pools with internal round-robin + cross-pool games
-        console.log(`[Selective Scheduling] STANDARD GROUP_OF_6: ${bracket.tournamentFormat} - generating dual pool format`);
+        // CRITICAL FIX: All 6-team formats should use CROSSPLAY ONLY (Pool A vs Pool B)
+        console.log(`🚨 CROSSPLAY FIX: ${bracket.tournamentFormat} with 6 teams - ENFORCING crossplay games only`);
         
         let gameNumber = 1;
         const selectedTeams = flightTeams.slice(0, 6);
         
-        // Generate 9 pool games (2 groups of 3: Pool A vs Pool B)
+        // Split into Pool A (first 3) and Pool B (last 3)
         const poolA = selectedTeams.slice(0, 3);
         const poolB = selectedTeams.slice(3, 6);
         
-        // Pool A round-robin (3 games)
-        for (let i = 0; i < poolA.length; i++) {
-          for (let j = i + 1; j < poolA.length; j++) {
-            bracketGames.push({
-              id: `${flightId}-${gameNumber}`,
-              homeTeamId: poolA[i].id,
-              homeTeamName: poolA[i].name,
-              awayTeamId: poolA[j].id,
-              awayTeamName: poolA[j].name,
-              bracketId: parseInt(flightId),
-              bracketName: bracket.name,
-              round: 1,
-              gameType: 'pool_play',
-              duration: 90,
-              gameNumber: gameNumber++
-            });
-          }
-        }
+        console.log(`🔄 CROSSPLAY ENFORCED: Pool A teams:`, poolA.map(t => t.name));
+        console.log(`🔄 CROSSPLAY ENFORCED: Pool B teams:`, poolB.map(t => t.name));
         
-        // Pool B round-robin (3 games)  
-        for (let i = 0; i < poolB.length; i++) {
-          for (let j = i + 1; j < poolB.length; j++) {
-            bracketGames.push({
-              id: `${flightId}-${gameNumber}`,
-              homeTeamId: poolB[i].id,
-              homeTeamName: poolB[i].name,
-              awayTeamId: poolB[j].id,
-              awayTeamName: poolB[j].name,
-              bracketId: parseInt(flightId),
-              bracketName: bracket.name,
-              round: 1,
-              gameType: 'pool_play',
-              duration: 90,
-              gameNumber: gameNumber++
-            });
-          }
-        }
+        // Generate ONLY crossplay games (Pool A vs Pool B) - 9 games total
+        // Pattern: A1-B1, A2-B2, A3-B3, A1-B2, A2-B3, A3-B1, A1-B3, A2-B1, A3-B2
+        const crossplayPairs = [
+          [0, 0], // A1 vs B1
+          [1, 1], // A2 vs B2
+          [2, 2], // A3 vs B3
+          [0, 1], // A1 vs B2
+          [1, 2], // A2 vs B3
+          [2, 0], // A3 vs B1
+          [0, 2], // A1 vs B3
+          [1, 0], // A2 vs B1
+          [2, 1]  // A3 vs B2
+        ];
         
-        // Cross-pool games (3 games: each Pool A team plays corresponding Pool B team)
-        for (let i = 0; i < poolA.length; i++) {
+        crossplayPairs.forEach(([aIdx, bIdx]) => {
           bracketGames.push({
             id: `${flightId}-${gameNumber}`,
-            homeTeamId: poolA[i].id,
-            homeTeamName: poolA[i].name,
-            awayTeamId: poolB[i].id,
-            awayTeamName: poolB[i].name,
+            homeTeamId: poolA[aIdx].id,
+            homeTeamName: poolA[aIdx].name,
+            awayTeamId: poolB[bIdx].id,
+            awayTeamName: poolB[bIdx].name,
             bracketId: parseInt(flightId),
             bracketName: bracket.name,
             round: 1,
@@ -940,7 +918,9 @@ async function generateSelectiveSchedule(eventId: string, flightIds: string[], o
             duration: 90,
             gameNumber: gameNumber++
           });
-        }
+          
+          console.log(`✅ CROSSPLAY GAME ${gameNumber - 1}: ${poolA[aIdx].name} vs ${poolB[bIdx].name}`);
+        });
         
         // Championship final (10th game)
         bracketGames.push({
@@ -959,7 +939,7 @@ async function generateSelectiveSchedule(eventId: string, flightIds: string[], o
           isPending: true
         });
         
-        console.log(`[Selective Scheduling] Generated ${bracketGames.length} games using smart group_of_6 fallback (9 pool + 1 championship)`);
+        console.log(`🎯 CROSSPLAY FIX COMPLETE: Generated ${bracketGames.length} games (9 crossplay + 1 championship)`);
       } else if (flightTeams.length >= 7 && flightTeams.length <= 8) {
         // Smart fallback: Use group_of_8 (12 pool games + 1 championship = 13 games)
         console.log(`[Selective Scheduling] SMART FALLBACK: ${bracket.tournamentFormat} not handled, using group_of_8 for ${flightTeams.length} teams`);

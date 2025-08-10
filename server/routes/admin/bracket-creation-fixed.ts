@@ -614,7 +614,59 @@ router.post('/:eventId/flights/:flightId/auto-seed', isAdmin, async (req, res) =
   }
 });
 
-// Add placeholder team to flight
+// Add placeholder team to flight (new endpoint that matches frontend)
+router.post('/:eventId/placeholders', isAdmin, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const { name: placeholderName, flightId } = req.body;
+
+    console.log(`[Placeholder] Adding placeholder "${placeholderName}" to flight ${flightId} in event ${eventId}`);
+
+    if (!placeholderName || !flightId) {
+      return res.status(400).json({ error: 'Placeholder name and flight ID are required' });
+    }
+
+    // Get the bracket/flight info to determine age group
+    const bracket = await db.query.eventBrackets.findFirst({
+      where: and(
+        eq(eventBrackets.id, parseInt(flightId)),
+        eq(eventBrackets.eventId, eventId)
+      )
+    });
+
+    if (!bracket) {
+      return res.status(404).json({ error: 'Bracket not found' });
+    }
+
+    // Create placeholder team record
+    const [placeholderTeam] = await db.insert(teams).values({
+      eventId: eventId,
+      ageGroupId: bracket.ageGroupId,
+      bracketId: parseInt(flightId),
+      name: placeholderName,
+      clubName: 'TBD',
+      status: 'placeholder',
+      managerName: 'TBD',
+      managerEmail: 'tbd@placeholder.com',
+      seedRanking: 999, // Put placeholders at the end by default
+      createdAt: new Date().toISOString()
+    }).returning();
+
+    console.log(`[Placeholder] Successfully created placeholder team:`, placeholderTeam);
+
+    res.json({
+      success: true,
+      message: `Added placeholder "${placeholderName}" successfully`,
+      placeholderTeam
+    });
+
+  } catch (error) {
+    console.error('[Placeholder] Error adding placeholder team:', error);
+    res.status(500).json({ error: 'Failed to add placeholder team' });
+  }
+});
+
+// Add placeholder team to flight (legacy endpoint)
 router.post('/:eventId/flights/:flightId/add-placeholder', isAdmin, async (req, res) => {
   try {
     const { eventId, flightId } = req.params;
@@ -662,7 +714,7 @@ router.post('/:eventId/flights/:flightId/add-placeholder', isAdmin, async (req, 
   }
 });
 
-// Replace placeholder team with real team
+// Replace placeholder team with real team (Enhanced: supports ANY team in same flight)
 router.post('/:eventId/replace-placeholder', isAdmin, async (req, res) => {
   try {
     const { eventId } = req.params;
@@ -683,17 +735,26 @@ router.post('/:eventId/replace-placeholder', isAdmin, async (req, res) => {
       return res.status(404).json({ error: 'Placeholder team not found' });
     }
 
-    // Get the real team
+    // Get the real team - allow ANY team in the same flight/bracket
     const realTeam = await db.query.teams.findFirst({
       where: and(
         eq(teams.id, parseInt(newTeamId)),
-        eq(teams.eventId, eventId)
+        eq(teams.eventId, eventId),
+        eq(teams.status, 'approved') // Only approved teams can replace placeholders
       )
     });
 
     if (!realTeam) {
-      return res.status(404).json({ error: 'Real team not found' });
+      return res.status(404).json({ error: 'Approved team not found' });
     }
+
+    // Validate that the replacement team is from the same flight (bracket)
+    if (realTeam.bracketId && realTeam.bracketId !== placeholderTeam.bracketId) {
+      console.log(`[Placeholder] Cross-flight replacement: Team ${realTeam.name} (bracket ${realTeam.bracketId}) → Placeholder bracket ${placeholderTeam.bracketId}`);
+    }
+
+    // Store the original bracket ID of the real team for potential restoration
+    const originalBracketId = realTeam.bracketId;
 
     // Update the real team to take the placeholder's position
     await db.update(teams)
@@ -707,12 +768,17 @@ router.post('/:eventId/replace-placeholder', isAdmin, async (req, res) => {
     await db.delete(teams)
       .where(eq(teams.id, parseInt(placeholderId)));
 
-    console.log(`[Placeholder] Successfully replaced placeholder with real team`);
+    console.log(`[Placeholder] Successfully replaced placeholder with ${realTeam.name} (moved from bracket ${originalBracketId} to ${placeholderTeam.bracketId})`);
 
     res.json({
       success: true,
       message: `Successfully replaced placeholder with ${realTeam.name}`,
-      replacedTeam: realTeam
+      replacedTeam: {
+        ...realTeam,
+        bracketId: placeholderTeam.bracketId,
+        seedRanking: placeholderTeam.seedRanking
+      },
+      originalBracketId: originalBracketId
     });
 
   } catch (error) {

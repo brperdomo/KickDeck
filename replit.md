@@ -4,15 +4,16 @@
 MatchPro AI is a comprehensive sports event management platform for tournament organizers and sports clubs. Its primary purpose is to streamline and automate workflows such as team registrations, payment processing, scoring, standings, and administrative tasks. The system aims to provide a professional, low-maintenance, and intelligent solution for managing tournaments from initial setup and scheduling to real-time updates and financial oversight, aspiring to offer predictive insights and eliminate manual configuration.
 
 ## Recent Changes (August 2025)
-- **CRITICAL CROSSPLAY FIX COMPLETED**: Fixed catastrophic bug in quick-schedule.ts where ≤6 teams generated round-robin matchups within same pool instead of proper Pool A vs Pool B crossplay format
+- **CRITICAL CROSSPLAY FORMAT INTEGRITY RESTORED**: Fixed catastrophic bug in automated-scheduling.ts where ALL 6-team groups generated same-bracket matchups instead of proper Pool A vs Pool B crossplay format. Now ALL 6-team formats enforce crossplay-only games (9 Pool A vs Pool B games + 1 championship) regardless of tournament format name.
+- **COMPREHENSIVE PLACEHOLDER SYSTEM COMPLETE**: Fixed 500 error in placeholder creation API by adding missing /api/admin/events/:eventId/placeholders endpoint. Enhanced placeholder replacement to allow admins to replace TBD with ANY approved team in same flight, with cross-flight movement support and comprehensive logging.
+- **TEAM SWAP FUNCTIONALITY COMPLETE**: Fixed critical team swap bug by adding missing homeTeamId and awayTeamId fields to schedule calendar API response, implemented comprehensive debugging logs for team click tracking, and enhanced error handling with user-friendly toast notifications for games without team assignments.
+- **BRACKET ASSIGNMENT STORAGE VERIFIED**: Teams are properly stored using bracketId field in teams table when using "Assign Teams to Brackets" functionality, ensuring crossplay validation works correctly.
 - **Team Editing Functionality**: Implemented comprehensive team editing interface in Schedule Viewer with flight-restricted dropdown selections for admins
 - **Game Team API**: Created secure API endpoints (/api/admin/events/:eventId/games/:gameId/teams) for updating game teams with validation ensuring teams are from same flight
 - **Enhanced Schedule Interface**: Added edit buttons to game cards with real-time team selection dropdowns and proper crossplay validation
 - **Pool Separation Logic**: Implemented robust Pool A (first 3 teams) vs Pool B (next 3 teams) separation with comprehensive logging for 6-team crossplay groups
 - **Tournament Format Validation**: Eliminated inappropriate `round_robin` format usage system-wide to prevent crossplay format integrity issues
 - **Bulk Format Correction**: Fixed 60+ brackets using improper round_robin formats to appropriate group formats (group_of_4, group_of_6, group_of_8)
-- **COMPLETE PLACEHOLDER TEAM SYSTEM**: Implemented comprehensive placeholder team functionality including creation API (/api/admin/events/:eventId/placeholders), visual styling with amber badges and italic text, placeholder warning notifications in Flight Review Dashboard, drag-and-drop placeholder creation dialog, and full integration with Bracket Assignment interface for team replacement workflows
-- **TEAM SWAP FUNCTIONALITY FIX**: Fixed critical team swap bug by adding missing homeTeamId and awayTeamId fields to schedule calendar API response, implemented comprehensive debugging logs for team click tracking, and enhanced error handling with detailed feedback messages
 - **Schedule Grid UX Improvements**: Implemented instant hover tooltips and full team name display in drag-and-drop scheduler
 - **Build Fix**: Resolved duplicate variable declaration error in BracketAssignmentInterface.tsx
 
