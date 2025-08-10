@@ -70,6 +70,12 @@ interface ScheduleData {
   };
 }
 
+interface EditingGameState {
+  gameId: number;
+  editingPosition: 'home' | 'away';
+  availableTeams: Array<{ id: number; name: string; club: string }>;
+}
+
 interface ScheduleViewerProps {
   eventId: string;
 }
@@ -97,7 +103,7 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
   const [deleteGameId, setDeleteGameId] = useState(initialState.deleteGameId);
   
   // Team editing state
-  const [editingGame, setEditingGame] = useState<number | null>(null);
+  const [editingGame, setEditingGame] = useState<EditingGameState | null>(null);
   const [swappingTeam, setSwappingTeam] = useState<{ gameId: number; teamId: number; teamName: string; position: 'home' | 'away' } | null>(null);
   const [availableTeams, setAvailableTeams] = useState<Array<{id: number, name: string, flightName: string}>>([]);
   
@@ -420,7 +426,16 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
     },
     onSuccess: () => {
       console.log('SWAP SUCCESS: Teams swapped successfully');
-      queryClient.invalidateQueries({ queryKey: ['schedule-data', eventId] });
+      // Use optimistic update instead of full invalidation to prevent game cards from moving
+      queryClient.setQueryData(['schedule-data', eventId], (oldData: ScheduleData | undefined) => {
+        if (!oldData) return oldData;
+        // The data will be updated by the server response, no need to manually update here
+        return oldData;
+      });
+      // Only invalidate after a short delay to let the UI stabilize
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['schedule-data', eventId] });
+      }, 100);
       setSwappingTeam(null);
       toast({ title: 'Teams swapped successfully', variant: 'default' });
     },
@@ -767,7 +782,7 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
                           checked={selectedGames.includes(game.id)}
                           onCheckedChange={() => toggleGameSelection(game.id)}
                         />
-                        {editingGame === game.id ? (
+                        {editingGame?.gameId === game.id ? (
                           // Team Editing Interface
                           <div className="space-y-3 w-full">
                             <div className="text-sm font-medium text-gray-700">Edit Game Teams</div>
@@ -775,23 +790,36 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
                               <div>
                                 <Label className="text-xs text-gray-600">Home Team</Label>
                                 <Select 
-                                  defaultValue={game.homeTeamId?.toString()}
+                                  defaultValue={
+                                    editingGame?.editingPosition === 'home' 
+                                      ? game.homeTeamId?.toString() 
+                                      : editingGame?.editingPosition === 'away' 
+                                      ? game.awayTeamId?.toString()
+                                      : game.homeTeamId?.toString()
+                                  }
                                   onValueChange={(value) => {
-                                    const awayTeamId = game.awayTeamId;
-                                    if (awayTeamId && value !== awayTeamId.toString()) {
+                                    if (editingGame?.editingPosition === 'home') {
                                       updateGameTeamsMutation.mutate({
                                         gameId: game.id,
                                         homeTeamId: parseInt(value),
-                                        awayTeamId: awayTeamId
+                                        awayTeamId: game.awayTeamId || null
+                                      });
+                                    } else if (editingGame?.editingPosition === 'away') {
+                                      updateGameTeamsMutation.mutate({
+                                        gameId: game.id,
+                                        homeTeamId: game.homeTeamId || null,
+                                        awayTeamId: parseInt(value)
                                       });
                                     }
                                   }}
                                 >
                                   <SelectTrigger className="h-8 text-xs">
-                                    <SelectValue placeholder="Select home team" />
+                                    <SelectValue placeholder={
+                                      editingGame?.editingPosition === 'home' ? "Select home team" : "Select team"
+                                    } />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {flightTeams?.map((team: any) => (
+                                    {editingGame?.availableTeams?.map((team: any) => (
                                       <SelectItem key={team.id} value={team.id.toString()}>
                                         {team.name}
                                       </SelectItem>
@@ -855,12 +883,15 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
                                       swappingTeam: swappingTeam
                                     });
                                     
-                                    if (!game.homeTeamId) {
-                                      console.warn('Cannot swap: homeTeamId is missing for game:', game);
-                                      toast({ 
-                                        title: 'Cannot swap teams', 
-                                        description: 'This game does not have team IDs assigned. Please ensure teams are properly assigned to brackets.',
-                                        variant: 'destructive' 
+                                    if (!game.homeTeamId || game.homeTeam.includes('TBD') || game.homeTeam.includes('Place')) {
+                                      console.log('TBD/Placeholder team clicked - opening edit dialog');
+                                      // For TBD teams, open edit dialog instead of swapping
+                                      setEditingGame({ 
+                                        gameId: game.id,
+                                        editingPosition: 'home',
+                                        availableTeams: scheduleData?.teamsList?.filter(team => 
+                                          team.name !== game.awayTeam // Don't allow same team in both positions
+                                        ) || []
                                       });
                                       return;
                                     }
@@ -915,12 +946,15 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
                                       swappingTeam: swappingTeam
                                     });
                                     
-                                    if (!game.awayTeamId) {
-                                      console.warn('Cannot swap: awayTeamId is missing for game:', game);
-                                      toast({ 
-                                        title: 'Cannot swap teams', 
-                                        description: 'This game does not have team IDs assigned. Please ensure teams are properly assigned to brackets.',
-                                        variant: 'destructive' 
+                                    if (!game.awayTeamId || game.awayTeam.includes('TBD') || game.awayTeam.includes('Place')) {
+                                      console.log('TBD/Placeholder team clicked - opening edit dialog');
+                                      // For TBD teams, open edit dialog instead of swapping
+                                      setEditingGame({ 
+                                        gameId: game.id,
+                                        editingPosition: 'away',
+                                        availableTeams: scheduleData?.teamsList?.filter(team => 
+                                          team.name !== game.homeTeam // Don't allow same team in both positions
+                                        ) || []
                                       });
                                       return;
                                     }
