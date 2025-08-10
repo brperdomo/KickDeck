@@ -14,6 +14,7 @@ interface Team {
   status: string;
   groupId: number | null;
   seedRanking: number | null;
+  isPlaceholder?: boolean;
 }
 
 interface TournamentGroup {
@@ -559,10 +560,10 @@ export function BracketAssignmentInterface({ eventId }: BracketAssignmentInterfa
                     {bracket.teams.map((team) => (
                       <div key={team.id} className="flex items-center justify-between p-2 bg-slate-700 rounded">
                         <div className="flex items-center gap-2">
-                          <span className={`text-slate-200 ${team.name.includes('Placeholder') ? 'italic text-slate-400' : ''}`}>
+                          <span className={`text-slate-200 ${team.status === 'placeholder' ? 'italic text-slate-400' : ''}`}>
                             {team.name}
                           </span>
-                          {team.name.includes('Placeholder') && (
+                          {team.status === 'placeholder' && (
                             <Badge variant="outline" className="text-xs text-amber-400 border-amber-400">
                               Placeholder
                             </Badge>
@@ -574,7 +575,7 @@ export function BracketAssignmentInterface({ eventId }: BracketAssignmentInterfa
                               Seed #{team.seedRanking}
                             </Badge>
                           )}
-                          {team.name.includes('Placeholder') && selectedFlightData.unassignedTeams.length > 0 && (
+                          {team.status === 'placeholder' && selectedFlightData.unassignedTeams.length > 0 && (
                             <Select onValueChange={(value) => replacePlaceholderMutation.mutate({ placeholderTeamId: team.id, realTeamId: parseInt(value) })}>
                               <SelectTrigger className="w-8 h-6 p-0 border-none bg-blue-600 hover:bg-blue-700">
                                 <ArrowRight className="h-3 w-3 text-white" />

@@ -7,7 +7,7 @@ import {
   tournamentGroups,
   games 
 } from '@db/schema';
-import { eq, and, isNull, isNotNull } from 'drizzle-orm';
+import { eq, and, isNull, isNotNull, inArray } from 'drizzle-orm';
 
 const router = Router();
 
@@ -67,7 +67,8 @@ router.get('/events/:eventId/bracket-assignments', async (req, res) => {
               .where(and(
                 eq(teams.bracketId, flight.flightId),
                 eq(teams.groupId, bracket.id),
-                eq(teams.status, 'approved')
+                // Include both approved teams and placeholder teams
+                inArray(teams.status, ['approved', 'placeholder'])
               ));
 
             return {
@@ -90,7 +91,7 @@ router.get('/events/:eventId/bracket-assignments', async (req, res) => {
           .from(teams)
           .where(and(
             eq(teams.bracketId, flight.flightId),
-            eq(teams.status, 'approved'),
+            inArray(teams.status, ['approved', 'placeholder']),
             isNull(teams.groupId)
           ));
 
@@ -100,7 +101,7 @@ router.get('/events/:eventId/bracket-assignments', async (req, res) => {
           .from(teams)
           .where(and(
             eq(teams.bracketId, flight.flightId),
-            eq(teams.status, 'approved')
+            inArray(teams.status, ['approved', 'placeholder'])
           ));
 
         console.log(`BRACKET ASSIGNMENT DEBUG: Flight ${flight.flightName}:
@@ -407,6 +408,68 @@ router.post('/events/:eventId/brackets/:bracketId/add-placeholder', async (req, 
   } catch (error) {
     console.error('Error adding placeholder team:', error);
     res.status(500).json({ error: 'Failed to add placeholder team' });
+  }
+});
+
+// Replace placeholder team with real team
+router.post('/events/:eventId/teams/:placeholderTeamId/replace-with/:realTeamId', async (req, res) => {
+  try {
+    const { placeholderTeamId, realTeamId } = req.params;
+    
+    console.log(`PLACEHOLDER REPLACE DEBUG: Replacing placeholder team ${placeholderTeamId} with real team ${realTeamId}`);
+
+    // Get the placeholder team's bracket assignment
+    const placeholderTeam = await db
+      .select({
+        groupId: teams.groupId,
+        bracketId: teams.bracketId,
+        status: teams.status
+      })
+      .from(teams)
+      .where(eq(teams.id, parseInt(placeholderTeamId)))
+      .limit(1);
+
+    if (placeholderTeam.length === 0) {
+      return res.status(404).json({ error: 'Placeholder team not found' });
+    }
+
+    if (placeholderTeam[0].status !== 'placeholder') {
+      return res.status(400).json({ error: 'Team is not a placeholder' });
+    }
+
+    // Transfer all scheduled games from placeholder to real team
+    await db
+      .update(games)
+      .set({ homeTeamId: parseInt(realTeamId) })
+      .where(eq(games.homeTeamId, parseInt(placeholderTeamId)));
+
+    await db
+      .update(games)
+      .set({ awayTeamId: parseInt(realTeamId) })
+      .where(eq(games.awayTeamId, parseInt(placeholderTeamId)));
+
+    // Assign the real team to the placeholder's bracket position
+    await db
+      .update(teams)
+      .set({
+        groupId: placeholderTeam[0].groupId,
+        bracketId: placeholderTeam[0].bracketId
+      })
+      .where(eq(teams.id, parseInt(realTeamId)));
+
+    // Delete the placeholder team
+    await db
+      .delete(teams)
+      .where(eq(teams.id, parseInt(placeholderTeamId)));
+
+    console.log(`PLACEHOLDER REPLACE DEBUG: Successfully replaced placeholder ${placeholderTeamId} with real team ${realTeamId}`);
+    res.json({ 
+      success: true, 
+      message: 'Placeholder team replaced successfully. All scheduled games transferred to real team.' 
+    });
+  } catch (error) {
+    console.error('Error replacing placeholder team:', error);
+    res.status(500).json({ error: 'Failed to replace placeholder team' });
   }
 });
 
