@@ -1,0 +1,57 @@
+ScheduleViewerFixed-ET7UZziM.js:6 
+ GET https://app.matchpro.ai/api/admin/events/1844329078/schedule-calendar 500 (Internal Server Error)
+queryFn	@	ScheduleViewerFixed-ET7UZziM.js:6
+i	@	index-vnuSTfVm.js:41
+f	@	index-vnuSTfVm.js:41
+(anonymous)	@	index-vnuSTfVm.js:41
+Promise.then		
+(anonymous)	@	index-vnuSTfVm.js:41
+Promise.catch		
+f	@	index-vnuSTfVm.js:41
+(anonymous)	@	index-vnuSTfVm.js:41
+Promise.then		
+(anonymous)	@	index-vnuSTfVm.js:41
+Promise.catch		
+f	@	index-vnuSTfVm.js:41
+start	@	index-vnuSTfVm.js:41
+fetch	@	index-vnuSTfVm.js:41
+ng	@	index-vnuSTfVm.js:41
+onSubscribe	@	index-vnuSTfVm.js:41
+subscribe	@	index-vnuSTfVm.js:41
+(anonymous)	@	index-vnuSTfVm.js:41
+iW	@	index-vnuSTfVm.js:39
+SS	@	index-vnuSTfVm.js:41
+Jh	@	index-vnuSTfVm.js:41
+rhe	@	index-vnuSTfVm.js:41
+ku	@	index-vnuSTfVm.js:41
+BM	@	index-vnuSTfVm.js:41
+iu	@	index-vnuSTfVm.js:39
+(anonymous)	@	index-vnuSTfVm.js:41
+
+ScheduleViewerFixed-ET7UZziM.js:6 Fetch failed loading: GET "https://app.matchpro.ai/api/admin/events/1844329078/schedule-calendar".
+out-4.5.44.js:1 XHR finished loading: POST "https://m.stripe.com/6".
+out-4.5.44.js:1 XHR finished loading: POST "https://m.stripe.com/6".
+shared-df7789195bf09…8558bdd92c931a.js:1 Fetch finished loading: POST "https://r.stripe.com/b".
+ScheduleViewerFixed-ET7UZziM.js:6 
+ GET https://app.matchpro.ai/api/admin/events/1844329078/schedule-calendar 500 (Internal Server Error)
+ScheduleViewerFixed-ET7UZziM.js:6 Fetch failed loading: GET "https://app.matchpro.ai/api/admin/events/1844329078/schedule-calendar".
+index-vnuSTfVm.js:824 🎯 [FIELD DEBUG] All available fields: 
+[]
+index-vnuSTfVm.js:824 🎯 [FIELD DEBUG] Fields with games assigned: 
+[]
+index-vnuSTfVm.js:824 🎯 [ENHANCED DRAG DROP] Debug Info: 
+{isLoading: true, error: null, scheduleData: undefined, fieldsCount: 0, gamesCount: 0, …}
+index-vnuSTfVm.js:823 
+ GET https://app.matchpro.ai/api/admin/events/1844329078/schedule-calendar 500 (Internal Server Error)
+index-vnuSTfVm.js:824 🎯 [FIELD DEBUG] All available fields: 
+[]
+index-vnuSTfVm.js:824 🎯 [FIELD DEBUG] Fields with games assigned: 
+[]
+index-vnuSTfVm.js:824 🎯 [ENHANCED DRAG DROP] Debug Info: 
+{isLoading: false, error: Error: Failed to fetch schedule data
+    at queryFn (https://app.matchpro.ai/assets/index-vnuSTfVm.…, scheduleData: undefined, fieldsCount: 0, gamesCount: 0, …}
+index-vnuSTfVm.js:824 🚨 [ENHANCED DRAG DROP] API Error: Error: Failed to fetch schedule data
+    at queryFn (index-vnuSTfVm.js:823:69551)
+index-vnuSTfVm.js:823 Fetch failed loading: GET "https://app.matchpro.ai/api/admin/events/1844329078/schedule-calendar".
+﻿
+
