@@ -364,4 +364,74 @@ router.post('/events/:eventId/flights/:flightId/auto-balance', async (req, res) 
   }
 });
 
+// Add placeholder team to bracket
+router.post('/events/:eventId/brackets/:bracketId/add-placeholder', async (req, res) => {
+  try {
+    const { eventId, bracketId } = req.params;
+    const { placeholderName } = req.body;
+    
+    console.log(`PLACEHOLDER DEBUG: Adding placeholder "${placeholderName}" to bracket ${bracketId}`);
+    
+    if (!placeholderName || placeholderName.trim() === '') {
+      return res.status(400).json({ error: 'Placeholder name is required' });
+    }
+
+    // Get bracket details to find eventId and ageGroupId
+    const bracket = await db
+      .select({
+        eventId: tournamentGroups.eventId,
+        ageGroupId: tournamentGroups.ageGroupId
+      })
+      .from(tournamentGroups)
+      .where(eq(tournamentGroups.id, parseInt(bracketId)))
+      .limit(1);
+
+    if (bracket.length === 0) {
+      return res.status(404).json({ error: 'Bracket not found' });
+    }
+
+    // Create a placeholder team entry
+    await db
+      .insert(teams)
+      .values({
+        eventId: bracket[0].eventId,
+        ageGroupId: bracket[0].ageGroupId,
+        name: placeholderName.trim(),
+        status: 'placeholder',
+        groupId: parseInt(bracketId),
+        createdAt: new Date().toISOString()
+      });
+
+    console.log(`PLACEHOLDER DEBUG: Successfully added placeholder team "${placeholderName}"`);
+    res.json({ success: true, message: 'Placeholder team added successfully' });
+  } catch (error) {
+    console.error('Error adding placeholder team:', error);
+    res.status(500).json({ error: 'Failed to add placeholder team' });
+  }
+});
+
+// Remove team from bracket
+router.post('/events/:eventId/teams/:teamId/remove-from-bracket', async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    
+    console.log(`BRACKET EDIT DEBUG: Removing team ${teamId} from bracket`);
+
+    // Update team to remove bracket assignment
+    await db
+      .update(teams)
+      .set({ 
+        groupId: null,
+        bracketId: null
+      })
+      .where(eq(teams.id, parseInt(teamId)));
+
+    console.log(`BRACKET EDIT DEBUG: Successfully removed team ${teamId} from bracket`);
+    res.json({ success: true, message: 'Team removed from bracket successfully' });
+  } catch (error) {
+    console.error('Error removing team from bracket:', error);
+    res.status(500).json({ error: 'Failed to remove team from bracket' });
+  }
+});
+
 export default router;

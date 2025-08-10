@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Users, ArrowRight, Shuffle, BarChart3, Move, Plus, AlertCircle, RotateCcw } from 'lucide-react';
+import { Users, ArrowRight, Shuffle, BarChart3, Move, Plus, AlertCircle, RotateCcw, Filter, Edit, UserPlus, UserMinus } from 'lucide-react';
 
 interface Team {
   id: number;
@@ -46,6 +47,9 @@ export function BracketAssignmentInterface({ eventId }: BracketAssignmentInterfa
   const queryClient = useQueryClient();
   const [selectedFlight, setSelectedFlight] = useState<number | null>(null);
   const [teamAssignments, setTeamAssignments] = useState<{ [teamId: number]: number }>({});
+  const [flightTypeFilter, setFlightTypeFilter] = useState<string>('all');
+  const [editingBracket, setEditingBracket] = useState<number | null>(null);
+  const [placeholderName, setPlaceholderName] = useState<string>('');
 
   // Fetch bracket assignment data
   const { data: bracketData, isLoading } = useQuery({
@@ -184,6 +188,48 @@ export function BracketAssignmentInterface({ eventId }: BracketAssignmentInterfa
     }
   });
 
+  // Add placeholder team mutation
+  const addPlaceholderMutation = useMutation({
+    mutationFn: async ({ bracketId, placeholderName }: { bracketId: number; placeholderName: string }) => {
+      const response = await fetch(`/api/admin/events/${eventId}/brackets/${bracketId}/add-placeholder`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ placeholderName })
+      });
+      if (!response.ok) throw new Error('Failed to add placeholder team');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Placeholder Added",
+        description: "Placeholder team added to bracket"
+      });
+      queryClient.invalidateQueries({ queryKey: ['bracket-assignments', eventId] });
+      setPlaceholderName('');
+      setEditingBracket(null);
+    }
+  });
+
+  // Remove team from bracket mutation
+  const removeTeamMutation = useMutation({
+    mutationFn: async ({ teamId }: { teamId: number }) => {
+      const response = await fetch(`/api/admin/events/${eventId}/teams/${teamId}/remove-from-bracket`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to remove team from bracket');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Team Removed",
+        description: "Team removed from bracket"
+      });
+      queryClient.invalidateQueries({ queryKey: ['bracket-assignments', eventId] });
+    }
+  });
+
   const getFlightLevelBadge = (level: string) => {
     const colors = {
       elite: 'bg-amber-500 text-white',
@@ -198,7 +244,52 @@ export function BracketAssignmentInterface({ eventId }: BracketAssignmentInterfa
     );
   };
 
-  const selectedFlightData = bracketData?.find(f => f.flightId === selectedFlight);
+  // Helper function to get flight type from name
+  const getFlightType = (flightName: string): string => {
+    if (flightName.toLowerCase().includes('elite')) return 'elite';
+    if (flightName.toLowerCase().includes('premier')) return 'premier';
+    if (flightName.toLowerCase().includes('classic')) return 'classic';
+    return 'other';
+  };
+
+  // Filter and sort flights
+  const filteredFlights = useMemo(() => {
+    if (!bracketData) return [];
+    
+    let flights = bracketData;
+    
+    // Filter by flight type if not 'all'
+    if (flightTypeFilter !== 'all') {
+      flights = flights.filter(flight => 
+        getFlightType(flight.flightName) === flightTypeFilter
+      );
+    }
+    
+    // Sort by birth year (oldest to youngest) then by gender (Boys first)
+    flights = flights.sort((a, b) => {
+      // First sort by birth year (descending - oldest first)
+      const yearA = parseInt(a.birthYear) || 0;
+      const yearB = parseInt(b.birthYear) || 0;
+      if (yearA !== yearB) {
+        return yearA - yearB; // Ascending order for birth years (2010 before 2015)
+      }
+      
+      // Then sort by gender (Boys first)
+      if (a.gender !== b.gender) {
+        return a.gender === 'Boys' ? -1 : 1;
+      }
+      
+      // Finally sort by flight level (Elite > Premier > Classic)
+      const levelOrder = { elite: 1, premier: 2, classic: 3, other: 4 };
+      const levelA = levelOrder[getFlightType(a.flightName) as keyof typeof levelOrder] || 4;
+      const levelB = levelOrder[getFlightType(b.flightName) as keyof typeof levelOrder] || 4;
+      return levelA - levelB;
+    });
+    
+    return flights;
+  }, [bracketData, flightTypeFilter]);
+
+  const selectedFlightData = filteredFlights?.find(f => f.flightId === selectedFlight);
 
   if (isLoading) {
     return <div className="flex justify-center p-8 text-slate-300">Loading bracket assignment data...</div>;
@@ -237,22 +328,57 @@ export function BracketAssignmentInterface({ eventId }: BracketAssignmentInterfa
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Flight Type Filter */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-slate-400" />
+              <span className="text-sm text-slate-300">Filter by type:</span>
+            </div>
+            <Select value={flightTypeFilter} onValueChange={setFlightTypeFilter}>
+              <SelectTrigger className="w-48 bg-slate-700 border-slate-600 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-700 border-slate-600">
+                <SelectItem value="all">All Flight Types</SelectItem>
+                <SelectItem value="elite">
+                  <div className="flex items-center gap-2">
+                    {getFlightLevelBadge('elite')}
+                    <span>Nike Elite</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="premier">
+                  <div className="flex items-center gap-2">
+                    {getFlightLevelBadge('premier')}
+                    <span>Nike Premier</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="classic">
+                  <div className="flex items-center gap-2">
+                    {getFlightLevelBadge('classic')}
+                    <span>Nike Classic</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Flight Selection */}
           <Select value={selectedFlight?.toString() || ""} onValueChange={(value) => setSelectedFlight(parseInt(value))}>
             <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
               <SelectValue placeholder="Select a flight..." />
             </SelectTrigger>
             <SelectContent className="bg-slate-700 border-slate-600 max-h-96 overflow-y-auto">
               {/* Active Flights */}
-              {bracketData && bracketData.filter(flight => !flight.isCompleted).length > 0 && (
+              {filteredFlights && filteredFlights.filter(flight => !flight.isCompleted).length > 0 && (
                 <>
                   <div className="px-2 py-1.5 text-xs font-medium text-slate-300 bg-slate-600 sticky top-0">
-                    Active Flights
+                    Active Flights ({filteredFlights.filter(flight => !flight.isCompleted).length})
                   </div>
-                  {bracketData.filter(flight => !flight.isCompleted).map((flight) => (
+                  {filteredFlights.filter(flight => !flight.isCompleted).map((flight) => (
                     <SelectItem key={flight.flightId} value={flight.flightId.toString()}>
                       <div className="flex items-center gap-2">
                         {getFlightLevelBadge(flight.flightLevel)}
-                        <span>{flight.gender} {flight.birthYear} - {flight.flightName}</span>
+                        <span>U{new Date().getFullYear() - parseInt(flight.birthYear)} {flight.gender} ({flight.birthYear}) - {flight.flightName}</span>
                         <span className="text-slate-400">({flight.totalTeams} teams)</span>
                       </div>
                     </SelectItem>
@@ -261,22 +387,29 @@ export function BracketAssignmentInterface({ eventId }: BracketAssignmentInterfa
               )}
 
               {/* Completed Flights */}
-              {bracketData && bracketData.filter(flight => flight.isCompleted).length > 0 && (
+              {filteredFlights && filteredFlights.filter(flight => flight.isCompleted).length > 0 && (
                 <>
                   <div className="px-2 py-1.5 text-xs font-medium text-slate-300 bg-slate-600 sticky top-0">
-                    Completed
+                    Completed ({filteredFlights.filter(flight => flight.isCompleted).length})
                   </div>
-                  {bracketData.filter(flight => flight.isCompleted).map((flight) => (
+                  {filteredFlights.filter(flight => flight.isCompleted).map((flight) => (
                     <SelectItem key={flight.flightId} value={flight.flightId.toString()}>
                       <div className="flex items-center gap-2">
                         {getFlightLevelBadge(flight.flightLevel)}
-                        <span>{flight.gender} {flight.birthYear} - {flight.flightName}</span>
+                        <span>U{new Date().getFullYear() - parseInt(flight.birthYear)} {flight.gender} ({flight.birthYear}) - {flight.flightName}</span>
                         <span className="text-slate-400">({flight.totalTeams} teams)</span>
                         <Badge variant="secondary" className="text-xs">Completed</Badge>
                       </div>
                     </SelectItem>
                   ))}
                 </>
+              )}
+
+              {/* No flights message */}
+              {filteredFlights && filteredFlights.length === 0 && (
+                <div className="px-2 py-4 text-center text-slate-400 text-sm">
+                  No flights found for selected type
+                </div>
               )}
             </SelectContent>
           </Select>
@@ -292,7 +425,7 @@ export function BracketAssignmentInterface({ eventId }: BracketAssignmentInterfa
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <CardTitle className="text-white">
-                    {selectedFlightData.gender} {selectedFlightData.birthYear} - {selectedFlightData.flightName}
+                    U{new Date().getFullYear() - parseInt(selectedFlightData.birthYear)} {selectedFlightData.gender} ({selectedFlightData.birthYear}) - {selectedFlightData.flightName}
                   </CardTitle>
                   {getFlightLevelBadge(selectedFlightData.flightLevel)}
                   {selectedFlightData.isCompleted && (
@@ -369,9 +502,20 @@ export function BracketAssignmentInterface({ eventId }: BracketAssignmentInterfa
                       <Users className="h-5 w-5" />
                       {bracket.name}
                     </div>
-                    <Badge variant="outline" className="text-slate-300 border-slate-600">
-                      {bracket.teams.length} teams
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-slate-300 border-slate-600">
+                        {bracket.teams.length} teams
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditingBracket(editingBracket === bracket.id ? null : bracket.id)}
+                        className="border-slate-600 text-slate-200 hover:bg-slate-600"
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        {editingBracket === bracket.id ? 'Done' : 'Edit'}
+                      </Button>
+                    </div>
                   </CardTitle>
                   <CardDescription className="text-slate-300">
                     {bracket.type} - {bracket.stage}
@@ -382,13 +526,55 @@ export function BracketAssignmentInterface({ eventId }: BracketAssignmentInterfa
                     {bracket.teams.map((team) => (
                       <div key={team.id} className="flex items-center justify-between p-2 bg-slate-700 rounded">
                         <span className="text-slate-200">{team.name}</span>
-                        {team.seedRanking && (
-                          <Badge variant="secondary" className="text-xs">
-                            Seed #{team.seedRanking}
-                          </Badge>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {team.seedRanking && (
+                            <Badge variant="secondary" className="text-xs">
+                              Seed #{team.seedRanking}
+                            </Badge>
+                          )}
+                          {editingBracket === bracket.id && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeTeamMutation.mutate({ teamId: team.id })}
+                              className="h-6 w-6 p-0 border-red-400 text-red-400 hover:bg-red-400 hover:text-white"
+                            >
+                              <UserMinus className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     ))}
+                    
+                    {/* Add Placeholder Section */}
+                    {editingBracket === bracket.id && (
+                      <div className="mt-4 p-3 border border-slate-600 rounded bg-slate-800/50">
+                        <div className="flex items-center gap-2 mb-2">
+                          <UserPlus className="h-4 w-4 text-slate-400" />
+                          <span className="text-sm text-slate-300">Add Placeholder Team</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            placeholder="Enter placeholder name (e.g., 'TBD Team A')"
+                            value={placeholderName}
+                            onChange={(e) => setPlaceholderName(e.target.value)}
+                            className="flex-1 bg-slate-700 border-slate-600 text-white"
+                          />
+                          <Button
+                            size="sm"
+                            onClick={() => addPlaceholderMutation.mutate({ 
+                              bracketId: bracket.id, 
+                              placeholderName: placeholderName.trim() 
+                            })}
+                            disabled={!placeholderName.trim() || addPlaceholderMutation.isPending}
+                            className="bg-green-600 hover:bg-green-500 text-white"
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Add
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
