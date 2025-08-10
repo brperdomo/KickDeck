@@ -1152,7 +1152,7 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                                     {game.ageGroup?.replace(/[^\dUB]/g, '') || 'U?'}
                                   </div>
                                   
-                                  {/* Status and action buttons */}
+                                  {/* Status and conflict indicators */}
                                   <div className="flex items-center gap-1">
                                     {gameConflicts.length > 0 && (
                                       <div className="flex items-center gap-1">
@@ -1160,55 +1160,8 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                                         <span className="text-xs">{gameConflicts.length}</span>
                                       </div>
                                     )}
-                                    
-                                    {/* Game Action Buttons */}
-                                    <div className="flex items-center gap-1">
-                                      <button
-                                        className="text-xs bg-blue-700/50 hover:bg-blue-600 px-1.5 py-0.5 rounded text-white transition-colors flex items-center gap-1"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          // Show available dates for moving
-                                          const availableDates = availableDays.map(day => day.label).join('\n');
-                                          const currentDate = game.date || new Date().toISOString().split('T')[0];
-                                          const newDateInput = prompt(`Move game to a different day:\n\nAvailable dates:\n${availableDates}\n\nEnter new date (YYYY-MM-DD):`, currentDate);
-                                          
-                                          if (newDateInput && newDateInput !== currentDate) {
-                                            // Validate that the new date is in available days
-                                            const isValidDate = availableDays.some(day => day.value === newDateInput);
-                                            if (!isValidDate) {
-                                              alert('Please select a valid tournament date from the list above.');
-                                              return;
-                                            }
-                                            
-                                            // Call reschedule API with current time
-                                            const currentTime = game.startTime ? new Date(game.startTime).toTimeString().slice(0,5) : '09:00';
-                                            fetch(`/api/admin/games/${game.id}/reschedule`, {
-                                              method: 'PUT',
-                                              headers: { 'Content-Type': 'application/json' },
-                                              credentials: 'include',
-                                              body: JSON.stringify({ 
-                                                startTime: `${newDateInput}T${currentTime}:00`,
-                                                eventId: Number(eventId)
-                                              })
-                                            }).then(response => {
-                                              if (response.ok) {
-                                                // Refresh the schedule data
-                                                window.location.reload();
-                                              } else {
-                                                alert('Failed to reschedule game');
-                                              }
-                                            });
-                                          }
-                                        }}
-                                        title="Move to different day"
-                                      >
-                                        <Calendar className="h-3 w-3" />
-                                        <span className="text-xs">Move</span>
-                                      </button>
-                                      
-                                      <div className="text-xs">
-                                        {hasWinnerPlaceholder(game) ? '🏆' : '⚽'}
-                                      </div>
+                                    <div className="text-xs">
+                                      {hasWinnerPlaceholder(game) ? '🏆' : '⚽'}
                                     </div>
                                   </div>
                                 </div>
@@ -1241,7 +1194,6 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
               <h4 className="font-medium text-white mb-2">How to Use</h4>
               <ul className="space-y-1 text-slate-300">
                 <li>• Drag games between time slots and fields</li>
-                <li>• Click 'Move' button on games to reschedule to different days</li>
                 <li>• Game boxes span horizontally across time duration</li>
                 <li>• Times run horizontally, fields are vertical</li>
                 <li>• Use 5/10/15 minute intervals for precise timing</li>
