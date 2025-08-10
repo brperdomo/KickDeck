@@ -42,7 +42,7 @@ interface TimeSlot {
 }
 
 interface ConflictInfo {
-  type: 'coach' | 'team_rest' | 'field_size' | 'capacity' | 'games_per_day' | 'team_conflict';
+  type: 'coach' | 'team_rest' | 'field_size' | 'capacity' | 'games_per_day' | 'team_conflict' | 'rest_period';
   severity: 'warning' | 'error';
   message: string;
   gameIds: number[];
@@ -706,24 +706,50 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
     setTimeout(() => document.body.removeChild(dragImage), 0);
   };
 
-  // Handle drag over
+  // Handle drag over - FIXED: Better collision detection for occupied slots
   const handleDragOver = (e: React.DragEvent, fieldId: number, timeSlot: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     
-    // Only allow dropping if the slot is actually available (excluding dragged game from collision)
+    if (!draggedGame) return;
+    
     const timeSlots = generateTimeSlots();
     const timeSlotObj = timeSlots.find(slot => slot.startTime === timeSlot);
     if (!timeSlotObj) return;
     
+    // Get all games in this slot, excluding the dragged game
     const gamesInSlot = getGamesForSlot(fieldId, timeSlotObj);
-    const isOccupied = isSlotOccupiedByExtendingGame(fieldId, timeSlotObj);
+    const nonDraggedGames = gamesInSlot.filter(game => game.id !== draggedGame.id);
     
-    // Filter out the currently dragged game from collision check
-    const nonDraggedGames = gamesInSlot.filter(game => !draggedGame || game.id !== draggedGame.id);
+    // Check if extending games from previous slots would conflict (excluding dragged game)
+    const isOccupiedByExtending = isSlotOccupiedByExtendingGame(fieldId, timeSlotObj);
     
-    // Allow drop if slot is empty (excluding dragged game)
-    if (nonDraggedGames.length === 0 && !isOccupied) {
+    // Calculate how many slots the dragged game would need
+    const draggedGameSpanSlots = calculateGameSpanSlots(draggedGame);
+    const currentSlotIndex = timeSlots.findIndex(s => s.id === timeSlotObj.id);
+    
+    // Check if ALL required slots for the dragged game are available
+    let canDrop = true;
+    for (let i = 0; i < draggedGameSpanSlots; i++) {
+      const checkSlotIndex = currentSlotIndex + i;
+      if (checkSlotIndex >= timeSlots.length) {
+        canDrop = false; // Game would extend beyond available time slots
+        break;
+      }
+      
+      const checkSlot = timeSlots[checkSlotIndex];
+      const checkGames = getGamesForSlot(fieldId, checkSlot).filter(g => g.id !== draggedGame.id);
+      const checkOccupied = isSlotOccupiedByExtendingGame(fieldId, checkSlot);
+      
+      // If any slot in the span is occupied, can't drop
+      if (checkGames.length > 0 || checkOccupied) {
+        canDrop = false;
+        break;
+      }
+    }
+    
+    // Allow drop only if all required slots are clear
+    if (canDrop && nonDraggedGames.length === 0 && !isOccupiedByExtending) {
       setDragOverSlot({ fieldId, timeSlot });
     } else {
       setDragOverSlot(null);
@@ -902,7 +928,7 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
             {/* Time Interval Selection */}
             <div className="flex items-center gap-2">
               <label className="text-slate-200 text-sm">Time Intervals:</label>
-              <Select value={timeInterval.toString()} onValueChange={(value: string) => setTimeInterval(Number(value))}>
+              <Select value={timeInterval.toString()} onValueChange={(value: string) => setTimeInterval(parseInt(value))}>
                 <SelectTrigger className="w-32">
                   <SelectValue />
                 </SelectTrigger>
@@ -1060,18 +1086,24 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                                 top: '2px',
                                 left: '2px'
                               }}
-                              title={`${game.homeTeamName} vs ${game.awayTeamName}\nAge Group: ${game.ageGroup}\nTotal Duration: ${totalDuration} minutes (${gameSpanSlots} slots)\nDrag to move`}
+                              title={`Teams: ${game.homeTeamName} vs ${game.awayTeamName}
+Field: ${field.name}
+Age Group: ${game.ageGroup}
+Birth Year: ${game.ageGroup ? game.ageGroup.replace(/[^\d]/g, '') || 'N/A' : 'N/A'}
+Flight: ${game.bracketName || 'Standard'}
+Duration: ${totalDuration} minutes (${gameSpanSlots} slots)
+Status: ${game.status || 'scheduled'}
+
+Drag to move to a different time slot or field`}
                             >
                               <div className="flex justify-between items-start">
                                 <div className="flex-1">
-                                  <div className="font-medium truncate text-xs">
-                                    {game.homeTeamName} vs {game.awayTeamName}
+                                  <div className="font-medium text-xs">
+                                    {/* Shortened team names for better display */}
+                                    {game.homeTeamName?.split(' ')[0] || 'TBD'} vs {game.awayTeamName?.split(' ')[0] || 'TBD'}
                                   </div>
-                                  <div className="text-xs opacity-80 truncate">
-                                    {game.ageGroup}
-                                  </div>
-                                  <div className="text-xs opacity-70">
-                                    {totalDuration}min
+                                  <div className="text-xs opacity-80">
+                                    {game.ageGroup?.replace(/[^\dUB]/g, '') || 'U?'}
                                   </div>
                                   {gameConflicts.length > 0 && (
                                     <div className="flex items-center gap-1">
@@ -1081,36 +1113,10 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                                   )}
                                 </div>
                                 
-                                {/* Day Change Dropdown */}
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 w-6 p-0 text-white/70 hover:text-white hover:bg-white/20"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      <CalendarDays className="h-3 w-3" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-48">
-                                    {availableDays
-                                      .filter(day => day.value !== selectedDate)
-                                      .map((day) => (
-                                        <DropdownMenuItem
-                                          key={day.value}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            moveGameToDay(game, day.value);
-                                          }}
-                                          className="cursor-pointer"
-                                        >
-                                          <CalendarDays className="h-4 w-4 mr-2" />
-                                          Move to {day.label}
-                                        </DropdownMenuItem>
-                                      ))}
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
+                                {/* Status indicator */}
+                                <div className="text-xs opacity-70 text-right">
+                                  {hasWinnerPlaceholder(game) ? '🏆' : '⚽'}
+                                </div>
                               </div>
                             </div>
                           );
