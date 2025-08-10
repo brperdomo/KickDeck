@@ -130,7 +130,14 @@ router.get('/:eventId/schedule-calendar', async (req, res) => {
         return !excludeFields.includes(field.name);
       })
       .sort((a, b) => {
-        // Extract field numbers for proper sequential sorting
+        // Group fields by complex first, then by numerical order within complex
+        const getComplex = (name: string): string => {
+          if (name.startsWith('Galway Downs')) return 'Galway Downs';
+          if (name.startsWith('Birdsall')) return 'Birdsall';
+          if (name.startsWith('Sommersbend')) return 'Sommersbend';
+          return 'Other';
+        };
+        
         const extractFieldNumber = (name: string): number => {
           // Handle "Galway Downs Field X" format
           const galwayMatch = name.match(/Galway Downs Field (\d+)/);
@@ -152,10 +159,19 @@ router.get('/:eventId/schedule-calendar', async (req, res) => {
           return 999;
         };
 
+        const aComplex = getComplex(a.name);
+        const bComplex = getComplex(b.name);
+        
+        // First sort by complex
+        if (aComplex !== bComplex) {
+          const complexOrder = ['Galway Downs', 'Birdsall', 'Sommersbend', 'Other'];
+          return complexOrder.indexOf(aComplex) - complexOrder.indexOf(bComplex);
+        }
+        
+        // Within same complex, sort by field number
         const aNum = extractFieldNumber(a.name);
         const bNum = extractFieldNumber(b.name);
         
-        // Sort by field number first, then alphabetically if same number
         if (aNum !== bNum) return aNum - bNum;
         return a.name.localeCompare(b.name);
       });
