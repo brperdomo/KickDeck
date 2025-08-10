@@ -11,6 +11,8 @@ router.get('/:eventId/schedule-calendar', async (req, res) => {
     const { eventId } = req.params;
     
     console.log(`[Schedule Calendar] Fetching calendar data for event ${eventId}`);
+    console.log(`[Schedule Calendar] Request headers:`, req.headers);
+    console.log(`[Schedule Calendar] Session ID:`, req.sessionID);
 
     // Get event details first to get proper dates  
     const event = await db.query.events.findFirst({
@@ -24,32 +26,32 @@ router.get('/:eventId/schedule-calendar', async (req, res) => {
     const eventStartDate = event.startDate; // Use actual tournament start date (2025-08-16)
     console.log(`[Schedule Calendar] Using event start date: ${eventStartDate}`);
 
-    // Get games with proper age group information using raw SQL to include scheduled_date and scheduled_time
-    const gamesWithDetails = await db.execute(sql`
-      SELECT 
-        g.id as "gameId",
-        g.home_team_id as "homeTeamId",
-        g.away_team_id as "awayTeamId", 
-        g.age_group_id as "ageGroupId",
-        g.field_id as "fieldId",
-        g.time_slot_id as "timeSlotId",
-        g.scheduled_date as "scheduledDate",
-        g.scheduled_time as "scheduledTime",
-        g.status,
-        g.duration,
-        g.round,
-        g.match_number as "matchNumber",
-        ag.age_group as "ageGroupName",
-        ag.gender as "ageGroupGender"
-      FROM games g
-      LEFT JOIN event_age_groups ag ON g.age_group_id = ag.id
-      WHERE g.event_id = ${eventId}
-    `);
+    // Get games with proper age group information using Drizzle ORM
+    const gamesWithDetails = await db
+      .select({
+        gameId: games.id,
+        homeTeamId: games.homeTeamId,
+        awayTeamId: games.awayTeamId,
+        ageGroupId: games.ageGroupId,
+        fieldId: games.fieldId,
+        timeSlotId: games.timeSlotId,
+        scheduledDate: games.scheduledDate,
+        scheduledTime: games.scheduledTime,
+        status: games.status,
+        duration: games.duration,
+        round: games.round,
+        matchNumber: games.matchNumber,
+        ageGroupName: eventAgeGroups.name,
+        ageGroupGender: eventAgeGroups.gender
+      })
+      .from(games)
+      .leftJoin(eventAgeGroups, eq(games.ageGroupId, eventAgeGroups.id))
+      .where(eq(games.eventId, eventId));
 
-    console.log(`[Schedule Calendar] Found ${gamesWithDetails.rows.length} total games with age group data`);
-    console.log(`[Schedule Calendar] Sample game:`, gamesWithDetails.rows[0]);
+    console.log(`[Schedule Calendar] Found ${gamesWithDetails.length} total games with age group data`);
+    console.log(`[Schedule Calendar] Sample game:`, gamesWithDetails[0]);
     
-    if (gamesWithDetails.rows.length === 0) {
+    if (gamesWithDetails.length === 0) {
       console.log(`[Schedule Calendar] No games found for event ${eventId}, checking database...`);
       // Check if the event exists
       const eventCheck = await db.select().from(games).limit(5);
@@ -60,7 +62,7 @@ router.get('/:eventId/schedule-calendar', async (req, res) => {
     const allTimeSlots = await db
       .select()
       .from(gameTimeSlots)
-      .where(eq(gameTimeSlots.eventId, eventId.toString()));
+      .where(eq(gameTimeSlots.eventId, parseInt(eventId)));
 
     console.log(`[Schedule Calendar] Found ${allTimeSlots.length} time slots`);
 
@@ -80,13 +82,13 @@ router.get('/:eventId/schedule-calendar', async (req, res) => {
     // Process actual games from database only - no synthetic data
     const processedGames: any[] = [];
     
-    console.log(`[Schedule Calendar Direct] Found ${gamesWithDetails.rows.length} total games`);
+    console.log(`[Schedule Calendar Direct] Found ${gamesWithDetails.length} total games`);
     console.log(`[Schedule Calendar Direct] Found ${allTimeSlots.length} time slots`);
     console.log(`[Schedule Calendar Direct] Using event start date: ${eventStartDate}`);
     
     // Only process real games that exist in the database
-    for (let i = 0; i < gamesWithDetails.rows.length; i++) {
-      const game = gamesWithDetails.rows[i];
+    for (let i = 0; i < gamesWithDetails.length; i++) {
+      const game = gamesWithDetails[i];
       
       // Get actual time slot and field data from database using proper IDs
       const timeSlot = allTimeSlots.find(ts => ts.id === game.timeSlotId);
@@ -243,9 +245,11 @@ router.get('/:eventId/schedule-calendar', async (req, res) => {
 
   } catch (error) {
     console.error('[Schedule Calendar] Error:', error);
+    console.error('[Schedule Calendar] Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
     res.status(500).json({ 
       error: 'Failed to fetch calendar schedule data',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
     });
   }
 });
