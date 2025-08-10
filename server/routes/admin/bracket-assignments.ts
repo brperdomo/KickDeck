@@ -7,7 +7,7 @@ import {
   tournamentGroups,
   games 
 } from '@db/schema';
-import { eq, and, isNull, isNotNull, inArray, sql } from 'drizzle-orm';
+import { eq, and, isNull, isNotNull, inArray } from 'drizzle-orm';
 
 const router = Router();
 
@@ -34,12 +34,11 @@ router.get('/events/:eventId/bracket-assignments', async (req, res) => {
       .where(eq(eventAgeGroups.eventId, eventId));
 
     console.log(`BRACKET ASSIGNMENT DEBUG: Found ${flights.length} flights:`, 
-      flights.map(f => `${f.ageGroup} ${f.gender} - ${f.flightName} (ID: ${f.flightId})`));
+      flights.map(f => `${f.ageGroup} ${f.gender} - ${f.flightName}`));
 
     const bracketAssignmentData = await Promise.all(
       flights.map(async (flight) => {
-        // Get tournament groups (brackets) for this specific flight
-        // Now using proper flight_id tracking instead of name patterns
+        // Get tournament groups (brackets) for this flight
         const brackets = await db
           .select({
             id: tournamentGroups.id,
@@ -50,10 +49,8 @@ router.get('/events/:eventId/bracket-assignments', async (req, res) => {
           .from(tournamentGroups)
           .where(and(
             eq(tournamentGroups.eventId, eventId),
-            eq(sql`${tournamentGroups}.flight_id`, flight.flightId) // Direct flight ownership tracking
+            eq(tournamentGroups.ageGroupId, flight.ageGroupId)
           ));
-
-        console.log(`BRACKET ASSIGNMENT DEBUG: Flight ${flight.flightName} (ID: ${flight.flightId}) - Found ${brackets.length} brackets:`, brackets.map(b => `${b.name} (ID: ${b.id})`));
 
         // Get teams for each bracket
         const bracketsWithTeams = await Promise.all(
@@ -69,9 +66,10 @@ router.get('/events/:eventId/bracket-assignments', async (req, res) => {
               })
               .from(teams)
               .where(and(
-                eq(teams.bracketId, flight.flightId), // Teams must be in this specific flight
-                eq(teams.groupId, bracket.id) // Teams must be assigned to this bracket
-                // Include both approved teams and placeholder teams (status filtering removed)
+                eq(teams.bracketId, flight.flightId),
+                eq(teams.groupId, bracket.id),
+                // Include both approved teams and placeholder teams
+                eq(teams.status, 'approved')
               ));
 
             return {
@@ -82,7 +80,7 @@ router.get('/events/:eventId/bracket-assignments', async (req, res) => {
           })
         );
 
-        // Get unassigned teams (teams in flight but no groupId) - include approved teams only, not placeholders
+        // Get unassigned teams (teams in flight but no groupId)
         const unassignedTeams = await db
           .select({
             id: teams.id,
@@ -96,24 +94,23 @@ router.get('/events/:eventId/bracket-assignments', async (req, res) => {
           .where(and(
             eq(teams.bracketId, flight.flightId),
             eq(teams.status, 'approved'),
-            isNull(teams.groupId),
-            eq(teams.isPlaceholder, false) // Only real teams, not placeholders
+            isNull(teams.groupId)
           ));
 
-        // Get total teams in this flight (both approved and placeholders)
+        // Get total teams in this flight
         const totalTeams = await db
           .select()
           .from(teams)
-          .where(eq(teams.bracketId, flight.flightId));
+          .where(and(
+            eq(teams.bracketId, flight.flightId),
+            eq(teams.status, 'approved')
+          ));
 
         console.log(`BRACKET ASSIGNMENT DEBUG: Flight ${flight.flightName}:
           - Total teams: ${totalTeams.length}
           - Brackets: ${bracketsWithTeams.length}
           - Unassigned teams: ${unassignedTeams.length}
           - Teams in brackets: ${bracketsWithTeams.reduce((sum, b) => sum + b.teamCount, 0)}`);
-        
-        console.log(`UNASSIGNED TEAMS DEBUG for ${flight.flightName}:`, 
-          unassignedTeams.map(t => `${t.name} (ID: ${t.id}, groupId: ${t.groupId})`));
 
         // Check if this flight has completed bracket play (has games generated)
         const hasGames = await db.query.games.findFirst({
@@ -258,15 +255,14 @@ router.post('/events/:eventId/flights/:flightId/create-brackets', async (req, re
 
     console.log(`BRACKET CREATION DEBUG: Creating ${bracketsToCreate.length} brackets:`, bracketsToCreate.map(b => b.name));
 
-    // Create the brackets with proper flight ownership tracking
+    // Create the brackets
     const createdBrackets = [];
     for (const bracket of bracketsToCreate) {
       const [newBracket] = await db
         .insert(tournamentGroups)
         .values({
-          eventId: eventId, // Keep as string to match schema
+          eventId: eventId,
           ageGroupId: flight[0].ageGroupId,
-          flightId: parseInt(flightId), // Track which flight this bracket belongs to
           name: bracket.name,
           type: bracket.type,
           stage: bracket.stage,
