@@ -22,15 +22,45 @@ router.get('/events/:eventId/fields', requireAuth, isAdmin, async (req, res) => 
   try {
     const { eventId } = req.params;
     
-    console.log(`🏟️ API: Getting available fields for event ${eventId}`);
+    console.log(`🏟️ API: Getting available fields for event ${eventId} with configurations`);
     
-    const fields = await FieldAvailabilityService.getAvailableFields(eventId);
+    // Get base field data
+    const baseFields = await FieldAvailabilityService.getAvailableFields(eventId);
     
-    res.json({
-      success: true,
-      fields,
-      count: fields.length
+    // Get event-specific configurations
+    const configurations = await db
+      .select()
+      .from(eventFieldConfigurations)
+      .where(eq(eventFieldConfigurations.eventId, parseInt(eventId)));
+    
+    console.log(`🏟️ API: Found ${baseFields.length} base fields and ${configurations.length} configurations`);
+    
+    // Create a map of field configurations for easy lookup
+    const configMap = new Map();
+    configurations.forEach(config => {
+      configMap.set(config.fieldId, config);
     });
+    
+    // Merge base field data with event-specific configurations
+    const enhancedFields = baseFields.map(field => {
+      const config = configMap.get(field.id);
+      return {
+        ...field,
+        fieldSize: config?.fieldSize || field.fieldSize || '11v11',
+        isActive: config?.isActive !== undefined ? config.isActive : true,
+        firstGameTime: config?.firstGameTime || null,
+        sortOrder: config?.sortOrder || 0,
+        // Complex status - fix the "Complex Closed" issue
+        isOpen: field.isOpen !== false
+      };
+    });
+    
+    // Sort by sort order if available
+    enhancedFields.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    
+    console.log(`🏟️ API: Enhanced ${enhancedFields.length} fields with configurations`);
+    
+    res.json(enhancedFields);
   } catch (error: any) {
     console.error('Error getting available fields:', error);
     res.status(500).json({
