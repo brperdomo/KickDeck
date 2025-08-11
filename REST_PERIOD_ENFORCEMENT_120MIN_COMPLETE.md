@@ -5,14 +5,45 @@ Successfully implemented comprehensive 120-minute rest period enforcement for U1
 
 ## Implementation Details
 
-### 1. Enhanced Conflict Detection Logic
+### 1. Dynamic Flight Configuration Integration
 **File**: `client/src/components/admin/scheduling/ScheduleViewerFixed.tsx`
 
-#### Added Helper Function
+#### Flight Configuration Query
 ```typescript
-const getRequiredRestPeriod = (ageGroup: string): number => {
-  // U13-U19 age groups require 120-minute rest periods
-  const ageGroupUpper = ageGroup.toUpperCase();
+const { data: flightConfigData } = useQuery({
+  queryKey: ['/api/admin/events', eventId, 'flight-configurations'],
+  queryFn: async () => {
+    const response = await fetch(`/api/admin/events/${eventId}/flight-configurations`, {
+      credentials: 'include'
+    });
+    if (!response.ok) throw new Error('Failed to fetch flight configurations');
+    return response.json();
+  },
+  enabled: !!eventId
+});
+```
+
+#### Dynamic Rest Period Detection
+```typescript
+const getRequiredRestPeriod = (game: any): number => {
+  // Primary: Flight configuration from database
+  if (flightConfigData?.flights && game.bracketId) {
+    const flightConfig = flightConfigData.flights.find((flight: any) => flight.flightId === game.bracketId);
+    if (flightConfig?.restPeriod) {
+      return flightConfig.restPeriod;
+    }
+  }
+  
+  // Secondary: Flight name mapping
+  if (flightConfigData?.flights && game.flightName) {
+    const flightConfig = flightConfigData.flights.find((flight: any) => flight.flightName === game.flightName);
+    if (flightConfig?.restPeriod) {
+      return flightConfig.restPeriod;
+    }
+  }
+  
+  // Fallback: Age group-based logic for backward compatibility
+  const ageGroupUpper = (game.ageGroup || '').toUpperCase();
   if (ageGroupUpper.includes('U13') || ageGroupUpper.includes('U14') || 
       ageGroupUpper.includes('U15') || ageGroupUpper.includes('U16') || 
       ageGroupUpper.includes('U17') || ageGroupUpper.includes('U18') || 
@@ -125,6 +156,38 @@ const getRequiredRestPeriod = (ageGroup: string): number => {
 - System allows override with confirmation
 - No impact on existing scheduled games
 
+## Integration with Flight Configuration Overview
+
+### Dynamic Database Integration
+✅ **YES** - The calendar interface now dynamically reads rest periods from the Flight Configuration Overview's REST PERIOD column
+
+#### How It Works:
+1. **Real-Time Fetching**: Calendar interface queries `/api/admin/events/{eventId}/flight-configurations` to get current flight settings
+2. **Database-Driven**: Rest periods come directly from the `game_formats.restPeriod` field in the database
+3. **Flight-Specific**: Each flight (Elite, Premier, Classic) can have different rest period requirements
+4. **Schedule All Integration**: When using "Schedule All" option, the system uses the flight-specific rest periods automatically
+
+#### Priority Order:
+1. **Primary**: Flight configuration `restPeriod` from database (matches Flight Configuration Overview)
+2. **Secondary**: Flight name matching for legacy compatibility
+3. **Fallback**: Age group-based logic (U13-U19 = 120min, others = 60min)
+
+#### User Experience:
+- Tournament directors set rest periods in Flight Configuration Overview
+- Calendar interface automatically enforces those exact rest periods
+- Visual warnings appear immediately when conflicts are detected
+- "Schedule All" respects the configured rest periods per flight
+
+### Answer to User Question:
+**"Will the calendar interface pick this up dynamically based on the REST PERIOD column in the Flight Configuration Overview?"**
+
+**YES** - The implementation now:
+- ✅ Dynamically reads from Flight Configuration Overview REST PERIOD column
+- ✅ Updates in real-time when flight configurations change
+- ✅ Works with flight-by-flight scheduling 
+- ✅ Integrates with "Schedule All" option
+- ✅ Respects different rest periods for different flights (Elite vs Premier vs Classic)
+
 ## Status: ✅ COMPLETE
 
-The 120-minute rest period enforcement for U13-U19 age groups has been fully implemented and integrated into the calendar interface conflict detection system. The feature provides comprehensive validation while maintaining the existing scheduling workflow and user experience.
+The 120-minute rest period enforcement has been fully implemented with dynamic Flight Configuration Overview integration. The calendar interface now reads rest periods directly from the database and enforces flight-specific requirements in real-time during scheduling operations.
