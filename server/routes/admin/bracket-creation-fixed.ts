@@ -19,6 +19,7 @@ interface Flight {
   name: string;
   ageGroup: string;
   gender: string;
+  birthYear?: number;
   level: string;
   teamCount: number;
   assignedTeams: number;
@@ -28,6 +29,16 @@ interface Flight {
   isConfigured: boolean;
   registeredTeams: Team[];
   ageGroupId?: number;
+  brackets?: TournamentBracket[];
+}
+
+interface TournamentBracket {
+  id: number;
+  name: string;
+  type: string;
+  stage: string;
+  teamCount: number;
+  teams: any[];
 }
 
 interface BracketStats {
@@ -167,11 +178,25 @@ router.get('/:eventId/bracket-creation', isAdmin, async (req, res) => {
         placeholderLabel: team.status === 'placeholder' ? team.name : undefined
       }));
 
+      // Get existing brackets for this flight
+      const brackets = await db.query.tournamentGroups.findMany({
+        where: and(
+          eq(tournamentGroups.eventId, eventId),
+          eq(tournamentGroups.ageGroupId, flight.ageGroupId)
+        ),
+        with: {
+          teams: {
+            orderBy: (teams, { asc }) => [asc(teams.name)]
+          }
+        }
+      });
+
       flightData.push({
         flightId: flight.id,
         name: flight.name,
         ageGroup: flight.ageGroup?.ageGroup || 'Unknown Age Group',
         gender: flight.ageGroup?.gender || 'Mixed',
+        birthYear: flight.ageGroup?.birthYear, // Add birth year
         level: flight.level,
         teamCount: totalForAgeGroup,
         assignedTeams: assignedCount,
@@ -180,7 +205,15 @@ router.get('/:eventId/bracket-creation', isAdmin, async (req, res) => {
         estimatedGames,
         isConfigured,
         registeredTeams: teamsInFlight,
-        ageGroupId: flight.ageGroupId
+        ageGroupId: flight.ageGroupId,
+        brackets: brackets.map(bracket => ({
+          id: bracket.id,
+          name: bracket.name,
+          type: bracket.type,
+          stage: bracket.stage,
+          teamCount: bracket.teams?.length || 0,
+          teams: bracket.teams || []
+        }))
       });
 
     }

@@ -35,6 +35,7 @@ interface Flight {
   level: string;
   ageGroup: string;
   gender: string;
+  birthYear?: number;
   teamCount: number;
   assignedTeams: number;
   unassignedTeams: number;
@@ -74,6 +75,7 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
   const [selectedBracketConfig, setSelectedBracketConfig] = useState<BracketConfiguration | null>(null);
   const [teamAssignments, setTeamAssignments] = useState<{ [teamId: number]: number }>({});
   const [activeTab, setActiveTab] = useState('flight-selection');
+  const [flightFilter, setFlightFilter] = useState('all');
 
   // Fetch flight data with bracket information
   const { data: bracketData, isLoading } = useQuery({
@@ -90,6 +92,26 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
 
   const flightData = bracketData?.flights || [];
   const stats = bracketData?.stats;
+
+  // Filter flights based on selection
+  const filteredFlights = useMemo(() => {
+    if (!flightData) return [];
+    
+    switch (flightFilter) {
+      case 'with-brackets':
+        return flightData.filter((f: Flight) => f.brackets && f.brackets.length > 0);
+      case 'without-brackets':
+        return flightData.filter((f: Flight) => !f.brackets || f.brackets.length === 0);
+      case 'nike-elite':
+        return flightData.filter((f: Flight) => f.name === 'Nike Elite');
+      case 'nike-premier': 
+        return flightData.filter((f: Flight) => f.name === 'Nike Premier');
+      case 'nike-classic':
+        return flightData.filter((f: Flight) => f.name === 'Nike Classic');
+      default:
+        return flightData;
+    }
+  }, [flightData, flightFilter]);
 
   // Get bracket configurations based on team count
   const getBracketConfigurations = (teamCount: number): BracketConfiguration[] => {
@@ -188,7 +210,7 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
     }
   });
 
-  const selectedFlightData = flightData?.find(f => f.flightId === selectedFlight);
+  const selectedFlightData = flightData?.find((f: Flight) => f.flightId === selectedFlight);
   const bracketConfigs = selectedFlightData ? getBracketConfigurations(selectedFlightData.teamCount) : [];
 
   const handleCreateBrackets = () => {
@@ -286,9 +308,26 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {flightData && flightData.length > 0 ? (
+              <div className="flex items-center gap-4 mb-4">
+                <Label htmlFor="flight-filter" className="text-slate-300">Filter Flights:</Label>
+                <Select value={flightFilter} onValueChange={setFlightFilter}>
+                  <SelectTrigger className="w-48 bg-slate-700 border-slate-600">
+                    <SelectValue placeholder="Filter flights" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-700 border-slate-600">
+                    <SelectItem value="all">All Flights</SelectItem>
+                    <SelectItem value="with-brackets">With Brackets</SelectItem>
+                    <SelectItem value="without-brackets">Without Brackets</SelectItem>
+                    <SelectItem value="nike-elite">Nike Elite</SelectItem>
+                    <SelectItem value="nike-premier">Nike Premier</SelectItem>
+                    <SelectItem value="nike-classic">Nike Classic</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {filteredFlights && filteredFlights.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {flightData.map((flight) => (
+                  {filteredFlights.map((flight: Flight) => (
                     <Card 
                       key={flight.flightId}
                       className={`border transition-colors cursor-pointer ${
@@ -310,7 +349,7 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <h3 className="font-medium text-white text-sm">
-                                {flight.ageGroup} {flight.gender}
+                                {flight.ageGroup} {flight.gender} {flight.birthYear ? `(${flight.birthYear})` : ''}
                               </h3>
                               <p className="text-xs text-slate-300">{flight.name}</p>
                             </div>
@@ -334,7 +373,7 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
                           {flight.brackets && flight.brackets.length > 0 && (
                             <div className="pt-2 border-t border-slate-600">
                               <div className="text-xs text-slate-300 space-y-1">
-                                {flight.brackets.map((bracket, idx) => (
+                                {flight.brackets.map((bracket: TournamentBracket, idx: number) => (
                                   <div key={bracket.id} className="flex justify-between">
                                     <span>{bracket.name}</span>
                                     <span>{bracket.teamCount} teams</span>
@@ -466,7 +505,7 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {selectedFlightData.brackets.map((bracket, idx) => (
+                  {selectedFlightData.brackets.map((bracket: TournamentBracket, idx: number) => (
                     <Card key={bracket.id} className="border-slate-600 bg-slate-700">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-sm text-white flex items-center justify-between">
@@ -479,7 +518,7 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
                       <CardContent>
                         <div className="space-y-2">
                           {bracket.teams.length > 0 ? (
-                            bracket.teams.map((team) => (
+                            bracket.teams.map((team: Team) => (
                               <div key={team.id} className="flex items-center justify-between p-2 bg-slate-600 rounded">
                                 <div>
                                   <div className="text-sm font-medium text-white">{team.name}</div>
@@ -507,7 +546,7 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
                 </div>
 
                 {/* Unassigned Teams */}
-                {selectedFlightData.registeredTeams.filter(t => !t.groupId).length > 0 && (
+                {selectedFlightData.registeredTeams.filter((t: Team) => !t.groupId).length > 0 && (
                   <Card className="border-slate-600 bg-slate-700">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-sm text-white flex items-center gap-2">
@@ -518,15 +557,15 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {selectedFlightData.registeredTeams
-                          .filter(team => !team.groupId)
-                          .map((team) => (
+                          .filter((team: Team) => !team.groupId)
+                          .map((team: Team) => (
                           <div key={team.id} className="flex items-center justify-between p-3 bg-slate-600 rounded">
                             <div className="flex-1">
                               <div className="text-sm font-medium text-white">{team.name}</div>
                               <div className="text-xs text-slate-300">{team.clubName}</div>
                             </div>
                             <div className="flex gap-2">
-                              {selectedFlightData.brackets?.map((bracket) => (
+                              {selectedFlightData.brackets?.map((bracket: TournamentBracket) => (
                                 <Button
                                   key={bracket.id}
                                   size="sm"
