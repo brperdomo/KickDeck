@@ -304,32 +304,41 @@ router.put('/:gameId/reschedule', isAdmin, async (req, res) => {
 // Create TBD Game endpoint
 router.post('/:eventId/games/create-tbd', isAdmin, async (req, res) => {
   try {
-    const eventId = req.params.eventId;
+    const eventId = parseInt(req.params.eventId);
     const { ageGroupId, flightId, date, time, fieldId, duration } = req.body;
 
     console.log('Creating TBD game:', { eventId, ageGroupId, flightId, date, time, fieldId, duration });
 
-    // Find the bracket for this flight
-    const bracket = await db.query.eventBrackets.findFirst({
-      where: and(
-        eq(eventBrackets.eventId, eventId),
-        eq(eventBrackets.id, flightId)
-      )
-    });
+    // Validate required fields
+    if (!ageGroupId) {
+      return res.status(400).json({ error: 'Age group is required' });
+    }
 
-    if (!bracket) {
-      return res.status(400).json({ error: 'Flight/bracket not found' });
+    // Find the bracket for this flight if flightId provided
+    let bracketId = null;
+    if (flightId) {
+      const bracket = await db.query.eventBrackets.findFirst({
+        where: and(
+          eq(eventBrackets.eventId, eventId),
+          eq(eventBrackets.id, parseInt(flightId))
+        )
+      });
+
+      if (!bracket) {
+        return res.status(400).json({ error: 'Flight/bracket not found' });
+      }
+      bracketId = bracket.id;
     }
 
     // Create time slot if date and time provided
     let timeSlotId = null;
     if (date && time && fieldId) {
       const startTime = new Date(`${date}T${time}:00`).toISOString();
-      const endTime = new Date(new Date(startTime).getTime() + duration * 60 * 1000).toISOString();
+      const endTime = new Date(new Date(startTime).getTime() + (duration || 90) * 60 * 1000).toISOString();
       
       const [timeSlot] = await db.insert(gameTimeSlots).values({
         eventId: eventId.toString(),
-        fieldId: fieldId,
+        fieldId: parseInt(fieldId),
         startTime: startTime,
         endTime: endTime,
         isAvailable: true,
@@ -343,17 +352,17 @@ router.post('/:eventId/games/create-tbd', isAdmin, async (req, res) => {
 
     // Create the TBD game
     const [newGame] = await db.insert(games).values({
-      eventId: eventId,
-      ageGroupId: ageGroupId,
-      groupId: flightId, // This references tournament groups/brackets
+      eventId: eventId.toString(),
+      ageGroupId: parseInt(ageGroupId),
+      bracketId: bracketId ? bracketId.toString() : null,
       homeTeamId: null, // TBD
       awayTeamId: null, // TBD
-      matchNumber: 999, // Placeholder number
+      gameNumber: 999, // Placeholder number
       round: 1, // Default round
       status: 'scheduled',
-      fieldId: fieldId || null,
+      fieldId: fieldId ? parseInt(fieldId) : null,
       timeSlotId: timeSlotId,
-      duration: duration,
+      duration: duration || 90,
       scheduledDate: date || null,
       scheduledTime: time || null,
       createdAt: new Date().toISOString(),
