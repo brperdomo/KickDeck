@@ -724,10 +724,47 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
     }
   });
 
-  // Helper function to determine required rest period based on age group
-  const getRequiredRestPeriod = (ageGroup: string): number => {
-    // U13-U19 age groups require 120-minute rest periods
-    const ageGroupUpper = ageGroup.toUpperCase();
+  // Fetch flight configurations to get rest periods dynamically
+  const { data: flightConfigData } = useQuery({
+    queryKey: ['/api/admin/events', eventId, 'flight-configurations'],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/events/${eventId}/flight-configurations`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch flight configurations');
+      return response.json();
+    },
+    enabled: !!eventId
+  });
+
+  // Helper function to determine required rest period based on flight configuration
+  const getRequiredRestPeriod = (game: any): number => {
+    // Try to get rest period from flight configuration first
+    if (flightConfigData?.flights && game.bracketId) {
+      const flightConfig = flightConfigData.flights.find((flight: any) => flight.flightId === game.bracketId);
+      if (flightConfig?.restPeriod) {
+        return flightConfig.restPeriod;
+      }
+    }
+    
+    // Try to get rest period from flight name mapping
+    if (flightConfigData?.flights && game.flightName) {
+      const flightConfig = flightConfigData.flights.find((flight: any) => flight.flightName === game.flightName);
+      if (flightConfig?.restPeriod) {
+        return flightConfig.restPeriod;
+      }
+    }
+    
+    // Try bracket-level tournament settings as fallback
+    if (flightConfigData?.flights && game.bracketId) {
+      const flightConfig = flightConfigData.flights.find((flight: any) => flight.flightId === game.bracketId);
+      if (flightConfig?.tournamentSettings?.restPeriodMinutes) {
+        return flightConfig.tournamentSettings.restPeriodMinutes;
+      }
+    }
+    
+    // Fallback to age group-based logic for backward compatibility
+    const ageGroupUpper = (game.ageGroup || '').toUpperCase();
     if (ageGroupUpper.includes('U13') || ageGroupUpper.includes('U14') || 
         ageGroupUpper.includes('U15') || ageGroupUpper.includes('U16') || 
         ageGroupUpper.includes('U17') || ageGroupUpper.includes('U18') || 
@@ -748,10 +785,9 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
     const gameStartTime = startHour * 60 + startMinute; // minutes since midnight
     const gameEndTime = gameStartTime + (gameDuration || 90); // default 90 min duration
 
-    // Find the current game details to get teams and age group
+    // Find the current game details to get teams and flight configuration
     const currentGame = scheduleData.games.find(g => g.id === gameId);
-    const currentAgeGroup = currentGame?.ageGroup || '';
-    const requiredRestPeriod = getRequiredRestPeriod(currentAgeGroup);
+    const requiredRestPeriod = currentGame ? getRequiredRestPeriod(currentGame) : 60;
 
     // Check field conflicts
     const fieldConflicts = scheduleData.games.filter(existingGame => {
