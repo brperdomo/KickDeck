@@ -134,24 +134,10 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
       
       // Transform the API response to match the expected format
       const transformedGames = data.games?.map((game: any, index: number) => {
-        console.log(`Game ${index + 1} transformation debug:`, {
-          raw: game,
-          homeTeamStructure: game.homeTeam,
-          awayTeamStructure: game.awayTeam,
-          fieldStructure: game.fieldName || game.field,
-          rawFieldName: game.fieldName,
-          rawField: game.field
-        });
-        
-        console.log(`Game ${index + 1} API data:`, JSON.stringify(game, null, 2));
-        console.log(`Game ${index + 1} Team IDs Debug:`, {
-          homeTeamId: game.homeTeamId,
-          awayTeamId: game.awayTeamId,
-          homeTeamIdType: typeof game.homeTeamId,
-          awayTeamIdType: typeof game.awayTeamId,
-          hasHomeTeamId: game.homeTeamId !== null && game.homeTeamId !== undefined,
-          hasAwayTeamId: game.awayTeamId !== null && game.awayTeamId !== undefined
-        });
+        // Simplified logging - removed excessive debug output to prevent console spam
+        if (index === 0) {
+          console.log(`[ScheduleViewer] Processing ${data.games.length} games for event ${eventId}`);
+        }
         
         // Handle team names - the API is returning them directly as strings in homeTeam/awayTeam
         const homeTeamName = game.homeTeam || game.homeTeamName || `Team ${game.homeTeamId || 'Unknown'}`;
@@ -209,7 +195,6 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
           flightName: game.flightName
         };
         
-        console.log(`Game ${index + 1} transformed:`, transformed);
         return transformed;
       }) || [];
 
