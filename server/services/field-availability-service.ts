@@ -75,8 +75,8 @@ export class FieldAvailabilityService {
   static async getAvailableFields(eventId: string): Promise<FieldInfo[]> {
     console.log(`🏟️ Getting available fields for event ${eventId}`);
     
-    // Get complexes assigned to this event
-    const eventComplexesData = await db
+    // First try to get complexes assigned to this event
+    let eventComplexesData = await db
       .select({
         complexId: eventComplexes.complexId,
         complexName: complexes.name,
@@ -100,6 +100,33 @@ export class FieldAvailabilityService {
           eq(fields.isOpen, true)
         )
       );
+
+    // If no event-complex associations exist, fallback to all available fields
+    if (eventComplexesData.length === 0) {
+      console.log(`⚠️ No event-complex associations found for event ${eventId}, using all available fields`);
+      eventComplexesData = await db
+        .select({
+          complexId: complexes.id,
+          complexName: complexes.name,
+          complexOpenTime: complexes.openTime,
+          complexCloseTime: complexes.closeTime,
+          fieldId: fields.id,
+          fieldName: fields.name,
+          fieldSize: fields.fieldSize,
+          fieldOpenTime: fields.openTime,
+          fieldCloseTime: fields.closeTime,
+          hasLights: fields.hasLights,
+          isOpen: fields.isOpen
+        })
+        .from(complexes)
+        .innerJoin(fields, eq(fields.complexId, complexes.id))
+        .where(
+          and(
+            eq(complexes.isOpen, true),
+            eq(fields.isOpen, true)
+          )
+        );
+    }
 
     const fieldsInfo: FieldInfo[] = eventComplexesData.map((row: any) => ({
       id: row.fieldId,
