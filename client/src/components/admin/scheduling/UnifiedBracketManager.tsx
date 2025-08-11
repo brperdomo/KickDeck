@@ -218,12 +218,12 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
       if (!response.ok) throw new Error('Failed to assign teams to brackets');
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Teams Assigned",
-        description: "Teams have been successfully assigned to brackets"
+        description: `Teams successfully assigned! Pool A (ID: ${data.createdGroups?.poolA}), Pool B (ID: ${data.createdGroups?.poolB})`
       });
-      queryClient.invalidateQueries({ queryKey: ['unified-bracket-manager', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/events', eventId, 'bracket-creation'] });
       setTeamAssignments({});
     },
     onError: (error) => {

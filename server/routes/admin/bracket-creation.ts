@@ -53,13 +53,17 @@ router.get('/:eventId/bracket-creation', async (req, res) => {
             id: teams.id,
             name: teams.name,
             clubName: teams.clubName,
-            status: teams.status
+            status: teams.status,
+            groupId: teams.groupId,
+            bracketId: teams.bracketId
           })
           .from(teams)
           .where(and(
             eq(teams.bracketId, flight.flightId),
             eq(teams.status, 'approved')
           ));
+
+        console.log(`[FLIGHT ${flight.flightId} DEBUG] Found ${assignedTeams.length} assigned teams:`, assignedTeams.map(t => `${t.name} (groupId: ${t.groupId})`));
 
         // Check if this flight has a game format configured using Drizzle ORM
         let hasFormat = false;
@@ -163,6 +167,8 @@ router.get('/:eventId/bracket-creation', async (req, res) => {
           const teamsWithGroups = assignedTeams.filter(t => t.groupId);
           const teamsWithoutGroups = assignedTeams.filter(t => !t.groupId);
           
+          console.log(`[BRACKET DISPLAY DEBUG] Flight ${flight.flightId} - Teams with groups:`, teamsWithGroups.map(t => `${t.name} (groupId: ${t.groupId})`));
+          
           // Group teams by their groupId (which represents bracket assignments)
           const teamsByBracket = teamsWithGroups.reduce((acc, team) => {
             const bracketKey = team.groupId || 'unassigned';
@@ -173,30 +179,38 @@ router.get('/:eventId/bracket-creation', async (req, res) => {
             return acc;
           }, {} as Record<string, any[]>);
           
+          console.log(`[BRACKET DISPLAY DEBUG] Flight ${flight.flightId} - Teams by bracket:`, teamsByBracket);
+          
+          // For display purposes, we need to map actual tournament group IDs to UI bracket IDs
+          // Get the tournament groups for this flight to map them correctly
+          const groupIds = Object.keys(teamsByBracket).filter(key => key !== 'unassigned').sort();
+          
           // Create bracket objects for assigned teams
-          Object.keys(teamsByBracket).forEach((bracketId, index) => {
-            if (bracketId !== 'unassigned') {
-              brackets.push({
-                id: parseInt(bracketId),
-                name: templateName === 'group_of_6' ? 
-                      (index === 0 ? 'Pool A' : 'Pool B') :
-                      (index === 0 ? 'Bracket A' : 'Bracket B'),
-                teamCount: teamsByBracket[bracketId].length,
-                teams: teamsByBracket[bracketId].map(t => ({
-                  id: t.id,
-                  name: t.name,
-                  clubName: t.clubName || '',
-                  status: t.status,
-                  groupId: t.groupId,
-                  bracketId: t.bracketId
-                }))
-              });
-            }
+          groupIds.forEach((groupId, index) => {
+            const bracketName = templateName === 'group_of_6' ? 
+                    (index === 0 ? 'Pool A' : 'Pool B') :
+                    (index === 0 ? 'Bracket A' : 'Bracket B');
+            
+            console.log(`[BRACKET DISPLAY DEBUG] Creating bracket ${index + 1} (${bracketName}) with ${teamsByBracket[groupId].length} teams`);
+            
+            brackets.push({
+              id: index + 1, // UI bracket ID (1 = Pool A, 2 = Pool B) 
+              name: bracketName,
+              teamCount: teamsByBracket[groupId].length,
+              teams: teamsByBracket[groupId].map(t => ({
+                id: t.id,
+                name: t.name,
+                clubName: t.clubName || '',
+                status: t.status,
+                groupId: t.groupId,
+                bracketId: t.bracketId
+              }))
+            });
           });
           
-          // If no brackets exist yet, create default structure for unassigned teams
-          if (brackets.length === 0 && teamsWithoutGroups.length > 0) {
-            // Create empty brackets that teams can be assigned to
+          // Always create default brackets if none exist (for initial display)
+          if (brackets.length === 0) {
+            console.log(`[BRACKET DISPLAY DEBUG] Flight ${flight.flightId} - Creating empty default brackets`);
             brackets.push({
               id: 1,
               name: templateName === 'group_of_6' ? 'Pool A' : 'Bracket A',
@@ -225,6 +239,7 @@ router.get('/:eventId/bracket-creation', async (req, res) => {
           estimatedGames,
           isConfigured,
           brackets: brackets, // Add brackets information
+          debugInfo: `${brackets.length} brackets created`,
           registeredTeams: assignedTeams.map(t => ({
             ...t,
             seed: 0,
