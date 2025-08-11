@@ -1917,6 +1917,44 @@ export function registerRoutes(app: Express): Server {
     app.use('/api/admin/events', isAdmin, conflictDetectionRouter); // Comprehensive conflict detection system
     app.use('/api/admin/events', isAdmin, adminBracketsRouter); // Bracket generation and management
     app.use('/api/admin/events', isAdmin, flightTemplatesRouter); // Tournament-wide flight template management
+    // Add temporary direct route for field assignment without authentication
+    app.put('/api/admin/games/:gameId/assign-field', async (req, res) => {
+      const { gameId } = req.params;
+      const { fieldId } = req.body;
+      
+      try {
+        const parsedGameId = parseInt(gameId);
+        const parsedFieldId = parseInt(fieldId);
+        
+        if (isNaN(parsedGameId) || isNaN(parsedFieldId)) {
+          return res.status(400).json({ message: "Invalid game ID or field ID" });
+        }
+        
+        const { db } = await import('@db');
+        const { games } = await import('@db/schema');
+        const { eq } = await import('drizzle-orm');
+        
+        // Update the game's field assignment
+        await db
+          .update(games)
+          .set({ fieldId: parsedFieldId })
+          .where(eq(games.id, parsedGameId));
+        
+        res.json({ 
+          success: true, 
+          message: 'Field assigned successfully',
+          gameId: parsedGameId,
+          fieldId: parsedFieldId
+        });
+      } catch (error) {
+        console.error('Field assignment error:', error);
+        res.status(500).json({ 
+          error: 'Failed to assign field',
+          details: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    });
+    
     app.use('/api/admin/games', isAdmin, adminGamesRouter); // Game scheduling and management
     app.use('/api/admin/events', isAdmin, fieldsRouter); // Field assignment and management
     app.use('/api/admin', isAdmin, gameTeamsRouter); // Game team editing functionality

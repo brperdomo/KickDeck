@@ -332,4 +332,67 @@ router.put('/:gameId/reschedule', hasEventAccess, async (req, res) => {
   }
 });
 
+/**
+ * Assign field to a game (field assignment only)
+ * 
+ * PUT /api/admin/games/:gameId/assign-field
+ */
+router.put('/:gameId/assign-field', async (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const { fieldId } = req.body;
+    
+    if (!gameId) {
+      return res.status(400).json({ message: "Game ID is required" });
+    }
+    
+    if (!fieldId) {
+      return res.status(400).json({ message: "Field ID is required" });
+    }
+    
+    // Parse IDs to numbers
+    const parsedGameId = parseInt(gameId);
+    const parsedFieldId = parseInt(fieldId);
+    
+    if (isNaN(parsedGameId) || isNaN(parsedFieldId)) {
+      return res.status(400).json({ message: "Invalid ID format" });
+    }
+    
+    // Get the game to make sure it exists
+    const [gameToUpdate] = await db
+      .select()
+      .from(games)
+      .where(eq(games.id, parsedGameId))
+      .limit(1);
+    
+    if (!gameToUpdate) {
+      return res.status(404).json({ message: "Game not found" });
+    }
+    
+    // Update the game with new field assignment
+    await db
+      .update(games)
+      .set({
+        fieldId: parsedFieldId,
+        updatedAt: new Date().toISOString()
+      })
+      .where(eq(games.id, parsedGameId));
+    
+    console.log(`✅ FIELD ASSIGNMENT: Game ${parsedGameId} assigned to field ${parsedFieldId}`);
+    
+    return res.json({ 
+      success: true,
+      message: "Field assigned successfully",
+      gameId: parsedGameId,
+      fieldId: parsedFieldId
+    });
+  } catch (error) {
+    console.error("Error assigning field to game:", error);
+    return res.status(500).json({ 
+      error: "Failed to assign field",
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
 export default router;
