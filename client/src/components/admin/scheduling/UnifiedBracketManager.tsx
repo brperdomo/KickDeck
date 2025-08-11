@@ -225,7 +225,12 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
         title: "Teams Assigned",
         description: `Teams successfully assigned! Pool A (ID: ${data.createdGroups?.poolA}), Pool B (ID: ${data.createdGroups?.poolB})`
       });
+      // Invalidate multiple query keys to ensure UI updates
       queryClient.invalidateQueries({ queryKey: ['/api/admin/events', eventId, 'bracket-creation'] });
+      queryClient.invalidateQueries({ queryKey: ['unified-bracket-manager', eventId] });
+      // Force immediate refetch for real-time updates
+      queryClient.refetchQueries({ queryKey: ['/api/admin/events', eventId, 'bracket-creation'] });
+      queryClient.refetchQueries({ queryKey: ['unified-bracket-manager', eventId] });
       setTeamAssignments({});
     },
     onError: (error) => {
@@ -324,7 +329,7 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
       return updated;
     });
 
-    // Auto-save after drag and drop
+    // Auto-save after drag and drop with immediate UI feedback
     setTimeout(() => {
       const assignments = { ...teamAssignments };
       if (targetBracketId === 0) {
@@ -333,8 +338,12 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
         assignments[teamId] = targetBracketId;
       }
       
-      if (Object.keys(assignments).length > 0) {
-        assignTeamsMutation.mutate({ assignments, flightId: selectedFlight! });
+      if (Object.keys(assignments).length > 0 || targetBracketId === 0) {
+        // Always save, even for unassignments
+        assignTeamsMutation.mutate({ 
+          assignments: Object.keys(assignments).length > 0 ? assignments : { [teamId]: 0 }, 
+          flightId: selectedFlight! 
+        });
       }
     }, 100);
   };
