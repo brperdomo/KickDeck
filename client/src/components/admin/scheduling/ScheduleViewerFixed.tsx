@@ -1769,7 +1769,7 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
                   <SelectContent>
                     {ageGroupsData?.map((ageGroup: any) => (
                       <SelectItem key={ageGroup.id} value={ageGroup.id.toString()}>
-                        {ageGroup.name}
+                        {ageGroup.name} ({ageGroup.gender} - {ageGroup.divisionCode || ageGroup.division || 'No Division'})
                       </SelectItem>
                     ))}
                   </SelectContent>
