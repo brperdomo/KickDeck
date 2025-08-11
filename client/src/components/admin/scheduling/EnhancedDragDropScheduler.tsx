@@ -72,11 +72,13 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
     { value: '2025-08-18', label: 'Monday, Aug 18' }
   ];
 
-  // Fetch games and fields data
+  // Fetch games and fields data - share cache with ScheduleViewer to prevent duplicate requests
   const { data: scheduleData, isLoading, error } = useQuery({
-    queryKey: ['enhanced-schedule', eventId, selectedDate],
+    queryKey: ['schedule-data', eventId], // Use same key as ScheduleViewer to share cache
     queryFn: async () => {
-      const response = await fetch(`/api/admin/events/${eventId}/schedule-calendar`);
+      const response = await fetch(`/api/admin/events/${eventId}/schedule-calendar`, {
+        credentials: 'include'
+      });
       if (!response.ok) throw new Error('Failed to fetch schedule data');
       const data = await response.json();
       
@@ -97,21 +99,18 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
         bracketName: game.bracketName || ''
       })) || [];
       
-      console.log('🎯 [ENHANCED DRAG DROP] Transformed games for calendar:', transformedGames);
-      console.log('🎯 [ENHANCED DRAG DROP] Fields data:', data.fields);
-      
-      // Debug game-field mapping
-      transformedGames.forEach((game: any) => {
-        console.log(`🎯 [GAME-FIELD DEBUG] Game ${game.id}: fieldId=${game.fieldId}, fieldName="${game.fieldName}", startTime="${game.startTime}"`);
-      });
+      // Simplified logging - only log summary to prevent console spam
+      if (transformedGames.length > 0) {
+        console.log(`[EnhancedDragDropScheduler] Loaded ${transformedGames.length} games for event ${eventId}`);
+      }
       
       return {
         ...data,
         games: transformedGames
       };
     },
-    staleTime: 0,
-    refetchOnWindowFocus: true
+    staleTime: 30000, // Cache for 30 seconds to prevent excessive requests
+    refetchOnWindowFocus: false // Prevent refetch when switching tabs
   });
 
   // Calculate total game duration to match Flight Configuration Overview

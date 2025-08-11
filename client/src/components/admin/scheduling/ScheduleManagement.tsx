@@ -249,12 +249,10 @@ export default function ScheduleManagement({ eventId }: ScheduleManagementProps)
   const games = gamesData?.games || [];
   const complexes = complexesData?.complexes || [];
 
-  // SCHEDULE DEBUG: Log the raw data structure
-  console.log("SCHEDULE DEBUG - Raw games data:", gamesData);
-  console.log("SCHEDULE DEBUG - Games array:", games);
-  console.log("SCHEDULE DEBUG - Games count:", games.length);
-  console.log("SCHEDULE DEBUG - First game structure:", games[0]);
-  console.log("SCHEDULE DEBUG - Complexes data:", complexes);
+  // Debug logging - simplified to prevent console spam
+  if (games.length > 0) {
+    console.log(`[ScheduleManagement] Loaded ${games.length} games and ${complexes.length} complexes for event ${eventId}`);
+  }
 
   // Group games by date and get time slots for multi-day display
   const getGamesByDate = () => {
@@ -263,18 +261,14 @@ export default function ScheduleManagement({ eventId }: ScheduleManagementProps)
     console.log('DATE GROUPING DEBUG - Processing games:', games.length);
     
     games.forEach((game, index) => {
-      console.log(`Game ${index + 1}:`, {
-        id: game.id,
-        gameNumber: game.gameNumber,
-        startTime: game.startTime,
-        rawStartTime: game.startTime
-      });
+      // Simplified logging to prevent console spam
+      if (index === 0) {
+        console.log(`[ScheduleManagement] Processing ${games.length} games for date grouping`);
+      }
       
       if (game.startTime) {
         // Parse the UTC time and convert to Pacific Time
         const gameTime = new Date(game.startTime);
-        console.log(`Game ${index + 1} parsed date:`, gameTime);
-        
         // Get the date in Pacific Time (venue timezone)
         const pacificDate = new Intl.DateTimeFormat('en-US', {
           timeZone: 'America/Los_Angeles',
@@ -283,14 +277,10 @@ export default function ScheduleManagement({ eventId }: ScheduleManagementProps)
           day: '2-digit'
         }).format(gameTime);
         
-        console.log(`Game ${index + 1} Pacific date:`, pacificDate);
-        
         if (!gamesByDate.has(pacificDate)) {
           gamesByDate.set(pacificDate, []);
         }
         gamesByDate.get(pacificDate).push(game);
-      } else {
-        console.log(`Game ${index + 1} has no startTime`);
       }
     });
     
@@ -525,21 +515,12 @@ export default function ScheduleManagement({ eventId }: ScheduleManagementProps)
                             .sort((a, b) => a.name.localeCompare(b.name))
                             .map((field: Field) => {
                             const assignedGame = dateGames.find((game: Game) => {
-                              console.log(`GAME MATCHING DEBUG - Checking game ${game.gameNumber}:`, {
-                                gameFieldId: game.fieldId,
-                                targetFieldId: field.id,
-                                gameStartTime: game.startTime,
-                                timeSlot: timeSlot
-                              });
-                              
                               if (game.fieldId !== field.id) {
-                                console.log(`Game ${game.gameNumber} field mismatch: ${game.fieldId} !== ${field.id}`);
                                 return false;
                               }
                               
                               // Check if game has startTime data
                               if (!game.startTime) {
-                                console.log(`Game ${game.gameNumber} has no startTime data`);
                                 return false;
                               }
                               
@@ -552,14 +533,7 @@ export default function ScheduleManagement({ eventId }: ScheduleManagementProps)
                                 hour12: false
                               }).format(gameTime);
                               
-                              console.log(`Field ${field.id}: Game ${game.gameNumber} time ${gameTimeStr} (PT) vs slot time ${timeSlot}`);
-                              
-                              const match = gameTimeStr === timeSlot;
-                              if (match) {
-                                console.log(`MATCH FOUND: Game ${game.gameNumber} matches time slot ${timeSlot} on field ${field.id}`);
-                              }
-                              
-                              return match;
+                              return gameTimeStr === timeSlot;
                             });
 
                             return (
