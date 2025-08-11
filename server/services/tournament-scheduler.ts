@@ -142,13 +142,20 @@ export class TournamentScheduler {
     const fieldsData = await this.getAvailableFields(eventId);
     const timeSlots = await this.getAvailableTimeSlots(eventId);
     
-    // Assign games to fields and time slots
-    const scheduledGames = await this.assignFieldsAndTimes(
-      allGames,
-      fieldsData,
-      timeSlots,
-      options
-    );
+    // DIRECT FIELD ASSIGNMENT FALLBACK: If no time slots exist, assign fields directly
+    let scheduledGames: Game[];
+    if (timeSlots.length === 0) {
+      console.log('⚠️ No time slots configured - using direct field assignment fallback');
+      scheduledGames = await this.assignFieldsDirectly(allGames, fieldsData, options);
+    } else {
+      // Assign games to fields and time slots
+      scheduledGames = await this.assignFieldsAndTimes(
+        allGames,
+        fieldsData,
+        timeSlots,
+        options
+      );
+    }
     
     // Generate schedule summary
     const summary = this.generateSummary(scheduledGames);
@@ -1118,6 +1125,89 @@ export class TournamentScheduler {
     const date = new Date();
     date.setDate(date.getDate() + dayOffset);
     return date.toISOString().split('T')[0];
+  }
+
+  /**
+   * Direct field assignment fallback when no time slots are configured
+   */
+  private static async assignFieldsDirectly(
+    games: Game[],
+    fields: Field[],
+    options: any = {}
+  ): Promise<Game[]> {
+    console.log(`🎯 Direct field assignment: ${games.length} games to ${fields.length} fields`);
+    
+    if (fields.length === 0) {
+      console.log('⚠️ No fields available, returning games without field assignments');
+      return games;
+    }
+    
+    const scheduledGames: Game[] = [];
+    let currentDay = 0;
+    let currentTime = '08:00';
+    let fieldIndex = 0;
+    
+    // Simple round-robin field assignment with basic time scheduling
+    for (const game of games) {
+      const fieldSize = this.determineFieldSize(game);
+      
+      // Find fields that match the required size
+      const matchingFields = fields.filter(f => 
+        f.name.includes('11v11') || f.name.includes('Galway Downs')
+      );
+      
+      if (matchingFields.length === 0) {
+        console.log(`⚠️ No matching fields for size ${fieldSize}, using first available field`);
+        // Use first available field as fallback
+        const field = fields[0];
+        scheduledGames.push({
+          ...game,
+          fieldId: field.id,
+          fieldName: field.name,
+          startTime: currentTime,
+          endTime: this.addMinutesToTime(currentTime, game.duration),
+          date: this.formatDate(currentDay)
+        });
+      } else {
+        // Assign to next field in rotation
+        const field = matchingFields[fieldIndex % matchingFields.length];
+        
+        scheduledGames.push({
+          ...game,
+          fieldId: field.id,
+          fieldName: field.name,
+          startTime: currentTime,
+          endTime: this.addMinutesToTime(currentTime, game.duration),
+          date: this.formatDate(currentDay)
+        });
+        
+        // Advance to next time slot (90 minutes + 15 min buffer = 105 minutes)
+        currentTime = this.addMinutesToTime(currentTime, game.duration + 15);
+        
+        // If we've reached end of day, move to next day and reset time
+        if (this.timeToMinutes(currentTime) > 17 * 60) { // After 5 PM
+          currentDay++;
+          currentTime = '08:00';
+          fieldIndex = 0;
+        } else {
+          fieldIndex++;
+        }
+      }
+    }
+    
+    console.log(`✅ Direct assignment: ${scheduledGames.filter(g => g.fieldId).length}/${games.length} games assigned to fields`);
+    
+    return scheduledGames;
+  }
+  
+  /**
+   * Add minutes to a time string (HH:MM format)
+   */
+  private static addMinutesToTime(timeString: string, minutes: number): string {
+    const totalMinutes = this.timeToMinutes(timeString) + minutes;
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   }
 
   /**
