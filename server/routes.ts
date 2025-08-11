@@ -1996,6 +1996,7 @@ export function registerRoutes(app: Express): Server {
     });
     
     app.use('/api/admin/games', isAdmin, adminGamesRouter); // Game scheduling and management
+    app.use('/api/admin/events', isAdmin, gamesRouter); // Game creation and event-specific game management (includes create-tbd)
     app.use('/api/admin/events', isAdmin, fillEmptySlotsRouter); // Fill empty slots functionality
     app.use('/api/admin/events', isAdmin, fieldsRouter); // Field assignment and management
     app.use('/api/admin', isAdmin, gameTeamsRouter); // Game team editing functionality
