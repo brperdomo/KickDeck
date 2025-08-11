@@ -1164,7 +1164,9 @@ router.post('/:eventId/flights/:flightId/create-brackets', isAdmin, async (req, 
     const { eventId, flightId } = req.params;
     const { bracketType, bracketCount, teamsPerBracket } = req.body;
     
-    console.log(`[Bracket Assignment] POST /${eventId}/flights/${flightId}/create-brackets with type: ${bracketType}`);
+    console.log(`[Bracket Creation] POST /${eventId}/flights/${flightId}/create-brackets`);
+    console.log(`[Bracket Creation] Request body:`, { bracketType, bracketCount, teamsPerBracket });
+    console.log(`[Bracket Creation] Session user:`, req.session?.user?.id, req.session?.user?.isAdmin);
 
     // Get teams assigned to this flight
     const assignedTeams = await db.query.teams.findMany({
@@ -1175,10 +1177,11 @@ router.post('/:eventId/flights/:flightId/create-brackets', isAdmin, async (req, 
       )
     });
 
-    console.log(`[Bracket Assignment] Found ${assignedTeams.length} teams assigned to flight ${flightId}`);
-    console.log(`[Bracket Assignment] Request body:`, req.body);
+    console.log(`[Bracket Creation] Found ${assignedTeams.length} teams for flight ${flightId}:`);
+    assignedTeams.forEach(team => console.log(`  - ${team.name} (ID: ${team.id})`));
 
     if (assignedTeams.length === 0) {
+      console.log(`[Bracket Creation] ERROR: No teams found for flight ${flightId}`);
       return res.status(400).json({ 
         error: 'No teams assigned to this flight',
         details: `Flight ${flightId} has no approved teams assigned to it`,
