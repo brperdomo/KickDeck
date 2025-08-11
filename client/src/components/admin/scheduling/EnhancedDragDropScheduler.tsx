@@ -1259,46 +1259,59 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                                 }
                               }}
                             >
-                              <div className="flex flex-col justify-between h-full">
-                                <div className="flex-1 overflow-hidden px-1 py-2">
-                                  <div className="text-sm leading-tight space-y-2">
-                                    {/* Flight information at top - larger and more readable */}
-                                    <div className="text-xs text-blue-100 font-semibold text-center bg-blue-800/40 rounded px-2 py-1">
-                                      {(game as any).flightName || game.ageGroup || 'Flight TBD'}
+                              <div className="flex flex-col justify-center h-full overflow-hidden">
+                                <div className="space-y-1 text-center px-1">
+                                    {/* Flight and birth year info - always visible at top */}
+                                    <div className="text-xs font-bold text-yellow-200 bg-blue-800/60 rounded px-1 py-0.5 truncate">
+                                      {(game as any).flightName || game.ageGroup || 'Flight TBD'} 
+                                      {/* Extract birth year from age group or team data */}
+                                      {(() => {
+                                        const birthYear = (game as any).homeTeamData?.birthYear || 
+                                                         (game as any).awayTeamData?.birthYear || 
+                                                         game.ageGroup?.match(/\d{4}/)?.[0] || 
+                                                         (game.ageGroup?.match(/U(\d+)/)?.[1] ? 
+                                                           (new Date().getFullYear() - parseInt(game.ageGroup.match(/U(\d+)/)?.[1] || '19')) : null);
+                                        return birthYear ? ` (${birthYear})` : '';
+                                      })()}
                                     </div>
                                     
-                                    {/* Team names display - show actual team names or birth year + gender */}
-                                    <div className="text-white leading-tight text-center">
+                                    {/* Team names - prominently displayed */}
+                                    <div className="text-white font-bold leading-tight">
                                       {game.homeTeamName && game.awayTeamName && 
                                        game.homeTeamName !== 'TBD' && game.awayTeamName !== 'TBD' && 
                                        game.homeTeamName !== game.ageGroup && game.awayTeamName !== game.ageGroup ? (
-                                        <>
-                                          <div className="text-sm font-bold truncate max-w-full">
+                                        <div className="space-y-0.5">
+                                          <div className="text-sm font-bold truncate leading-tight">
                                             {game.homeTeamName
                                               .replace(/FC |SC | Academy| Elite| Premier/g, '')
-                                              .replace(/B\d+\/?\d*/g, '')
-                                              .replace(/U\d+/g, '')
+                                              .replace(/\s+B\d+\/?.*$/g, '')
+                                              .replace(/\s+U\d+.*$/g, '')
                                               .trim()
-                                              .slice(0, 12)}
+                                              .slice(0, 15)}
                                           </div>
-                                          <div className="text-xs text-blue-200 font-medium my-1">vs</div>
-                                          <div className="text-sm font-bold truncate max-w-full">
+                                          <div className="text-xs text-blue-200 font-medium">vs</div>
+                                          <div className="text-sm font-bold truncate leading-tight">
                                             {game.awayTeamName
                                               .replace(/FC |SC | Academy| Elite| Premier/g, '')
-                                              .replace(/B\d+\/?\d*/g, '')
-                                              .replace(/U\d+/g, '')
+                                              .replace(/\s+B\d+\/?.*$/g, '')
+                                              .replace(/\s+U\d+.*$/g, '')
                                               .trim()
-                                              .slice(0, 12)}
+                                              .slice(0, 15)}
                                           </div>
-                                        </>
+                                        </div>
                                       ) : (
-                                        /* Show birth year and gender when no team names available */
-                                        <div className="text-center">
-                                          <div className="text-lg font-bold">
-                                            {((game as any).homeTeamData?.birthYear || (game as any).awayTeamData?.birthYear || 
-                                              game.ageGroup?.match(/\d{4}/)?.[0] || 
-                                              new Date().getFullYear() - parseInt(game.ageGroup?.replace(/\D/g, '') || '19'))}
+                                        /* Show placeholder with birth year when no team names available */
+                                        <div className="space-y-0.5">
+                                          <div className="text-sm font-bold">
+                                            {(() => {
+                                              const birthYear = (game as any).homeTeamData?.birthYear || 
+                                                               (game as any).awayTeamData?.birthYear || 
+                                                               game.ageGroup?.match(/\d{4}/)?.[0] || 
+                                                               (new Date().getFullYear() - parseInt(game.ageGroup?.replace(/\D/g, '') || '19'));
+                                              return birthYear;
+                                            })()}
                                           </div>
+                                          <div className="text-xs text-blue-200 font-medium">vs</div>
                                           <div className="text-sm font-semibold text-blue-200">
                                             {((game as any).homeTeamData?.division || (game as any).awayTeamData?.division || 
                                               (game.ageGroup?.includes('Girls') || game.ageGroup?.includes('G')) ? 'Girls' : 'Boys')}
@@ -1306,29 +1319,6 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                                         </div>
                                       )}
                                     </div>
-                                  </div>
-                                </div>
-                                
-                                <div className="flex justify-end items-end mt-2">
-                                  {/* Status and conflict indicators - larger */}
-                                  <div className="flex flex-col items-center gap-1">
-                                    {gameConflicts.length > 0 && (
-                                      <div className="flex items-center gap-1">
-                                        <AlertTriangle className="h-4 w-4 text-red-300" />
-                                        <span className="text-xs font-bold text-red-200">{gameConflicts.length}</span>
-                                      </div>
-                                    )}
-                                    <div className="text-sm">
-                                      {hasWinnerPlaceholder(game) ? '🏆' : '⚽'}
-                                    </div>
-                                    
-                                    {/* Coach conflict indicator - larger */}
-                                    {gameConflicts.some(c => c.type === 'coach') && (
-                                      <div className="text-sm text-red-200" title="Coach Conflict">
-                                        👨‍🏫
-                                      </div>
-                                    )}
-                                  </div>
                                 </div>
                               </div>
                             </div>
