@@ -42,7 +42,7 @@ interface TimeSlot {
 }
 
 interface ConflictInfo {
-  type: 'coach' | 'team_rest' | 'field_size' | 'capacity' | 'games_per_day' | 'team_conflict' | 'rest_period';
+  type: 'coach' | 'team_rest' | 'field_size' | 'capacity' | 'games_per_day' | 'team_conflict' | 'rest_period' | 'field_conflict';
   severity: 'warning' | 'error';
   message: string;
   gameIds: number[];
@@ -518,6 +518,35 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
             type: 'coach',
             severity: 'error',
             message: `Coach ${coachName} (${coachEmail}) has ${games.length} overlapping games at ${slot.displayTime} with teams: ${uniqueTeams.join(', ')}`,
+            gameIds: games.map(g => g.id)
+          });
+        }
+      });
+
+      // Field conflict detection - check for overlapping games on the same field
+      const fieldGames = new Map<number, Game[]>();
+      slotGames.forEach(game => {
+        const position = gamePositions.get(game.id);
+        const fieldId = position?.fieldId ?? game.fieldId;
+        
+        if (fieldId) {
+          if (!fieldGames.has(fieldId)) fieldGames.set(fieldId, []);
+          fieldGames.get(fieldId)!.push(game);
+        }
+      });
+
+      fieldGames.forEach((games, fieldId) => {
+        if (games.length > 1) {
+          // Check if games actually overlap in time for this field
+          const fieldName = fields.find((f: Field) => f.id === fieldId)?.name || `Field ${fieldId}`;
+          const gameDetails = games.map(g => `${g.homeTeamName} vs ${g.awayTeamName} (${g.ageGroup})`);
+          
+          console.log(`🏟️ [FIELD CONFLICT] ${games.length} games scheduled on ${fieldName} at ${slot.displayTime}:`, gameDetails);
+          
+          conflicts.push({
+            type: 'field_conflict',
+            severity: 'error',
+            message: `${games.length} games are scheduled on ${fieldName} at ${slot.displayTime}. Games: ${gameDetails.join(', ')}`,
             gameIds: games.map(g => g.id)
           });
         }
@@ -1147,7 +1176,9 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                                 ${isBeingDragged ? 'opacity-50 scale-95' : 'opacity-100'}
                                 ${gameConflicts.length > 0 
                                   ? gameConflicts.some(c => c.severity === 'error') 
-                                    ? 'bg-red-600 text-white' 
+                                    ? gameConflicts.some(c => c.type === 'field_conflict')
+                                      ? 'bg-red-600 text-white border-2 border-orange-400 shadow-lg shadow-orange-400/50' 
+                                      : 'bg-red-600 text-white' 
                                     : 'bg-yellow-600 text-white'
                                   : 'bg-blue-600 text-white'
                                 }
@@ -1199,8 +1230,9 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                                   // Silent fail for coach data parsing
                                 }
                                 
-                                // Check for coach conflicts
+                                // Check for different conflict types
                                 const coachConflicts = gameConflicts.filter(c => c.type === 'coach');
+                                const fieldConflicts = gameConflicts.filter(c => c.type === 'field_conflict');
                                 
                                 tooltip.innerHTML = `
                                   <div class="font-bold text-blue-300 mb-3">${game.homeTeamName || 'TBD'} vs ${game.awayTeamName || 'TBD'}</div>
@@ -1228,6 +1260,12 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                                       <div class="mt-3 pt-2 border-t border-red-600/30">
                                         <div class="text-red-300 font-medium mb-1">⚠️ Coach Conflicts</div>
                                         ${coachConflicts.map(c => `<div class="text-red-200 text-xs">${c.message}</div>`).join('')}
+                                      </div>
+                                    ` : ''}
+                                    ${fieldConflicts.length > 0 ? `
+                                      <div class="mt-3 pt-2 border-t border-orange-600/30">
+                                        <div class="text-orange-300 font-medium mb-1">🏟️ Field Conflicts</div>
+                                        ${fieldConflicts.map(c => `<div class="text-orange-200 text-xs">${c.message}</div>`).join('')}
                                       </div>
                                     ` : ''}
                                   </div>
@@ -1333,6 +1371,9 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
                                       {gameConflicts.some(c => c.type === 'coach') && (
                                         <span className="text-xs text-red-200" title="Coach Conflict">👨‍🏫</span>
                                       )}
+                                      {gameConflicts.some(c => c.type === 'field_conflict') && (
+                                        <span className="text-xs text-orange-200" title="Field Conflict">🏟️</span>
+                                      )}
                                     </div>
                                   </div>
                                 )}
@@ -1376,9 +1417,11 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
               <h4 className="font-medium text-white mb-2">Conflict Types & Features</h4>
               <ul className="space-y-1 text-slate-300">
                 <li>• <span className="text-red-300">Red:</span> Coach conflicts (same coach, overlapping games)</li>
+                <li>• <span className="text-orange-300">Red + Orange Border:</span> Field conflicts (multiple games on same field)</li>
                 <li>• <span className="text-yellow-300">Yellow:</span> Team rest period violations</li>
                 <li>• <span className="text-blue-300">Blue:</span> Normal scheduled games</li>
-                <li>• <span className="text-slate-400">👨‍🏫:</span> Coach conflict indicator in game cards</li>
+                <li>• <span className="text-slate-400">👨‍🏫:</span> Coach conflict indicator</li>
+                <li>• <span className="text-orange-400">🏟️:</span> Field conflict indicator</li>
                 <li>• Game cards show team names, birth year, and division</li>
               </ul>
             </div>
