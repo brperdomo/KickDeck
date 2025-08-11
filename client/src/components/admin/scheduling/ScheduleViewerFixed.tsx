@@ -33,6 +33,7 @@ interface Game {
   awayTeam: string;
   ageGroup: string;
   field: string;
+  fieldId?: number;
   date: string;
   time: string;
   duration: number;
@@ -118,6 +119,10 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
   
   // Date/Time editing state
   const [editingDateTime, setEditingDateTime] = useState<{ gameId: number; currentDate: string; currentTime: string } | null>(null);
+  
+  // Field editing state
+  const [editingField, setEditingField] = useState<{ gameId: number; currentFieldId?: number; currentFieldName?: string } | null>(null);
+  const [availableFields, setAvailableFieldsState] = useState<Array<{id: number, name: string, fieldSize: string}>>([]);
   
   // TBD Game Creation state
   const [showTBDCreator, setShowTBDCreator] = useState(false);
@@ -223,6 +228,7 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
           awayTeamId: game.awayTeamId,
           ageGroup: game.ageGroup || 'Unknown',
           field: fieldName,
+          fieldId: game.fieldId,
           date: dateDisplay,
           time: timeDisplay,
           duration: game.duration || 90,
@@ -335,8 +341,19 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
       if (!response.ok) throw new Error('Failed to fetch fields');
       return response.json();
     },
-    enabled: showTBDCreator
+    enabled: showTBDCreator || !!editingField
   });
+
+  // Update available fields when fieldsData changes
+  useEffect(() => {
+    if (fieldsData?.fields) {
+      setAvailableFieldsState(fieldsData.fields.map((field: any) => ({
+        id: field.id,
+        name: field.name,
+        fieldSize: field.field_size || field.fieldSize || 'Unknown'
+      })));
+    }
+  }, [fieldsData]);
 
   // Memoize filtered games to prevent unnecessary recalculations
   const filteredGames = useMemo(() => {
@@ -528,6 +545,28 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
     },
     onError: (error) => {
       toast({ title: 'Failed to update date/time', description: error.message, variant: 'destructive' });
+    }
+  });
+
+  // Field assignment mutation
+  const updateGameFieldMutation = useMutation({
+    mutationFn: async ({ gameId, fieldId }: { gameId: number; fieldId: number }) => {
+      const response = await fetch(`/api/admin/games/${gameId}/assign-field`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ fieldId })
+      });
+      if (!response.ok) throw new Error('Failed to assign field');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-data', eventId] });
+      setEditingField(null);
+      toast({ title: 'Field assigned successfully', variant: 'default' });
+    },
+    onError: (error) => {
+      toast({ title: 'Failed to assign field', description: error.message, variant: 'destructive' });
     }
   });
 
@@ -1203,10 +1242,57 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
                                   <Clock className="h-3 w-3 mr-1" />
                                   {game.time}
                                 </span>
-                                <span className={`flex items-center ${(game.field === 'Unassigned' || game.field === 'TBD') ? 'text-yellow-600 font-medium' : ''}`}>
-                                  <MapPin className="h-3 w-3 mr-1" />
-                                  {game.field}
-                                </span>
+                                {editingField?.gameId === game.id ? (
+                                  // Field Editing Interface
+                                  <div className="flex items-center gap-2">
+                                    <MapPin className="h-3 w-3 text-gray-400" />
+                                    <Select 
+                                      defaultValue={editingField.currentFieldId?.toString() || ''}
+                                      onValueChange={(value) => {
+                                        if (value && editingField) {
+                                          updateGameFieldMutation.mutate({
+                                            gameId: editingField.gameId,
+                                            fieldId: parseInt(value)
+                                          });
+                                        }
+                                      }}
+                                    >
+                                      <SelectTrigger className="h-6 text-xs w-32">
+                                        <SelectValue placeholder="Select field" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {availableFields?.map((field) => (
+                                          <SelectItem key={field.id} value={field.id.toString()}>
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-xs text-gray-500">({field.fieldSize})</span>
+                                              <span>{field.name}</span>
+                                            </div>
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => setEditingField(null)}
+                                      className="h-6 w-6 p-0"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <span 
+                                    className={`flex items-center cursor-pointer hover:bg-blue-100 px-1 rounded ${(game.field === 'Unassigned' || game.field === 'TBD') ? 'text-yellow-600 font-medium' : ''}`}
+                                    onClick={() => setEditingField({
+                                      gameId: game.id,
+                                      currentFieldId: game.fieldId,
+                                      currentFieldName: game.field
+                                    })}
+                                  >
+                                    <MapPin className="h-3 w-3 mr-1" />
+                                    {game.field}
+                                  </span>
+                                )}
                               </div>
                             )}
                             <div className="flex items-center space-x-2">
