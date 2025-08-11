@@ -1,0 +1,805 @@
+Flight configs loaded: 76 flights
+ Configured flights: 50 of 76
+ TypeError: g.find is not a function
+    at O1 (MasterSchedulePage-O_zfrXqE.js:247:31372)
+    at uO (index-BNfjckxs.js:39:17031)
+    at rP (index-BNfjckxs.js:41:3143)
+    at VW (index-BNfjckxs.js:41:44880)
+    at zW (index-BNfjckxs.js:41:39822)
+    at the (index-BNfjckxs.js:41:39748)
+    at nw (index-BNfjckxs.js:41:39598)
+    at fP (index-BNfjckxs.js:41:35960)
+    at BM (index-BNfjckxs.js:41:36765)
+    at iu (index-BNfjckxs.js:39:3288)
+nP @ index-BNfjckxs.js:41Understand this error
+index-BNfjckxs.js:39 Uncaught TypeError: g.find is not a function
+    at O1 (MasterSchedulePage-O_zfrXqE.js:247:31372)
+    at uO (index-BNfjckxs.js:39:17031)
+    at rP (index-BNfjckxs.js:41:3143)
+    at VW (index-BNfjckxs.js:41:44880)
+    at zW (index-BNfjckxs.js:41:39822)
+    at the (index-BNfjckxs.js:41:39748)
+    at nw (index-BNfjckxs.js:41:39598)
+    at fP (index-BNfjckxs.js:41:35960)
+    at BM (index-BNfjckxs.js:41:36765)
+    at iu (index-BNfjckxs.js:39:3288)Understand this error
+ Google Maps JavaScript API warning: NoApiKeys https://developers.google.com/maps/documentation/javascript/error-messages#no-api-keys
+$Aa @ maps.googleapis.com/…/14-beta/util.js:33Understand this warning
+master-schedule:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swapUnderstand this warning
+master-schedule:1 OTS parsing error: invalid sfntVersion: 791289955Understand this warning
+Navigated to https://app.matchpro.ai/admin/events/1844329078/master-schedule
+js?libraries=places&v=beta&callback=Function.prototype:1382 Google Maps JavaScript API has been loaded directly without loading=async. This can result in suboptimal performance. For best-practice loading patterns please see https://goo.gle/js-api-loading
+Tda @ js?libraries=places&v=beta&callback=Function.prototype:1382
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641Understand this warning
+js?libraries=places&v=beta&callback=Function.prototype:1414 XHR finished loading: GET "https://maps.googleapis.com/maps/api/mapsjs/gen_204?csp_test=true".
+_.B.send @ js?libraries=places&v=beta&callback=Function.prototype:1414
+Qda @ js?libraries=places&v=beta&callback=Function.prototype:1391
+Tda @ js?libraries=places&v=beta&callback=Function.prototype:1383
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641
+index-BNfjckxs.js:880 Google Maps API key length: 0 characters
+index-BNfjckxs.js:880 Mapbox API key length: 93 characters
+index-BNfjckxs.js:880 Google Maps API already loaded
+index-BNfjckxs.js:657 Current route location (Wouter): /admin/events/1844329078/master-schedule
+index-BNfjckxs.js:657 Current URL: https://app.matchpro.ai/admin/events/1844329078/master-schedule
+index-BNfjckxs.js:657 Current pathname: /admin/events/1844329078/master-schedule
+index-BNfjckxs.js:657 Current search: 
+index-BNfjckxs.js:657 Fetching user with emulation token: not present
+6Fetch finished loading: GET "<URL>".
+index-BNfjckxs.js:657 User data fetched: {id: 24, email: 'bperdomo@zoho.com', username: 'bperdomo@zoho.com', password: '$2b$12$d6n1CBWgsWFm0fh77F1OX.YxDZy7/O3aLSuJOuq4QkvOtFmSit7BC', firstName: 'Bryan', …}
+8Fetch finished loading: GET "<URL>".
+index-BNfjckxs.js:649 Fetch failed loading: GET "https://app.matchpro.ai/api/user".
+queryFn @ index-BNfjckxs.js:649
+i @ index-BNfjckxs.js:41
+f @ index-BNfjckxs.js:41
+start @ index-BNfjckxs.js:41
+fetch @ index-BNfjckxs.js:41
+rg @ index-BNfjckxs.js:41
+onSubscribe @ index-BNfjckxs.js:41
+subscribe @ index-BNfjckxs.js:41
+(anonymous) @ index-BNfjckxs.js:41
+iW @ index-BNfjckxs.js:39
+SS @ index-BNfjckxs.js:41
+Jh @ index-BNfjckxs.js:41
+BM @ index-BNfjckxs.js:41
+iu @ index-BNfjckxs.js:39
+rhe @ index-BNfjckxs.js:41
+ku @ index-BNfjckxs.js:41
+$W @ index-BNfjckxs.js:41
+w @ index-BNfjckxs.js:26
+A @ index-BNfjckxs.js:26
+master-schedule:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swapUnderstand this warning
+master-schedule:1 OTS parsing error: invalid sfntVersion: 791289955Understand this warning
+UnifiedTournamentControlCenter-S4KeUzGw.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-S4KeUzGw.js:1 Configured flights: 50 of 76
+9Fetch finished loading: POST "<URL>".
+util.js:33 Google Maps JavaScript API warning: NoApiKeys https://developers.google.com/maps/documentation/javascript/error-messages#no-api-keys
+$Aa @ util.js:33
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1384
+Promise.then
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1384
+setTimeout
+Tda @ js?libraries=places&v=beta&callback=Function.prototype:1384
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641Understand this warning
+index-BNfjckxs.js:41 TypeError: g.find is not a function
+    at O1 (MasterSchedulePage-O_zfrXqE.js:247:31372)
+    at uO (index-BNfjckxs.js:39:17031)
+    at rP (index-BNfjckxs.js:41:3143)
+    at VW (index-BNfjckxs.js:41:44880)
+    at zW (index-BNfjckxs.js:41:39822)
+    at the (index-BNfjckxs.js:41:39748)
+    at nw (index-BNfjckxs.js:41:39598)
+    at fP (index-BNfjckxs.js:41:35960)
+    at BM (index-BNfjckxs.js:41:36765)
+    at iu (index-BNfjckxs.js:39:3288)
+nP @ index-BNfjckxs.js:41
+r.callback @ index-BNfjckxs.js:41
+bM @ index-BNfjckxs.js:39
+MM @ index-BNfjckxs.js:41
+MW @ index-BNfjckxs.js:41
+Jme @ index-BNfjckxs.js:41
+rhe @ index-BNfjckxs.js:41
+ku @ index-BNfjckxs.js:41
+BM @ index-BNfjckxs.js:41
+iu @ index-BNfjckxs.js:39
+(anonymous) @ index-BNfjckxs.js:41
+setTimeout
+whe @ index-BNfjckxs.js:41
+o @ index-BNfjckxs.js:41
+batch @ index-BNfjckxs.js:41
+ac @ index-BNfjckxs.js:41
+setData @ index-BNfjckxs.js:41
+onSuccess @ index-BNfjckxs.js:41
+m @ index-BNfjckxs.js:41
+Promise.then
+f @ index-BNfjckxs.js:41
+start @ index-BNfjckxs.js:41
+fetch @ index-BNfjckxs.js:41
+rg @ index-BNfjckxs.js:41
+onSubscribe @ index-BNfjckxs.js:41
+subscribe @ index-BNfjckxs.js:41
+(anonymous) @ index-BNfjckxs.js:41
+iW @ index-BNfjckxs.js:39
+SS @ index-BNfjckxs.js:41
+Jh @ index-BNfjckxs.js:41
+rhe @ index-BNfjckxs.js:41
+ku @ index-BNfjckxs.js:41
+BM @ index-BNfjckxs.js:41
+iu @ index-BNfjckxs.js:39
+(anonymous) @ index-BNfjckxs.js:41Understand this error
+index-BNfjckxs.js:39 Uncaught TypeError: g.find is not a function
+    at O1 (MasterSchedulePage-O_zfrXqE.js:247:31372)
+    at uO (index-BNfjckxs.js:39:17031)
+    at rP (index-BNfjckxs.js:41:3143)
+    at VW (index-BNfjckxs.js:41:44880)
+    at zW (index-BNfjckxs.js:41:39822)
+    at the (index-BNfjckxs.js:41:39748)
+    at nw (index-BNfjckxs.js:41:39598)
+    at fP (index-BNfjckxs.js:41:35960)
+    at BM (index-BNfjckxs.js:41:36765)
+    at iu (index-BNfjckxs.js:39:3288)
+O1 @ MasterSchedulePage-O_zfrXqE.js:247
+uO @ index-BNfjckxs.js:39
+rP @ index-BNfjckxs.js:41
+VW @ index-BNfjckxs.js:41
+zW @ index-BNfjckxs.js:41
+the @ index-BNfjckxs.js:41
+nw @ index-BNfjckxs.js:41
+fP @ index-BNfjckxs.js:41
+BM @ index-BNfjckxs.js:41
+iu @ index-BNfjckxs.js:39
+(anonymous) @ index-BNfjckxs.js:41
+setTimeout
+whe @ index-BNfjckxs.js:41
+o @ index-BNfjckxs.js:41
+batch @ index-BNfjckxs.js:41
+ac @ index-BNfjckxs.js:41
+setData @ index-BNfjckxs.js:41
+onSuccess @ index-BNfjckxs.js:41
+m @ index-BNfjckxs.js:41
+Promise.then
+f @ index-BNfjckxs.js:41
+start @ index-BNfjckxs.js:41
+fetch @ index-BNfjckxs.js:41
+rg @ index-BNfjckxs.js:41
+onSubscribe @ index-BNfjckxs.js:41
+subscribe @ index-BNfjckxs.js:41
+(anonymous) @ index-BNfjckxs.js:41
+iW @ index-BNfjckxs.js:39
+SS @ index-BNfjckxs.js:41
+Jh @ index-BNfjckxs.js:41
+rhe @ index-BNfjckxs.js:41
+ku @ index-BNfjckxs.js:41
+BM @ index-BNfjckxs.js:41
+iu @ index-BNfjckxs.js:39
+(anonymous) @ index-BNfjckxs.js:41Understand this error
+6XHR finished loading: POST "<URL>".
+master-schedule:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
+Navigated to https://app.matchpro.ai/admin/events/1844329078/master-schedule
+js?libraries=places&v=beta&callback=Function.prototype:1382 Google Maps JavaScript API has been loaded directly without loading=async. This can result in suboptimal performance. For best-practice loading patterns please see https://goo.gle/js-api-loading
+Tda @ js?libraries=places&v=beta&callback=Function.prototype:1382
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641Understand this warning
+js?libraries=places&v=beta&callback=Function.prototype:1414 XHR finished loading: GET "https://maps.googleapis.com/maps/api/mapsjs/gen_204?csp_test=true".
+_.B.send @ js?libraries=places&v=beta&callback=Function.prototype:1414
+Qda @ js?libraries=places&v=beta&callback=Function.prototype:1391
+Tda @ js?libraries=places&v=beta&callback=Function.prototype:1383
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641
+index-CRJLGR4q.js:880 Google Maps API key length: 0 characters
+index-CRJLGR4q.js:880 Mapbox API key length: 93 characters
+index-CRJLGR4q.js:880 Google Maps API already loaded
+index-CRJLGR4q.js:657 Current route location (Wouter): /admin/events/1844329078/master-schedule
+index-CRJLGR4q.js:657 Current URL: https://app.matchpro.ai/admin/events/1844329078/master-schedule
+index-CRJLGR4q.js:657 Current pathname: /admin/events/1844329078/master-schedule
+index-CRJLGR4q.js:657 Current search: 
+index-CRJLGR4q.js:657 Fetching user with emulation token: not present
+index-CRJLGR4q.js:657  GET https://app.matchpro.ai/api/user 401 (Unauthorized)
+GSe @ index-CRJLGR4q.js:657
+i @ index-CRJLGR4q.js:41
+f @ index-CRJLGR4q.js:41
+start @ index-CRJLGR4q.js:41
+fetch @ index-CRJLGR4q.js:41
+rg @ index-CRJLGR4q.js:41
+onSubscribe @ index-CRJLGR4q.js:41
+subscribe @ index-CRJLGR4q.js:41
+(anonymous) @ index-CRJLGR4q.js:41
+iW @ index-CRJLGR4q.js:39
+SS @ index-CRJLGR4q.js:41
+Jh @ index-CRJLGR4q.js:41
+BM @ index-CRJLGR4q.js:41
+iu @ index-CRJLGR4q.js:39
+rhe @ index-CRJLGR4q.js:41
+ku @ index-CRJLGR4q.js:41
+$W @ index-CRJLGR4q.js:41
+w @ index-CRJLGR4q.js:26
+A @ index-CRJLGR4q.js:26Understand this error
+index-CRJLGR4q.js:649 AnimatedBackground initialized with type: particles
+index-CRJLGR4q.js:657 Setting redirect based on current protected URL: /admin/events/1844329078/master-schedule
+index-CRJLGR4q.js:649  GET https://app.matchpro.ai/api/user 401 (Unauthorized)
+queryFn @ index-CRJLGR4q.js:649
+i @ index-CRJLGR4q.js:41
+f @ index-CRJLGR4q.js:41
+start @ index-CRJLGR4q.js:41
+fetch @ index-CRJLGR4q.js:41
+rg @ index-CRJLGR4q.js:41
+onSubscribe @ index-CRJLGR4q.js:41
+subscribe @ index-CRJLGR4q.js:41
+(anonymous) @ index-CRJLGR4q.js:41
+iW @ index-CRJLGR4q.js:39
+SS @ index-CRJLGR4q.js:41
+Jh @ index-CRJLGR4q.js:41
+BM @ index-CRJLGR4q.js:41
+iu @ index-CRJLGR4q.js:39
+rhe @ index-CRJLGR4q.js:41
+ku @ index-CRJLGR4q.js:41
+$W @ index-CRJLGR4q.js:41
+w @ index-CRJLGR4q.js:26
+A @ index-CRJLGR4q.js:26Understand this error
+index-CRJLGR4q.js:657 Fetch failed loading: GET "https://app.matchpro.ai/api/user".
+GSe @ index-CRJLGR4q.js:657
+i @ index-CRJLGR4q.js:41
+f @ index-CRJLGR4q.js:41
+start @ index-CRJLGR4q.js:41
+fetch @ index-CRJLGR4q.js:41
+rg @ index-CRJLGR4q.js:41
+onSubscribe @ index-CRJLGR4q.js:41
+subscribe @ index-CRJLGR4q.js:41
+(anonymous) @ index-CRJLGR4q.js:41
+iW @ index-CRJLGR4q.js:39
+SS @ index-CRJLGR4q.js:41
+Jh @ index-CRJLGR4q.js:41
+BM @ index-CRJLGR4q.js:41
+iu @ index-CRJLGR4q.js:39
+rhe @ index-CRJLGR4q.js:41
+ku @ index-CRJLGR4q.js:41
+$W @ index-CRJLGR4q.js:41
+w @ index-CRJLGR4q.js:26
+A @ index-CRJLGR4q.js:26
+master-schedule:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swapUnderstand this warning
+master-schedule:1 OTS parsing error: invalid sfntVersion: 791289955Understand this warning
+index-CRJLGR4q.js:649 Fetch failed loading: GET "https://app.matchpro.ai/api/user".
+queryFn @ index-CRJLGR4q.js:649
+i @ index-CRJLGR4q.js:41
+f @ index-CRJLGR4q.js:41
+start @ index-CRJLGR4q.js:41
+fetch @ index-CRJLGR4q.js:41
+rg @ index-CRJLGR4q.js:41
+onSubscribe @ index-CRJLGR4q.js:41
+subscribe @ index-CRJLGR4q.js:41
+(anonymous) @ index-CRJLGR4q.js:41
+iW @ index-CRJLGR4q.js:39
+SS @ index-CRJLGR4q.js:41
+Jh @ index-CRJLGR4q.js:41
+BM @ index-CRJLGR4q.js:41
+iu @ index-CRJLGR4q.js:39
+rhe @ index-CRJLGR4q.js:41
+ku @ index-CRJLGR4q.js:41
+$W @ index-CRJLGR4q.js:41
+w @ index-CRJLGR4q.js:26
+A @ index-CRJLGR4q.js:26
+app.matchpro.ai.png:1  GET https://c.1password.com/richicons/images/login/120/app.matchpro.ai.png 404 (Not Found)
+Image
+J @ chunk-UVKO6OCU.js:6
+c @ menu.js:101
+Ln @ chunk-UVKO6OCU.js:6
+c @ menu.js:101
+c @ menu.js:101
+c @ menu.js:101
+c @ menu.js:101
+Ln @ chunk-UVKO6OCU.js:6
+c @ menu.js:101
+Ln @ chunk-UVKO6OCU.js:6
+c @ menu.js:101
+c @ menu.js:101
+Ln @ chunk-UVKO6OCU.js:6
+c @ menu.js:101
+c @ menu.js:101
+c @ menu.js:101
+c @ menu.js:101
+Ln @ chunk-UVKO6OCU.js:6
+c @ menu.js:101
+Ln @ chunk-UVKO6OCU.js:6
+c @ menu.js:101
+p @ menu.js:101
+pe @ chunk-UVKO6OCU.js:6
+Y @ chunk-UVKO6OCU.js:6
+Promise.then
+Pt @ chunk-UVKO6OCU.js:6
+$e @ chunk-UVKO6OCU.js:6
+(anonymous) @ chunk-UVKO6OCU.js:6
+(anonymous) @ menu.js:101
+o @ chunk-UVKO6OCU.js:6
+i @ chunk-UVKO6OCU.js:6
+(anonymous) @ menu.js:3
+Promise.then
+gr @ menu.js:3
+ve @ menu.js:3
+Lt @ chunk-UVKO6OCU.js:6
+Rn @ menu.js:3
+Eo @ menu.js:101
+yt @ chunk-UVKO6OCU.js:6
+we @ menu.js:3
+Lt @ chunk-UVKO6OCU.js:6
+Ln @ menu.js:3
+Ro @ menu.js:101
+yt @ chunk-UVKO6OCU.js:6
+br @ menu.js:3
+p @ menu.js:3
+pe @ chunk-UVKO6OCU.js:6
+Y @ chunk-UVKO6OCU.js:6
+Promise.then
+Pt @ chunk-UVKO6OCU.js:6
+$e @ chunk-UVKO6OCU.js:6
+(anonymous) @ chunk-UVKO6OCU.js:6
+(anonymous) @ menu.js:3
+Promise.then
+Be @ menu.js:3
+Lt @ chunk-UVKO6OCU.js:6
+jn @ menu.js:3
+Lo @ menu.js:101
+yt @ chunk-UVKO6OCU.js:6
+me @ menu.js:3
+Lt @ chunk-UVKO6OCU.js:6
+zn @ menu.js:3
+jo @ menu.js:101
+yt @ chunk-UVKO6OCU.js:6
+le @ menu.js:3
+Lt @ chunk-UVKO6OCU.js:6
+In @ menu.js:3
+qo @ menu.js:101
+Lt @ chunk-UVKO6OCU.js:6
+Un @ menu.js:101
+Xr @ menu.js:101
+(anonymous) @ menu.js:101Understand this error
+index-CRJLGR4q.js:657 Submitting login with email: bperdomo@zoho.com
+index-CRJLGR4q.js:649 Login mutation called with: bperdomo@zoho.com
+index-CRJLGR4q.js:649 Sending login request with data: {email: 'bperdomo@zoho.com', passwordLength: 8}
+index-CRJLGR4q.js:649 Login response status: 200
+index-CRJLGR4q.js:649 Fetch finished loading: POST "https://app.matchpro.ai/api/login?t=1754881051358".
+mutationFn @ index-CRJLGR4q.js:649
+fn @ index-CRJLGR4q.js:41
+f @ index-CRJLGR4q.js:41
+start @ index-CRJLGR4q.js:41
+execute @ index-CRJLGR4q.js:41
+await in execute
+mutate @ index-CRJLGR4q.js:41
+o @ index-CRJLGR4q.js:657
+(anonymous) @ index-CRJLGR4q.js:649
+await in (anonymous)
+wue @ index-CRJLGR4q.js:38
+Sue @ index-CRJLGR4q.js:38
+Cue @ index-CRJLGR4q.js:38
+dM @ index-CRJLGR4q.js:38
+V7 @ index-CRJLGR4q.js:38
+(anonymous) @ index-CRJLGR4q.js:38
+yO @ index-CRJLGR4q.js:41
+f7 @ index-CRJLGR4q.js:38
+N2 @ index-CRJLGR4q.js:38
+H4 @ index-CRJLGR4q.js:38
+zue @ index-CRJLGR4q.js:38
+submit @ injected.js:5
+is @ injected.js:5
+uD @ injected.js:5
+await in uD
+Ox @ injected.js:5
+(anonymous) @ injected.js:5
+(anonymous) @ injected.js:5
+(anonymous) @ injected.js:5
+n @ injected.js:5
+index-CRJLGR4q.js:649 Login successful, received user data: Yes
+index-CRJLGR4q.js:649 Fetching current user after login
+index-CRJLGR4q.js:649 Fetch finished loading: GET "https://app.matchpro.ai/api/user".
+mutationFn @ index-CRJLGR4q.js:649
+await in mutationFn
+fn @ index-CRJLGR4q.js:41
+f @ index-CRJLGR4q.js:41
+start @ index-CRJLGR4q.js:41
+execute @ index-CRJLGR4q.js:41
+await in execute
+mutate @ index-CRJLGR4q.js:41
+o @ index-CRJLGR4q.js:657
+(anonymous) @ index-CRJLGR4q.js:649
+await in (anonymous)
+wue @ index-CRJLGR4q.js:38
+Sue @ index-CRJLGR4q.js:38
+Cue @ index-CRJLGR4q.js:38
+dM @ index-CRJLGR4q.js:38
+V7 @ index-CRJLGR4q.js:38
+(anonymous) @ index-CRJLGR4q.js:38
+yO @ index-CRJLGR4q.js:41
+f7 @ index-CRJLGR4q.js:38
+N2 @ index-CRJLGR4q.js:38
+H4 @ index-CRJLGR4q.js:38
+zue @ index-CRJLGR4q.js:38
+submit @ injected.js:5
+is @ injected.js:5
+uD @ injected.js:5
+await in uD
+Ox @ injected.js:5
+(anonymous) @ injected.js:5
+(anonymous) @ injected.js:5
+(anonymous) @ injected.js:5
+n @ injected.js:5
+index-CRJLGR4q.js:649 User data fetched after login: success
+index-CRJLGR4q.js:657 Login mutation completed successfully
+index-CRJLGR4q.js:657 Performing explicit user data fetch after login
+index-CRJLGR4q.js:657 AUTH REDIRECT: User logged in, handling redirect
+index-CRJLGR4q.js:657 User data retrieved after login: success
+index-CRJLGR4q.js:657 Fetch finished loading: GET "https://app.matchpro.ai/api/user".
+o @ index-CRJLGR4q.js:657
+await in o
+(anonymous) @ index-CRJLGR4q.js:649
+await in (anonymous)
+wue @ index-CRJLGR4q.js:38
+Sue @ index-CRJLGR4q.js:38
+Cue @ index-CRJLGR4q.js:38
+dM @ index-CRJLGR4q.js:38
+V7 @ index-CRJLGR4q.js:38
+(anonymous) @ index-CRJLGR4q.js:38
+yO @ index-CRJLGR4q.js:41
+f7 @ index-CRJLGR4q.js:38
+N2 @ index-CRJLGR4q.js:38
+H4 @ index-CRJLGR4q.js:38
+zue @ index-CRJLGR4q.js:38
+submit @ injected.js:5
+is @ injected.js:5
+uD @ injected.js:5
+await in uD
+Ox @ injected.js:5
+(anonymous) @ injected.js:5
+(anonymous) @ injected.js:5
+(anonymous) @ injected.js:5
+n @ injected.js:5
+index-CRJLGR4q.js:649 Fetch finished loading: GET "https://app.matchpro.ai/api/user".
+queryFn @ index-CRJLGR4q.js:649
+i @ index-CRJLGR4q.js:41
+f @ index-CRJLGR4q.js:41
+start @ index-CRJLGR4q.js:41
+fetch @ index-CRJLGR4q.js:41
+(anonymous) @ index-CRJLGR4q.js:41
+(anonymous) @ index-CRJLGR4q.js:41
+batch @ index-CRJLGR4q.js:41
+refetchQueries @ index-CRJLGR4q.js:41
+(anonymous) @ index-CRJLGR4q.js:41
+batch @ index-CRJLGR4q.js:41
+invalidateQueries @ index-CRJLGR4q.js:41
+onSuccess @ index-CRJLGR4q.js:649
+execute @ index-CRJLGR4q.js:41
+await in execute
+mutate @ index-CRJLGR4q.js:41
+o @ index-CRJLGR4q.js:657
+(anonymous) @ index-CRJLGR4q.js:649
+await in (anonymous)
+wue @ index-CRJLGR4q.js:38
+Sue @ index-CRJLGR4q.js:38
+Cue @ index-CRJLGR4q.js:38
+dM @ index-CRJLGR4q.js:38
+V7 @ index-CRJLGR4q.js:38
+(anonymous) @ index-CRJLGR4q.js:38
+yO @ index-CRJLGR4q.js:41
+f7 @ index-CRJLGR4q.js:38
+N2 @ index-CRJLGR4q.js:38
+H4 @ index-CRJLGR4q.js:38
+zue @ index-CRJLGR4q.js:38
+submit @ injected.js:5
+is @ injected.js:5
+uD @ injected.js:5
+await in uD
+Ox @ injected.js:5
+(anonymous) @ injected.js:5
+(anonymous) @ injected.js:5
+(anonymous) @ injected.js:5
+n @ injected.js:5
+index-CRJLGR4q.js:657 Found redirect path: /admin/events/1844329078/master-schedule
+index-CRJLGR4q.js:657 Redirecting to: /admin/events/1844329078/master-schedule
+Navigated to https://app.matchpro.ai/admin/events/1844329078/master-schedule
+js?libraries=places&v=beta&callback=Function.prototype:1382 Google Maps JavaScript API has been loaded directly without loading=async. This can result in suboptimal performance. For best-practice loading patterns please see https://goo.gle/js-api-loading
+Tda @ js?libraries=places&v=beta&callback=Function.prototype:1382
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641Understand this warning
+js?libraries=places&v=beta&callback=Function.prototype:1414 XHR finished loading: GET "https://maps.googleapis.com/maps/api/mapsjs/gen_204?csp_test=true".
+_.B.send @ js?libraries=places&v=beta&callback=Function.prototype:1414
+Qda @ js?libraries=places&v=beta&callback=Function.prototype:1391
+Tda @ js?libraries=places&v=beta&callback=Function.prototype:1383
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641
+master-schedule:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swapUnderstand this warning
+master-schedule:1 OTS parsing error: invalid sfntVersion: 791289955Understand this warning
+index-CRJLGR4q.js:880 Google Maps API key length: 0 characters
+index-CRJLGR4q.js:880 Mapbox API key length: 93 characters
+index-CRJLGR4q.js:880 Google Maps API already loaded
+index-CRJLGR4q.js:657 Current route location (Wouter): /admin/events/1844329078/master-schedule
+index-CRJLGR4q.js:657 Current URL: https://app.matchpro.ai/admin/events/1844329078/master-schedule
+index-CRJLGR4q.js:657 Current pathname: /admin/events/1844329078/master-schedule
+index-CRJLGR4q.js:657 Current search: 
+index-CRJLGR4q.js:657 Fetching user with emulation token: not present
+7Fetch finished loading: GET "<URL>".
+index-CRJLGR4q.js:657 User data fetched: {id: 24, email: 'bperdomo@zoho.com', username: 'bperdomo@zoho.com', password: '$2b$12$d6n1CBWgsWFm0fh77F1OX.YxDZy7/O3aLSuJOuq4QkvOtFmSit7BC', firstName: 'Bryan', …}
+index-CRJLGR4q.js:649 Fetch failed loading: GET "https://app.matchpro.ai/api/user".
+queryFn @ index-CRJLGR4q.js:649
+i @ index-CRJLGR4q.js:41
+f @ index-CRJLGR4q.js:41
+start @ index-CRJLGR4q.js:41
+fetch @ index-CRJLGR4q.js:41
+rg @ index-CRJLGR4q.js:41
+onSubscribe @ index-CRJLGR4q.js:41
+subscribe @ index-CRJLGR4q.js:41
+(anonymous) @ index-CRJLGR4q.js:41
+iW @ index-CRJLGR4q.js:39
+SS @ index-CRJLGR4q.js:41
+Jh @ index-CRJLGR4q.js:41
+BM @ index-CRJLGR4q.js:41
+iu @ index-CRJLGR4q.js:39
+rhe @ index-CRJLGR4q.js:41
+ku @ index-CRJLGR4q.js:41
+$W @ index-CRJLGR4q.js:41
+w @ index-CRJLGR4q.js:26
+A @ index-CRJLGR4q.js:26
+UnifiedTournamentControlCenter-8Bbhrfht.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-8Bbhrfht.js:1 Configured flights: 50 of 76
+util.js:33 Google Maps JavaScript API warning: NoApiKeys https://developers.google.com/maps/documentation/javascript/error-messages#no-api-keys
+$Aa @ util.js:33
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1384
+Promise.then
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1384
+setTimeout
+Tda @ js?libraries=places&v=beta&callback=Function.prototype:1384
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641Understand this warning
+MasterSchedulePage-Cfm1Ns3A.js:247 Fetch finished loading: POST "https://app.matchpro.ai/api/admin/events/1844329078/flights/629/create-brackets".
+mutationFn @ MasterSchedulePage-Cfm1Ns3A.js:247
+fn @ index-CRJLGR4q.js:41
+f @ index-CRJLGR4q.js:41
+start @ index-CRJLGR4q.js:41
+execute @ index-CRJLGR4q.js:41
+await in execute
+mutate @ index-CRJLGR4q.js:41
+(anonymous) @ index-CRJLGR4q.js:41
+O @ MasterSchedulePage-Cfm1Ns3A.js:247
+wue @ index-CRJLGR4q.js:38
+Sue @ index-CRJLGR4q.js:38
+Cue @ index-CRJLGR4q.js:38
+dM @ index-CRJLGR4q.js:38
+V7 @ index-CRJLGR4q.js:38
+(anonymous) @ index-CRJLGR4q.js:38
+yO @ index-CRJLGR4q.js:41
+f7 @ index-CRJLGR4q.js:38
+N2 @ index-CRJLGR4q.js:38
+H4 @ index-CRJLGR4q.js:38
+zue @ index-CRJLGR4q.js:38
+MasterSchedulePage-Cfm1Ns3A.js:247  POST https://app.matchpro.ai/api/admin/events/1844329078/flights/629/create-brackets 400 (Bad Request)
+mutationFn @ MasterSchedulePage-Cfm1Ns3A.js:247
+fn @ index-CRJLGR4q.js:41
+f @ index-CRJLGR4q.js:41
+start @ index-CRJLGR4q.js:41
+execute @ index-CRJLGR4q.js:41
+await in execute
+mutate @ index-CRJLGR4q.js:41
+(anonymous) @ index-CRJLGR4q.js:41
+O @ MasterSchedulePage-Cfm1Ns3A.js:247
+wue @ index-CRJLGR4q.js:38
+Sue @ index-CRJLGR4q.js:38
+Cue @ index-CRJLGR4q.js:38
+dM @ index-CRJLGR4q.js:38
+V7 @ index-CRJLGR4q.js:38
+(anonymous) @ index-CRJLGR4q.js:38
+yO @ index-CRJLGR4q.js:41
+f7 @ index-CRJLGR4q.js:38
+N2 @ index-CRJLGR4q.js:38
+H4 @ index-CRJLGR4q.js:38
+zue @ index-CRJLGR4q.js:38Understand this error
+MasterSchedulePage-Cfm1Ns3A.js:247 Fetch failed loading: POST "https://app.matchpro.ai/api/admin/events/1844329078/flights/629/create-brackets".
+mutationFn @ MasterSchedulePage-Cfm1Ns3A.js:247
+fn @ index-CRJLGR4q.js:41
+f @ index-CRJLGR4q.js:41
+start @ index-CRJLGR4q.js:41
+execute @ index-CRJLGR4q.js:41
+await in execute
+mutate @ index-CRJLGR4q.js:41
+(anonymous) @ index-CRJLGR4q.js:41
+O @ MasterSchedulePage-Cfm1Ns3A.js:247
+wue @ index-CRJLGR4q.js:38
+Sue @ index-CRJLGR4q.js:38
+Cue @ index-CRJLGR4q.js:38
+dM @ index-CRJLGR4q.js:38
+V7 @ index-CRJLGR4q.js:38
+(anonymous) @ index-CRJLGR4q.js:38
+yO @ index-CRJLGR4q.js:41
+f7 @ index-CRJLGR4q.js:38
+N2 @ index-CRJLGR4q.js:38
+H4 @ index-CRJLGR4q.js:38
+zue @ index-CRJLGR4q.js:38
+MasterSchedulePage-Cfm1Ns3A.js:247  POST https://app.matchpro.ai/api/admin/events/1844329078/flights/629/create-brackets 400 (Bad Request)
+mutationFn @ MasterSchedulePage-Cfm1Ns3A.js:247
+fn @ index-CRJLGR4q.js:41
+f @ index-CRJLGR4q.js:41
+start @ index-CRJLGR4q.js:41
+execute @ index-CRJLGR4q.js:41
+await in execute
+mutate @ index-CRJLGR4q.js:41
+(anonymous) @ index-CRJLGR4q.js:41
+O @ MasterSchedulePage-Cfm1Ns3A.js:247
+wue @ index-CRJLGR4q.js:38
+Sue @ index-CRJLGR4q.js:38
+Cue @ index-CRJLGR4q.js:38
+dM @ index-CRJLGR4q.js:38
+V7 @ index-CRJLGR4q.js:38
+(anonymous) @ index-CRJLGR4q.js:38
+yO @ index-CRJLGR4q.js:41
+f7 @ index-CRJLGR4q.js:38
+N2 @ index-CRJLGR4q.js:38
+H4 @ index-CRJLGR4q.js:38
+zue @ index-CRJLGR4q.js:38Understand this error
+MasterSchedulePage-Cfm1Ns3A.js:247 Fetch failed loading: POST "https://app.matchpro.ai/api/admin/events/1844329078/flights/629/create-brackets".
+mutationFn @ MasterSchedulePage-Cfm1Ns3A.js:247
+fn @ index-CRJLGR4q.js:41
+f @ index-CRJLGR4q.js:41
+start @ index-CRJLGR4q.js:41
+execute @ index-CRJLGR4q.js:41
+await in execute
+mutate @ index-CRJLGR4q.js:41
+(anonymous) @ index-CRJLGR4q.js:41
+O @ MasterSchedulePage-Cfm1Ns3A.js:247
+wue @ index-CRJLGR4q.js:38
+Sue @ index-CRJLGR4q.js:38
+Cue @ index-CRJLGR4q.js:38
+dM @ index-CRJLGR4q.js:38
+V7 @ index-CRJLGR4q.js:38
+(anonymous) @ index-CRJLGR4q.js:38
+yO @ index-CRJLGR4q.js:41
+f7 @ index-CRJLGR4q.js:38
+N2 @ index-CRJLGR4q.js:38
+H4 @ index-CRJLGR4q.js:38
+zue @ index-CRJLGR4q.js:38
+MasterSchedulePage-Cfm1Ns3A.js:247  POST https://app.matchpro.ai/api/admin/events/1844329078/flights/629/create-brackets 400 (Bad Request)
+mutationFn @ MasterSchedulePage-Cfm1Ns3A.js:247
+fn @ index-CRJLGR4q.js:41
+f @ index-CRJLGR4q.js:41
+start @ index-CRJLGR4q.js:41
+execute @ index-CRJLGR4q.js:41
+await in execute
+mutate @ index-CRJLGR4q.js:41
+(anonymous) @ index-CRJLGR4q.js:41
+O @ MasterSchedulePage-Cfm1Ns3A.js:247
+wue @ index-CRJLGR4q.js:38
+Sue @ index-CRJLGR4q.js:38
+Cue @ index-CRJLGR4q.js:38
+dM @ index-CRJLGR4q.js:38
+V7 @ index-CRJLGR4q.js:38
+(anonymous) @ index-CRJLGR4q.js:38
+yO @ index-CRJLGR4q.js:41
+f7 @ index-CRJLGR4q.js:38
+N2 @ index-CRJLGR4q.js:38
+H4 @ index-CRJLGR4q.js:38
+zue @ index-CRJLGR4q.js:38Understand this error
+MasterSchedulePage-Cfm1Ns3A.js:247 Fetch failed loading: POST "https://app.matchpro.ai/api/admin/events/1844329078/flights/629/create-brackets".
+mutationFn @ MasterSchedulePage-Cfm1Ns3A.js:247
+fn @ index-CRJLGR4q.js:41
+f @ index-CRJLGR4q.js:41
+start @ index-CRJLGR4q.js:41
+execute @ index-CRJLGR4q.js:41
+await in execute
+mutate @ index-CRJLGR4q.js:41
+(anonymous) @ index-CRJLGR4q.js:41
+O @ MasterSchedulePage-Cfm1Ns3A.js:247
+wue @ index-CRJLGR4q.js:38
+Sue @ index-CRJLGR4q.js:38
+Cue @ index-CRJLGR4q.js:38
+dM @ index-CRJLGR4q.js:38
+V7 @ index-CRJLGR4q.js:38
+(anonymous) @ index-CRJLGR4q.js:38
+yO @ index-CRJLGR4q.js:41
+f7 @ index-CRJLGR4q.js:38
+N2 @ index-CRJLGR4q.js:38
+H4 @ index-CRJLGR4q.js:38
+zue @ index-CRJLGR4q.js:38
+Navigated to https://app.matchpro.ai/admin/events/1844329078/master-schedule
+js?libraries=places&v=beta&callback=Function.prototype:1382 Google Maps JavaScript API has been loaded directly without loading=async. This can result in suboptimal performance. For best-practice loading patterns please see https://goo.gle/js-api-loading
+Tda @ js?libraries=places&v=beta&callback=Function.prototype:1382
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641Understand this warning
+js?libraries=places&v=beta&callback=Function.prototype:1414 XHR finished loading: GET "https://maps.googleapis.com/maps/api/mapsjs/gen_204?csp_test=true".
+_.B.send @ js?libraries=places&v=beta&callback=Function.prototype:1414
+Qda @ js?libraries=places&v=beta&callback=Function.prototype:1391
+Tda @ js?libraries=places&v=beta&callback=Function.prototype:1383
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641
+index-CRJLGR4q.js:880 Google Maps API key length: 0 characters
+index-CRJLGR4q.js:880 Mapbox API key length: 93 characters
+index-CRJLGR4q.js:880 Google Maps API already loaded
+index-CRJLGR4q.js:657 Current route location (Wouter): /admin/events/1844329078/master-schedule
+index-CRJLGR4q.js:657 Current URL: https://app.matchpro.ai/admin/events/1844329078/master-schedule
+index-CRJLGR4q.js:657 Current pathname: /admin/events/1844329078/master-schedule
+index-CRJLGR4q.js:657 Current search: 
+index-CRJLGR4q.js:657 Fetching user with emulation token: not present
+7Fetch finished loading: GET "<URL>".
+index-CRJLGR4q.js:657 User data fetched: {id: 24, email: 'bperdomo@zoho.com', username: 'bperdomo@zoho.com', password: '$2b$12$d6n1CBWgsWFm0fh77F1OX.YxDZy7/O3aLSuJOuq4QkvOtFmSit7BC', firstName: 'Bryan', …}
+index-CRJLGR4q.js:649 Fetch failed loading: GET "https://app.matchpro.ai/api/user".
+queryFn @ index-CRJLGR4q.js:649
+i @ index-CRJLGR4q.js:41
+f @ index-CRJLGR4q.js:41
+start @ index-CRJLGR4q.js:41
+fetch @ index-CRJLGR4q.js:41
+rg @ index-CRJLGR4q.js:41
+onSubscribe @ index-CRJLGR4q.js:41
+subscribe @ index-CRJLGR4q.js:41
+(anonymous) @ index-CRJLGR4q.js:41
+iW @ index-CRJLGR4q.js:39
+SS @ index-CRJLGR4q.js:41
+Jh @ index-CRJLGR4q.js:41
+BM @ index-CRJLGR4q.js:41
+iu @ index-CRJLGR4q.js:39
+rhe @ index-CRJLGR4q.js:41
+ku @ index-CRJLGR4q.js:41
+$W @ index-CRJLGR4q.js:41
+w @ index-CRJLGR4q.js:26
+A @ index-CRJLGR4q.js:26
+master-schedule:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swapUnderstand this warning
+master-schedule:1 OTS parsing error: invalid sfntVersion: 791289955Understand this warning
+UnifiedTournamentControlCenter-8Bbhrfht.js:1 Flight configs loaded: 76 flights
+UnifiedTournamentControlCenter-8Bbhrfht.js:1 Configured flights: 50 of 76
+util.js:33 Google Maps JavaScript API warning: NoApiKeys https://developers.google.com/maps/documentation/javascript/error-messages#no-api-keys
+$Aa @ util.js:33
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1384
+Promise.then
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1384
+setTimeout
+Tda @ js?libraries=places&v=beta&callback=Function.prototype:1384
+google.maps.Load @ js?libraries=places&v=beta&callback=Function.prototype:14
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641
+(anonymous) @ js?libraries=places&v=beta&callback=Function.prototype:1641Understand this warning
+MasterSchedulePage-Cfm1Ns3A.js:247  POST https://app.matchpro.ai/api/admin/events/1844329078/flights/629/create-brackets 400 (Bad Request)
+mutationFn @ MasterSchedulePage-Cfm1Ns3A.js:247
+fn @ index-CRJLGR4q.js:41
+f @ index-CRJLGR4q.js:41
+start @ index-CRJLGR4q.js:41
+execute @ index-CRJLGR4q.js:41
+await in execute
+mutate @ index-CRJLGR4q.js:41
+(anonymous) @ index-CRJLGR4q.js:41
+O @ MasterSchedulePage-Cfm1Ns3A.js:247
+wue @ index-CRJLGR4q.js:38
+Sue @ index-CRJLGR4q.js:38
+Cue @ index-CRJLGR4q.js:38
+dM @ index-CRJLGR4q.js:38
+V7 @ index-CRJLGR4q.js:38
+(anonymous) @ index-CRJLGR4q.js:38
+yO @ index-CRJLGR4q.js:41
+f7 @ index-CRJLGR4q.js:38
+N2 @ index-CRJLGR4q.js:38
+H4 @ index-CRJLGR4q.js:38
+zue @ index-CRJLGR4q.js:38Understand this error
+MasterSchedulePage-Cfm1Ns3A.js:247 Fetch failed loading: POST "https://app.matchpro.ai/api/admin/events/1844329078/flights/629/create-brackets".
+mutationFn @ MasterSchedulePage-Cfm1Ns3A.js:247
+fn @ index-CRJLGR4q.js:41
+f @ index-CRJLGR4q.js:41
+start @ index-CRJLGR4q.js:41
+execute @ index-CRJLGR4q.js:41
+await in execute
+mutate @ index-CRJLGR4q.js:41
+(anonymous) @ index-CRJLGR4q.js:41
+O @ MasterSchedulePage-Cfm1Ns3A.js:247
+wue @ index-CRJLGR4q.js:38
+Sue @ index-CRJLGR4q.js:38
+Cue @ index-CRJLGR4q.js:38
+dM @ index-CRJLGR4q.js:38
+V7 @ index-CRJLGR4q.js:38
+(anonymous) @ index-CRJLGR4q.js:38
+yO @ index-CRJLGR4q.js:41
+f7 @ index-CRJLGR4q.js:38
+N2 @ index-CRJLGR4q.js:38
+H4 @ index-CRJLGR4q.js:38
+zue @ index-CRJLGR4q.js:38
