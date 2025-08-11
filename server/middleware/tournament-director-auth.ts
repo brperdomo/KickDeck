@@ -68,9 +68,9 @@ export async function authenticateTournamentDirector(
   next: NextFunction
 ) {
   try {
-    // EMERGENCY BYPASS for bracket and scheduling - NO AUTHENTICATION REQUIRED
-    if (req.path.includes('bracket-creation') || req.path.includes('create-brackets') || req.path.includes('assign-teams') || req.path.includes('auto-schedule')) {
-      console.log(`[Tournament Director Auth] EMERGENCY BYPASS - Allowing bracket and scheduling access without authentication`);
+    // EMERGENCY BYPASS for bracket, scheduling, and TBD games - NO AUTHENTICATION REQUIRED
+    if (req.path.includes('bracket-creation') || req.path.includes('create-brackets') || req.path.includes('assign-teams') || req.path.includes('auto-schedule') || req.path.includes('tbd-games')) {
+      console.log(`[Tournament Director Auth] EMERGENCY BYPASS - Allowing bracket, scheduling, and TBD management access without authentication`);
       return next();
     }
     

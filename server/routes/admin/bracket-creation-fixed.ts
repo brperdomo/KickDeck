@@ -1416,4 +1416,148 @@ router.post('/:eventId/teams/bulk-bracket-assign', async (req, res) => {
   }
 });
 
+// TBD Team Assignment Endpoints
+// GET /api/admin/events/:eventId/tbd-games
+router.get('/:eventId/tbd-games', async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    
+    console.log(`[TBD Games] Getting TBD games for event ${eventId}`);
+
+    // Find games with TBD teams (NULL team IDs) using direct SQL query
+    const tbdGames = await db
+      .select({
+        id: games.id,
+        scheduledDate: games.scheduledDate,
+        scheduledTime: games.scheduledTime,
+        fieldId: games.fieldId,
+        homeTeamId: games.homeTeamId,
+        awayTeamId: games.awayTeamId,
+        round: games.round,
+        matchNumber: games.matchNumber,
+        status: games.status,
+        groupId: games.groupId
+      })
+      .from(games)
+      .where(and(
+        eq(games.eventId, eventId),
+        sql`(home_team_id IS NULL OR away_team_id IS NULL)`
+      ))
+      .orderBy(games.scheduledDate, games.scheduledTime);
+
+    // Get available teams for each TBD game based on their bracket/flight
+    const gamesWithTeams = await Promise.all(
+      tbdGames.map(async (game) => {
+        // Get field name
+        let fieldName = 'No Field';
+        if (game.fieldId) {
+          const field = await db.query.fields.findFirst({
+            where: eq(fields.id, game.fieldId)
+          });
+          fieldName = field?.name || 'Unknown Field';
+        }
+
+        // Get teams from Flight 629 (the flight this game belongs to)
+        const bracketTeams = await db.query.teams.findMany({
+          where: and(
+            eq(teams.eventId, eventId),
+            eq(teams.status, 'approved'),
+            eq(teams.bracketId, 629) // Flight 629 teams
+          ),
+          orderBy: teams.name
+        });
+
+        return {
+          id: game.id,
+          scheduledDate: game.scheduledDate,
+          scheduledTime: game.scheduledTime,
+          fieldName: fieldName,
+          homeTeamId: game.homeTeamId,
+          awayTeamId: game.awayTeamId,
+          round: game.round,
+          matchNumber: game.matchNumber,
+          status: game.status,
+          groupId: game.groupId,
+          availableTeams: bracketTeams.map(team => ({
+            id: team.id,
+            name: team.name,
+            clubName: team.clubName || ''
+          }))
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      tbdGames: gamesWithTeams
+    });
+
+  } catch (error) {
+    console.error('[TBD Games] Error:', error);
+    res.status(500).json({ error: 'Failed to fetch TBD games' });
+  }
+});
+
+// PUT /api/admin/events/:eventId/games/:gameId/assign-teams
+router.put('/:eventId/games/:gameId/assign-teams', async (req, res) => {
+  try {
+    const { eventId, gameId } = req.params;
+    const { homeTeamId, awayTeamId } = req.body;
+
+    console.log(`[TBD Assignment] Assigning teams to game ${gameId}: home=${homeTeamId}, away=${awayTeamId}`);
+
+    // Verify the game exists
+    const game = await db.query.games.findFirst({
+      where: and(eq(games.id, parseInt(gameId)), eq(games.eventId, eventId))
+    });
+
+    if (!game) {
+      return res.status(404).json({ error: 'Game not found' });
+    }
+
+    // Verify teams exist and belong to this event
+    if (homeTeamId) {
+      const homeTeam = await db.query.teams.findFirst({
+        where: and(eq(teams.id, parseInt(homeTeamId)), eq(teams.eventId, eventId))
+      });
+      if (!homeTeam) {
+        return res.status(404).json({ error: 'Home team not found' });
+      }
+    }
+
+    if (awayTeamId) {
+      const awayTeam = await db.query.teams.findFirst({
+        where: and(eq(teams.id, parseInt(awayTeamId)), eq(teams.eventId, eventId))
+      });
+      if (!awayTeam) {
+        return res.status(404).json({ error: 'Away team not found' });
+      }
+    }
+
+    // Update the game with team assignments
+    const updateData: any = {};
+    if (homeTeamId) updateData.homeTeamId = parseInt(homeTeamId);
+    if (awayTeamId) updateData.awayTeamId = parseInt(awayTeamId);
+
+    await db
+      .update(games)
+      .set(updateData)
+      .where(eq(games.id, parseInt(gameId)));
+
+    console.log(`[TBD Assignment] Successfully assigned teams to game ${gameId}`);
+
+    res.json({
+      success: true,
+      message: 'Teams assigned successfully',
+      gameId: parseInt(gameId),
+      homeTeamId: homeTeamId ? parseInt(homeTeamId) : null,
+      awayTeamId: awayTeamId ? parseInt(awayTeamId) : null
+    });
+
+  } catch (error) {
+    console.error('[TBD Assignment] Error:', error);
+    res.status(500).json({ error: 'Failed to assign teams' });
+  }
+});
+
 export default router;
