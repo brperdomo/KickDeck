@@ -684,7 +684,7 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
           }
           
           if (overlapCheck.restPeriodViolations?.length > 0) {
-            warningMessage += `Rest period violations (U13-U19 need 120min):\n${restViolationDetails}\n\n`;
+            warningMessage += `Rest period violations:\n${restViolationDetails}\n\n`;
           }
           
           warningMessage += `Do you want to proceed anyway? This may cause scheduling issues.`;
@@ -739,39 +739,68 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
 
   // Helper function to determine required rest period based on flight configuration
   const getRequiredRestPeriod = (game: any): number => {
-    // Try to get rest period from flight configuration first
-    if (flightConfigData?.flights && game.bracketId) {
-      const flightConfig = flightConfigData.flights.find((flight: any) => flight.flightId === game.bracketId);
+    // Debug logging to understand the data structure
+    console.log(`[REST PERIOD DEBUG] Checking game:`, {
+      gameId: game.id,
+      bracketId: game.bracketId,
+      flightName: game.flightName,
+      ageGroup: game.ageGroup,
+      flightConfigDataAvailable: !!flightConfigData,
+      flightConfigDataType: Array.isArray(flightConfigData) ? `Array of ${flightConfigData?.length} flights` : typeof flightConfigData
+    });
+    
+    if (Array.isArray(flightConfigData) && flightConfigData.length > 0) {
+      console.log(`[REST PERIOD DEBUG] First few flights:`, flightConfigData.slice(0, 3).map(f => ({ 
+        id: f.id, 
+        flightName: f.flightName, 
+        restPeriod: f.restPeriod, 
+        ageGroup: f.ageGroup 
+      })));
+    }
+
+    // Handle direct array response from API
+    if (Array.isArray(flightConfigData) && game.bracketId) {
+      const flightConfig = flightConfigData.find((flight: any) => flight.id === game.bracketId.toString());
       if (flightConfig?.restPeriod) {
+        console.log(`[REST PERIOD DEBUG] Found flight config for bracket ${game.bracketId}: ${flightConfig.restPeriod} minutes`);
         return flightConfig.restPeriod;
       }
     }
     
-    // Try to get rest period from flight name mapping
-    if (flightConfigData?.flights && game.flightName) {
-      const flightConfig = flightConfigData.flights.find((flight: any) => flight.flightName === game.flightName);
+    // Try flight name mapping for direct array
+    if (Array.isArray(flightConfigData) && game.flightName) {
+      const flightConfig = flightConfigData.find((flight: any) => flight.flightName === game.flightName);
       if (flightConfig?.restPeriod) {
+        console.log(`[REST PERIOD DEBUG] Found flight config for flight name ${game.flightName}: ${flightConfig.restPeriod} minutes`);
         return flightConfig.restPeriod;
       }
     }
     
-    // Try bracket-level tournament settings as fallback
+    // Legacy: Try nested flights property (backwards compatibility)
     if (flightConfigData?.flights && game.bracketId) {
-      const flightConfig = flightConfigData.flights.find((flight: any) => flight.flightId === game.bracketId);
-      if (flightConfig?.tournamentSettings?.restPeriodMinutes) {
-        return flightConfig.tournamentSettings.restPeriodMinutes;
+      const flightConfig = flightConfigData.flights.find((flight: any) => flight.id === game.bracketId.toString());
+      if (flightConfig?.restPeriod) {
+        console.log(`[REST PERIOD DEBUG] Found nested flight config for bracket ${game.bracketId}: ${flightConfig.restPeriod} minutes`);
+        return flightConfig.restPeriod;
       }
     }
     
     // Fallback to age group-based logic for backward compatibility
     const ageGroupUpper = (game.ageGroup || '').toUpperCase();
+    let fallbackPeriod = 60;
     if (ageGroupUpper.includes('U13') || ageGroupUpper.includes('U14') || 
         ageGroupUpper.includes('U15') || ageGroupUpper.includes('U16') || 
         ageGroupUpper.includes('U17') || ageGroupUpper.includes('U18') || 
         ageGroupUpper.includes('U19')) {
-      return 120; // 120 minutes for U13-U19
+      fallbackPeriod = 120; // 120 minutes for U13-U19
+    } else if (ageGroupUpper.includes('U7') || ageGroupUpper.includes('U8') || 
+               ageGroupUpper.includes('U9') || ageGroupUpper.includes('U10') || 
+               ageGroupUpper.includes('U11') || ageGroupUpper.includes('U12')) {
+      fallbackPeriod = 90; // 90 minutes for U7-U12
     }
-    return 60; // Default 60 minutes for other age groups
+    
+    console.log(`[REST PERIOD DEBUG] Using fallback for age group ${game.ageGroup}: ${fallbackPeriod} minutes`);
+    return fallbackPeriod;
   };
 
   // Field overlap detection function enhanced with rest period validation
@@ -910,7 +939,7 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
           }
           
           if (overlapCheck.restPeriodViolations?.length > 0) {
-            warningMessage += `Rest period violations (U13-U19 need 120min):\n${restViolationDetails}\n\n`;
+            warningMessage += `Rest period violations:\n${restViolationDetails}\n\n`;
           }
           
           warningMessage += `Do you want to proceed anyway? This may cause scheduling issues.`;
