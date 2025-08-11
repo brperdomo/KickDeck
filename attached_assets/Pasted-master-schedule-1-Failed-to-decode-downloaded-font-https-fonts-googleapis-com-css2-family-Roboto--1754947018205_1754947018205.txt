@@ -1,0 +1,103 @@
+master-schedule:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap
+
+master-schedule:1 OTS parsing error: invalid sfntVersion: 791289955
+master-schedule:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap
+master-schedule:1 OTS parsing error: invalid sfntVersion: 791289955
+master-schedule:1 Failed to decode downloaded font: https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap
+master-schedule:1 OTS parsing error: invalid sfntVersion: 791289955
+MasterSchedulePage-B3PW2aXd.js:247 UnifiedBracketManager Debug: 
+{selectedFlight: 600, allFlightData: Array(76), selectedFlightData: {…}, apiResponse: {…}}
+allFlightData
+: 
+(76) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+apiResponse
+: 
+{flights: Array(76), stats: {…}}
+selectedFlight
+: 
+600
+selectedFlightData
+: 
+{flightId: 600, name: 'Nike Premier', bracketsLength: 2, brackets: Array(2), assignedTeams: 8, …}
+[[Prototype]]
+: 
+Object
+MasterSchedulePage-B3PW2aXd.js:247 UnifiedBracketManager Debug: 
+{selectedFlight: 600, allFlightData: Array(76), selectedFlightData: {…}, apiResponse: {…}}
+allFlightData
+: 
+(76) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+apiResponse
+: 
+{flights: Array(76), stats: {…}}
+selectedFlight
+: 
+600
+selectedFlightData
+: 
+{flightId: 600, name: 'Nike Premier', bracketsLength: 2, brackets: Array(2), assignedTeams: 8, …}
+[[Prototype]]
+: 
+Object
+MasterSchedulePage-B3PW2aXd.js:247 Fetch finished loading: POST "https://app.matchpro.ai/api/admin/events/1844329078/bracket-creation/assign-teams".
+mutationFn	@	MasterSchedulePage-B3PW2aXd.js:247
+fn	@	index-BOYxCOCY.js:41
+f	@	index-BOYxCOCY.js:41
+start	@	index-BOYxCOCY.js:41
+execute	@	index-BOYxCOCY.js:41
+await in execute		
+mutate	@	index-BOYxCOCY.js:41
+(anonymous)	@	index-BOYxCOCY.js:41
+(anonymous)	@	MasterSchedulePage-B3PW2aXd.js:247
+setTimeout		
+B	@	MasterSchedulePage-B3PW2aXd.js:247
+SE	@	index-BOYxCOCY.js:806
+(anonymous)	@	index-BOYxCOCY.js:806
+Mx	@	index-BOYxCOCY.js:806
+d	@	index-BOYxCOCY.js:806
+(anonymous)	@	index-BOYxCOCY.js:806
+(anonymous)	@	index-BOYxCOCY.js:806
+(anonymous)	@	index-BOYxCOCY.js:806
+(anonymous)	@	index-BOYxCOCY.js:806
+(anonymous)	@	index-BOYxCOCY.js:806
+(anonymous)	@	index-BOYxCOCY.js:806
+(anonymous)	@	index-BOYxCOCY.js:806
+(anonymous)	@	index-BOYxCOCY.js:806
+(anonymous)	@	index-BOYxCOCY.js:806
+(anonymous)	@	index-BOYxCOCY.js:806
+(anonymous)	@	index-BOYxCOCY.js:806
+dispatch	@	index-BOYxCOCY.js:756
+(anonymous)	@	index-BOYxCOCY.js:806
+(anonymous)	@	index-BOYxCOCY.js:806
+(anonymous)	@	index-BOYxCOCY.js:806
+(anonymous)	@	index-BOYxCOCY.js:806
+(anonymous)	@	index-BOYxCOCY.js:806
+r.<computed>	@	index-BOYxCOCY.js:770
+(anonymous)	@	index-BOYxCOCY.js:823
+Nue	@	index-BOYxCOCY.js:38
+Cue	@	index-BOYxCOCY.js:38
+Eue	@	index-BOYxCOCY.js:38
+dM	@	index-BOYxCOCY.js:38
+q7	@	index-BOYxCOCY.js:38
+(anonymous)	@	index-BOYxCOCY.js:38
+yO	@	index-BOYxCOCY.js:41
+p7	@	index-BOYxCOCY.js:38
+N2	@	index-BOYxCOCY.js:38
+H4	@	index-BOYxCOCY.js:38
+MasterSchedulePage-B3PW2aXd.js:247 UnifiedBracketManager Debug: 
+{selectedFlight: 600, allFlightData: Array(76), selectedFlightData: {…}, apiResponse: {…}}
+allFlightData
+: 
+(76) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+apiResponse
+: 
+{flights: Array(76), stats: {…}}
+selectedFlight
+: 
+600
+selectedFlightData
+: 
+{flightId: 600, name: 'Nike Premier', bracketsLength: 2, brackets: Array(2), assignedTeams: 8, …}
+[[Prototype]]
+: 
+Object

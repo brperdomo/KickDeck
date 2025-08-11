@@ -65,70 +65,15 @@ export function GameCreation({ eventId, workflowData, onComplete, onError }: Gam
       if (seedings.length > 0) {
         generateAllGames();
       } else {
-        // If we have brackets but no seedings, try to generate games with automatic team assignment
-        console.log('No seedings found, attempting automatic team assignment for brackets');
-        generateGamesWithAutoSeeding();
+        // ADMIN CONTROL REQUIRED: Cannot generate games without proper team seeding assignments
+        console.log('No seedings found - admin must manually assign teams to brackets before game generation');
+        // Do not auto-assign teams - this breaks fairplay requirements
       }
     }
   }, [brackets, seedings]);
 
-  const generateGamesWithAutoSeeding = async () => {
-    console.log('generateGamesWithAutoSeeding called');
-    setIsGenerating(true);
-    setGenerationProgress(0);
-    
-    const allBracketGames: BracketGames[] = [];
-    
-    for (let i = 0; i < brackets.length; i++) {
-      const bracket = brackets[i];
-      console.log('Processing bracket for auto-seeding:', bracket);
-      
-      // Create automatic seeding for this bracket
-      const autoSeeding = {
-        bracketId: bracket.id,
-        teams: [], // Will be populated from flight data
-        pools: []
-      };
-      
-      // Try to get teams from flight data or bracket data
-      if (workflowData?.flight?.flights) {
-        const flight = workflowData.flight.flights.find((f: any) => f.id === bracket.flightId);
-        if (flight && flight.teams) {
-          autoSeeding.teams = flight.teams.map((team: any, index: number) => ({
-            id: team.id,
-            name: team.name,
-            seed: index + 1,
-            poolAssignment: bracket.format === 'knockout' ? null : `Pool A`
-          }));
-        }
-      }
-      
-      // Create pools if needed
-      if (bracket.format !== 'knockout' && autoSeeding.teams.length > 0) {
-        autoSeeding.pools = [{
-          poolName: 'Pool A',
-          teams: autoSeeding.teams.length
-        }];
-      }
-      
-      console.log('Auto-generated seeding:', autoSeeding);
-      
-      if (autoSeeding.teams.length > 0) {
-        const games = generateGamesForBracket(bracket, autoSeeding);
-        allBracketGames.push(games);
-      }
-      
-      setGenerationProgress(((i + 1) / brackets.length) * 100);
-    }
-    
-    setBracketGames(allBracketGames);
-    setIsGenerating(false);
-    
-    toast({
-      title: "Games Generated with Auto-Seeding",
-      description: `Created ${allBracketGames.reduce((sum, bg) => sum + bg.totalGames, 0)} games across ${allBracketGames.length} brackets using automatic team assignment`
-    });
-  };
+  // REMOVED: generateGamesWithAutoSeeding function - violates admin control requirements
+  // Admin must manually assign teams to brackets for fairplay control
 
   const generateAllGames = async () => {
     setIsGenerating(true);
