@@ -199,50 +199,37 @@ export default function AgeGroupSchedule() {
                   <CardContent>
                     {flight.games && flight.games.length > 0 ? (
                       <div className="overflow-x-auto">
-                        <table className="w-full table-fixed">
-                          <colgroup>
-                            <col className="w-24 sm:w-32" />  {/* Date & Time */}
-                            <col className="w-40 sm:w-48" />  {/* Home Team */}
-                            <col className="w-40 sm:w-48" />  {/* Away Team */}
-                            <col className="w-20 sm:w-24" />  {/* Field */}
-                            <col className="w-16 sm:w-20" />  {/* Score */}
-                          </colgroup>
+                        <table className="w-full">
                           <thead className="bg-gray-50 rounded-lg">
                             <tr>
-                              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
-                              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Home Team</th>
-                              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Away Team</th>
-                              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Field</th>
-                              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Home Team</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Away Team</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Field</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-200">
                             {flight.games.map((game: any) => (
                               <tr key={game.id} className="hover:bg-gray-50">
-                                <td className="px-3 py-3 text-sm text-gray-900">
-                                  <div className="whitespace-nowrap">
+                                <td className="px-4 py-3 text-sm text-gray-900">
+                                  <div>
                                     {new Date(`${game.date}T${game.time}`).toLocaleDateString()}
                                   </div>
-                                  <div className="text-xs text-gray-500 whitespace-nowrap">{game.time}</div>
+                                  <div className="text-xs text-gray-500">{game.time}</div>
                                 </td>
-                                <td className="px-3 py-3 text-sm font-medium text-gray-900">
-                                  <div className="truncate" title={game.homeTeam}>
-                                    {game.homeTeam}
-                                  </div>
+                                <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                                  {game.homeTeam}
                                 </td>
-                                <td className="px-3 py-3 text-sm font-medium text-gray-900">
-                                  <div className="truncate" title={game.awayTeam}>
-                                    {game.awayTeam}
-                                  </div>
+                                <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                                  {game.awayTeam}
                                 </td>
-                                <td className="px-3 py-3 text-sm text-gray-600">
-                                  <div className="truncate" title={game.field}>
-                                    {game.field}
-                                  </div>
+                                <td className="px-4 py-3 text-sm text-gray-600">
+                                  {game.field}
                                 </td>
-                                <td className="px-3 py-3 text-sm text-gray-900 text-center">
+                                <td className="px-4 py-3 text-sm text-gray-900">
                                   {game.homeScore !== null && game.awayScore !== null ? (
-                                    <span className="font-medium whitespace-nowrap">
+                                    <span className="font-medium">
                                       {game.homeScore} - {game.awayScore}
                                     </span>
                                   ) : (
