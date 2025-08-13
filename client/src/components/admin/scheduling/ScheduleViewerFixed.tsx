@@ -1792,14 +1792,13 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
                             </div>
                           </div>
                         )}
-                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-                );
-              })}
-            </div>
-          )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
         </CardContent>
       </Card>
 
