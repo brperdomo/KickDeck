@@ -1,0 +1,108 @@
+
+Expression
+not available
+﻿
+index-DPlaZFsQ.js:911 Sending status update with data: 
+{teamId: 998, status: 'approved', notes: 'Approval attempted but payment failed (payment_err…eam has completed payment setup before approving.', skipPayment: undefined, skipEmail: undefined}
+index-DPlaZFsQ.js:911 
+ PUT https://app.matchpro.ai/api/admin/teams/998/status 400 (Bad Request)
+mutationFn	@	index-DPlaZFsQ.js:911
+fn	@	index-DPlaZFsQ.js:41
+f	@	index-DPlaZFsQ.js:41
+start	@	index-DPlaZFsQ.js:41
+execute	@	index-DPlaZFsQ.js:41
+await in execute		
+mutate	@	index-DPlaZFsQ.js:41
+(anonymous)	@	index-DPlaZFsQ.js:41
+As	@	index-DPlaZFsQ.js:911
+onClick	@	index-DPlaZFsQ.js:911
+Nue	@	index-DPlaZFsQ.js:38
+Cue	@	index-DPlaZFsQ.js:38
+Eue	@	index-DPlaZFsQ.js:38
+dM	@	index-DPlaZFsQ.js:38
+q7	@	index-DPlaZFsQ.js:38
+(anonymous)	@	index-DPlaZFsQ.js:38
+yO	@	index-DPlaZFsQ.js:41
+p7	@	index-DPlaZFsQ.js:38
+N2	@	index-DPlaZFsQ.js:38
+H4	@	index-DPlaZFsQ.js:38
+Uue	@	index-DPlaZFsQ.js:38
+index-DPlaZFsQ.js:911 Raw response text: {"status":"error","error":"Payment processing failed","message":"Payment processing failed. Please check team payment details.","paymentStatus":"payment_error","teamStatus":"registered"}
+index-DPlaZFsQ.js:911 Error response: 
+{status: 'error', error: 'Payment processing failed', message: 'Payment processing failed. Please check team payment details.', paymentStatus: 'payment_error', teamStatus: 'registered'}
+mutationFn	@	index-DPlaZFsQ.js:911
+await in mutationFn		
+fn	@	index-DPlaZFsQ.js:41
+f	@	index-DPlaZFsQ.js:41
+start	@	index-DPlaZFsQ.js:41
+execute	@	index-DPlaZFsQ.js:41
+await in execute		
+mutate	@	index-DPlaZFsQ.js:41
+(anonymous)	@	index-DPlaZFsQ.js:41
+As	@	index-DPlaZFsQ.js:911
+onClick	@	index-DPlaZFsQ.js:911
+Nue	@	index-DPlaZFsQ.js:38
+Cue	@	index-DPlaZFsQ.js:38
+Eue	@	index-DPlaZFsQ.js:38
+dM	@	index-DPlaZFsQ.js:38
+q7	@	index-DPlaZFsQ.js:38
+(anonymous)	@	index-DPlaZFsQ.js:38
+yO	@	index-DPlaZFsQ.js:41
+p7	@	index-DPlaZFsQ.js:38
+N2	@	index-DPlaZFsQ.js:38
+H4	@	index-DPlaZFsQ.js:38
+Uue	@	index-DPlaZFsQ.js:38
+index-DPlaZFsQ.js:911 Error in updateTeamStatus mutation: Error: Payment processing failed
+    at Object.mutationFn (index-DPlaZFsQ.js:911:83873)
+mutationFn	@	index-DPlaZFsQ.js:911
+await in mutationFn		
+fn	@	index-DPlaZFsQ.js:41
+f	@	index-DPlaZFsQ.js:41
+start	@	index-DPlaZFsQ.js:41
+execute	@	index-DPlaZFsQ.js:41
+await in execute		
+mutate	@	index-DPlaZFsQ.js:41
+(anonymous)	@	index-DPlaZFsQ.js:41
+As	@	index-DPlaZFsQ.js:911
+onClick	@	index-DPlaZFsQ.js:911
+Nue	@	index-DPlaZFsQ.js:38
+Cue	@	index-DPlaZFsQ.js:38
+Eue	@	index-DPlaZFsQ.js:38
+dM	@	index-DPlaZFsQ.js:38
+q7	@	index-DPlaZFsQ.js:38
+(anonymous)	@	index-DPlaZFsQ.js:38
+yO	@	index-DPlaZFsQ.js:41
+p7	@	index-DPlaZFsQ.js:38
+N2	@	index-DPlaZFsQ.js:38
+H4	@	index-DPlaZFsQ.js:38
+Uue	@	index-DPlaZFsQ.js:38
+index-DPlaZFsQ.js:911 Fetch failed loading: PUT "https://app.matchpro.ai/api/admin/teams/998/status".
+mutationFn	@	index-DPlaZFsQ.js:911
+fn	@	index-DPlaZFsQ.js:41
+f	@	index-DPlaZFsQ.js:41
+start	@	index-DPlaZFsQ.js:41
+execute	@	index-DPlaZFsQ.js:41
+await in execute		
+mutate	@	index-DPlaZFsQ.js:41
+(anonymous)	@	index-DPlaZFsQ.js:41
+As	@	index-DPlaZFsQ.js:911
+onClick	@	index-DPlaZFsQ.js:911
+Nue	@	index-DPlaZFsQ.js:38
+Cue	@	index-DPlaZFsQ.js:38
+Eue	@	index-DPlaZFsQ.js:38
+dM	@	index-DPlaZFsQ.js:38
+q7	@	index-DPlaZFsQ.js:38
+(anonymous)	@	index-DPlaZFsQ.js:38
+yO	@	index-DPlaZFsQ.js:41
+p7	@	index-DPlaZFsQ.js:38
+N2	@	index-DPlaZFsQ.js:38
+H4	@	index-DPlaZFsQ.js:38
+Uue	@	index-DPlaZFsQ.js:38
+index-DPlaZFsQ.js:911 Fetch finished loading: GET "https://app.matchpro.ai/api/admin/registrations/new-count".
+queryFn	@	index-DPlaZFsQ.js:911
+i	@	index-DPlaZFsQ.js:41
+f	@	index-DPlaZFsQ.js:41
+start	@	index-DPlaZFsQ.js:41
+fetch	@	index-DPlaZFsQ.js:41
+rg	@	index-DPlaZFsQ.js:41
+(anonymous)	@	index-DPlaZFsQ.js:41
