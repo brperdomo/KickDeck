@@ -12129,6 +12129,169 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
       }
     });
 
+    // Payment fix endpoint for Team 998 and similar issues
+    app.post('/api/admin/teams/:teamId/fix-payment', isAdmin, async (req, res) => {
+      try {
+        const { teamId } = req.params;
+        console.log(`🔧 PAYMENT FIX: Starting payment recovery for Team ${teamId}`);
+        
+        // Get team details
+        const [team] = await db
+          .select()
+          .from(teams)
+          .where(eq(teams.id, parseInt(teamId)));
+        
+        if (!team) {
+          return res.status(404).json({ error: 'Team not found' });
+        }
+        
+        console.log(`Team ${teamId}: ${team.name}, Status: ${team.paymentStatus}`);
+        
+        // Only process failed payments
+        if (team.paymentStatus !== 'payment_failed') {
+          return res.status(400).json({ 
+            error: 'Team payment is not in failed status',
+            currentStatus: team.paymentStatus 
+          });
+        }
+        
+        if (!team.setupIntentId) {
+          return res.status(400).json({ 
+            error: 'No setup intent found for this team' 
+          });
+        }
+        
+        // Initialize Stripe
+        const stripe = (await import('stripe')).default;
+        const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY!, {
+          apiVersion: '2023-10-16',
+        });
+        
+        // Get setup intent from Stripe
+        const setupIntent = await stripeInstance.setupIntents.retrieve(team.setupIntentId);
+        
+        if (setupIntent.status !== 'succeeded' || !setupIntent.payment_method) {
+          return res.status(400).json({ 
+            error: 'Setup intent not completed',
+            setupIntentStatus: setupIntent.status 
+          });
+        }
+        
+        console.log(`✅ Setup Intent verified: ${setupIntent.id}`);
+        
+        // Create Stripe Customer first (this was the missing step)
+        const customer = await stripeInstance.customers.create({
+          email: team.managerEmail,
+          metadata: {
+            teamId: team.id.toString(),
+            teamName: team.name,
+            eventType: 'payment_recovery'
+          }
+        });
+        
+        console.log(`✅ Customer created: ${customer.id}`);
+        
+        // Attach payment method to customer
+        await stripeInstance.paymentMethods.attach(setupIntent.payment_method as string, {
+          customer: customer.id
+        });
+        
+        console.log(`✅ Payment method attached to customer`);
+        
+        // Calculate fees using the same logic as other payments
+        const tournamentCost = team.totalAmount || 119500; // $1,195.00 in cents
+        const platformFeeAmount = Math.round(tournamentCost * 0.04 + 30); // 4% + $0.30
+        const totalChargedAmount = tournamentCost + platformFeeAmount;
+        
+        console.log(`💰 Payment calculation: Base=$${(tournamentCost/100).toFixed(2)}, Platform Fee=$${(platformFeeAmount/100).toFixed(2)}, Total=$${(totalChargedAmount/100).toFixed(2)}`);
+        
+        // Get event Connect account info
+        const [eventInfo] = await db
+          .select({
+            stripeConnectAccountId: events.stripeConnectAccountId,
+            connectAccountStatus: events.connectAccountStatus,
+            connectChargesEnabled: events.connectChargesEnabled
+          })
+          .from(events)
+          .where(eq(events.id, team.eventId));
+        
+        if (!eventInfo?.stripeConnectAccountId) {
+          return res.status(400).json({ 
+            error: 'Event Stripe Connect account not configured' 
+          });
+        }
+        
+        // Create and confirm payment intent
+        const paymentIntent = await stripeInstance.paymentIntents.create({
+          amount: totalChargedAmount,
+          currency: 'usd',
+          customer: customer.id,
+          payment_method: setupIntent.payment_method as string,
+          confirm: true,
+          off_session: true,
+          application_fee_amount: platformFeeAmount,
+          transfer_data: {
+            destination: eventInfo.stripeConnectAccountId,
+          },
+          metadata: {
+            teamId: team.id.toString(),
+            teamName: team.name,
+            eventType: 'payment_recovery_fix',
+            originalSetupIntent: setupIntent.id
+          }
+        });
+        
+        if (paymentIntent.status !== 'succeeded') {
+          return res.status(400).json({ 
+            error: 'Payment failed to process',
+            paymentStatus: paymentIntent.status 
+          });
+        }
+        
+        console.log(`✅ Payment successful: ${paymentIntent.id}`);
+        
+        // Update team record
+        await db.update(teams)
+          .set({
+            paymentIntentId: paymentIntent.id,
+            paymentStatus: 'paid',
+            stripeCustomerId: customer.id,
+            paymentMethodId: setupIntent.payment_method as string,
+            paidAt: new Date().toISOString()
+          })
+          .where(eq(teams.id, parseInt(teamId)));
+        
+        // Record payment transaction
+        await db.insert(paymentTransactions).values({
+          teamId: parseInt(teamId),
+          amount: totalChargedAmount,
+          currency: 'usd',
+          paymentIntentId: paymentIntent.id,
+          stripeCustomerId: customer.id,
+          status: 'succeeded',
+          cardLastFour: (paymentIntent.charges?.data[0]?.payment_method_details as any)?.card?.last4 || null,
+          createdAt: new Date().toISOString()
+        });
+        
+        console.log(`✅ Team ${teamId} payment recovery complete - $${(totalChargedAmount/100).toFixed(2)} charged`);
+        
+        res.json({
+          success: true,
+          message: `Payment successfully processed for ${team.name}`,
+          amountCharged: totalChargedAmount / 100,
+          paymentIntentId: paymentIntent.id,
+          teamStatus: 'paid'
+        });
+        
+      } catch (error: any) {
+        console.error(`❌ Payment fix failed for Team ${req.params.teamId}:`, error);
+        res.status(500).json({ 
+          error: 'Payment fix failed',
+          message: error.message 
+        });
+      }
+    });
+
     // Preview route moved above to prevent route conflicts
 
     return httpServer;
