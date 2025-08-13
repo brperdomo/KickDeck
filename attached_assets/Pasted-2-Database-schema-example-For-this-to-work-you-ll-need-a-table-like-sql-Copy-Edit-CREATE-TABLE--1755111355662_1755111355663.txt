@@ -1,0 +1,183 @@
+2️⃣ Database schema example
+For this to work, you’ll need a table like:
+
+sql
+Copy
+Edit
+CREATE TABLE games (
+  id SERIAL PRIMARY KEY,
+  team_a TEXT NOT NULL,
+  team_b TEXT NOT NULL,
+  game_time TIMESTAMP WITH TIME ZONE NOT NULL,
+  field TEXT NOT NULL
+);
+3️⃣ index.js
+javascript
+Copy
+Edit
+import fetch from "node-fetch";
+import pkg from "pg";
+const { Pool } = pkg;
+
+// === PostgreSQL connection ===
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL, // Set in Replit Secrets
+});
+
+// === Conversation history ===
+let conversationHistory = [
+  {
+    role: "system",
+    content: `
+You are a tournament scheduling assistant.
+Rules:
+- No overlapping games on the same field
+- Minimum 90 minutes rest between games for any team
+- No more than 2 games per day per team
+- All times are in UTC
+You can query and update the games database.
+`
+  }
+];
+
+// === Tool functions ===
+async function getGames() {
+  const { rows } = await pool.query("SELECT * FROM games ORDER BY game_time ASC");
+  return rows;
+}
+
+async function moveGame({ gameId, newTime, newField }) {
+  const games = await getGames();
+  const targetGame = games.find(g => g.id === parseInt(gameId));
+  if (!targetGame) return { success: false, message: "Game not found" };
+
+  // Conflict check
+  for (let g of games) {
+    if (g.id !== targetGame.id) {
+      const sameField = g.field === newField;
+      const overlap = Math.abs(new Date(g.game_time) - new Date(newTime)) < 90 * 60 * 1000;
+      const sameTeam = [g.team_a, g.team_b].some(t => 
+        t === targetGame.team_a || t === targetGame.team_b
+      );
+
+      if (sameField && overlap) {
+        return { success: false, message: "Field conflict detected" };
+      }
+      if (sameTeam && overlap) {
+        return { success: false, message: "Rest time conflict for one of the teams" };
+      }
+    }
+  }
+
+  // Update game
+  await pool.query(
+    "UPDATE games SET game_time = $1, field = $2 WHERE id = $3",
+    [newTime, newField, gameId]
+  );
+
+  return { success: true, updatedGame: await getGames() };
+}
+
+async function swapTeams({ gameId, teamA, teamB }) {
+  const res = await pool.query(
+    "UPDATE games SET team_a = $1, team_b = $2 WHERE id = $3 RETURNING *",
+    [teamA, teamB, gameId]
+  );
+  if (res.rowCount === 0) return { success: false, message: "Game not found" };
+  return { success: true, updatedGame: res.rows[0] };
+}
+
+// === Responses API request ===
+async function askAssistant(userMessage) {
+  conversationHistory.push({ role: "user", content: userMessage });
+
+  const res = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: "gpt-4.1",
+      messages: conversationHistory,
+      tools: [
+        {
+          type: "function",
+          name: "moveGame",
+          description: "Move a game to a new time and field",
+          parameters: {
+            type: "object",
+            properties: {
+              gameId: { type: "string" },
+              newTime: { type: "string", format: "date-time" },
+              newField: { type: "string" }
+            },
+            required: ["gameId", "newTime", "newField"]
+          }
+        },
+        {
+          type: "function",
+          name: "swapTeams",
+          description: "Swap the teams in a given game",
+          parameters: {
+            type: "object",
+            properties: {
+              gameId: { type: "string" },
+              teamA: { type: "string" },
+              teamB: { type: "string" }
+            },
+            required: ["gameId", "teamA", "teamB"]
+          }
+        },
+        {
+          type: "function",
+          name: "getGames",
+          description: "Retrieve all scheduled games",
+          parameters: {}
+        }
+      ]
+    })
+  });
+
+  const data = await res.json();
+
+  // Handle tool calls
+  if (data.output && data.output[0]?.tool_calls) {
+    for (let call of data.output[0].tool_calls) {
+      const args = JSON.parse(call.function.arguments);
+      let result;
+
+      if (call.function.name === "moveGame") result = await moveGame(args);
+      if (call.function.name === "swapTeams") result = await swapTeams(args);
+      if (call.function.name === "getGames") result = await getGames();
+
+      conversationHistory.push({
+        role: "tool",
+        tool_call_id: call.id,
+        content: JSON.stringify(result)
+      });
+
+      return await askAssistant("(processed tool request)");
+    }
+  }
+
+  // Regular text response
+  const message = data.output_text;
+  conversationHistory.push({ role: "assistant", content: message });
+  return message;
+}
+
+// === Example usage ===
+(async () => {
+  console.log(await askAssistant("Show me all games"));
+  console.log(await askAssistant("Move game 1 to 2025-08-14T20:00:00Z on Field 2"));
+})();
+How this works for your use case
+Context is stored in conversationHistory so the Responses API remembers what’s already been discussed in this session.
+
+The assistant can query PostgreSQL directly to check rest times and conflicts before making changes.
+
+If there’s a conflict, the assistant will return an explanation and can be extended to propose the next available time slot.
+
+Works seamlessly in Replit with your existing Postgres DB.
+
