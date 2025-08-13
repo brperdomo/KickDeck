@@ -517,6 +517,26 @@ export const paymentTransactions = pgTable("payment_transactions", {
   updatedAt: timestamp("updated_at").notNull().defaultNow()
 });
 
+// Refunds table for tracking all refund transactions
+export const refunds = pgTable("refunds", {
+  id: serial("id").primaryKey(),
+  teamId: integer("team_id").notNull().references(() => teams.id),
+  eventId: integer("event_id").notNull(), // Changed to integer to match events.id
+  originalPaymentIntentId: text("original_payment_intent_id").notNull(),
+  refundId: text("refund_id").notNull(), // Stripe refund ID
+  refundAmount: integer("refund_amount").notNull(), // Amount refunded in cents
+  platformFeeRefund: integer("platform_fee_refund").notNull(), // Platform fee refunded in cents
+  refundReason: text("refund_reason").notNull(),
+  adminNotes: text("admin_notes"),
+  status: text("status").notNull().default("pending"), // pending, completed, failed
+  processedByUserId: integer("processed_by_user_id").notNull().references(() => users.id),
+  processedAt: timestamp("processed_at").defaultNow(),
+  stripeConnectAccountId: text("stripe_connect_account_id").notNull(),
+  metadata: jsonb("metadata"), // Additional refund data
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow()
+});
+
 // Fee revenue tracking table - tracks how much revenue each fee generates
 export const feeRevenue = pgTable("fee_revenue", {
   id: serial("id").primaryKey(),
