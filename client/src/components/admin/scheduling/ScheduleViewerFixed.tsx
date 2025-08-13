@@ -1516,7 +1516,7 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 xl:grid-cols-4 lg:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 gap-4">
               {filteredGames.map((game) => {
                 const tooltipMessage = getUnassignedTooltip(game);
                 const hasUnassignedFields = game.time === 'TBD' || game.field === 'Unassigned' || game.field === 'TBD' || game.date === 'TBD';
@@ -1526,7 +1526,7 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
                 return (
                 <Card 
                   key={game.id} 
-                  className={`border transition-colors ${
+                  className={`border transition-colors hover:shadow-md ${
                     isFillingSlotsMode ? 
                       (selectedUnscheduledGames.includes(game.id) ? 'border-green-400 bg-green-50' : 
                        hasUnassignedFields ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200 opacity-50') :
@@ -1536,9 +1536,10 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
                   }`}
                   title={tooltipMessage || undefined}
                 >
-                  <CardContent className="p-2">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center space-x-2">
+                  <CardContent className="p-4">
+                    {/* Header with checkbox and game ID */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-3">
                         <Checkbox
                           checked={isFillingSlotsMode ? 
                             selectedUnscheduledGames.includes(game.id) : 
@@ -1560,7 +1561,48 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
                           }}
                           disabled={isFillingSlotsMode && !hasUnassignedFields}
                         />
-                        {editingGame?.gameId === game.id ? (
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs font-mono">
+                            #{game.id}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {game.ageGroup}
+                          </Badge>
+                          {game.flightName && (
+                            <Badge variant="secondary" className="text-xs">
+                              {game.flightName}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Action buttons */}
+                      <div className="flex gap-1">
+                        {editingGame !== game.id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingGame(game.id)}
+                            className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteGame(game.id)}
+                          className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Main content area */}
+                    <div className="space-y-3">
+                      {/* Teams section */}
+                      {editingGame?.gameId === game.id ? (
                           // Team Editing Interface
                           <div className="space-y-3 w-full">
                             <div className="text-sm font-medium text-gray-700">Edit Game Teams</div>
@@ -1646,447 +1688,110 @@ export function ScheduleViewer({ eventId }: ScheduleViewerProps) {
                           </div>
                         ) : (
                           // Normal Game Display
-                          <div className="space-y-0.5">
-                            <div className="font-medium text-xs text-gray-900 flex items-center gap-1">
-                              <div className="flex items-center gap-2">
-                                {replacingTeam?.gameId === game.id && replacingTeam?.position === 'home' ? (
-                                  // Team replacement interface for home team
-                                  <div className="flex items-center gap-2 p-2 bg-blue-50 rounded border">
-                                    <span className="text-xs text-gray-600">Replace:</span>
-                                    <Select 
-                                      onValueChange={(value) => {
-                                        replaceTeamMutation.mutate({
-                                          gameId: game.id,
-                                          position: 'home',
-                                          newTeamId: parseInt(value)
-                                        });
-                                      }}
-                                    >
-                                      <SelectTrigger className="h-6 text-xs w-32">
-                                        <SelectValue placeholder="Select team" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {replacementTeams?.teams
-                                          ?.filter((team: any) => team.id !== game.awayTeamId) // Don't allow same team
-                                          ?.map((team: any) => (
-                                          <SelectItem key={team.id} value={team.id.toString()}>
-                                            {team.name}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                    <Button 
-                                      size="sm" 
-                                      variant="outline" 
-                                      onClick={() => setReplacingTeam(null)}
-                                      className="h-6 px-2 text-xs"
-                                    >
-                                      Cancel
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center gap-1">
-                                    <span 
-                                      className={`cursor-pointer hover:bg-blue-100 px-1 rounded ${
-                                        swappingTeam?.teamId === game.homeTeamId ? 'bg-blue-200' : ''
-                                      }`}
-                                      onClick={() => {
-                                        console.log('HOME TEAM CLICKED:', {
-                                          gameId: game.id,
-                                          homeTeamId: game.homeTeamId,
-                                          homeTeam: game.homeTeam,
-                                          swappingTeam: swappingTeam
-                                    });
-                                    
-                                    if (!game.homeTeamId || game.homeTeam.includes('TBD') || game.homeTeam.includes('Place')) {
-                                      console.log('TBD/Placeholder team clicked - opening edit dialog');
-                                      // For TBD teams, open edit dialog instead of swapping
-                                      setEditingGame({ 
-                                        gameId: game.id,
-                                        editingPosition: 'home',
-                                        availableTeams: scheduleData?.teamsList?.filter(team => 
-                                          team.name !== game.awayTeam // Don't allow same team in both positions
-                                        ) || []
-                                      });
-                                      return;
-                                    }
-                                    
-                                    if (swappingTeam) {
-                                      // Complete the swap
-                                      if (swappingTeam.teamId === game.homeTeamId) {
-                                        console.log('Canceling swap - same team clicked');
-                                        setSwappingTeam(null); // Cancel if clicking same team
-                                      } else {
-                                        console.log('Executing swap:', {
-                                          game1Id: swappingTeam.gameId,
-                                          team1Id: swappingTeam.teamId,
-                                          team1Position: swappingTeam.position,
-                                          game2Id: game.id,
-                                          team2Id: game.homeTeamId,
-                                          team2Position: 'home'
-                                        });
-                                        swapTeamsMutation.mutate({
-                                          game1Id: swappingTeam.gameId,
-                                          team1Id: swappingTeam.teamId,
-                                          team1Position: swappingTeam.position,
-                                          game2Id: game.id,
-                                          team2Id: game.homeTeamId,
-                                          team2Position: 'home'
-                                        });
-                                      }
-                                    } else {
-                                      // Start swapping
-                                      console.log('Starting swap mode with home team');
-                                      setSwappingTeam({
-                                        gameId: game.id,
-                                        teamId: game.homeTeamId,
-                                        teamName: game.homeTeam,
-                                        position: 'home'
-                                      });
-                                    }
-                                  }}
-                                >
-                                      <span className="text-blue-700 font-medium">{game.homeTeam}</span>
+                          <div className="space-y-4">
+                            {/* Teams Display */}
+                            <div className="bg-gray-50 rounded-lg p-3">
+                              <div className="text-center">
+                                <div className="flex items-center justify-center gap-4">
+                                  {/* Home Team */}
+                                  <div className="flex flex-col items-center">
+                                    <span className="text-sm font-semibold text-blue-700">
+                                      {game.homeTeam}
                                     </span>
-                                    {game.flightName && (
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setReplacingTeam({
-                                            gameId: game.id,
-                                            currentTeamId: game.homeTeamId || 0,
-                                            currentTeamName: game.homeTeam,
-                                            position: 'home',
-                                            flightName: game.flightName
-                                          });
-                                        }}
-                                        className="h-4 w-4 p-0 hover:bg-blue-100"
-                                        title="Replace team"
-                                      >
-                                        <RefreshCw className="h-3 w-3" />
-                                      </Button>
+                                    <span className="text-xs text-gray-500">Home</span>
+                                  </div>
+                                  
+                                  {/* VS Divider */}
+                                  <div className="flex flex-col items-center">
+                                    <span className="text-lg font-bold text-gray-400">VS</span>
+                                    {game.homeScore !== null && game.awayScore !== null && (
+                                      <div className="text-sm font-mono">
+                                        {game.homeScore} - {game.awayScore}
+                                      </div>
                                     )}
                                   </div>
-                                )}
-                                <span className="mx-1 text-gray-500">vs</span>
-                                {replacingTeam?.gameId === game.id && replacingTeam?.position === 'away' ? (
-                                  // Team replacement interface for away team
-                                  <div className="flex items-center gap-2 p-2 bg-red-50 rounded border">
-                                    <span className="text-xs text-gray-600">Replace:</span>
-                                    <Select 
-                                      onValueChange={(value) => {
-                                        replaceTeamMutation.mutate({
-                                          gameId: game.id,
-                                          position: 'away',
-                                          newTeamId: parseInt(value)
-                                        });
-                                      }}
-                                    >
-                                      <SelectTrigger className="h-6 text-xs w-32">
-                                        <SelectValue placeholder="Select team" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {replacementTeams?.teams
-                                          ?.filter((team: any) => team.id !== game.homeTeamId) // Don't allow same team
-                                          ?.map((team: any) => (
-                                          <SelectItem key={team.id} value={team.id.toString()}>
-                                            {team.name}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                    <Button 
-                                      size="sm" 
-                                      variant="outline" 
-                                      onClick={() => setReplacingTeam(null)}
-                                      className="h-6 px-2 text-xs"
-                                    >
-                                      Cancel
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center gap-1">
-                                    <span 
-                                      className={`cursor-pointer hover:bg-blue-100 px-1 rounded ${
-                                        swappingTeam?.teamId === game.awayTeamId ? 'bg-blue-200' : ''
-                                      }`}
-                                      onClick={() => {
-                                    console.log('AWAY TEAM CLICKED:', {
-                                      gameId: game.id,
-                                      awayTeamId: game.awayTeamId,
-                                      awayTeam: game.awayTeam,
-                                      swappingTeam: swappingTeam
-                                    });
-                                    
-                                    if (!game.awayTeamId || game.awayTeam.includes('TBD') || game.awayTeam.includes('Place')) {
-                                      console.log('TBD/Placeholder team clicked - opening edit dialog');
-                                      // For TBD teams, open edit dialog instead of swapping
-                                      setEditingGame({ 
-                                        gameId: game.id,
-                                        editingPosition: 'away',
-                                        availableTeams: scheduleData?.teamsList?.filter(team => 
-                                          team.name !== game.homeTeam // Don't allow same team in both positions
-                                        ) || []
-                                      });
-                                      return;
-                                    }
-                                    
-                                    if (swappingTeam) {
-                                      // Complete the swap
-                                      if (swappingTeam.teamId === game.awayTeamId) {
-                                        console.log('Canceling swap - same team clicked');
-                                        setSwappingTeam(null); // Cancel if clicking same team
-                                      } else {
-                                        console.log('Executing swap:', {
-                                          game1Id: swappingTeam.gameId,
-                                          team1Id: swappingTeam.teamId,
-                                          team1Position: swappingTeam.position,
-                                          game2Id: game.id,
-                                          team2Id: game.awayTeamId,
-                                          team2Position: 'away'
-                                        });
-                                        swapTeamsMutation.mutate({
-                                          game1Id: swappingTeam.gameId,
-                                          team1Id: swappingTeam.teamId,
-                                          team1Position: swappingTeam.position,
-                                          game2Id: game.id,
-                                          team2Id: game.awayTeamId,
-                                          team2Position: 'away'
-                                        });
-                                      }
-                                    } else {
-                                      // Start swapping
-                                      console.log('Starting swap mode with away team');
-                                      setSwappingTeam({
-                                        gameId: game.id,
-                                        teamId: game.awayTeamId,
-                                        teamName: game.awayTeam,
-                                        position: 'away'
-                                      });
-                                    }
-                                  }}
-                                >
-                                      <span className="text-red-700 font-medium">{game.awayTeam}</span>
+                                  {/* Away Team */}
+                                  <div className="flex flex-col items-center">
+                                    <span className="text-sm font-semibold text-red-700">
+                                      {game.awayTeam}
                                     </span>
-                                    {game.flightName && (
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setReplacingTeam({
-                                            gameId: game.id,
-                                            currentTeamId: game.awayTeamId || 0,
-                                            currentTeamName: game.awayTeam,
-                                            position: 'away',
-                                            flightName: game.flightName
-                                          });
-                                        }}
-                                        className="h-4 w-4 p-0 hover:bg-red-100"
-                                        title="Replace team"
-                                      >
-                                        <RefreshCw className="h-3 w-3" />
-                                      </Button>
-                                    )}
+                                    <span className="text-xs text-gray-500">Away</span>
                                   </div>
-                                )}
+                                </div>
                               </div>
-                              {hasUnassignedFields && (
-                                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                              )}
                             </div>
-                            {editingDateTime?.gameId === game.id ? (
-                              // Date/Time Editing Interface
-                              <div className="space-y-2">
-                                <div className="text-xs font-medium text-gray-700">Edit Date & Time</div>
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div>
-                                    <Label className="text-xs text-gray-600">Date</Label>
-                                    <Input
-                                      type="date"
-                                      defaultValue={editingDateTime.currentDate !== 'TBD' ? editingDateTime.currentDate : new Date().toISOString().split('T')[0]}
-                                      className="h-8 text-xs"
-                                      onChange={(e) => {
-                                        setEditingDateTime(prev => prev ? { ...prev, currentDate: e.target.value } : null);
-                                      }}
-                                    />
+
+                            {/* Game Details */}
+                            <div className="grid grid-cols-3 gap-3 text-sm">
+                              {/* Date */}
+                              <div className="flex items-center gap-2 p-2 bg-white rounded border">
+                                <Calendar className="h-4 w-4 text-blue-500" />
+                                <div>
+                                  <div className="text-xs text-gray-500">Date</div>
+                                  <div className={`font-medium ${game.date === 'TBD' ? 'text-yellow-600' : 'text-gray-900'}`}>
+                                    {game.date === 'TBD' ? 'TBD' : new Date(game.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                   </div>
-                                  <div>
-                                    <Label className="text-xs text-gray-600">Time</Label>
-                                    <Input
-                                      type="time"
-                                      defaultValue={editingDateTime.currentTime !== 'TBD' ? editingDateTime.currentTime : '09:00'}
-                                      className="h-8 text-xs"
-                                      onChange={(e) => {
-                                        setEditingDateTime(prev => prev ? { ...prev, currentTime: e.target.value } : null);
-                                      }}
-                                    />
-                                  </div>
-                                </div>
-                                <div className="flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    onClick={() => {
-                                      if (editingDateTime) {
-                                        updateGameDateTimeMutation.mutate({
-                                          gameId: editingDateTime.gameId,
-                                          date: editingDateTime.currentDate,
-                                          time: editingDateTime.currentTime
-                                        });
-                                      }
-                                    }}
-                                    className="h-7 text-xs"
-                                    disabled={updateGameDateTimeMutation.isPending}
-                                  >
-                                    {updateGameDateTimeMutation.isPending ? (
-                                      <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                                    ) : null}
-                                    Save
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => setEditingDateTime(null)}
-                                    className="h-7 text-xs"
-                                  >
-                                    Cancel
-                                  </Button>
                                 </div>
                               </div>
-                            ) : (
-                              // Normal Date/Time Display (clickable to edit)
-                              <div className="flex items-center space-x-2 text-xs text-gray-600">
-                                <span 
-                                  className={`flex items-center cursor-pointer hover:bg-blue-100 px-0.5 rounded ${game.date === 'TBD' ? 'text-yellow-600 font-medium' : ''}`}
-                                  onClick={() => setEditingDateTime({
-                                    gameId: game.id,
-                                    currentDate: game.date !== 'TBD' ? game.date : new Date().toISOString().split('T')[0],
-                                    currentTime: game.time !== 'TBD' ? game.time : '09:00'
-                                  })}
-                                >
-                                  <Calendar className="h-2.5 w-2.5 mr-0.5" />
-                                  {game.date}
-                                </span>
-                                <span 
-                                  className={`flex items-center cursor-pointer hover:bg-blue-100 px-0.5 rounded ${game.time === 'TBD' ? 'text-yellow-600 font-medium' : ''}`}
-                                  onClick={() => setEditingDateTime({
-                                    gameId: game.id,
-                                    currentDate: game.date !== 'TBD' ? game.date : new Date().toISOString().split('T')[0],
-                                    currentTime: game.time !== 'TBD' ? game.time : '09:00'
-                                  })}
-                                >
-                                  <Clock className="h-2.5 w-2.5 mr-0.5" />
-                                  {game.time}
-                                </span>
-                                {editingField?.gameId === game.id ? (
-                                  // Field Editing Interface
-                                  <div className="flex items-center gap-2">
-                                    <MapPin className="h-3 w-3 text-gray-400" />
-                                    <Select 
-                                      defaultValue={editingField.currentFieldId?.toString() || ''}
-                                      onValueChange={(value) => {
-                                        if (value && editingField) {
-                                          updateGameFieldMutation.mutate({
-                                            gameId: editingField.gameId,
-                                            fieldId: parseInt(value)
-                                          });
-                                        }
-                                      }}
-                                    >
-                                      <SelectTrigger className="h-6 text-xs w-32">
-                                        <SelectValue placeholder="Select field" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {availableFields?.map((field) => (
-                                          <SelectItem key={field.id} value={field.id.toString()}>
-                                            <div className="flex items-center gap-2">
-                                              <span className="text-xs text-gray-500">({field.fieldSize})</span>
-                                              <span>{field.name}</span>
-                                            </div>
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => setEditingField(null)}
-                                      className="h-6 w-6 p-0"
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </Button>
+
+                              {/* Time */}
+                              <div className="flex items-center gap-2 p-2 bg-white rounded border">
+                                <Clock className="h-4 w-4 text-green-500" />
+                                <div>
+                                  <div className="text-xs text-gray-500">Time</div>
+                                  <div className={`font-medium ${game.time === 'TBD' ? 'text-yellow-600' : 'text-gray-900'}`}>
+                                    {game.time === 'TBD' ? 'TBD' : game.time}
                                   </div>
-                                ) : (
-                                  <span 
-                                    className={`flex items-center cursor-pointer hover:bg-blue-100 px-1 rounded ${(game.field === 'Unassigned' || game.field === 'TBD') ? 'text-yellow-600 font-medium' : ''}`}
-                                    onClick={() => setEditingField({
-                                      gameId: game.id,
-                                      currentFieldId: game.fieldId,
-                                      currentFieldName: game.field
-                                    })}
-                                  >
-                                    <MapPin className="h-3 w-3 mr-1" />
+                                </div>
+                              </div>
+
+                              {/* Field */}
+                              <div className="flex items-center gap-2 p-2 bg-white rounded border">
+                                <MapPin className="h-4 w-4 text-orange-500" />
+                                <div>
+                                  <div className="text-xs text-gray-500">Field</div>
+                                  <div className={`font-medium ${(game.field === 'Unassigned' || game.field === 'TBD') ? 'text-yellow-600' : 'text-gray-900'}`}>
                                     {game.field}
-                                  </span>
-                                )}
+                                  </div>
+                                </div>
                               </div>
-                            )}
-                            <div className="flex items-center space-x-1">
-                              <Badge variant="outline" className="text-xs px-1 py-0">
-                                {game.ageGroup}
-                              </Badge>
+                            </div>
+
+                            {/* Status and Warnings */}
+                            <div className="flex flex-wrap gap-2 justify-center">
                               <Badge 
                                 variant={game.status === 'scheduled' ? 'default' : 'secondary'}
-                                className="text-xs px-1 py-0"
+                                className="text-xs"
                               >
                                 {game.status}
                               </Badge>
+                              
                               {hasOverlap && (
                                 <>
                                   {overlapCheck.conflicts.length > 0 && (
-                                    <Badge variant="destructive" className="text-xs px-1 py-0">
-                                      <AlertTriangle className="h-2 w-2 mr-1" />
-                                      OVERLAP
+                                    <Badge variant="destructive" className="text-xs">
+                                      <AlertTriangle className="h-3 w-3 mr-1" />
+                                      Field Conflict
                                     </Badge>
                                   )}
                                   {overlapCheck.restPeriodViolations?.length > 0 && (
-                                    <Badge variant="destructive" className="text-xs px-1 py-0 bg-orange-500 hover:bg-orange-600">
+                                    <Badge variant="destructive" className="text-xs bg-orange-500 hover:bg-orange-600">
                                       <Clock className="h-3 w-3 mr-1" />
-                                      REST VIOLATION
+                                      Rest Violation ({overlapCheck.restPeriodViolations.length})
                                     </Badge>
                                   )}
                                 </>
                               )}
-                              {game.flightName && (
-                                <Badge variant="secondary" className="text-xs">
-                                  {game.flightName}
+
+                              {hasUnassignedFields && (
+                                <Badge variant="outline" className="text-xs text-yellow-600 border-yellow-300">
+                                  <AlertTriangle className="h-3 w-3 mr-1" />
+                                  Incomplete
                                 </Badge>
                               )}
                             </div>
                           </div>
                         )}
-                      </div>
-                      <div className="flex gap-1">
-                        {editingGame !== game.id && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setEditingGame(game.id)}
-                            className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteGame(game.id)}
-                          className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
                       </div>
                     </div>
                   </CardContent>
