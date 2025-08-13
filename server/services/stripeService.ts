@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { db } from "../../db";
-import { teams, paymentTransactions, events } from "../../db/schema";
+import { teams, paymentTransactions, events, refunds, users } from "../../db/schema";
 import { eq } from "drizzle-orm";
 import { log } from "../vite";
 import { sendRegistrationReceiptEmail } from "./emailService";
@@ -1282,6 +1282,189 @@ async function sendApprovalEmailWithPaymentDetails(
     );
   } catch (error) {
     log(`Error sending approval email: ${error}`, "admin");
+    throw error;
+  }
+}
+
+/**
+ * Process a refund through the tournament's Stripe Connect account
+ */
+export async function processConnectRefund({
+  teamId,
+  refundAmount,
+  refundReason,
+  adminNotes,
+  processedByUserId
+}: {
+  teamId: number;
+  refundAmount: number;
+  refundReason: string;
+  adminNotes?: string;
+  processedByUserId: number;
+}) {
+  try {
+    console.log(`🔄 REFUND: Starting refund process for Team ${teamId}`);
+
+    // Get team and original payment details
+    const team = await db
+      .select({
+        id: teams.id,
+        name: teams.name,
+        eventId: teams.eventId,
+        paymentIntentId: teams.paymentIntentId,
+        totalAmount: teams.totalAmount,
+        managerEmail: teams.managerEmail,
+      })
+      .from(teams)
+      .where(eq(teams.id, teamId))
+      .limit(1);
+
+    if (!team[0]) {
+      throw new Error(`Team ${teamId} not found`);
+    }
+
+    const teamData = team[0];
+
+    if (!teamData.paymentIntentId) {
+      throw new Error(`No payment found for Team ${teamId}`);
+    }
+
+    // Get event and Connect account details
+    const event = await db
+      .select({
+        id: events.id,
+        name: events.name,
+        stripeConnectAccountId: events.stripeConnectAccountId,
+      })
+      .from(events)
+      .where(eq(events.id, teamData.eventId))
+      .limit(1);
+
+    if (!event[0] || !event[0].stripeConnectAccountId) {
+      throw new Error(`Event Stripe Connect account not configured`);
+    }
+
+    const eventData = event[0];
+
+    console.log(`🔄 REFUND: Processing $${refundAmount/100} refund for ${teamData.name}`);
+
+    // Calculate platform fee refund (4% + $0.30)
+    const platformFeeRefund = Math.round(refundAmount * 0.04) + 30;
+
+    // Create refund through Connect account
+    const refund = await stripe.refunds.create({
+      payment_intent: teamData.paymentIntentId,
+      amount: refundAmount,
+      reason: 'requested_by_customer',
+      metadata: {
+        teamId: teamId.toString(),
+        teamName: teamData.name,
+        refundReason: refundReason,
+        processedByUserId: processedByUserId.toString(),
+      }
+    }, {
+      stripeAccount: eventData.stripeConnectAccountId
+    });
+
+    console.log(`✅ REFUND: Stripe refund created: ${refund.id}`);
+
+    // Record refund in database
+    const refundRecord = await db
+      .insert(refunds)
+      .values({
+        teamId: teamId,
+        eventId: teamData.eventId,
+        originalPaymentIntentId: teamData.paymentIntentId,
+        refundId: refund.id,
+        refundAmount: refundAmount,
+        platformFeeRefund: platformFeeRefund,
+        refundReason: refundReason,
+        adminNotes: adminNotes,
+        status: refund.status === 'succeeded' ? 'completed' : 'pending',
+        processedByUserId: processedByUserId,
+        stripeConnectAccountId: eventData.stripeConnectAccountId,
+        metadata: {
+          stripeRefundObject: refund,
+          originalAmount: teamData.totalAmount,
+        }
+      })
+      .returning();
+
+    // Update team status
+    await db
+      .update(teams)
+      .set({
+        paymentStatus: 'refunded',
+        refundDate: new Date(),
+        notes: adminNotes ? `REFUND: ${refundReason}. ${adminNotes}` : `REFUND: ${refundReason}`
+      })
+      .where(eq(teams.id, teamId));
+
+    // Create refund transaction record
+    await db
+      .insert(paymentTransactions)
+      .values({
+        teamId: teamId,
+        eventId: parseInt(teamData.eventId),
+        userId: processedByUserId,
+        paymentIntentId: teamData.paymentIntentId,
+        transactionType: 'refund',
+        amount: -refundAmount, // Negative for refund
+        status: refund.status,
+        platformFeeAmount: -platformFeeRefund, // Platform fee gets refunded
+        metadata: {
+          refundId: refund.id,
+          refundReason: refundReason,
+          originalPaymentIntent: teamData.paymentIntentId
+        },
+        notes: `Refund processed: ${refundReason}`
+      });
+
+    console.log(`✅ REFUND: Database records updated for Team ${teamId}`);
+
+    return {
+      success: true,
+      refundId: refund.id,
+      refundAmount: refundAmount,
+      platformFeeRefund: platformFeeRefund,
+      status: refund.status,
+      teamName: teamData.name,
+      refundRecord: refundRecord[0]
+    };
+
+  } catch (error) {
+    console.error('🚨 REFUND ERROR:', error);
+    
+    // Try to log failed refund attempt if we have team data
+    try {
+      const failedTeamData = await db
+        .select({ eventId: teams.eventId, paymentIntentId: teams.paymentIntentId })
+        .from(teams)
+        .where(eq(teams.id, teamId))
+        .limit(1);
+
+      if (failedTeamData[0]) {
+        await db
+          .insert(refunds)
+          .values({
+            teamId: teamId,
+            eventId: failedTeamData[0].eventId,
+            originalPaymentIntentId: failedTeamData[0].paymentIntentId || `FAILED_${Date.now()}`,
+            refundId: `FAILED_${Date.now()}`,
+            refundAmount: refundAmount,
+            platformFeeRefund: 0,
+            refundReason: refundReason,
+            adminNotes: `FAILED: ${error.message}`,
+            status: 'failed',
+            processedByUserId: processedByUserId,
+            stripeConnectAccountId: '',
+            metadata: { error: error.message }
+          });
+      }
+    } catch (dbError) {
+      console.error('Could not log failed refund attempt:', dbError);
+    }
+
     throw error;
   }
 }

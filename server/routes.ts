@@ -12296,6 +12296,122 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
       }
     });
 
+    // Team refund endpoints
+    app.post('/api/admin/teams/:teamId/refund', isAdmin, async (req, res) => {
+      try {
+        const { teamId } = req.params;
+        const { refundAmount, refundReason, adminNotes } = req.body;
+        const userId = req.session?.user?.id;
+
+        if (!userId) {
+          return res.status(401).json({ error: 'User not authenticated' });
+        }
+
+        if (!refundAmount || !refundReason) {
+          return res.status(400).json({ 
+            error: 'Refund amount and reason are required' 
+          });
+        }
+
+        console.log(`🔄 API REFUND: Processing refund for Team ${teamId}`);
+
+        const result = await processConnectRefund({
+          teamId: parseInt(teamId),
+          refundAmount: refundAmount,
+          refundReason: refundReason,
+          adminNotes: adminNotes,
+          processedByUserId: userId
+        });
+
+        res.json({
+          success: true,
+          message: `Refund processed successfully for ${result.teamName}`,
+          refundId: result.refundId,
+          refundAmount: result.refundAmount,
+          platformFeeRefund: result.platformFeeRefund,
+          status: result.status
+        });
+
+      } catch (error: any) {
+        console.error('🚨 API REFUND ERROR:', error);
+        res.status(500).json({
+          error: 'REFUND_FAILED',
+          message: error.message
+        });
+      }
+    });
+
+    // Get team refund history
+    app.get('/api/admin/teams/:teamId/refunds', isAdmin, async (req, res) => {
+      try {
+        const { teamId } = req.params;
+
+        const refundHistory = await db
+          .select({
+            id: refunds.id,
+            refundId: refunds.refundId,
+            refundAmount: refunds.refundAmount,
+            platformFeeRefund: refunds.platformFeeRefund,
+            refundReason: refunds.refundReason,
+            adminNotes: refunds.adminNotes,
+            status: refunds.status,
+            processedAt: refunds.processedAt,
+            processedByUser: {
+              firstName: users.firstName,
+              lastName: users.lastName,
+              email: users.email
+            }
+          })
+          .from(refunds)
+          .leftJoin(users, eq(refunds.processedByUserId, users.id))
+          .where(eq(refunds.teamId, parseInt(teamId)))
+          .orderBy(desc(refunds.createdAt));
+
+        res.json(refundHistory);
+
+      } catch (error: any) {
+        console.error('Error fetching refund history:', error);
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Get all refunds for an event
+    app.get('/api/admin/events/:eventId/refunds', isAdmin, async (req, res) => {
+      try {
+        const { eventId } = req.params;
+
+        const eventRefunds = await db
+          .select({
+            id: refunds.id,
+            teamId: refunds.teamId,
+            teamName: teams.name,
+            refundId: refunds.refundId,
+            refundAmount: refunds.refundAmount,
+            platformFeeRefund: refunds.platformFeeRefund,
+            refundReason: refunds.refundReason,
+            adminNotes: refunds.adminNotes,
+            status: refunds.status,
+            processedAt: refunds.processedAt,
+            processedByUser: {
+              firstName: users.firstName,
+              lastName: users.lastName,
+              email: users.email
+            }
+          })
+          .from(refunds)
+          .leftJoin(teams, eq(refunds.teamId, teams.id))
+          .leftJoin(users, eq(refunds.processedByUserId, users.id))
+          .where(eq(refunds.eventId, eventId))
+          .orderBy(desc(refunds.createdAt));
+
+        res.json(eventRefunds);
+
+      } catch (error: any) {
+        console.error('Error fetching event refunds:', error);
+        res.status(500).json({ error: error.message });
+      }
+    });
+
     // Simple test page for payment fix
     app.get('/fix-payment-test', (req, res) => {
       res.send(`
@@ -12306,8 +12422,12 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             <p><strong>Team:</strong> ELI7E FC G-2013 Select</p>
             <p><strong>Amount to charge:</strong> $1,243.10 (includes 4% + $0.30 platform fee)</p>
             
-            <button onclick="fixPayment()" style="background: #007AFF; color: white; padding: 10px 20px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">
+            <button onclick="fixPayment()" style="background: #007AFF; color: white; padding: 10px 20px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-right: 10px;">
               Fix Team 998 Payment
+            </button>
+            
+            <button onclick="processRefund()" style="background: #FF6B6B; color: white; padding: 10px 20px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">
+              Process Refund ($1,243.10)
             </button>
             
             <div id="result" style="margin-top: 20px; padding: 10px; border-radius: 5px; display: none;"></div>
@@ -12367,6 +12487,69 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
                   \`;
                   result.style.display = 'block';
                   button.textContent = 'Fix Team 998 Payment';
+                  button.disabled = false;
+                }
+              }
+              
+              async function processRefund() {
+                const button = document.querySelectorAll('button')[1];
+                const result = document.getElementById('result');
+                
+                button.disabled = true;
+                button.textContent = 'Processing Refund...';
+                result.style.display = 'none';
+                
+                try {
+                  const response = await fetch('/api/admin/teams/998/refund', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                      refundAmount: 124310, // $1,243.10 in cents
+                      refundReason: "Payment fix testing - full refund",
+                      adminNotes: "Testing refund system functionality"
+                    })
+                  });
+                  
+                  const data = await response.json();
+                  
+                  if (response.ok) {
+                    result.style.background = '#d4edda';
+                    result.style.color = '#155724';
+                    result.style.border = '1px solid #c3e6cb';
+                    result.innerHTML = \`
+                      <strong>✅ Refund Success!</strong><br>
+                      Amount refunded: $\${(data.refundAmount / 100).toFixed(2)}<br>
+                      Platform fee refunded: $\${(data.platformFeeRefund / 100).toFixed(2)}<br>
+                      Refund ID: \${data.refundId}<br>
+                      Status: \${data.status}
+                    \`;
+                  } else {
+                    result.style.background = '#f8d7da';
+                    result.style.color = '#721c24';
+                    result.style.border = '1px solid #f5c6cb';
+                    result.innerHTML = \`
+                      <strong>❌ Refund Failed</strong><br>
+                      Error: \${data.error || 'Unknown error'}<br>
+                      Message: \${data.message || 'No additional details'}
+                    \`;
+                  }
+                  
+                  result.style.display = 'block';
+                  button.textContent = 'Process Refund ($1,243.10)';
+                  button.disabled = false;
+                  
+                } catch (error) {
+                  result.style.background = '#f8d7da';
+                  result.style.color = '#721c24';
+                  result.style.border = '1px solid #f5c6cb';
+                  result.innerHTML = \`
+                    <strong>❌ Network Error</strong><br>
+                    \${error.message}
+                  \`;
+                  result.style.display = 'block';
+                  button.textContent = 'Process Refund ($1,243.10)';
                   button.disabled = false;
                 }
               }
