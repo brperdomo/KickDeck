@@ -1,0 +1,195 @@
+import fetch from "node-fetch";
+
+// === 1. Fake "Games DB" ===
+let gamesDB = [
+  { id: "G1", teamA: "Lions", teamB: "Tigers", time: "2025-08-14T15:00:00Z", field: "Field 1" },
+  { id: "G2", teamA: "Bears", teamB: "Wolves", time: "2025-08-14T16:30:00Z", field: "Field 2" }
+];
+
+// === 2. Conversation history storage ===
+let conversationHistory = [
+  {
+    role: "system",
+    content: `
+You are a tournament scheduling assistant.
+Tournament rules:
+- No overlapping games on the same field.
+- Minimum 90 minutes rest between games for any team.
+- No more than 2 games per day per team.
+- All times are in UTC.
+If a move violates these rules, suggest the closest valid time instead.
+`
+  }
+];
+
+// === 3. Helper functions ===
+function minutesBetween(date1, date2) {
+  return Math.abs((new Date(date1) - new Date(date2)) / (1000 * 60));
+}
+
+function checkConflicts(gameId, newTime, newField) {
+  const movedTime = new Date(newTime);
+  const movingGame = gamesDB.find(g => g.id === gameId);
+  if (!movingGame) return { valid: false, reason: "Game not found" };
+
+  const teamA = movingGame.teamA;
+  const teamB = movingGame.teamB;
+
+  // Check field overlap
+  for (let game of gamesDB) {
+    if (game.id === gameId) continue;
+    if (game.field === newField && game.time === newTime) {
+      return { valid: false, reason: "Field already in use at that time" };
+    }
+  }
+
+  // Check rest period and daily limit
+  let teamAGamesToday = 0;
+  let teamBGamesToday = 0;
+
+  for (let game of gamesDB) {
+    const gameDate = new Date(game.time).toISOString().split("T")[0];
+    const newDate = movedTime.toISOString().split("T")[0];
+    if (gameDate === newDate) {
+      if (game.teamA === teamA || game.teamB === teamA) teamAGamesToday++;
+      if (game.teamA === teamB || game.teamB === teamB) teamBGamesToday++;
+    }
+
+    // Rest time check
+    if (game.teamA === teamA || game.teamB === teamA || game.teamA === teamB || game.teamB === teamB) {
+      if (minutesBetween(game.time, movedTime) < 90) {
+        return { valid: false, reason: "Rest period of 90 minutes not met" };
+      }
+    }
+  }
+
+  if (teamAGamesToday >= 2 || teamBGamesToday >= 2) {
+    return { valid: false, reason: "Daily game limit exceeded" };
+  }
+
+  return { valid: true };
+}
+
+function findNextValidTime(gameId, newTime, newField) {
+  let proposedTime = new Date(newTime);
+
+  for (let i = 0; i < 10; i++) { // Try 10 increments
+    proposedTime = new Date(proposedTime.getTime() + 30 * 60000); // +30 minutes
+    const check = checkConflicts(gameId, proposedTime.toISOString(), newField);
+    if (check.valid) {
+      return proposedTime.toISOString();
+    }
+  }
+
+  return null;
+}
+
+// === 4. Tool function implementations ===
+async function moveGame({ gameId, newTime, newField }) {
+  const check = checkConflicts(gameId, newTime, newField);
+  if (!check.valid) {
+    const alt = findNextValidTime(gameId, newTime, newField);
+    if (alt) {
+      return {
+        success: false,
+        suggestion: alt,
+        message: `Requested move violates rule: ${check.reason}. Suggested alternate time: ${alt}`
+      };
+    }
+    return { success: false, message: `Requested move violates rule: ${check.reason}. No alternate found.` };
+  }
+
+  const game = gamesDB.find(g => g.id === gameId);
+  game.time = newTime;
+  game.field = newField;
+  return { success: true, updatedGame: game };
+}
+
+async function swapTeams({ gameId, teamA, teamB }) {
+  const game = gamesDB.find(g => g.id === gameId);
+  if (!game) return { success: false, message: "Game not found" };
+
+  game.teamA = teamA;
+  game.teamB = teamB;
+  return { success: true, updatedGame: game };
+}
+
+// === 5. Call OpenAI Responses API ===
+async function askAssistant(userMessage) {
+  conversationHistory.push({ role: "user", content: userMessage });
+
+  const res = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: "gpt-4.1",
+      messages: conversationHistory,
+      tools: [
+        {
+          type: "function",
+          name: "moveGame",
+          description: "Move a game to a new time and field (checks tournament constraints)",
+          parameters: {
+            type: "object",
+            properties: {
+              gameId: { type: "string" },
+              newTime: { type: "string", format: "date-time" },
+              newField: { type: "string" }
+            },
+            required: ["gameId", "newTime", "newField"]
+          }
+        },
+        {
+          type: "function",
+          name: "swapTeams",
+          description: "Swap the teams in a given game",
+          parameters: {
+            type: "object",
+            properties: {
+              gameId: { type: "string" },
+              teamA: { type: "string" },
+              teamB: { type: "string" }
+            },
+            required: ["gameId", "teamA", "teamB"]
+          }
+        }
+      ]
+    })
+  });
+
+  const data = await res.json();
+
+  if (data.output && data.output[0]?.tool_calls) {
+    for (let call of data.output[0].tool_calls) {
+      const args = JSON.parse(call.function.arguments);
+      let result;
+      if (call.function.name === "moveGame") {
+        result = await moveGame(args);
+      } else if (call.function.name === "swapTeams") {
+        result = await swapTeams(args);
+      }
+      conversationHistory.push({
+        role: "tool",
+        tool_call_id: call.id,
+        content: JSON.stringify(result)
+      });
+      return await askAssistant("(processed tool request)");
+    }
+  }
+
+  const message = data.output_text;
+  conversationHistory.push({ role: "assistant", content: message });
+  return message;
+}
+
+// === 6. Example usage ===
+(async () => {
+  console.log(await askAssistant("Move game G1 to 2025-08-14T16:30:00Z on Field 1"));
+  console.log("Updated games DB:", gamesDB);
+
+  console.log(await askAssistant("Swap teams in game G2 to Eagles vs Hawks"));
+  console.log("Updated games DB:", gamesDB);
+})();

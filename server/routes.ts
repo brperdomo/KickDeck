@@ -12412,6 +12412,38 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
       }
     });
 
+    // AI Chat endpoint using Responses API
+    app.post('/api/admin/events/:eventId/ai-chat', isAdmin, async (req, res) => {
+      try {
+        const { eventId } = req.params;
+        const { message } = req.body;
+
+        if (!message) {
+          return res.status(400).json({ error: 'Message is required' });
+        }
+
+        // Import the Responses API service
+        const { OpenAIResponsesScheduler } = await import('./services/openai-responses-service');
+        
+        console.log(`🤖 AI Chat request for event ${eventId}: "${message}"`);
+
+        const aiResponse = await OpenAIResponsesScheduler.chatWithScheduler(eventId, message);
+
+        res.json({
+          success: true,
+          response: aiResponse,
+          timestamp: new Date().toISOString()
+        });
+
+      } catch (error: any) {
+        console.error('🚨 AI Chat Error:', error);
+        res.status(500).json({
+          error: 'AI_CHAT_FAILED',
+          message: error.message || 'Failed to process AI chat request'
+        });
+      }
+    });
+
     // Simple test page for payment fix
     app.get('/fix-payment-test', (req, res) => {
       res.send(`
