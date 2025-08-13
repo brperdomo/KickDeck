@@ -17,6 +17,7 @@ export default function AIScheduleChatInterface({ eventId }: AIScheduleChatInter
   const [userInput, setUserInput] = useState('');
   const [conversation, setConversation] = useState<Array<{role: string, content: string}>>([]);
   const [showChat, setShowChat] = useState(false);
+  const [sessionId, setSessionId] = useState<string>('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -56,7 +57,8 @@ export default function AIScheduleChatInterface({ eventId }: AIScheduleChatInter
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          message: message
+          message: message,
+          sessionId: sessionId
         })
       });
 
@@ -67,6 +69,11 @@ export default function AIScheduleChatInterface({ eventId }: AIScheduleChatInter
 
       const data = await response.json();
       console.log('✅ AI Response:', data);
+      
+      // Store session ID if this is first message
+      if (!sessionId && data.sessionId) {
+        setSessionId(data.sessionId);
+      }
       
       // Add AI response to conversation
       setConversation(prev => [...prev, { role: 'assistant', content: data.response }]);
@@ -102,6 +109,10 @@ export default function AIScheduleChatInterface({ eventId }: AIScheduleChatInter
   const startChat = () => {
     setShowChat(true);
     if (conversation.length === 0) {
+      // Generate a new session ID for this chat
+      const newSessionId = crypto.randomUUID();
+      setSessionId(newSessionId);
+      
       setConversation([{
         role: 'assistant',
         content: 'Hello! I\'m your tournament scheduling assistant. What would you like to do today?\n\nI can help you with:\n• Moving games to different times or fields\n• Checking for scheduling conflicts\n• Swapping teams in games\n• Finding optimal time slots\n• Reviewing tomorrow\'s schedule\n\nJust tell me what you need in plain English! For example:\n"Move the Lions vs Tigers game to Field 2 at 3 PM"\n"Are there any conflicts with today\'s schedule?"\n"Show me all games on Field 1"'
@@ -109,8 +120,21 @@ export default function AIScheduleChatInterface({ eventId }: AIScheduleChatInter
     }
   };
 
-  const clearChat = () => {
+  const clearChat = async () => {
+    if (sessionId) {
+      try {
+        await fetch(`/api/admin/events/${eventId}/ai-chat/clear`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId })
+        });
+      } catch (error) {
+        console.warn('Failed to clear chat history on server:', error);
+      }
+    }
+    
     setConversation([]);
+    setSessionId('');
     setShowChat(false);
   };
 

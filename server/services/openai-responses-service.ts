@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { db } from "../../db";
-import { eq, and, gte, lte } from "drizzle-orm";
+import { eq, and, gte, lte, desc } from "drizzle-orm";
 import { 
   teams, 
   events, 
@@ -10,8 +10,10 @@ import {
   fields, 
   gameTimeSlots,
   eventGameFormats,
-  gameFormats
+  gameFormats,
+  aiConversationHistory
 } from "../../db/schema";
+import { v4 as uuidv4 } from 'uuid';
 
 // Initialize the OpenAI client
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -26,28 +28,75 @@ interface TournamentGame {
   bracket?: string;
 }
 
-interface ConversationContext {
-  history: any[];
-  tournamentData: any;
-  flightConfig: any;
+interface TournamentConstraints {
+  restPeriod: number;
+  gameLength: number;
+  bufferTime: number;
+  fieldSize: string;
 }
 
 /**
  * OpenAI Responses API Tournament Scheduling Service
- * Uses OpenAI's Responses API for conversational tournament scheduling with constraint validation
+ * Uses PostgreSQL for conversation persistence and real-time constraint validation
  */
 export class OpenAIResponsesScheduler {
   
-  private static conversationHistory = new Map<string, ConversationContext>();
-  
   /**
-   * Initialize conversation context for an event
+   * Generate or get session ID for conversation tracking
    */
-  private static async initializeConversation(eventId: string): Promise<ConversationContext> {
+  private static generateSessionId(): string {
+    return uuidv4();
+  }
+
+  /**
+   * Store conversation message in PostgreSQL
+   */
+  private static async storeMessage(eventId: string, sessionId: string, role: string, content: string, toolCallId?: string) {
+    try {
+      await db.insert(aiConversationHistory).values({
+        eventId: parseInt(eventId),
+        sessionId,
+        role,
+        content,
+        toolCallId: toolCallId || null
+      });
+    } catch (error) {
+      console.error('Failed to store conversation message:', error);
+    }
+  }
+
+  /**
+   * Load conversation history from PostgreSQL
+   */
+  private static async loadConversationHistory(eventId: string, sessionId: string): Promise<any[]> {
+    try {
+      const messages = await db.query.aiConversationHistory.findMany({
+        where: and(
+          eq(aiConversationHistory.eventId, parseInt(eventId)),
+          eq(aiConversationHistory.sessionId, sessionId)
+        ),
+        orderBy: [desc(aiConversationHistory.createdAt)]
+      });
+
+      return messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        tool_call_id: msg.toolCallId
+      })).reverse(); // Return chronological order
+    } catch (error) {
+      console.error('Failed to load conversation history:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Initialize system prompt with current tournament context
+   */
+  private static async getSystemPrompt(eventId: string): Promise<string> {
     const tournamentData = await this.fetchTournamentData(eventId);
     const flightConfig = await this.getFlightConfigurations(eventId);
     
-    const systemPrompt = `
+    return `
 You are a professional tournament scheduling assistant for MatchPro.AI. You help tournament directors manage complex scheduling with natural language commands.
 
 CORE PERSONALITY:
@@ -85,16 +134,9 @@ AVAILABLE FUNCTIONS:
 Current tournament data: ${JSON.stringify(tournamentData, null, 2)}
 
 Always be helpful and solution-oriented in your responses.
-`;
 
-    const context: ConversationContext = {
-      history: [{ role: "system", content: systemPrompt }],
-      tournamentData,
-      flightConfig
-    };
-    
-    this.conversationHistory.set(eventId, context);
-    return context;
+Current tournament data: ${JSON.stringify(tournamentData, null, 2)}
+`;
   }
 
   /**
@@ -102,27 +144,28 @@ Always be helpful and solution-oriented in your responses.
    */
   private static async getFlightConfigurations(eventId: string) {
     try {
-      const eventGameFormats = await db.query.eventGameFormats.findMany({
+      // Try eventGameFormats first
+      const eventFormats = await db.query.eventGameFormats.findMany({
         where: eq(eventGameFormats.eventId, parseInt(eventId))
       });
 
-      if (eventGameFormats.length > 0) {
-        return eventGameFormats.map(format => ({
+      if (eventFormats.length > 0) {
+        return eventFormats.map(format => ({
           gameLength: format.gameLength || 90,
-          restPeriod: format.restPeriod || 90,
+          restPeriod: 90, // Default rest period 
           bufferTime: format.bufferTime || 15,
           fieldSize: format.fieldSize || '7v7'
         }));
       }
 
       // Fallback to game_formats table
-      const gameFormats = await db.query.gameFormats.findMany({
+      const gameFormatsData = await db.query.gameFormats.findMany({
         where: eq(gameFormats.eventId, parseInt(eventId))
       });
 
-      return gameFormats.map(format => ({
+      return gameFormatsData.map(format => ({
         gameLength: format.gameLength || 90,
-        restPeriod: format.restPeriod || 90,
+        restPeriod: 90, // Default rest period
         bufferTime: format.bufferTime || 15,
         fieldSize: format.fieldSize || '7v7'
       }));
@@ -144,9 +187,9 @@ Always be helpful and solution-oriented in your responses.
     console.log(`📊 Fetching tournament data for event ${eventId}...`);
     
     try {
-      // Fetch existing games
+      // Fetch existing games with proper field names
       const existingGames = await db.query.games.findMany({
-        where: eq(games.eventId, parseInt(eventId))
+        where: eq(games.eventId, eventId)
       });
 
       // Fetch teams
@@ -154,19 +197,19 @@ Always be helpful and solution-oriented in your responses.
         where: eq(teams.eventId, eventId)
       });
 
-      // Fetch fields
+      // Fetch fields  
       const eventFields = await db.query.fields.findMany({
         where: eq(fields.eventId, parseInt(eventId))
       });
 
       const gameData: TournamentGame[] = existingGames.map(game => ({
         id: game.id.toString(),
-        teamA: game.homeTeam || 'TBD',
-        teamB: game.awayTeam || 'TBD',
-        time: game.gameDateTime || '',
-        field: game.fieldName || '',
-        ageGroup: game.ageGroup || '',
-        bracket: game.bracketName || ''
+        teamA: game.homeTeamName || 'TBD',
+        teamB: game.awayTeamName || 'TBD', 
+        time: game.scheduledTime || game.createdAt,
+        field: game.fieldName || 'TBD',
+        ageGroup: game.ageGroupId?.toString() || '',
+        bracket: game.groupId?.toString() || ''
       }));
 
       return {
@@ -182,13 +225,13 @@ Always be helpful and solution-oriented in your responses.
   }
 
   /**
-   * Helper functions for constraint validation
+   * Smart conflict detection with detailed explanations
    */
   private static minutesBetween(date1: string, date2: string): number {
     return Math.abs((new Date(date1).getTime() - new Date(date2).getTime()) / (1000 * 60));
   }
 
-  private static checkConflicts(games: TournamentGame[], gameId: string, newTime: string, newField: string, restPeriod: number = 90) {
+  private static checkConflicts(games: TournamentGame[], gameId: string, newTime: string, newField: string, constraints: TournamentConstraints) {
     const movingGame = games.find(g => g.id === gameId);
     if (!movingGame) return { valid: false, reason: "Game not found" };
 
@@ -221,11 +264,11 @@ Always be helpful and solution-oriented in your responses.
 
       // Rest time check
       if (game.teamA === teamA || game.teamB === teamA || game.teamA === teamB || game.teamB === teamB) {
-        if (this.minutesBetween(game.time, newTime) < restPeriod) {
+        if (this.minutesBetween(game.time, newTime) < constraints.restPeriod) {
           const conflictTeam = (game.teamA === teamA || game.teamB === teamA) ? teamA : teamB;
           return { 
             valid: false, 
-            reason: `${conflictTeam} needs ${restPeriod} minutes rest. Current gap is ${this.minutesBetween(game.time, newTime)} minutes.` 
+            reason: `${conflictTeam} needs ${constraints.restPeriod} minutes rest. Current gap is ${this.minutesBetween(game.time, newTime)} minutes.` 
           };
         }
       }
@@ -239,58 +282,59 @@ Always be helpful and solution-oriented in your responses.
     return { valid: true };
   }
 
-  private static findNextValidTime(games: TournamentGame[], gameId: string, startTime: string, field: string, restPeriod: number = 90): string | null {
+  private static findAlternativeTimeSlots(games: TournamentGame[], gameId: string, startTime: string, field: string, constraints: TournamentConstraints): string[] {
+    const alternatives: string[] = [];
     let proposedTime = new Date(startTime);
 
-    for (let i = 0; i < 20; i++) { // Try 20 increments (10 hours)
+    for (let i = 1; i <= 20; i++) { // Try 20 increments (10 hours)
       proposedTime = new Date(proposedTime.getTime() + 30 * 60000); // +30 minutes
-      const check = this.checkConflicts(games, gameId, proposedTime.toISOString(), field, restPeriod);
+      const check = this.checkConflicts(games, gameId, proposedTime.toISOString(), field, constraints);
       if (check.valid) {
-        return proposedTime.toISOString();
+        alternatives.push(proposedTime.toISOString());
       }
+      if (alternatives.length >= 5) break; // Limit to 5 suggestions
     }
 
-    return null;
+    return alternatives;
   }
 
   /**
-   * Tool functions for AI to call
+   * Enhanced move game with PostgreSQL integration and smart suggestions
    */
   private static async moveGame(eventId: string, { gameId, newTime, newField }: { gameId: string, newTime: string, newField: string }) {
-    const context = this.conversationHistory.get(eventId);
-    if (!context) throw new Error('Conversation context not found');
+    const tournamentData = await this.fetchTournamentData(eventId);
+    const flightConfig = await this.getFlightConfigurations(eventId);
+    const constraints: TournamentConstraints = {
+      restPeriod: flightConfig[0]?.restPeriod || 90,
+      gameLength: flightConfig[0]?.gameLength || 90,
+      bufferTime: flightConfig[0]?.bufferTime || 15,
+      fieldSize: flightConfig[0]?.fieldSize || '7v7'
+    };
 
-    const check = this.checkConflicts(context.tournamentData.games, gameId, newTime, newField, context.flightConfig[0]?.restPeriod);
+    const check = this.checkConflicts(tournamentData.games, gameId, newTime, newField, constraints);
     if (!check.valid) {
-      const alt = this.findNextValidTime(context.tournamentData.games, gameId, newTime, newField, context.flightConfig[0]?.restPeriod);
-      if (alt) {
+      const alternatives = this.findAlternativeTimeSlots(tournamentData.games, gameId, newTime, newField, constraints);
+      if (alternatives.length > 0) {
         return {
           success: false,
-          suggestion: alt,
-          message: `❌ Requested move violates rule: ${check.reason}. ✅ Suggested alternate time: ${alt}`
+          suggestions: alternatives,
+          message: `❌ ${check.reason}. ✅ Available alternatives: ${alternatives.map(t => new Date(t).toLocaleTimeString()).join(', ')}`
         };
       }
-      return { success: false, message: `❌ Requested move violates rule: ${check.reason}. No alternate time found within 10 hours.` };
+      return { success: false, message: `❌ ${check.reason}. No alternatives found within 10 hours.` };
     }
 
     // Update the game in database
     try {
       await db.update(games)
         .set({
-          gameDateTime: newTime,
+          scheduledTime: newTime,
           fieldName: newField,
-          updatedAt: new Date()
+          updatedAt: new Date().toISOString()
         })
         .where(eq(games.id, parseInt(gameId)));
 
-      // Update local context
-      const game = context.tournamentData.games.find((g: TournamentGame) => g.id === gameId);
-      if (game) {
-        game.time = newTime;
-        game.field = newField;
-      }
-
-      return { success: true, message: `✅ Game ${gameId} successfully moved to ${newTime} on ${newField}` };
+      return { success: true, message: `✅ Game ${gameId} successfully moved to ${new Date(newTime).toLocaleString()} on ${newField}` };
     } catch (error) {
       return { success: false, message: `❌ Database error: ${error}` };
     }
@@ -300,20 +344,11 @@ Always be helpful and solution-oriented in your responses.
     try {
       await db.update(games)
         .set({
-          homeTeam: teamA,
-          awayTeam: teamB,
-          updatedAt: new Date()
+          homeTeamName: teamA,
+          awayTeamName: teamB,
+          updatedAt: new Date().toISOString()
         })
         .where(eq(games.id, parseInt(gameId)));
-
-      const context = this.conversationHistory.get(eventId);
-      if (context) {
-        const game = context.tournamentData.games.find((g: TournamentGame) => g.id === gameId);
-        if (game) {
-          game.teamA = teamA;
-          game.teamB = teamB;
-        }
-      }
 
       return { success: true, message: `✅ Game ${gameId} teams updated to ${teamA} vs ${teamB}` };
     } catch (error) {
@@ -322,25 +357,35 @@ Always be helpful and solution-oriented in your responses.
   }
 
   /**
-   * Main chat interface for tournament scheduling
+   * Main chat interface with PostgreSQL persistence
    */
-  public static async chatWithScheduler(eventId: string, userMessage: string): Promise<string> {
+  public static async chatWithScheduler(eventId: string, userMessage: string, sessionId?: string): Promise<string> {
     try {
       console.log(`🤖 Processing chat message for event ${eventId}: "${userMessage}"`);
 
-      // Initialize or get conversation context
-      let context = this.conversationHistory.get(eventId);
-      if (!context) {
-        context = await this.initializeConversation(eventId);
+      // Generate session ID if not provided
+      if (!sessionId) {
+        sessionId = this.generateSessionId();
       }
 
-      // Add user message to conversation
-      context.history.push({ role: "user", content: userMessage });
+      // Load conversation history from database
+      const conversationHistory = await this.loadConversationHistory(eventId, sessionId);
+      
+      // Add system prompt if this is a new conversation
+      if (conversationHistory.length === 0) {
+        const systemPrompt = await this.getSystemPrompt(eventId);
+        await this.storeMessage(eventId, sessionId, 'system', systemPrompt);
+        conversationHistory.push({ role: 'system', content: systemPrompt });
+      }
+
+      // Store user message
+      await this.storeMessage(eventId, sessionId, 'user', userMessage);
+      conversationHistory.push({ role: "user", content: userMessage });
 
       // Call OpenAI Responses API (not Realtime)
       const response = await openai.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: context.history,
+        messages: conversationHistory,
         tools: [
           {
             type: "function",
@@ -392,8 +437,9 @@ Always be helpful and solution-oriented in your responses.
             result = await this.swapTeams(eventId, args);
           }
 
-          // Add tool result to conversation
-          context.history.push({
+          // Store tool result in database
+          await this.storeMessage(eventId, sessionId, 'tool', JSON.stringify(result), toolCall.id);
+          conversationHistory.push({
             role: "tool",
             tool_call_id: toolCall.id,
             content: JSON.stringify(result)
@@ -403,39 +449,48 @@ Always be helpful and solution-oriented in your responses.
         // Get AI response after tool execution
         const followUpResponse = await openai.chat.completions.create({
           model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-          messages: context.history,
+          messages: conversationHistory,
           temperature: 0.7,
           max_tokens: 1000
         });
 
         const aiMessage = followUpResponse.choices[0].message.content || "I've processed your request.";
-        context.history.push({ role: "assistant", content: aiMessage });
+        await this.storeMessage(eventId, sessionId, 'assistant', aiMessage);
         return aiMessage;
       }
 
       // Regular response without tool calls
       const aiMessage = choice.message.content || "I'm here to help with tournament scheduling.";
-      context.history.push({ role: "assistant", content: aiMessage });
+      await this.storeMessage(eventId, sessionId, 'assistant', aiMessage);
       return aiMessage;
 
-    } catch (error) {
-      console.error('🚨 OpenAI Responses API Error:', error);
-      return `❌ Sorry, I encountered an error: ${error.message}. Please try again.`;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('🚨 AI Scheduler Error:', error);
+      return `❌ Sorry, I encountered an error: ${errorMessage}. Please try again.`;
     }
   }
 
   /**
-   * Get conversation history for display
+   * Get conversation history from PostgreSQL for display
    */
-  public static getConversationHistory(eventId: string): any[] {
-    const context = this.conversationHistory.get(eventId);
-    return context ? context.history.filter(msg => msg.role !== 'system') : [];
+  public static async getConversationHistory(eventId: string, sessionId: string): Promise<any[]> {
+    const history = await this.loadConversationHistory(eventId, sessionId);
+    return history.filter(msg => msg.role !== 'system');
   }
 
   /**
-   * Clear conversation history
+   * Clear conversation history for a session
    */
-  public static clearConversation(eventId: string): void {
-    this.conversationHistory.delete(eventId);
+  public static async clearConversation(eventId: string, sessionId: string): Promise<void> {
+    try {
+      await db.delete(aiConversationHistory)
+        .where(and(
+          eq(aiConversationHistory.eventId, parseInt(eventId)),
+          eq(aiConversationHistory.sessionId, sessionId)
+        ));
+    } catch (error) {
+      console.error('Failed to clear conversation history:', error);
+    }
   }
 }

@@ -1880,4 +1880,35 @@ export const selectPublishedScheduleSchema = createSelectSchema(publishedSchedul
 export type InsertPublishedSchedule = typeof publishedSchedules.$inferInsert;
 export type SelectPublishedSchedule = typeof publishedSchedules.$inferSelect;
 
+// AI Conversation History table for storing chat sessions with PostgreSQL
+export const aiConversationHistory = pgTable('ai_conversation_history', {
+  id: serial('id').primaryKey(),
+  eventId: integer('event_id').references(() => events.id, { onDelete: 'cascade' }),
+  sessionId: varchar('session_id', { length: 255 }).notNull(),
+  role: varchar('role', { length: 20 }).notNull(), // 'user', 'assistant', 'system', 'tool'
+  content: text('content').notNull(),
+  toolCallId: varchar('tool_call_id', { length: 255 }),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+export const aiConversationHistoryRelations = relations(aiConversationHistory, ({ one }) => ({
+  event: one(events, {
+    fields: [aiConversationHistory.eventId],
+    references: [events.id],
+  }),
+}));
+
+export const insertAiConversationHistorySchema = createInsertSchema(aiConversationHistory, {
+  eventId: z.number().positive("Event ID is required"),
+  sessionId: z.string().min(1, "Session ID is required"),
+  role: z.enum(['user', 'assistant', 'system', 'tool']),
+  content: z.string().min(1, "Content is required"),
+});
+
+export const selectAiConversationHistorySchema = createSelectSchema(aiConversationHistory);
+
+export type InsertAiConversationHistory = typeof aiConversationHistory.$inferInsert;
+export type SelectAiConversationHistory = typeof aiConversationHistory.$inferSelect;
+
 // Note: Clubs table already defined at the top of the file

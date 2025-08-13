@@ -12416,7 +12416,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
     app.post('/api/admin/events/:eventId/ai-chat', isAdmin, async (req, res) => {
       try {
         const { eventId } = req.params;
-        const { message } = req.body;
+        const { message, sessionId } = req.body;
 
         if (!message) {
           return res.status(400).json({ error: 'Message is required' });
@@ -12425,13 +12425,14 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         // Import the Responses API service
         const { OpenAIResponsesScheduler } = await import('./services/openai-responses-service');
         
-        console.log(`🤖 AI Chat request for event ${eventId}: "${message}"`);
+        console.log(`🤖 AI Chat request for event ${eventId}: "${message}" (session: ${sessionId || 'new'})`);
 
-        const aiResponse = await OpenAIResponsesScheduler.chatWithScheduler(eventId, message);
+        const aiResponse = await OpenAIResponsesScheduler.chatWithScheduler(eventId, message, sessionId);
 
         res.json({
           success: true,
           response: aiResponse,
+          sessionId: sessionId || 'generated',
           timestamp: new Date().toISOString()
         });
 
@@ -12440,6 +12441,30 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         res.status(500).json({
           error: 'AI_CHAT_FAILED',
           message: error.message || 'Failed to process AI chat request'
+        });
+      }
+    });
+
+    // Clear AI conversation history endpoint
+    app.post('/api/admin/events/:eventId/ai-chat/clear', isAdmin, async (req, res) => {
+      try {
+        const { eventId } = req.params;
+        const { sessionId } = req.body;
+
+        if (!sessionId) {
+          return res.status(400).json({ error: 'Session ID is required' });
+        }
+
+        const { OpenAIResponsesScheduler } = await import('./services/openai-responses-service');
+        await OpenAIResponsesScheduler.clearConversation(eventId, sessionId);
+
+        res.json({ success: true, message: 'Conversation cleared' });
+
+      } catch (error: any) {
+        console.error('🚨 AI Chat Clear Error:', error);
+        res.status(500).json({
+          error: 'AI_CHAT_CLEAR_FAILED',
+          message: error.message || 'Failed to clear AI chat history'
         });
       }
     });

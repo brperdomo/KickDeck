@@ -1,0 +1,68 @@
+Smart Conflict Resolution Upgrade
+I’ll just show the updated parts of the moveGame function from earlier.
+
+javascript
+Copy
+Edit
+async function moveGame({ gameId, newTime, newField }) {
+  const games = await getGames();
+  const targetGame = games.find(g => g.id === parseInt(gameId));
+  if (!targetGame) return { success: false, message: "Game not found" };
+
+  const conflictReason = checkConflict(targetGame, games, newTime, newField);
+  if (conflictReason) {
+    const suggestions = findNextAvailableSlots(targetGame, games, newField, newTime);
+    return { 
+      success: false, 
+      message: conflictReason, 
+      suggestions 
+    };
+  }
+
+  // Update game if no conflict
+  await pool.query(
+    "UPDATE games SET game_time = $1, field = $2 WHERE id = $3",
+    [newTime, newField, gameId]
+  );
+
+  return { success: true, updatedGame: await getGames() };
+}
+
+// Helper: Check if the proposed time/field violates rules
+function checkConflict(game, games, proposedTime, proposedField) {
+  const proposed = new Date(proposedTime);
+
+  for (let g of games) {
+    if (g.id !== game.id) {
+      const sameField = g.field === proposedField;
+      const overlap = Math.abs(new Date(g.game_time) - proposed) < 90 * 60 * 1000;
+      const sameTeam = [g.team_a, g.team_b].some(t => 
+        t === game.team_a || t === game.team_b
+      );
+
+      if (sameField && overlap) {
+        return "Field conflict detected";
+      }
+      if (sameTeam && overlap) {
+        return "Rest time conflict for one of the teams";
+      }
+    }
+  }
+  return null; // No conflict
+}
+
+// Helper: Suggest available time slots
+function findNextAvailableSlots(game, games, field, startFromTime) {
+  const slots = [];
+  const start = new Date(startFromTime);
+
+  // Search up to 10 hours forward in 30-min increments
+  for (let i = 1; i <= 20; i++) {
+    const candidate = new Date(start.getTime() + i * 30 * 60 * 1000);
+    if (!checkConflict(game, games, candidate.toISOString(), field)) {
+      slots.push(candidate.toISOString());
+    }
+    if (slots.length >= 5) break; // Limit suggestions
+  }
+  return slots;
+}
