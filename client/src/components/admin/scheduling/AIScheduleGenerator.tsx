@@ -15,9 +15,10 @@ interface AIScheduleGeneratorProps {
 }
 
 export default function AIScheduleGenerator({ eventId }: AIScheduleGeneratorProps) {
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [prompt, setPrompt] = useState('');
-  const [scheduleResults, setScheduleResults] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [userInput, setUserInput] = useState('');
+  const [conversation, setConversation] = useState<Array<{role: string, content: string}>>([]);
+  const [showChat, setShowChat] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -31,48 +32,53 @@ export default function AIScheduleGenerator({ eventId }: AIScheduleGeneratorProp
     }
   });
 
-  const generateWithAI = async () => {
-    if (!prompt.trim()) {
+  const sendMessage = async () => {
+    if (!userInput.trim()) {
       toast({
-        title: "Prompt Required",
-        description: "Please provide instructions for the AI scheduler.",
+        title: "Message Required",
+        description: "Please enter a message to send to the AI assistant.",
         variant: "destructive"
       });
       return;
     }
 
-    setIsGenerating(true);
+    setIsLoading(true);
+    const message = userInput.trim();
+    setUserInput('');
+    
+    // Add user message to conversation
+    setConversation(prev => [...prev, { role: 'user', content: message }]);
     
     try {
-      console.log('🤖 Starting OpenAI Realtime API schedule generation...');
+      console.log('🤖 Sending message to OpenAI Responses API...');
       
-      const response = await fetch(`/api/admin/events/${eventId}/ai-schedule`, {
+      const response = await fetch(`/api/admin/events/${eventId}/ai-chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          prompt: prompt.trim(),
-          useRealtimeAPI: true // Flag to use Realtime API instead of GPT-4o
+          message: message
         })
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `AI scheduling failed: ${response.status}`);
+        throw new Error(errorData.message || `AI chat failed: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('✅ AI Schedule generation response:', data);
+      console.log('✅ AI Response:', data);
       
-      setScheduleResults(data);
+      // Add AI response to conversation
+      setConversation(prev => [...prev, { role: 'assistant', content: data.response }]);
       
-      // Refresh schedule data
+      // Refresh schedule data if changes were made
       queryClient.invalidateQueries({ queryKey: ['admin', 'schedule', eventId] });
       
       toast({
-        title: "AI Schedule Generated",
-        description: `Successfully generated ${data.gamesCreated || 0} games using OpenAI Realtime API.`,
+        title: "Message Sent",
+        description: "AI assistant has responded to your request.",
         variant: "default"
       });
       

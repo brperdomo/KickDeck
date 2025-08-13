@@ -25,7 +25,7 @@ import { MasterScheduleConflictDetection } from '@/components/admin/scheduling/M
 import { PublishSchedules } from '@/components/admin/scheduling/PublishSchedules';
 import FieldSortingManager from '@/components/admin/FieldSortingManager';
 import FieldManagementDashboard from '@/components/admin/FieldManagementDashboard';
-import AIScheduleGenerator from '@/components/admin/scheduling/AIScheduleGenerator';
+import AIScheduleChatInterface from '@/components/admin/scheduling/AIScheduleChatInterface';
 
 export default function MasterSchedulePage() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -188,19 +188,7 @@ export default function MasterSchedulePage() {
           
 
           
-          {/* Post Schedules Tab */}
-          <Button
-            variant={currentView === 'ai-schedule' ? 'default' : 'outline'}
-            onClick={() => setCurrentView('ai-schedule')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 active:scale-95 whitespace-nowrap backdrop-blur-sm ${
-              currentView === 'ai-schedule' 
-                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 hover:from-blue-400 hover:to-blue-500' 
-                : 'bg-black/20 text-purple-100 hover:bg-blue-900/30 border border-blue-400/30 hover:border-blue-300/50'
-            }`}
-          >
-            <Zap className="h-4 w-4" />
-            Schedule with AI
-          </Button>
+          {/* Removed AI Schedule tab - moved to Overview */}
 
           <Button
             variant={currentView === 'field-sorting' ? 'default' : 'outline'}
@@ -252,6 +240,21 @@ export default function MasterSchedulePage() {
             
 
             
+            {/* AI Schedule Generator - Now on Overview Tab */}
+            <div className="mt-8">
+              <Card className="bg-black/40 border-blue-400/30 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-white">
+                    <Zap className="h-5 w-5 text-blue-400" />
+                    Schedule with AI Assistant
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <AIScheduleChatInterface eventId={eventId} />
+                </CardContent>
+              </Card>
+            </div>
+
             {/* Add Data Flow Demo Button */}
             <div className="mt-6 text-center">
               <Button
