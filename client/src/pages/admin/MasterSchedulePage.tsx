@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { 
   Calendar, Zap, Eye, Settings, ArrowRight, 
-  CheckCircle, Clock, Users, Trophy, ArrowLeft, Home, FileText, Plane, Globe 
+  CheckCircle, Clock, Users, Trophy, ArrowLeft, Home, FileText, Plane, Globe, Cog 
 } from 'lucide-react';
 import { UnifiedScheduleSetup } from '@/components/admin/scheduling/UnifiedScheduleSetup';
 import { UnifiedTournamentControlCenter } from '@/components/admin/scheduling/UnifiedTournamentControlCenter';
@@ -26,11 +26,12 @@ import { PublishSchedules } from '@/components/admin/scheduling/PublishSchedules
 import FieldSortingManager from '@/components/admin/FieldSortingManager';
 import FieldManagementDashboard from '@/components/admin/FieldManagementDashboard';
 import PersistentAIChatbot from '@/components/admin/scheduling/PersistentAIChatbot';
+import { FormatSettings } from '@/components/admin/scheduling/FormatSettings';
 
 export default function MasterSchedulePage() {
   const { eventId } = useParams<{ eventId: string }>();
   const [, setLocation] = useLocation();
-  const [currentView, setCurrentView] = useState<'view' | 'calendar' | 'cards' | 'manage' | 'flights' | 'brackets' | 'overview' | 'workflow' | 'publish' | 'field-sorting'>('overview');
+  const [currentView, setCurrentView] = useState<'view' | 'calendar' | 'cards' | 'manage' | 'flights' | 'brackets' | 'overview' | 'workflow' | 'publish' | 'field-sorting' | 'format-settings'>('overview');
 
   if (!eventId) {
     return <div>Event ID not found</div>;
@@ -89,6 +90,20 @@ export default function MasterSchedulePage() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentView('format-settings')}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all duration-300 hover:scale-105 backdrop-blur-sm ${
+                    currentView === 'format-settings'
+                      ? 'bg-gradient-to-r from-orange-600 to-orange-700 text-white shadow-lg border-orange-400/30'
+                      : 'bg-black/20 text-purple-100 hover:bg-orange-900/30 border border-purple-400/30 hover:border-orange-300/50'
+                  }`}
+                  title="Format Settings - Manage Tournament Matchup Templates"
+                >
+                  <Cog className="h-4 w-4" />
+                  Format Settings
+                </Button>
                 <Badge 
                   variant="secondary" 
                   className="text-sm bg-gradient-to-r from-purple-600 to-purple-700 text-white border-purple-400/30 shadow-lg"
@@ -346,6 +361,20 @@ export default function MasterSchedulePage() {
         ) : currentView === 'field-sorting' ? (
           <div className="space-y-6">
             <FieldManagementDashboard eventId={eventId} />
+          </div>
+        ) : currentView === 'format-settings' ? (
+          <div className="space-y-6">
+            <Alert className="border-orange-400/30 bg-black/30 backdrop-blur-sm">
+              <Cog className="h-4 w-4 text-orange-400" />
+              <AlertDescription className="text-purple-100">
+                <strong>Format Settings:</strong> Define and manage matchup templates for tournament scheduling. 
+                Create custom bracket patterns, crossplay formats, and elimination structures with zero hardcoded logic. 
+                All tournament formats use dynamic templates accessible through this interface.
+              </AlertDescription>
+            </Alert>
+            <div className="bg-black/20 backdrop-blur-sm border border-purple-400/30 rounded-lg p-6">
+              <FormatSettings eventId={eventId} />
+            </div>
           </div>
         ) : (
           <div className="space-y-6">
