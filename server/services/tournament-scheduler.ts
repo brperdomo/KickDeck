@@ -229,7 +229,7 @@ export class TournamentScheduler {
       case 'group_of_6':
       case 'group_of_8':
         // Use smart bracket generation based on team count and template
-        const smartBracketGames = this.generateSmartBracketGames(bracket, teams, gameCounter);
+        const smartBracketGames = await this.generateSmartBracketGames(bracket, teams, gameCounter);
         games.push(...smartBracketGames);
         break;
         
@@ -269,75 +269,98 @@ export class TournamentScheduler {
         break;
         
       default:
-        // Handle team-count specific formats - NO GROUP OF 8 FALLBACKS
-        if (teams.length === 6) {
-          console.log(`🚨 CRITICAL: Unknown format '${bracket.format}' for 6-team bracket - ENFORCING crossplay (ONLY format for 6 teams)`);
-          games.push(...this.generate6TeamCrossover(bracket, teams, gameCounter));
-        } else if (teams.length === 4) {
-          console.log(`🚨 CRITICAL: Unknown format '${bracket.format}' for 4-team bracket - ENFORCING single bracket round-robin`);
-          games.push(...this.generateRoundRobinGames(bracket, teams, gameCounter));
-        } else {
-          console.error(`❌ UNSUPPORTED FORMAT: No fallback for format '${bracket.format}' with ${teams.length} teams. Format must be explicitly configured.`);
-          throw new Error(`Unsupported format '${bracket.format}' for ${teams.length} teams. No fallback available.`);
-        }
+        // ✅ DYNAMIC TEMPLATE SYSTEM - Complete elimination of hardcoded fallbacks
+        console.log(`🚀 DYNAMIC TEMPLATES: Using database templates for unknown format '${bracket.format}' with ${teams.length} teams`);
+        games.push(...await this.generateGamesFromTemplate(bracket, teams, gameCounter));
     }
     
     return games;
   }
   
   /**
-   * Generate smart bracket games based on team count and configured format
+   * Generate games using dynamic templates - ZERO hardcoded logic
    */
-  private static generateSmartBracketGames(
+  private static async generateGamesFromTemplate(
     bracket: any,
     teams: Team[],
     startingGameNumber: number
-  ): Game[] {
-    const teamCount = teams.length;
-    const templateName = bracket.templateName || bracket.format;
-    
-    console.log(`🎯 Smart bracket generation: ${teamCount} teams, template: ${templateName}`);
-    
-    // Match template names to specific tournament scenarios (replacing snake_case with proper names)
-    switch (templateName) {
-      case 'group_of_4':
-      case 'single_bracket_4_teams':
-      case '4 Team Single Bracket':
-        console.log(`📋 Using 4 Team Single Bracket template for ${teamCount} teams - generating 6 pool + 1 championship = 7 games`);
-        // Generate 6 pool games (round robin) + 1 championship final
-        const games = [];
-        let gameCounter = startingGameNumber;
+  ): Promise<Game[]> {
+    try {
+      const { findBestTemplate, generateGamesFromTemplate } = await import('./dynamic-matchup-engine');
+      
+      // Determine template type based on team count and format hints
+      let templateType = 'single';
+      if (teams.length === 6 || bracket.format?.includes('crossover') || bracket.format?.includes('crossplay')) {
+        templateType = 'crossover';
+      } else if (teams.length === 8 || bracket.format?.includes('dual')) {
+        templateType = 'dual';
+      }
+      
+      console.log(`🔍 TEMPLATE SEARCH: Looking for ${teams.length}-team ${templateType} template for bracket '${bracket.name}'`);
+      
+      const template = await findBestTemplate(teams.length, templateType);
+      
+      if (template) {
+        console.log(`✅ TEMPLATE FOUND: ${template.name} - ${template.description}`);
         
-        // Generate pool play games (6 games)
-        const poolPlayGames = this.generateRoundRobinGames(bracket, teams, gameCounter);
-        games.push(...poolPlayGames);
-        gameCounter += poolPlayGames.length;
+        // Map teams to template format
+        const templateTeams = teams.map((team, index) => ({
+          id: team.id,
+          name: team.name,
+          bracketId: bracket.id,
+          groupId: team.groupId,
+          seedRanking: index + 1,
+          poolAssignment: teams.length === 6 ? (index < 3 ? 'A' : 'B') :
+                         teams.length === 8 ? (index < 4 ? 'A' : 'B') : undefined
+        }));
         
-        // Add championship final with proper winner descriptions
-        const championshipGame = this.generateChampionshipGame(bracket, gameCounter);
-        games.push(championshipGame);
+        const templateGames = await generateGamesFromTemplate(template.id, templateTeams, {
+          id: bracket.id,
+          name: bracket.name,
+          tournamentFormat: bracket.format
+        });
         
-        console.log(`🏆 4 Team Single Bracket: Generated ${poolPlayGames.length} pool + 1 championship = ${games.length} total games`);
+        // Convert template games to tournament scheduler format
+        const games: Game[] = templateGames.map((game, index) => ({
+          id: game.id || `${bracket.id}-${startingGameNumber + index}`,
+          homeTeamId: game.homeTeamId,
+          homeTeamName: game.homeTeamName,
+          awayTeamId: game.awayTeamId,
+          awayTeamName: game.awayTeamName,
+          bracketId: bracket.id,
+          bracketName: bracket.name,
+          round: game.round,
+          gameType: game.gameType,
+          duration: game.duration || 90,
+          gameNumber: startingGameNumber + index,
+          notes: game.notes,
+          isPending: game.isPending
+        }));
+        
+        console.log(`✅ DYNAMIC SUCCESS: Generated ${games.length} games using template '${template.name}'`);
         return games;
+        
+      } else {
+        throw new Error(`No template found for ${teams.length} teams with type '${templateType}'`);
+      }
       
-      case 'group_of_6':
-      case 'crossover_bracket_6_teams':
-      case '6 Team Crossover':
-        console.log(`📋 Using 6 Team Crossover template for ${teamCount} teams`);
-        return this.generate6TeamCrossover(bracket, teams, startingGameNumber);
-      
-      case 'group_of_8':
-      case 'group_of_9':
-      case 'dual_bracket_8_teams':
-      case '8 Team Dual Bracket':
-        console.log(`📋 Using 8 Team Dual Bracket template for ${teamCount} teams`);
-        return this.generate8TeamDualBracket(bracket, teams, startingGameNumber);
-      
-      default:
-        // NO FALLBACKS - Format must be explicitly configured
-        console.error(`❌ UNSUPPORTED TEMPLATE: No handler for template '${templateName}' with ${teamCount} teams. Template must be explicitly configured.`);
-        throw new Error(`Unsupported template '${templateName}' for ${teamCount} teams. No fallback available.`);
+    } catch (templateError) {
+      console.error(`❌ TEMPLATE SYSTEM FAILURE: ${templateError.message}`);
+      throw new Error(`Dynamic template system failed: ${templateError.message}. Configure templates in Format Settings.`);
     }
+  }
+
+  /**
+   * DEPRECATED: Smart bracket games now use dynamic templates exclusively
+   */
+  private static async generateSmartBracketGames(
+    bracket: any,
+    teams: Team[],
+    startingGameNumber: number
+  ): Promise<Game[]> {
+    console.warn(`⚠️ DEPRECATED: generateSmartBracketGames called. Use generateGamesFromTemplate instead.`);
+    // Redirect to template system
+    return await this.generateGamesFromTemplate(bracket, teams, startingGameNumber);
   }
 
   /**
