@@ -930,37 +930,82 @@ async function generateSelectiveSchedule(eventId: string, flightIds: string[], o
         console.log(`🔄 CROSSPLAY: Pool A teams:`, poolA.map(t => t.name));
         console.log(`🔄 CROSSPLAY: Pool B teams:`, poolB.map(t => t.name));
         
-        // Generate ONLY crossplay games (Pool A vs Pool B) - 9 games total
-        // Pattern: A1-B1, A2-B2, A3-B3, A1-B2, A2-B3, A3-B1, A1-B3, A2-B1, A3-B2
-        const crossplayPairs = [
-          [0, 0], // A1 vs B1
-          [1, 1], // A2 vs B2
-          [2, 2], // A3 vs B3
-          [0, 1], // A1 vs B2
-          [1, 2], // A2 vs B3
-          [2, 0], // A3 vs B1
-          [0, 2], // A1 vs B3
-          [1, 0], // A2 vs B1
-          [2, 1]  // A3 vs B2
-        ];
+        // ✅ DYNAMIC TEMPLATE SYSTEM - Using 6-Team Crossover template from database
+        console.log(`🚀 DYNAMIC TEMPLATES: Loading 6-Team Crossover pattern for ${selectedTeams.length} teams`);
         
-        crossplayPairs.forEach(([aIdx, bIdx]) => {
-          bracketGames.push({
-            id: `${flightId}-${gameNumber}`,
-            homeTeamId: poolA[aIdx].id,
-            homeTeamName: poolA[aIdx].name,
-            awayTeamId: poolB[bIdx].id,
-            awayTeamName: poolB[bIdx].name,
-            bracketId: parseInt(flightId),
-            bracketName: bracket.name,
-            round: 1,
-            gameType: 'pool_play',
-            duration: 90,
-            gameNumber: gameNumber++
+        try {
+          const { findBestTemplate, generateGamesFromTemplate } = await import('../../services/dynamic-matchup-engine');
+          const template = await findBestTemplate(6, 'crossover');
+          
+          if (template) {
+            console.log(`✅ TEMPLATE FOUND: ${template.name} - ${template.description}`);
+            
+            // Map teams to template format
+            const templateTeams = selectedTeams.map((team, index) => ({
+              id: team.id,
+              name: team.name,
+              bracketId: team.bracketId,
+              groupId: team.groupId,
+              seedRanking: index + 1,
+              poolAssignment: index < 3 ? 'A' : 'B'
+            }));
+            
+            const templateGames = await generateGamesFromTemplate(template.id, templateTeams, {
+              id: parseInt(flightId),
+              name: bracket.name,
+              tournamentFormat: bracket.tournamentFormat || 'crossover'
+            });
+            
+            // Convert template games to bracket games format
+            templateGames.forEach(game => {
+              if (!game.isPending && game.homeTeamId && game.awayTeamId) {
+                bracketGames.push({
+                  id: game.id,
+                  homeTeamId: game.homeTeamId,
+                  homeTeamName: game.homeTeamName,
+                  awayTeamId: game.awayTeamId,
+                  awayTeamName: game.awayTeamName,
+                  bracketId: parseInt(flightId),
+                  bracketName: bracket.name,
+                  round: game.round,
+                  gameType: game.gameType,
+                  duration: game.duration,
+                  gameNumber: gameNumber++,
+                  notes: game.notes
+                });
+              }
+            });
+            
+            console.log(`✅ TEMPLATE SUCCESS: Generated ${templateGames.length} games using dynamic template`);
+          } else {
+            throw new Error('No 6-team crossover template found');
+          }
+        } catch (templateError) {
+          console.warn('⚠️ TEMPLATE FALLBACK: Using legacy crossplay pattern:', templateError.message);
+          
+          // Legacy fallback (temporary until all templates verified)
+          const crossplayPairs = [
+            [0, 0], [1, 1], [2, 2], [0, 1], [1, 2], [2, 0], [0, 2], [1, 0], [2, 1]
+          ];
+          
+          crossplayPairs.forEach(([aIdx, bIdx]) => {
+            bracketGames.push({
+              id: `${flightId}-${gameNumber}`,
+              homeTeamId: poolA[aIdx].id,
+              homeTeamName: poolA[aIdx].name,
+              awayTeamId: poolB[bIdx].id,
+              awayTeamName: poolB[bIdx].name,
+              bracketId: parseInt(flightId),
+              bracketName: bracket.name,
+              round: 1,
+              gameType: 'pool_play',
+              duration: 90,
+              gameNumber: gameNumber++
+            });
           });
           
-          console.log(`✅ CROSSPLAY GAME ${gameNumber - 1}: ${poolA[aIdx].name} vs ${poolB[bIdx].name}`);
-        });
+          console.log(`⚠️ FALLBACK COMPLETE: Generated ${bracketGames.length} games using legacy pattern`);
+        }
         
         console.log(`🎯 CROSSPLAY FIX: Generated ${bracketGames.length} crossplay games (Pool A vs Pool B only)`);
       } else if (flightTeams.length === 6) {

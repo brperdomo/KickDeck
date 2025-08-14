@@ -41,7 +41,7 @@ import memberMergeRouter from "./routes/admin/member-merge";
 import feeAdjustmentsRouter from "./routes/admin/fee-adjustments";
 import gameMetadataRouter from "./routes/admin/game-metadata";
 import gameFormatsRouter from "./routes/admin/game-formats";
-// import matchupTemplatesRouter from "./routes/admin/matchup-templates.js";
+import matchupTemplatesRouter from "./routes/admin/matchup-templates";
 import bracketCreationSqlRouter from "./routes/admin/bracket-creation";
 import bracketCreationFixedRouter from "./routes/admin/bracket-creation-fixed";
 import bracketSubdivisionRouter from "./routes/admin/bracket-subdivision";
@@ -5700,6 +5700,9 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
     
     // CSV upload helper for team imports (admin)
     app.use('/api/admin/import', isAdmin, csvTeamUploadRouter);
+    
+    // Matchup Templates Management
+    app.use('/api/admin', isAdmin, matchupTemplatesRouter);
     
     // Member team management routes
     app.use('/api/member-teams', memberTeamManagementRouter);
