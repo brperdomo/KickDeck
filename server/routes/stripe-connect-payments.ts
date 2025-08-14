@@ -383,13 +383,17 @@ export async function processDestinationCharge(
             throw new Error("Customer not found in any account");
           }
 
-          // Check if payment method is attached to this customer
+          // CRITICAL FIX: Check if payment method is attached and handle properly
           const paymentMethod =
             await stripe.paymentMethods.retrieve(paymentMethodId);
 
+          console.log(
+            `ATTACHMENT CHECK: PaymentMethod ${paymentMethodId} customer status: ${paymentMethod.customer}`,
+          );
+
           if (!paymentMethod.customer) {
             console.log(
-              `Attaching payment method ${paymentMethodId} to customer ${customerIdToUse}`,
+              `PaymentMethod ${paymentMethodId} not attached - attaching to customer ${customerIdToUse}`,
             );
             try {
               if (connectAccountId && customerExists) {
@@ -418,12 +422,11 @@ export async function processDestinationCharge(
             } catch (attachError: any) {
               if (
                 attachError.message &&
-                attachError.message.includes(
-                  "was previously used without being attached",
-                )
+                (attachError.message.includes("was previously used without being attached") ||
+                 attachError.message.includes("cannot be attached"))
               ) {
                 console.log(
-                  `Payment method ${paymentMethodId} is burned (previously used without customer), cannot be reused`,
+                  `Payment method ${paymentMethodId} attachment failed: ${attachError.message}`,
                 );
                 throw new Error(
                   `Payment method ${paymentMethodId} was previously used and cannot be reused. Team needs to provide new payment method.`,
@@ -434,37 +437,17 @@ export async function processDestinationCharge(
             }
           } else if (paymentMethod.customer !== customerIdToUse) {
             console.log(
-              `Payment method attached to different customer: ${paymentMethod.customer}, expected: ${customerIdToUse}`,
+              `PaymentMethod attached to different customer: ${paymentMethod.customer}, expected: ${customerIdToUse}`,
             );
-            // Detach from old customer and attach to correct one
-            await stripe.paymentMethods.detach(paymentMethodId);
-            try {
-              if (connectAccountId && customerExists) {
-                // Re-attach to customer in Connect account
-                await stripe.paymentMethods.attach(
-                  paymentMethodId,
-                  {
-                    customer: customerIdToUse,
-                  },
-                  {
-                    stripeAccount: connectAccountId,
-                  },
-                );
-                console.log(
-                  `Re-attached payment method to correct customer in Connect account`,
-                );
-              } else {
-                // Re-attach to customer in main platform account
-                await stripe.paymentMethods.attach(paymentMethodId, {
-                  customer: customerIdToUse,
-                });
-                console.log(
-                  `Re-attached payment method to correct customer in main platform account`,
-                );
-              }
-            } catch (attachError: any) {
-              throw attachError;
-            }
+            // Use the existing customer instead of re-attaching
+            console.log(
+              `Using existing customer ${paymentMethod.customer} instead of ${customerIdToUse}`,
+            );
+            customerIdToUse = paymentMethod.customer as string;
+          } else {
+            console.log(
+              `PaymentMethod ${paymentMethodId} already properly attached to customer ${customerIdToUse} - proceeding`,
+            );
           }
 
           paymentIntentParams.customer = customerIdToUse;
@@ -818,6 +801,38 @@ export async function chargeApprovedTeam(teamId: number) {
               `LINK PAYMENT DETECTED: Setting customer ID to null for Link payment method ${paymentMethodId}`,
             );
             customerIdToSet = null; // Link payment methods cannot be used with customers
+          } else {
+            // CRITICAL FIX: Check if PaymentMethod is already attached to the correct customer
+            console.log(
+              `PAYMENT METHOD ATTACHMENT CHECK: PaymentMethod ${paymentMethodId} is attached to customer: ${paymentMethod.customer}`,
+            );
+            
+            if (paymentMethod.customer) {
+              // PaymentMethod is already attached - use the existing customer
+              customerIdToSet = paymentMethod.customer as string;
+              console.log(
+                `PaymentMethod ${paymentMethodId} already attached to customer ${customerIdToSet} - skipping re-attachment`,
+              );
+            } else if (customerIdToSet) {
+              // PaymentMethod not attached but we have a customer - need to attach
+              console.log(
+                `PaymentMethod ${paymentMethodId} not attached - attaching to customer ${customerIdToSet}`,
+              );
+              try {
+                await stripe.paymentMethods.attach(paymentMethodId, {
+                  customer: customerIdToSet,
+                });
+                console.log(
+                  `Successfully attached PaymentMethod ${paymentMethodId} to customer ${customerIdToSet}`,
+                );
+              } catch (attachError) {
+                console.error(
+                  `Failed to attach PaymentMethod ${paymentMethodId} to customer ${customerIdToSet}:`,
+                  attachError,
+                );
+                // Don't throw here - we can still proceed with the unattached PaymentMethod
+              }
+            }
           }
 
           // Update team record with the payment method for future use
