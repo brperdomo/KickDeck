@@ -8735,32 +8735,31 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         }
 
         // First, check if we have existing age groups for this event
-        // Use direct .select() to ensure all columns are properly retrieved
+        // Explicitly select and map columns to ensure proper camelCase field names
         let ageGroups = await db
-          .select()
+          .select({
+            id: eventAgeGroups.id,
+            eventId: eventAgeGroups.eventId,
+            ageGroup: eventAgeGroups.ageGroup,
+            birthYear: eventAgeGroups.birthYear,
+            gender: eventAgeGroups.gender,
+            projectedTeams: eventAgeGroups.projectedTeams,
+            scoringRule: eventAgeGroups.scoringRule,
+            fieldSize: eventAgeGroups.fieldSize,
+            amountDue: eventAgeGroups.amountDue,
+            createdAt: eventAgeGroups.createdAt,
+            birth_date_start: eventAgeGroups.birth_date_start,
+            divisionCode: eventAgeGroups.divisionCode,
+            isEligible: eventAgeGroups.isEligible,
+            seasonalScopeId: eventAgeGroups.seasonalScopeId
+          })
           .from(eventAgeGroups)
           .where(eq(eventAgeGroups.eventId, eventId));
 
         // Log the count for debugging
         console.log(`Fetched ${ageGroups.length} age groups for event ${eventId}`);
         
-        // DEBUG: Check if field sizes are coming from the initial database query
-        const targetGroups = ageGroups.filter(g => g.id === 9971 || g.id === 9972);
-        console.log('DEBUG FROM DATABASE - Target age groups (raw object):', targetGroups.map(g => ({
-          id: g.id,
-          ageGroup: g.ageGroup,
-          gender: g.gender,
-          fieldSize: g.fieldSize,
-          field_size: g.field_size,
-          allKeys: Object.keys(g)
-        })));
-        
-        // Make sure fieldSize is properly mapped for all age groups
-        ageGroups = ageGroups.map(group => ({
-          ...group,
-          // Ensure fieldSize exists - map from field_size if needed
-          fieldSize: group.fieldSize || group.field_size || '11v11'
-        }));
+        // Age groups properly retrieved with explicit field mapping
 
         // Always check for seasonal scope configuration to ensure proper age group loading
         // This ensures that when a seasonal scope is configured, all its age groups are available
@@ -8894,15 +8893,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         console.log(`Applied eligibility settings: ${eligibilityMap.size} custom settings found`);
         console.log(`Age groups order: ${sortedGroups.slice(0, 6).map(g => `${g.ageGroup}-${g.gender}`).join(', ')}...`);
         
-        // DEBUG: Check field sizes in the final response for specific age groups
-        const debugGroups = sortedGroups.filter(g => g.id === 9971 || g.id === 9972);
-        console.log('DEBUG FINAL API RESPONSE - Target age groups:', debugGroups.map(g => ({
-          id: g.id,
-          ageGroup: g.ageGroup,
-          gender: g.gender,
-          fieldSize: g.fieldSize,
-          field_size: g.field_size || 'NOT_SET'
-        })));
+        // Age groups properly formatted and ready for frontend
         
         res.json(sortedGroups);
       } catch (error) {
