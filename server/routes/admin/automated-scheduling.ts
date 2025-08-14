@@ -801,121 +801,217 @@ async function generateSelectiveSchedule(eventId: string, flightIds: string[], o
         
         console.log(`[Selective Scheduling] Generated ${bracketGames.length} games using ${formatTemplate.name} template`);
       } else if (enforcedFormat === 'group_of_4') {
-        // Handle group_of_4 format - ALWAYS generate 6 pool games + 1 championship = 7 total (regardless of team count)
-        console.log(`[Selective Scheduling] *** HIT GROUP_OF_4 LOGIC! *** USING group_of_4 format - generating 6 pool + 1 championship regardless of actual team count (${flightTeams.length} teams)`);
+        // ✅ DYNAMIC TEMPLATE SYSTEM - Using 4-Team Single template
+        console.log(`🚀 DYNAMIC TEMPLATES: Loading 4-Team Single template for ${flightTeams.length} teams`);
+        
         let gameNumber = 1;
-        
-        // Take only first 4 teams for group_of_4 format
         const selectedTeams = flightTeams.slice(0, 4);
-        console.log(`[Selective Scheduling] Selected first 4 teams from ${flightTeams.length} available teams: ${selectedTeams.map(t => t.name).join(', ')}`);
         
-        // Generate 6 pool play games (round-robin among 4 teams)
-        for (let i = 0; i < selectedTeams.length; i++) {
-          for (let j = i + 1; j < selectedTeams.length; j++) {
-            bracketGames.push({
-              id: `${flightId}-${gameNumber}`,
-              homeTeamId: selectedTeams[i].id,
-              homeTeamName: selectedTeams[i].name,
-              awayTeamId: selectedTeams[j].id,
-              awayTeamName: selectedTeams[j].name,
-              bracketId: parseInt(flightId),
-              bracketName: bracket.name,
-              round: 1, // Pool play is round 1
-              gameType: 'pool_play',
-              duration: 90,
-              gameNumber: gameNumber++
+        try {
+          const { findBestTemplate, generateGamesFromTemplate } = await import('../../services/dynamic-matchup-engine');
+          const template = await findBestTemplate(4, 'single');
+          
+          if (template) {
+            console.log(`✅ TEMPLATE FOUND (4-team): ${template.name} - ${template.description}`);
+            
+            // Map teams to template format
+            const templateTeams = selectedTeams.map((team, index) => ({
+              id: team.id,
+              name: team.name,
+              bracketId: team.bracketId,
+              groupId: team.groupId,
+              seedRanking: index + 1
+            }));
+            
+            const templateGames = await generateGamesFromTemplate(template.id, templateTeams, {
+              id: parseInt(flightId),
+              name: bracket.name,
+              tournamentFormat: bracket.tournamentFormat || 'group_of_4'
             });
+            
+            // Convert template games to bracket games format
+            templateGames.forEach(game => {
+              if (!game.isPending && game.homeTeamId && game.awayTeamId) {
+                bracketGames.push({
+                  id: game.id,
+                  homeTeamId: game.homeTeamId,
+                  homeTeamName: game.homeTeamName,
+                  awayTeamId: game.awayTeamId,
+                  awayTeamName: game.awayTeamName,
+                  bracketId: parseInt(flightId),
+                  bracketName: bracket.name,
+                  round: game.round,
+                  gameType: game.gameType,
+                  duration: game.duration,
+                  gameNumber: gameNumber++,
+                  notes: game.notes
+                });
+              }
+            });
+            
+            console.log(`✅ TEMPLATE SUCCESS (4-team): Generated ${templateGames.length} games using dynamic template`);
+          } else {
+            throw new Error('No 4-team template found');
           }
+        } catch (templateError) {
+          console.warn('⚠️ TEMPLATE FALLBACK (4-team): Using legacy round-robin pattern:', templateError.message);
+          
+          // Legacy fallback
+          for (let i = 0; i < selectedTeams.length; i++) {
+            for (let j = i + 1; j < selectedTeams.length; j++) {
+              bracketGames.push({
+                id: `${flightId}-${gameNumber}`,
+                homeTeamId: selectedTeams[i].id,
+                homeTeamName: selectedTeams[i].name,
+                awayTeamId: selectedTeams[j].id,
+                awayTeamName: selectedTeams[j].name,
+                bracketId: parseInt(flightId),
+                bracketName: bracket.name,
+                round: 1,
+                gameType: 'pool_play',
+                duration: 90,
+                gameNumber: gameNumber++
+              });
+            }
+          }
+          
+          // Championship final
+          bracketGames.push({
+            id: `${flightId}-${gameNumber}`,
+            homeTeamId: null,
+            homeTeamName: '1st Place',
+            awayTeamId: null,
+            awayTeamName: '2nd Place',
+            bracketId: parseInt(flightId),
+            bracketName: bracket.name,
+            round: 2,
+            gameType: 'championship',
+            duration: 90,
+            gameNumber: gameNumber++,
+            notes: 'Championship Final - Teams TBD based on pool standings',
+            isPending: true
+          });
         }
         
-        // Add championship final (7th game)
-        bracketGames.push({
-          id: `${flightId}-${gameNumber}`,
-          homeTeamId: null, // TBD based on standings
-          homeTeamName: '1st Place',
-          awayTeamId: null, // TBD based on standings  
-          awayTeamName: '2nd Place',
-          bracketId: parseInt(flightId),
-          bracketName: bracket.name,
-          round: 2, // Championship is round 2
-          gameType: 'championship',
-          duration: 90,
-          gameNumber: gameNumber++,
-          notes: 'Championship Final - Teams TBD based on pool standings',
-          isPending: true
-        });
-        
-        console.log(`[Selective Scheduling] SUCCESS: Generated 6 pool + 1 championship = ${bracketGames.length} games for group_of_4 (used ${selectedTeams.length} of ${flightTeams.length} teams)`);
+        console.log(`[Selective Scheduling] SUCCESS: Generated ${bracketGames.length} games for group_of_4`);
       } else if (enforcedFormat === 'group_of_8') {
-        // ENFORCED: Use group_of_8 format (12 pool games + 1 championship = 13 games)
-        console.log(`[Selective Scheduling] *** ENFORCED GROUP_OF_8 LOGIC! *** Using group_of_8 format for ${flightTeams.length} teams`);
+        // ✅ DYNAMIC TEMPLATE SYSTEM - Using 8-Team Dual template  
+        console.log(`🚀 DYNAMIC TEMPLATES: Loading 8-Team Dual template for ${flightTeams.length} teams`);
         
         let gameNumber = 1;
         const selectedTeams = flightTeams.slice(0, 8);
         
-        // Generate 12 pool games (2 groups of 4: Pool A vs Pool B)
-        const poolA = selectedTeams.slice(0, 4);
-        const poolB = selectedTeams.slice(4, 8);
-        
-        console.log(`[Selective Scheduling] Pool A teams: ${poolA.map(t => t.name).join(', ')}`);
-        console.log(`[Selective Scheduling] Pool B teams: ${poolB.map(t => t.name).join(', ')}`);
-        
-        // Pool A round-robin (6 games)
-        for (let i = 0; i < poolA.length; i++) {
-          for (let j = i + 1; j < poolA.length; j++) {
-            bracketGames.push({
-              id: `${flightId}-${gameNumber}`,
-              homeTeamId: poolA[i].id,
-              homeTeamName: poolA[i].name,
-              awayTeamId: poolA[j].id,
-              awayTeamName: poolA[j].name,
-              bracketId: parseInt(flightId),
-              bracketName: bracket.name,
-              round: 1,
-              gameType: 'pool_play',
-              duration: 90,
-              gameNumber: gameNumber++
+        try {
+          const { findBestTemplate, generateGamesFromTemplate } = await import('../../services/dynamic-matchup-engine');
+          const template = await findBestTemplate(8, 'dual');
+          
+          if (template) {
+            console.log(`✅ TEMPLATE FOUND (8-team): ${template.name} - ${template.description}`);
+            
+            // Map teams to template format with pool assignments
+            const templateTeams = selectedTeams.map((team, index) => ({
+              id: team.id,
+              name: team.name,
+              bracketId: team.bracketId,
+              groupId: team.groupId,
+              seedRanking: index + 1,
+              poolAssignment: index < 4 ? 'A' : 'B'
+            }));
+            
+            const templateGames = await generateGamesFromTemplate(template.id, templateTeams, {
+              id: parseInt(flightId),
+              name: bracket.name,
+              tournamentFormat: bracket.tournamentFormat || 'group_of_8'
             });
+            
+            // Convert template games to bracket games format
+            templateGames.forEach(game => {
+              if (!game.isPending && game.homeTeamId && game.awayTeamId) {
+                bracketGames.push({
+                  id: game.id,
+                  homeTeamId: game.homeTeamId,
+                  homeTeamName: game.homeTeamName,
+                  awayTeamId: game.awayTeamId,
+                  awayTeamName: game.awayTeamName,
+                  bracketId: parseInt(flightId),
+                  bracketName: bracket.name,
+                  round: game.round,
+                  gameType: game.gameType,
+                  duration: game.duration,
+                  gameNumber: gameNumber++,
+                  notes: game.notes
+                });
+              }
+            });
+            
+            console.log(`✅ TEMPLATE SUCCESS (8-team): Generated ${templateGames.length} games using dynamic template`);
+          } else {
+            throw new Error('No 8-team dual template found');
           }
+        } catch (templateError) {
+          console.warn('⚠️ TEMPLATE FALLBACK (8-team): Using legacy dual bracket pattern:', templateError.message);
+          
+          // Legacy fallback
+          const poolA = selectedTeams.slice(0, 4);
+          const poolB = selectedTeams.slice(4, 8);
+          
+          // Pool A round-robin (6 games)
+          for (let i = 0; i < poolA.length; i++) {
+            for (let j = i + 1; j < poolA.length; j++) {
+              bracketGames.push({
+                id: `${flightId}-${gameNumber}`,
+                homeTeamId: poolA[i].id,
+                homeTeamName: poolA[i].name,
+                awayTeamId: poolA[j].id,
+                awayTeamName: poolA[j].name,
+                bracketId: parseInt(flightId),
+                bracketName: bracket.name,
+                round: 1,
+                gameType: 'pool_play',
+                duration: 90,
+                gameNumber: gameNumber++
+              });
+            }
+          }
+          
+          // Pool B round-robin (6 games)
+          for (let i = 0; i < poolB.length; i++) {
+            for (let j = i + 1; j < poolB.length; j++) {
+              bracketGames.push({
+                id: `${flightId}-${gameNumber}`,
+                homeTeamId: poolB[i].id,
+                homeTeamName: poolB[i].name,
+                awayTeamId: poolB[j].id,
+                awayTeamName: poolB[j].name,
+                bracketId: parseInt(flightId),
+                bracketName: bracket.name,
+                round: 1,
+                gameType: 'pool_play',
+                duration: 90,
+                gameNumber: gameNumber++
+              });
+            }
+          }
+          
+          // Championship final
+          bracketGames.push({
+            id: `${flightId}-${gameNumber}`,
+            homeTeamId: null,
+            homeTeamName: 'Pool A Winner',
+            awayTeamId: null,
+            awayTeamName: 'Pool B Winner',
+            bracketId: parseInt(flightId),
+            bracketName: bracket.name,
+            round: 2,
+            gameType: 'championship',
+            duration: 90,
+            gameNumber: gameNumber++,
+            notes: 'Championship Final - Pool A Winner vs Pool B Winner',
+            isPending: true
+          });
         }
         
-        // Pool B round-robin (6 games)
-        for (let i = 0; i < poolB.length; i++) {
-          for (let j = i + 1; j < poolB.length; j++) {
-            bracketGames.push({
-              id: `${flightId}-${gameNumber}`,
-              homeTeamId: poolB[i].id,
-              homeTeamName: poolB[i].name,
-              awayTeamId: poolB[j].id,
-              awayTeamName: poolB[j].name,
-              bracketId: parseInt(flightId),
-              bracketName: bracket.name,
-              round: 1,
-              gameType: 'pool_play',
-              duration: 90,
-              gameNumber: gameNumber++
-            });
-          }
-        }
-        
-        // Championship final (13th game)
-        bracketGames.push({
-          id: `${flightId}-${gameNumber}`,
-          homeTeamId: null,
-          homeTeamName: 'Pool A Winner',
-          awayTeamId: null,
-          awayTeamName: 'Pool B Winner',
-          bracketId: parseInt(flightId),
-          bracketName: bracket.name,
-          round: 2,
-          gameType: 'championship',
-          duration: 90,
-          gameNumber: gameNumber++,
-          notes: 'Championship Final - Pool A Winner vs Pool B Winner',
-          isPending: true
-        });
-        
-        console.log(`[Selective Scheduling] SUCCESS: Generated 12 pool + 1 championship = ${bracketGames.length} games for group_of_8 (Pool A: ${poolA.length}, Pool B: ${poolB.length})`);
+        console.log(`[Selective Scheduling] SUCCESS: Generated ${bracketGames.length} games for group_of_8`);
       } else if (enforcedFormat === 'group_of_6' || (flightTeams.length === 6 && (bracket.tournamentFormat?.toLowerCase().includes('crossplay') || bracket.tournamentFormat?.toLowerCase().includes('crossover')))) {
         // CRITICAL FIX: Handle 6-team CROSSPLAY formats correctly
         console.log(`🚨 CROSSPLAY FIX: ${bracket.tournamentFormat} detected - generating FULL CROSSPLAY games for 6 teams`);
@@ -1022,21 +1118,65 @@ async function generateSelectiveSchedule(eventId: string, flightIds: string[], o
         console.log(`🔄 CROSSPLAY ENFORCED: Pool A teams:`, poolA.map(t => t.name));
         console.log(`🔄 CROSSPLAY ENFORCED: Pool B teams:`, poolB.map(t => t.name));
         
-        // Generate ONLY crossplay games (Pool A vs Pool B) - 9 games total
-        // Pattern: A1-B1, A2-B2, A3-B3, A1-B2, A2-B3, A3-B1, A1-B3, A2-B1, A3-B2
-        const crossplayPairs = [
-          [0, 0], // A1 vs B1
-          [1, 1], // A2 vs B2
-          [2, 2], // A3 vs B3
-          [0, 1], // A1 vs B2
-          [1, 2], // A2 vs B3
-          [2, 0], // A3 vs B1
-          [0, 2], // A1 vs B3
-          [1, 0], // A2 vs B1
-          [2, 1]  // A3 vs B2
-        ];
+        // ✅ DYNAMIC TEMPLATE SYSTEM - Using 6-Team Crossover template (Second Integration)
+        console.log(`🚀 DYNAMIC TEMPLATES: Loading 6-Team Crossover pattern for ${selectedTeams.length} teams (Second Block)`);
         
-        crossplayPairs.forEach(([aIdx, bIdx]) => {
+        try {
+          const { findBestTemplate, generateGamesFromTemplate } = await import('../../services/dynamic-matchup-engine');
+          const template = await findBestTemplate(6, 'crossover');
+          
+          if (template) {
+            console.log(`✅ TEMPLATE FOUND (Block 2): ${template.name} - ${template.description}`);
+            
+            // Map teams to template format
+            const templateTeams = selectedTeams.map((team, index) => ({
+              id: team.id,
+              name: team.name,
+              bracketId: team.bracketId,
+              groupId: team.groupId,
+              seedRanking: index + 1,
+              poolAssignment: index < 3 ? 'A' : 'B'
+            }));
+            
+            const templateGames = await generateGamesFromTemplate(template.id, templateTeams, {
+              id: parseInt(flightId),
+              name: bracket.name,
+              tournamentFormat: bracket.tournamentFormat || 'crossover'
+            });
+            
+            // Convert template games to bracket games format
+            templateGames.forEach(game => {
+              if (!game.isPending && game.homeTeamId && game.awayTeamId) {
+                bracketGames.push({
+                  id: game.id,
+                  homeTeamId: game.homeTeamId,
+                  homeTeamName: game.homeTeamName,
+                  awayTeamId: game.awayTeamId,
+                  awayTeamName: game.awayTeamName,
+                  bracketId: parseInt(flightId),
+                  bracketName: bracket.name,
+                  round: game.round,
+                  gameType: game.gameType,
+                  duration: game.duration,
+                  gameNumber: gameNumber++,
+                  notes: game.notes
+                });
+              }
+            });
+            
+            console.log(`✅ TEMPLATE SUCCESS (Block 2): Generated ${templateGames.length} games using dynamic template`);
+          } else {
+            throw new Error('No 6-team crossover template found');
+          }
+        } catch (templateError) {
+          console.warn('⚠️ TEMPLATE FALLBACK (Block 2): Using legacy crossplay pattern:', templateError.message);
+          
+          // Legacy fallback (temporary until all templates verified)
+          const crossplayPairs = [
+            [0, 0], [1, 1], [2, 2], [0, 1], [1, 2], [2, 0], [0, 2], [1, 0], [2, 1]
+          ];
+          
+          crossplayPairs.forEach(([aIdx, bIdx]) => {
           bracketGames.push({
             id: `${flightId}-${gameNumber}`,
             homeTeamId: poolA[aIdx].id,
@@ -1070,6 +1210,7 @@ async function generateSelectiveSchedule(eventId: string, flightIds: string[], o
           notes: 'Championship Final - Teams TBD based on pool standings',
           isPending: true
         });
+        }
         
         console.log(`🎯 CROSSPLAY FIX COMPLETE: Generated ${bracketGames.length} games (9 crossplay + 1 championship)`);
       } else if (flightTeams.length >= 7) {

@@ -513,9 +513,9 @@ export class SoccerSchedulerAI {
         };
       }
       
-      // Skip OpenAI API to avoid quota issues and use fallback directly
-      console.log("Using fallback method to avoid OpenAI quota issues");
-      return this.generateFallbackBracketSuggestions(teamsWithoutBrackets, availableBrackets);
+      // ✅ DYNAMIC TEMPLATE SYSTEM - Use templates for bracket suggestions
+      console.log("🚀 OPENAI TEMPLATE INTEGRATION: Using dynamic templates for bracket suggestions");
+      return await this.generateTemplateBracketSuggestions(eventId, null);
     } catch (error) {
       console.error("Error suggesting bracket assignments:", error);
       
@@ -529,7 +529,48 @@ export class SoccerSchedulerAI {
   }
   
   /**
-   * Generates fallback bracket suggestions when OpenAI API is unavailable
+   * Generates bracket suggestions using dynamic templates
+   */
+  static async generateTemplateBracketSuggestions(eventId: string | number, ageGroupId?: string | number) {
+    try {
+      const { findBestTemplate, getAllTemplates } = await import('./dynamic-matchup-engine');
+      
+      console.log('🚀 TEMPLATE-BASED SUGGESTIONS: Loading available tournament formats...');
+      
+      // Get all available templates
+      const templates = await getAllTemplates();
+      
+      // Filter templates based on common team sizes (4, 6, 8)
+      const suggestions = templates
+        .filter(template => [4, 6, 8].includes(template.teamCount))
+        .map(template => ({
+          name: template.name,
+          teamCount: template.teamCount,
+          description: template.description,
+          confidence: 0.95, // High confidence in template-based suggestions
+          reasoning: `Professional ${template.teamCount}-team ${template.type} format with ${template.matchupPatterns.length} games`,
+          matchups: template.matchupPatterns.length,
+          format: template.type,
+          templateId: template.id
+        }));
+
+      console.log(`✅ TEMPLATE SUCCESS: Generated ${suggestions.length} template-based suggestions`);
+      
+      return {
+        suggestions,
+        totalSuggestions: suggestions.length,
+        source: "dynamic_templates"
+      };
+      
+    } catch (templateError) {
+      console.error('❌ TEMPLATE SYSTEM ERROR:', templateError);
+      // Fallback to legacy system only if templates completely fail
+      return this.generateFallbackBracketSuggestions(eventId, ageGroupId);
+    }
+  }
+
+  /**
+   * DEPRECATED: Legacy fallback bracket suggestions
    * Uses simple heuristics based on age group, birth year, etc.
    * @param teams - Teams without brackets
    * @param brackets - Available brackets
