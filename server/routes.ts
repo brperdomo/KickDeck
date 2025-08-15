@@ -55,6 +55,7 @@ import bracketSubdivisionRouter from "./routes/admin/bracket-subdivision";
 import conflictDetectionRouter from "./routes/admin/conflict-detection";
 import adminBracketsRouter from "./routes/admin/brackets-fixed";
 import aiAssistantRouter from "./routes/admin/ai-assistant";
+import gamecardsRouter from "./routes/admin/gamecards-simple";
 // Tournament format validation will be handled directly in brackets router
 import fieldCapacityRouter from "./routes/admin/field-capacity";
 import intelligentSchedulingRouter from "./routes/admin/intelligent-scheduling";
@@ -961,6 +962,7 @@ export function registerRoutes(app: Express): Server {
     app.use('/api/admin/seasonal-scopes', isAdmin, seasonalScopesRouter);
     app.use('/api/admin/events', isAdmin, eventsRouter); // REMOVED authenticateTournamentDirector TO ALLOW BRACKET ACCESS
     app.use('/api/admin', isAdmin, aiAuditRoutes); // AI Audit Trail routes
+    app.use('/api/admin', isAdmin, gamecardsRouter); // Game card generation and printing
     app.use('/api/admin/events', isAdmin, feesRouter); // Mount fees router under events path - REMOVED authenticateTournamentDirector
     app.use('/api/admin/age-groups', isAdmin, ageGroupsRouter); // Add age groups router
     app.use('/api/admin/age-groups-fix', isAdmin, adminAgeGroupsDataFixRoutes); // Age groups data fix

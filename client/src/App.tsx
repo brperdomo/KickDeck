@@ -73,6 +73,8 @@ import PublicSchedules from "@/pages/public/PublicSchedules";
 import AgeGroupSchedule from "@/pages/public/AgeGroupSchedule";
 // Game Score Management
 import GameScoreManagement from "@/pages/admin/GameScoreManagement";
+// Game Cards Management  
+import GameCardsPage from "@/pages/admin/GameCards";
 
 // Create placeholder components for missing pages
 const ScoreReportPage = () => <NotFound />;
@@ -318,6 +320,9 @@ function Router() {
           </Route>
           <Route path="/admin/events/:id/clubs">
             {(params) => user.isAdmin ? <EventClubsPage /> : <NotFound />}
+          </Route>
+          <Route path="/admin/events/:eventId/game-cards">
+            {(params) => user.isAdmin ? <GameCardsPage /> : <NotFound />}
           </Route>
           <Route path="/admin/complex-locations">
             {user.isAdmin ? <ComplexLocationsMapPage /> : <NotFound />}
