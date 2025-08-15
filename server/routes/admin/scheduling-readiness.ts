@@ -31,20 +31,51 @@ router.get('/events/:eventId/scheduling-readiness', async (req, res) => {
       });
     }
 
-    // 1. Fetch tournament teams with coach information
+    // Import event_brackets from schema first
+    const { eventBrackets } = await import('@db/schema');
+    
+    // 1. Calculate Flight Status - only count flights that have teams assigned
+    console.log('Calculating flight status...');
+    let configuredFlights = 0;
+    let totalFlights = 0;
+    let flightsWithTeams = 0;
+    
+    // Count total configured flights (flights with tournament formats)
+    const totalConfiguredResult = await db.select({
+      count: sql<number>`COUNT(DISTINCT ${eventBrackets.name})`
+    })
+    .from(eventBrackets)
+    .where(sql`${eventBrackets.eventId} = ${eventId} AND ${eventBrackets.tournamentFormat} IS NOT NULL`);
+    
+    totalFlights = totalConfiguredResult[0]?.count || 0;
+    
+    // Count flights that actually have teams (meaningful for scheduling)
+    // Each flight+age_group combination with teams counts as one schedulable flight
+    const flightsWithTeamsResult = await db.select({
+      flightName: eventBrackets.name,
+      ageGroupId: eventBrackets.ageGroupId,
+      teamCount: sql<number>`COUNT(${teams.id})`
+    })
+    .from(eventBrackets)
+    .leftJoin(teams, sql`${teams.bracketId} = ${eventBrackets.id} AND ${teams.status} = 'approved'`)
+    .where(sql`${eventBrackets.eventId} = ${eventId} AND ${eventBrackets.tournamentFormat} IS NOT NULL`)
+    .groupBy(eventBrackets.name, eventBrackets.ageGroupId)
+    .having(sql`COUNT(${teams.id}) > 0`);
+    
+    flightsWithTeams = flightsWithTeamsResult.length;
+    configuredFlights = flightsWithTeams; // Only count flights with teams as "configured" for scheduling
+    
+    console.log(`Flight Analysis: ${totalFlights} total configured flights, ${flightsWithTeams} flights with teams`);
+    console.log('Flights with teams (by age group):', flightsWithTeamsResult.map(f => `${f.flightName} age_group:${f.ageGroupId} (${f.teamCount} teams)`));
+    console.log(`Setting configuredFlights=${configuredFlights}, totalFlights=${flightsWithTeams}`);
+
+    // 2. Fetch tournament teams for basic validation
     console.log('Fetching teams...');
     const tournamentTeams = await db.select({
       id: teams.id,
       name: teams.name,
       ageGroupId: teams.ageGroupId,
       coach: teams.coach,
-      coachNames: sql<string[]>`
-        CASE 
-          WHEN ${teams.coach}::text LIKE '%{%' 
-          THEN ARRAY[${teams.coach}->>'headCoachName']
-          ELSE ARRAY[${teams.coach}]
-        END
-      `,
       clubId: teams.clubId,
       status: teams.status
     })
@@ -376,6 +407,9 @@ router.get('/events/:eventId/validate', isAdmin, async (req, res) => {
       completionPercentage: Math.round((completeBlocks / totalBlocks) * 100),
       completedBlocks: completeBlocks,
       totalBlocks: totalBlocks,
+      configuredFlights: configuredFlights,
+      totalFlights: flightsWithTeams, // Show flights with teams as the "total" for scheduling purposes
+      readyForScheduling: readyForScheduling,
       buildingBlocks: buildingBlocks,
       nextSteps: buildingBlocks
         .filter(b => b.status !== 'complete')
@@ -393,6 +427,7 @@ router.get('/events/:eventId/validate', isAdmin, async (req, res) => {
     console.log('Configuration validation complete');
     console.log(`Ready for scheduling: ${readyForScheduling}`);
     console.log(`Completion: ${completeBlocks}/${totalBlocks} blocks`);
+    console.log(`RESPONSE VALUES: configuredFlights=${validationSummary.configuredFlights}, totalFlights=${validationSummary.totalFlights}`);
 
     res.json(validationSummary);
 
