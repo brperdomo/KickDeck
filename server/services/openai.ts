@@ -7,8 +7,8 @@
 
 import OpenAI from "openai";
 import { db } from "@db";
-import { users, events, teams, eventFees, paymentTransactions, matchupTemplates, eventBrackets, games } from "@db/schema";
-import { eq, and, gte, lte, desc, sql } from "drizzle-orm";
+import { users, events, teams, eventFees, paymentTransactions, matchupTemplates, eventBrackets, games, eventFieldConfigurations, fields } from "@db/schema";
+import { eq, and, gte, lte, desc, sql, sum, count, avg } from "drizzle-orm";
 // Simple console.log replacement for now
 const log = (message: string, category?: string) => console.log(`[${category || 'OpenAI'}]`, message);
 
@@ -599,6 +599,64 @@ const getFeeStatistics = async () => {
   };
 };
 
+// Get comprehensive field data for AI assistant
+const getEventFieldsData = async (eventId: string) => {
+  try {
+    // Get all field configurations for this event with field details
+    const fieldsData = await db
+      .select({
+        fieldId: eventFieldConfigurations.fieldId,
+        fieldName: fields.name,
+        fieldSize: eventFieldConfigurations.fieldSize,
+        isActive: eventFieldConfigurations.isActive,
+        sortOrder: eventFieldConfigurations.sortOrder,
+        hasLights: fields.hasLights,
+        complexId: fields.complexId
+      })
+      .from(eventFieldConfigurations)
+      .leftJoin(fields, eq(fields.id, eventFieldConfigurations.fieldId))
+      .where(eq(eventFieldConfigurations.eventId, parseInt(eventId)))
+      .orderBy(eventFieldConfigurations.sortOrder);
+
+    const totalFields = fieldsData.length;
+    const activeFields = fieldsData.filter(f => f.isActive).length;
+    
+    // Create field size breakdown
+    const sizeBreakdown = fieldsData.reduce((acc, field) => {
+      if (field.isActive) {
+        acc[field.fieldSize] = (acc[field.fieldSize] || 0) + 1;
+      }
+      return acc;
+    }, {} as Record<string, number>);
+
+    const fieldSizeBreakdown = Object.entries(sizeBreakdown)
+      .map(([size, count]) => `${count} x ${size}`)
+      .join(', ');
+
+    return {
+      totalFields,
+      activeFields,
+      fieldSizeBreakdown,
+      fieldDetails: fieldsData.map(f => ({
+        id: f.fieldId,
+        name: f.fieldName,
+        fieldSize: f.fieldSize,
+        isActive: f.isActive,
+        hasLights: f.hasLights,
+        complexId: f.complexId
+      }))
+    };
+  } catch (error) {
+    console.error('Error fetching fields data:', error);
+    return {
+      totalFields: 0,
+      activeFields: 0,
+      fieldSizeBreakdown: 'No field data available',
+      fieldDetails: []
+    };
+  }
+};
+
 // Tournament data access functions for AI assistant
 const getTournamentData = async (eventId: string) => {
   try {
@@ -680,19 +738,20 @@ const chatWithTournamentContext = async (eventId: string, userMessage: string) =
       return { error: "OpenAI API key is not configured or invalid" };
     }
 
-    // Get both financial and tournament data
-    const [financialData, tournamentData] = await Promise.all([
+    // Get comprehensive tournament data including fields
+    const [financialData, tournamentData, fieldsData] = await Promise.all([
       getEventFinancialData(eventId),
-      getTournamentData(eventId)
+      getTournamentData(eventId),
+      getEventFieldsData(eventId)
     ]);
 
     if (!tournamentData) {
       return { error: "Unable to access tournament data" };
     }
 
-    // Build comprehensive context prompt
+    // Build comprehensive context prompt with fields data
     const contextPrompt = `
-You are a tournament management assistant for the Empire Super Cup soccer tournament.
+You are a tournament management assistant for the Empire Super Cup soccer tournament with full access to field management capabilities.
 
 TOURNAMENT STATUS:
 - Format Templates Available: ${tournamentData.formatTemplates} (including 4-Team Single, 6-Team Crossover, 8-Team Dual, Round Robin, Swiss, Single Elimination)
@@ -700,6 +759,14 @@ TOURNAMENT STATUS:
 - Configured Brackets: ${tournamentData.configuredBrackets} (${Math.round((tournamentData.configuredBrackets/tournamentData.totalBrackets)*100)}% configured)
 - Teams: ${tournamentData.approvedTeams.toLocaleString()} approved out of ${tournamentData.totalTeams.toLocaleString()} total
 - Games: ${tournamentData.totalGames.toLocaleString()} generated, ${tournamentData.scheduledGames.toLocaleString()} scheduled
+
+FIELD MANAGEMENT:
+- Total Fields Available: ${fieldsData.totalFields}
+- Active Fields: ${fieldsData.activeFields}
+- Field Size Distribution: ${fieldsData.fieldSizeBreakdown}
+
+DETAILED FIELD INVENTORY:
+${fieldsData.fieldDetails.map(f => `- Field ${f.name}: ${f.fieldSize} (${f.isActive ? 'Active' : 'Inactive'})${f.hasLights ? ' - Lighted' : ''}`).join('\n')}
 
 AVAILABLE TOURNAMENT FORMATS:
 ${tournamentData.availableFormats.map(f => `- ${f.name}: ${f.teamCount} teams, ${f.games} games`).join('\n')}
@@ -712,7 +779,7 @@ FINANCIAL DATA:
 - Paid Teams: ${financialData.paidTeams}
 - Pending Teams: ${financialData.pendingTeams}
 
-Answer questions about tournament setup, scheduling, formats, teams, and provide guidance on tournament management based on the current data provided above.
+You can answer questions about field management, game scheduling, field availability, field sizes, and help move games between fields. When discussing specific fields, reference them by their actual names and sizes shown above.
 
 User Question: ${userMessage}
 `;
@@ -757,5 +824,6 @@ export {
   analyzeFinancialOverview,
   analyzeFeesStructure,
   getTournamentData,
+  getEventFieldsData,
   chatWithTournamentContext
 };

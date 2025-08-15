@@ -53,7 +53,7 @@ interface EnhancedDragDropSchedulerProps {
 }
 
 export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropSchedulerProps) {
-  const [selectedDate, setSelectedDate] = useState<string>('2025-08-16');
+  const [selectedDate, setSelectedDate] = useState<string>('');
   const [timeInterval, setTimeInterval] = useState<number>(15); // 5, 10, 15 minute intervals
   const [draggedGame, setDraggedGame] = useState<Game | null>(null);
   const [dragOverSlot, setDragOverSlot] = useState<{ fieldId: number; timeSlot: string } | null>(null);
@@ -61,10 +61,23 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
   const [conflicts, setConflicts] = useState<ConflictInfo[]>([]);
   const [gamePositions, setGamePositions] = useState<Map<number, { fieldId: number; startTime: string }>>(new Map());
   const [showAllConflicts, setShowAllConflicts] = useState(false);
+  const [availableDays, setAvailableDays] = useState<{ value: string; label: string }[]>([]);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const gridRef = useRef<HTMLDivElement>(null);
+
+  // Fetch event data to get dynamic dates
+  const { data: eventData } = useQuery({
+    queryKey: ['event-data', eventId],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/events/${eventId}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch event data');
+      return response.json();
+    }
+  });
 
   // CRITICAL: Clear cache on mount to prevent stale data multiplication
   useEffect(() => {
@@ -72,13 +85,34 @@ export default function EnhancedDragDropScheduler({ eventId }: EnhancedDragDropS
     queryClient.removeQueries({ queryKey: ['schedule-data'] });
     queryClient.removeQueries({ queryKey: ['enhanced-schedule'] });
   }, [eventId, queryClient]);
-  
-  // Available tournament days (this should come from event data)
-  const availableDays = [
-    { value: '2025-08-16', label: 'Saturday, Aug 16' },
-    { value: '2025-08-17', label: 'Sunday, Aug 17' },
-    { value: '2025-08-18', label: 'Monday, Aug 18' }
-  ];
+
+  // Generate available days from event data
+  useEffect(() => {
+    if (eventData?.startDate && eventData?.endDate) {
+      const startDate = new Date(eventData.startDate);
+      const endDate = new Date(eventData.endDate);
+      const days = [];
+      
+      const currentDate = new Date(startDate);
+      while (currentDate <= endDate) {
+        const dateString = currentDate.toISOString().split('T')[0];
+        const label = currentDate.toLocaleDateString('en-US', { 
+          weekday: 'long', 
+          month: 'short', 
+          day: 'numeric' 
+        });
+        days.push({ value: dateString, label });
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      
+      setAvailableDays(days);
+      
+      // Set initial selected date to first tournament day
+      if (days.length > 0 && !selectedDate) {
+        setSelectedDate(days[0].value);
+      }
+    }
+  }, [eventData, selectedDate]);
 
   // Fetch games and fields data - share cache with ScheduleViewer to prevent duplicate requests
   const { data: scheduleData, isLoading, error } = useQuery({
