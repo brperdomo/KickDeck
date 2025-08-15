@@ -12,9 +12,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Edit, Trophy, Clock, AlertTriangle, CheckCircle, History, Filter, Lock, Unlock, Eye, Download, Trash2, FileText, MoreHorizontal } from 'lucide-react';
+import { Edit, Trophy, Clock, AlertTriangle, CheckCircle, History, Filter, Lock, Unlock, Eye, Download, Trash2, FileText, MoreHorizontal, Link, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { generateGameScoreUrl, generateShareableGameMessage } from '@/lib/gameUrls';
 
 interface Game {
   id: number;
@@ -65,7 +66,12 @@ interface ScoreEntry {
   gameId: string;
   homeScore: number;
   awayScore: number;
+  homeYellowCards?: number;
+  awayYellowCards?: number;
+  homeRedCards?: number;
+  awayRedCards?: number;
   notes?: string;
+  forceOverride?: boolean;
 }
 
 interface GameScoreManagerProps {
@@ -106,7 +112,7 @@ export default function GameScoreManager({ eventId }: GameScoreManagerProps) {
   });
 
   // Get unique brackets for filtering
-  const brackets = [...new Set(games.map(game => game.bracketName))].filter(Boolean);
+  const brackets = Array.from(new Set(games.map(game => game.bracketName))).filter(Boolean);
 
   // Fetch audit history for selected game
   const { data: auditHistory = [] } = useQuery({
@@ -223,6 +229,54 @@ export default function GameScoreManager({ eventId }: GameScoreManagerProps) {
   const handleViewAudit = (game: Game) => {
     setSelectedGame(game);
     setIsAuditDialogOpen(true);
+  };
+
+  const handleCopyScoreLink = async (game: Game) => {
+    try {
+      const scoreUrl = generateGameScoreUrl(game.id);
+      await navigator.clipboard.writeText(scoreUrl);
+      toast({
+        title: "Link Copied!",
+        description: "Public score submission link copied to clipboard",
+      });
+    } catch (error) {
+      // Fallback for browsers that don't support clipboard API
+      const textArea = document.createElement('textarea');
+      textArea.value = generateGameScoreUrl(game.id);
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      toast({
+        title: "Link Copied!",
+        description: "Public score submission link copied to clipboard",
+      });
+    }
+  };
+
+  const handleCopyGameDetails = async (game: Game) => {
+    try {
+      const gameMessage = generateShareableGameMessage({
+        homeTeam: game.homeTeamName || 'TBD',
+        awayTeam: game.awayTeamName || 'TBD',
+        startTime: game.scheduledDate && game.scheduledTime ? `${game.scheduledDate}T${game.scheduledTime}` : undefined,
+        field: game.fieldName || 'TBD',
+        gameId: game.id
+      });
+      
+      await navigator.clipboard.writeText(gameMessage);
+      toast({
+        title: "Game Details Copied!",
+        description: "Shareable game message with score link copied to clipboard",
+      });
+    } catch (error) {
+      toast({
+        title: "Copy Failed",
+        description: "Unable to copy game details",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSubmitScore = () => {
@@ -542,6 +596,14 @@ export default function GameScoreManager({ eventId }: GameScoreManagerProps) {
                             <History className="w-4 h-4 mr-2" />
                             View History
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleCopyScoreLink(game)}>
+                            <Link className="w-4 h-4 mr-2" />
+                            Copy Score Link
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleCopyGameDetails(game)}>
+                            <Copy className="w-4 h-4 mr-2" />
+                            Copy Game Details
+                          </DropdownMenuItem>
                           <DropdownMenuItem 
                             onClick={() => lockScore.mutate({ 
                               gameId: game.id, 
@@ -706,7 +768,7 @@ export default function GameScoreManager({ eventId }: GameScoreManagerProps) {
                   <Checkbox 
                     id="forceOverride" 
                     checked={forceOverride}
-                    onCheckedChange={setForceOverride}
+                    onCheckedChange={(checked) => setForceOverride(checked === true)}
                   />
                   <Label htmlFor="forceOverride" className="text-sm">
                     Override locked score (admin action)
