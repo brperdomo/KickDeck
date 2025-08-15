@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { eq } from 'drizzle-orm';
 import { db } from '@db';
-import { games, teams, eventAgeGroups, eventFieldConfigurations } from '@db/schema';
+import { games } from '@db/schema';
 
 const router = Router();
 
@@ -14,82 +14,61 @@ router.get('/:gameId', async (req, res) => {
       return res.status(400).json({ error: 'Invalid game ID' });
     }
 
-    const gameQuery = await db
-      .select({
-        // Game information
-        id: games.id,
-        startTime: games.startTime,
-        homeScore: games.homeScore,
-        awayScore: games.awayScore,
-        status: games.status,
-        isCompleted: games.isCompleted,
-        isScoreLocked: games.isScoreLocked,
-        // Home team
-        homeTeamId: games.homeTeamId,
-        homeTeamName: teams.name,
-        // Field information
-        fieldName: eventFieldConfigurations.fieldName,
-        // Age group
-        ageGroup: eventAgeGroups.ageGroup
-      })
-      .from(games)
-      .innerJoin(teams, eq(games.homeTeamId, teams.id))
-      .leftJoin(eventFieldConfigurations, eq(games.fieldId, eventFieldConfigurations.fieldId))
-      .leftJoin(eventAgeGroups, eq(games.ageGroupId, eventAgeGroups.id))
-      .where(eq(games.id, parseInt(gameId)))
-      .limit(1);
+    // Use raw SQL to avoid Drizzle ORM issues
+    const result = await db.execute(`
+      SELECT 
+        g.id,
+        g.scheduled_date,
+        g.scheduled_time,
+        g.home_score,
+        g.away_score,
+        g.status,
+        g.is_score_locked,
+        g.home_team_id,
+        g.away_team_id,
+        g.field_id,
+        g.age_group_id,
+        ht.name as home_team_name,
+        at.name as away_team_name,
+        efc.field_name as field_name,
+        eag.age_group as age_group_name
+      FROM games g
+      LEFT JOIN teams ht ON g.home_team_id = ht.id
+      LEFT JOIN teams at ON g.away_team_id = at.id
+      LEFT JOIN event_field_configurations efc ON g.field_id = efc.field_id
+      LEFT JOIN event_age_groups eag ON g.age_group_id = eag.id
+      WHERE g.id = $1
+      LIMIT 1
+    `, [parseInt(gameId)]);
 
-    if (gameQuery.length === 0) {
+    if (!result.rows || result.rows.length === 0) {
       return res.status(404).json({ error: 'Game not found' });
     }
 
-    const gameData = gameQuery[0];
-
-    // Get away team separately
-    const awayTeamQuery = await db
-      .select({
-        id: teams.id,
-        name: teams.name
-      })
-      .from(teams)
-      .where(eq(teams.id, gameData.homeTeamId === games.awayTeamId ? games.homeTeamId : games.awayTeamId))
-      .limit(1);
-
-    // Get the actual away team
-    const awayTeamData = await db
-      .select({
-        id: teams.id,
-        name: teams.name
-      })
-      .from(games)
-      .innerJoin(teams, eq(games.awayTeamId, teams.id))
-      .where(eq(games.id, parseInt(gameId)))
-      .limit(1);
-
-    const awayTeam = awayTeamData.length > 0 ? awayTeamData[0] : { id: 0, name: 'TBD' };
+    const gameData = result.rows[0];
 
     const game = {
       id: gameData.id,
       homeTeam: {
-        id: gameData.homeTeamId,
-        name: gameData.homeTeamName || 'TBD'
+        id: gameData.home_team_id,
+        name: gameData.home_team_name || 'TBD'
       },
       awayTeam: {
-        id: awayTeam.id,
-        name: awayTeam.name
+        id: gameData.away_team_id,
+        name: gameData.away_team_name || 'TBD'
       },
-      homeScore: gameData.homeScore,
-      awayScore: gameData.awayScore,
-      startTime: gameData.startTime,
+      homeScore: gameData.home_score,
+      awayScore: gameData.away_score,
+      startTime: `${gameData.scheduled_date} ${gameData.scheduled_time}`,
       field: {
-        name: gameData.fieldName || 'Field TBD'
+        name: gameData.field_name || 'Field TBD'
       },
-      status: gameData.status,
+      status: gameData.status || 'scheduled',
       ageGroup: {
-        ageGroup: gameData.ageGroup || 'Age Group'
+        ageGroup: gameData.age_group_name || 'Age Group'
       },
-      isCompleted: gameData.isCompleted || false,
-      isScoreLocked: gameData.isScoreLocked || false
+      isCompleted: gameData.status === 'completed',
+      isScoreLocked: gameData.is_score_locked || false
     };
 
     res.json(game);
@@ -114,38 +93,30 @@ router.post('/:gameId/score', async (req, res) => {
       return res.status(400).json({ error: 'Invalid scores. Scores must be non-negative numbers.' });
     }
 
-    // Check if game exists and is not locked
-    const gameCheck = await db
-      .select({
-        id: games.id,
-        isScoreLocked: games.isScoreLocked,
-        isCompleted: games.isCompleted
-      })
-      .from(games)
-      .where(eq(games.id, parseInt(gameId)))
-      .limit(1);
+    // Check if game exists and is not locked using raw SQL
+    const gameCheckResult = await db.execute(`
+      SELECT id, is_score_locked, status 
+      FROM games 
+      WHERE id = $1
+    `, [parseInt(gameId)]);
 
-    if (gameCheck.length === 0) {
+    if (!gameCheckResult.rows || gameCheckResult.rows.length === 0) {
       return res.status(404).json({ error: 'Game not found' });
     }
 
-    if (gameCheck[0].isScoreLocked) {
+    const gameCheck = gameCheckResult.rows[0];
+    if (gameCheck.is_score_locked) {
       return res.status(403).json({ 
         error: 'This game\'s score has been locked by tournament administrators. Contact event staff to make changes.' 
       });
     }
 
-    // Update the game score
-    await db
-      .update(games)
-      .set({
-        homeScore,
-        awayScore,
-        isCompleted: true,
-        status: 'completed',
-        updatedAt: new Date().toISOString()
-      })
-      .where(eq(games.id, parseInt(gameId)));
+    // Update the game score using raw SQL
+    await db.execute(`
+      UPDATE games 
+      SET home_score = $1, away_score = $2, status = 'completed', updated_at = NOW()
+      WHERE id = $3
+    `, [homeScore, awayScore, parseInt(gameId)]);
 
     // Log the score update
     console.log(`[PUBLIC SCORE UPDATE] Game ${gameId}: ${homeScore}-${awayScore} (IP: ${req.ip})`);
