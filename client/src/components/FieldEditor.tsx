@@ -207,7 +207,7 @@ export function FieldEditor({ open, onOpenChange, onSubmit, field, complexId }: 
                           <Clock className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                           <Input
                             type="time"
-                            className="pl-8"
+                            className="pl-8 text-slate-900 dark:text-white bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
                             {...formField}
                           />
                         </div>
@@ -230,7 +230,7 @@ export function FieldEditor({ open, onOpenChange, onSubmit, field, complexId }: 
                           <Clock className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                           <Input
                             type="time"
-                            className="pl-8"
+                            className="pl-8 text-slate-900 dark:text-white bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
                             {...formField}
                           />
                         </div>

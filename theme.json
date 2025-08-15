@@ -22,6 +22,7 @@
     "destructive-foreground": "hsl(220 9% 86%)",
     "border": "hsl(220 13% 18%)",
     "input": "hsl(220 13% 14%)",
+    "input-foreground": "hsl(220 9% 95%)",
     "ring": "hsl(220 91% 60%)",
     "success": "hsl(142 70% 45%)",
     "warning": "hsl(38 92% 55%)",
