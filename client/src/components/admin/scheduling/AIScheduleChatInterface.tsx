@@ -245,7 +245,7 @@ export default function AIScheduleChatInterface({ eventId }: AIScheduleChatInter
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
                 placeholder="Type your message..."
-                className="bg-black/50 border-blue-400/30 text-white placeholder-blue-300"
+                className="bg-slate-800 border-blue-400/30 text-white placeholder-slate-400 focus:border-blue-400 focus:text-white"
                 disabled={isLoading}
                 onKeyPress={(e) => e.key === 'Enter' && !isLoading && sendMessage()}
               />
