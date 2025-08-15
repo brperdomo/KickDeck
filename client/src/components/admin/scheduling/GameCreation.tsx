@@ -83,7 +83,7 @@ export function GameCreation({ eventId, workflowData, onComplete, onError }: Gam
     
     for (let i = 0; i < brackets.length; i++) {
       const bracket = brackets[i];
-      const seeding = seedings.find(s => s.bracketId === bracket.id);
+      const seeding = seedings.find((s: any) => s.bracketId === bracket.id);
       
       if (seeding) {
         const games = generateGamesForBracket(bracket, seeding);
@@ -175,7 +175,8 @@ export function GameCreation({ eventId, workflowData, onComplete, onError }: Gam
       knockoutGames.push(...generateKnockoutGames(
         bracket,
         knockoutTeams,
-        gameCounter
+        gameCounter,
+        seeding.pools
       ));
     }
 
@@ -203,15 +204,57 @@ export function GameCreation({ eventId, workflowData, onComplete, onError }: Gam
     return qualifiers;
   };
 
-  const generateKnockoutGames = (bracket: any, teams: any[], startingGameNumber: number): Game[] => {
+  const generateKnockoutGames = (bracket: any, teams: any[], startingGameNumber: number, pools?: any[]): Game[] => {
     const games: Game[] = [];
     let gameCounter = startingGameNumber;
     
     if (teams.length <= 1) return games;
 
-    // Simple knockout bracket generation
-    if (teams.length === 2) {
-      // Final only
+    console.log(`Generating knockout games for bracket ${bracket.id} with ${teams.length} teams, format: ${bracket.format}`);
+    console.log('Teams:', teams);
+    console.log('Pools:', pools);
+
+    // Determine bracket structure and championship format
+    const teamCount = pools ? pools.reduce((total, pool) => total + (pool.teamIds?.length || 0), 0) : teams.length;
+    
+    // Handle different bracket formats
+    if (teamCount === 6 && bracket.format === 'crossover') {
+      // 6-Team Crossover: Pool play + Championship (1st vs 2nd in points)
+      console.log('Generating 6-Team Crossover championship game');
+      games.push({
+        id: `${bracket.id}_championship`,
+        homeTeamId: 0, // TBD - 1st in points
+        homeTeamName: 'TBD (1st in Points)',
+        awayTeamId: 0, // TBD - 2nd in points 
+        awayTeamName: 'TBD (2nd in Points)',
+        bracketId: bracket.id,
+        bracketName: bracket.flightName,
+        round: 'Championship',
+        gameType: 'final',
+        gameNumber: gameCounter++,
+        duration: getGameDuration(bracket.id)
+      });
+    } else if (teamCount === 8 && bracket.format === 'dual') {
+      // 8-Team Dual Brackets: Pool play + Championship (1st from A vs 1st from B)
+      console.log('Generating 8-Team Dual Bracket championship game');
+      const poolA = pools?.find(p => p.poolName?.includes('A') || p.poolName?.includes('Pool A'));
+      const poolB = pools?.find(p => p.poolName?.includes('B') || p.poolName?.includes('Pool B'));
+      
+      games.push({
+        id: `${bracket.id}_championship`,
+        homeTeamId: 0, // TBD - Winner of Pool A
+        homeTeamName: poolA ? `TBD (${poolA.poolName} Winner)` : 'TBD (Pool A Winner)',
+        awayTeamId: 0, // TBD - Winner of Pool B
+        awayTeamName: poolB ? `TBD (${poolB.poolName} Winner)` : 'TBD (Pool B Winner)',
+        bracketId: bracket.id,
+        bracketName: bracket.flightName,
+        round: 'Championship',
+        gameType: 'final',
+        gameNumber: gameCounter++,
+        duration: getGameDuration(bracket.id)
+      });
+    } else if (teams.length === 2) {
+      // Final only (direct matchup)
       games.push({
         id: `${bracket.id}_final`,
         homeTeamId: teams[0].teamId,
@@ -226,7 +269,7 @@ export function GameCreation({ eventId, workflowData, onComplete, onError }: Gam
         duration: getGameDuration(bracket.id)
       });
     } else if (teams.length <= 4) {
-      // Semifinals + Final + 3rd Place
+      // Traditional knockout: Semifinals + Final + 3rd Place
       for (let i = 0; i < teams.length; i += 2) {
         if (i + 1 < teams.length) {
           games.push({
@@ -249,9 +292,9 @@ export function GameCreation({ eventId, workflowData, onComplete, onError }: Gam
       games.push({
         id: `${bracket.id}_3rd_place`,
         homeTeamId: 0, // TBD from semifinal losers
-        homeTeamName: 'TBD',
+        homeTeamName: 'TBD (Semi Loser 1)',
         awayTeamId: 0,
-        awayTeamName: 'TBD',
+        awayTeamName: 'TBD (Semi Loser 2)',
         bracketId: bracket.id,
         bracketName: bracket.flightName,
         round: '3rd Place',
@@ -263,9 +306,9 @@ export function GameCreation({ eventId, workflowData, onComplete, onError }: Gam
       games.push({
         id: `${bracket.id}_final`,
         homeTeamId: 0, // TBD from semifinal winners
-        homeTeamName: 'TBD',
+        homeTeamName: 'TBD (Semi Winner 1)',
         awayTeamId: 0,
-        awayTeamName: 'TBD',
+        awayTeamName: 'TBD (Semi Winner 2)',
         bracketId: bracket.id,
         bracketName: bracket.flightName,
         round: 'Final',
@@ -275,6 +318,7 @@ export function GameCreation({ eventId, workflowData, onComplete, onError }: Gam
       });
     }
 
+    console.log(`Generated ${games.length} knockout games for bracket ${bracket.id}`);
     return games;
   };
 
