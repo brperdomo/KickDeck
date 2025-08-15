@@ -50,7 +50,7 @@ export interface MatchupTemplate {
   matchupPattern: string[][];
   totalGames: number;
   hasPlayoffGame: boolean;
-  playoffDescription?: string;
+  playoffDescription?: string | null;
   includeChampionship?: boolean;
   championshipDescription?: string;
   isActive: boolean;
@@ -240,12 +240,33 @@ function generateGamesFromPattern(
 
     // Handle TBD placeholders for championship games
     if (homeSlot === 'TBD' || awaySlot === 'TBD') {
+      let homeTeamName = 'TBD';
+      let awayTeamName = 'TBD';
+      let championshipNotes = template.championshipDescription || template.playoffDescription || 'Championship final';
+      
+      // Different championship formats based on bracket structure
+      if (template.bracketStructure === 'crossover' && template.teamCount === 6) {
+        // 6-Team Crossover: 1st in points vs 2nd in points across all pools
+        homeTeamName = 'TBD (1st in Points)';
+        awayTeamName = 'TBD (2nd in Points)';
+        championshipNotes = '1st in points vs 2nd in points (crossover format)';
+      } else if (template.bracketStructure === 'dual' && template.teamCount === 8) {
+        // 8-Team Dual Brackets: 1st from Pool A vs 1st from Pool B
+        homeTeamName = 'TBD (Pool A Winner)';
+        awayTeamName = 'TBD (Pool B Winner)';
+        championshipNotes = '1st from Bracket A vs 1st from Bracket B';
+      } else if (template.hasPlayoffGame) {
+        // Generic playoff format
+        homeTeamName = 'Pool Winner';
+        awayTeamName = 'Pool Runner-up';
+      }
+      
       games.push({
-        id: `${bracketInfo.id}-${gameNumber}`,
+        id: `${bracketInfo.id}-championship`,
         homeTeamId: null,
-        homeTeamName: template.hasPlayoffGame ? 'Pool Winner' : 'TBD',
+        homeTeamName,
         awayTeamId: null,
-        awayTeamName: template.hasPlayoffGame ? 'Pool Runner-up' : 'TBD',
+        awayTeamName,
         bracketId: bracketInfo.id,
         bracketName: bracketInfo.name,
         round: 2,
@@ -253,7 +274,8 @@ function generateGamesFromPattern(
         gameNumber: gameNumber++,
         duration: 90,
         isPending: true,
-        notes: template.playoffDescription || 'Championship final'
+        isChampionship: true,
+        notes: championshipNotes
       });
       return;
     }
@@ -283,19 +305,42 @@ function generateGamesFromPattern(
     });
   });
 
-  // FIXED: Generate championship game based on template configuration, NOT pattern dependency
-  if (template.includeChampionship || template.hasPlayoffGame) {
+  // Generate championship game based on template configuration if not already generated from pattern
+  const hasChampionshipFromPattern = games.some(game => game.isChampionship || game.gameType === 'final');
+  
+  if ((template.includeChampionship || template.hasPlayoffGame) && !hasChampionshipFromPattern) {
     console.log(`[Championship Gen] Template ${template.name} requires championship game (includeChampionship: ${template.includeChampionship}, hasPlayoffGame: ${template.hasPlayoffGame})`);
     
     // Extract all team IDs for conflict validation - championship games need to validate against ALL possible participants
     const allTeamIds = Object.values(teamMapping).map(team => team.id);
     
+    let homeTeamName = 'TBD';
+    let awayTeamName = 'TBD';
+    let championshipNotes = template.championshipDescription || 'Championship final';
+    
+    // Different championship formats based on bracket structure
+    if (template.bracketStructure === 'crossover' && template.teamCount === 6) {
+      // 6-Team Crossover: 1st in points vs 2nd in points across all pools
+      homeTeamName = 'TBD (1st in Points)';
+      awayTeamName = 'TBD (2nd in Points)';
+      championshipNotes = '1st in points vs 2nd in points (crossover format)';
+    } else if (template.bracketStructure === 'dual' && template.teamCount === 8) {
+      // 8-Team Dual Brackets: 1st from Pool A vs 1st from Pool B
+      homeTeamName = 'TBD (Pool A Winner)';
+      awayTeamName = 'TBD (Pool B Winner)';
+      championshipNotes = '1st from Bracket A vs 1st from Bracket B';
+    } else {
+      // Generic playoff format
+      homeTeamName = 'Pool Winner';
+      awayTeamName = 'Pool Runner-up';
+    }
+    
     games.push({
       id: `${bracketInfo.id}-championship`,
       homeTeamId: null,
-      homeTeamName: 'Pool Winner',
+      homeTeamName,
       awayTeamId: null,
-      awayTeamName: 'Pool Runner-up',
+      awayTeamName,
       bracketId: bracketInfo.id,
       bracketName: bracketInfo.name,
       round: 2,
@@ -305,7 +350,7 @@ function generateGamesFromPattern(
       isPending: true,
       isChampionship: true,
       participatingTeams: allTeamIds, // CRITICAL: All teams in flight for conflict validation
-      notes: template.championshipDescription || template.playoffDescription || 'Championship final - teams determined by pool standings'
+      notes: championshipNotes
     });
   }
 
