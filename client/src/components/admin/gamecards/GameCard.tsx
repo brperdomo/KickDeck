@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Calendar, Clock, MapPin, Users } from 'lucide-react';
+import GameQRCode from '@/components/GameQRCode';
 
 interface Team {
   id: number;
@@ -136,12 +137,19 @@ export default function GameCard({ type, team, game }: GameCardProps) {
           
           <Separator />
           
-          <div className="space-y-2">
-            <div className="text-xs text-muted-foreground">
-              Referee: _______________
-            </div>
-            <div className="text-xs text-muted-foreground">
-              Score: HOME [  ] - [  ] AWAY
+          <div className="space-y-3">
+            <div className="flex justify-between items-start">
+              <div className="space-y-2 flex-1">
+                <div className="text-xs text-muted-foreground">
+                  Referee: _______________
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Score: HOME [  ] - [  ] AWAY
+                </div>
+              </div>
+              <div className="ml-3">
+                <GameQRCode gameId={game.id} size={80} />
+              </div>
             </div>
           </div>
         </CardContent>
