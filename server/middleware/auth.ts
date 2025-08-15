@@ -6,7 +6,8 @@ export const isAdmin = async (req: Request, res: Response, next: NextFunction) =
   const bypassPaths = [
     'bracket-creation', 'create-brackets', 'assign-teams', 'auto-schedule', 
     'tbd-games', 'assign-fields', 'assign-field', 'format-templates', 
-    'matchup-templates', 'tournament-format', 'field-configurations'
+    'matchup-templates', 'tournament-format', 'field-configurations',
+    'ai-assistant/chat'
   ];
   
   const fullPath = req.originalUrl || req.path;

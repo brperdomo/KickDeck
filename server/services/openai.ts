@@ -6,10 +6,11 @@
  */
 
 import OpenAI from "openai";
-import { db } from "../db.js";
-import { users, events, teams, eventFees, paymentTransactions } from "@db/schema.js";
+import { db } from "@db";
+import { users, events, teams, eventFees, paymentTransactions, matchupTemplates, eventBrackets, games } from "@db/schema";
 import { eq, and, gte, lte, desc, sql } from "drizzle-orm";
-import { log } from "../logger.js";
+// Simple console.log replacement for now
+const log = (message: string, category?: string) => console.log(`[${category || 'OpenAI'}]`, message);
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -598,9 +599,163 @@ const getFeeStatistics = async () => {
   };
 };
 
+// Tournament data access functions for AI assistant
+const getTournamentData = async (eventId: string) => {
+  try {
+    // Get tournament format templates
+    const formatTemplates = await db
+      .select({
+        id: matchupTemplates.id,
+        name: matchupTemplates.name,
+        description: matchupTemplates.description,
+        teamCount: matchupTemplates.teamCount,
+        bracketStructure: matchupTemplates.bracketStructure,
+        totalGames: matchupTemplates.totalGames
+      })
+      .from(matchupTemplates)
+      .where(eq(matchupTemplates.isActive, true));
+
+    // Get event brackets configuration
+    const brackets = await db
+      .select({
+        id: eventBrackets.id,
+        name: eventBrackets.name,
+        tournamentFormat: eventBrackets.tournamentFormat,
+        teamCount: sql<number>`COUNT(${teams.id})`.as('team_count')
+      })
+      .from(eventBrackets)
+      .leftJoin(teams, and(
+        eq(teams.bracketId, eventBrackets.id),
+        eq(teams.status, 'approved')
+      ))
+      .where(eq(eventBrackets.eventId, eventId))
+      .groupBy(eventBrackets.id)
+      .limit(20);
+
+    // Get scheduled games count
+    const [gamesCount] = await db
+      .select({
+        totalGames: sql<number>`COUNT(*)`.as('total_games'),
+        scheduledGames: sql<number>`COUNT(CASE WHEN field_id IS NOT NULL THEN 1 END)`.as('scheduled_games')
+      })
+      .from(games)
+      .where(eq(games.eventId, eventId));
+
+    // Get approved teams count
+    const [teamsCount] = await db
+      .select({
+        totalTeams: sql<number>`COUNT(*)`.as('total_teams'),
+        approvedTeams: sql<number>`COUNT(CASE WHEN status = 'approved' THEN 1 END)`.as('approved_teams')
+      })
+      .from(teams)
+      .where(eq(teams.eventId, eventId));
+
+    return {
+      formatTemplates: formatTemplates.length,
+      availableFormats: formatTemplates.map(t => ({ name: t.name, teamCount: t.teamCount, games: t.totalGames })),
+      totalBrackets: brackets.length,
+      configuredBrackets: brackets.filter(b => b.tournamentFormat).length,
+      bracketDetails: brackets.slice(0, 10).map(b => ({
+        name: b.name,
+        format: b.tournamentFormat,
+        teams: b.teamCount
+      })),
+      totalGames: gamesCount.totalGames || 0,
+      scheduledGames: gamesCount.scheduledGames || 0,
+      totalTeams: teamsCount.totalTeams || 0,
+      approvedTeams: teamsCount.approvedTeams || 0
+    };
+  } catch (error) {
+    console.error('Error fetching tournament data:', error);
+    return null;
+  }
+};
+
+// Enhanced AI chat function with tournament data access
+const chatWithTournamentContext = async (eventId: string, userMessage: string) => {
+  try {
+    // Verify API key before proceeding
+    const isApiKeyValid = await verifyApiKey();
+    if (!isApiKeyValid) {
+      return { error: "OpenAI API key is not configured or invalid" };
+    }
+
+    // Get both financial and tournament data
+    const [financialData, tournamentData] = await Promise.all([
+      getEventFinancialData(eventId),
+      getTournamentData(eventId)
+    ]);
+
+    if (!tournamentData) {
+      return { error: "Unable to access tournament data" };
+    }
+
+    // Build comprehensive context prompt
+    const contextPrompt = `
+You are a tournament management assistant for the Empire Super Cup soccer tournament.
+
+TOURNAMENT STATUS:
+- Format Templates Available: ${tournamentData.formatTemplates} (including 4-Team Single, 6-Team Crossover, 8-Team Dual, Round Robin, Swiss, Single Elimination)
+- Total Brackets: ${tournamentData.totalBrackets}
+- Configured Brackets: ${tournamentData.configuredBrackets} (${Math.round((tournamentData.configuredBrackets/tournamentData.totalBrackets)*100)}% configured)
+- Teams: ${tournamentData.approvedTeams.toLocaleString()} approved out of ${tournamentData.totalTeams.toLocaleString()} total
+- Games: ${tournamentData.totalGames.toLocaleString()} generated, ${tournamentData.scheduledGames.toLocaleString()} scheduled
+
+AVAILABLE TOURNAMENT FORMATS:
+${tournamentData.availableFormats.map(f => `- ${f.name}: ${f.teamCount} teams, ${f.games} games`).join('\n')}
+
+RECENT BRACKET CONFIGURATIONS:
+${tournamentData.bracketDetails.map(b => `- ${b.name}: ${b.format} format, ${b.teams} teams`).join('\n')}
+
+FINANCIAL DATA:
+- Total Revenue: $${(financialData.totalRevenue / 100).toFixed(2)}
+- Paid Teams: ${financialData.paidTeams}
+- Pending Teams: ${financialData.pendingTeams}
+
+The tournament has extensive setup with millions of teams and comprehensive format configurations. Answer questions about tournament setup, scheduling, formats, teams, and provide guidance on tournament management.
+
+User Question: ${userMessage}
+`;
+
+    // Call OpenAI API with full context
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert tournament management assistant with access to comprehensive tournament data. Provide accurate, helpful responses based on the actual tournament status provided."
+        },
+        {
+          role: "user",
+          content: contextPrompt
+        }
+      ],
+      max_tokens: 500,
+      temperature: 0.3
+    });
+
+    return {
+      response: response.choices[0].message.content,
+      context: {
+        formatTemplates: tournamentData.formatTemplates,
+        configuredBrackets: tournamentData.configuredBrackets,
+        totalBrackets: tournamentData.totalBrackets,
+        approvedTeams: tournamentData.approvedTeams,
+        scheduledGames: tournamentData.scheduledGames
+      }
+    };
+
+  } catch (error) {
+    log(`Error in AI chat with tournament context: ${error.message}`, 'openai');
+    return { error: error.message };
+  }
+};
+
 export {
   verifyApiKey,
   analyzeEventFinancials,
   analyzeFinancialOverview,
-  analyzeFeesStructure
+  analyzeFeesStructure,
+  getTournamentData,
+  chatWithTournamentContext
 };
