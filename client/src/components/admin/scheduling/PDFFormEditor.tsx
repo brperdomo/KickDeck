@@ -32,13 +32,16 @@ import {
   AlignRight,
   Bold,
   Italic,
-  Underline
+  Underline,
+  Minus,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 
 interface PDFElement {
   id: string;
-  type: 'text' | 'placeholder' | 'image' | 'shape' | 'qr-code';
+  type: 'text' | 'placeholder' | 'image' | 'shape' | 'qr-code' | 'line';
   x: number;
   y: number;
   width: number;
@@ -57,6 +60,10 @@ interface PDFElement {
   imageUrl?: string;
   shapeType?: 'rectangle' | 'circle';
   rotation?: number;
+  // Line-specific properties
+  x2?: number; // End point for lines
+  y2?: number;
+  lineStyle?: 'solid' | 'dashed' | 'dotted';
 }
 
 interface PDFTemplate {
@@ -97,6 +104,10 @@ export default function PDFFormEditor({ eventId }: PDFFormEditorProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [draggedElement, setDraggedElement] = useState<PDFElement | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
+  const [isCanvasMaximized, setIsCanvasMaximized] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -157,8 +168,8 @@ export default function PDFFormEditor({ eventId }: PDFFormEditorProps) {
       type,
       x: 20,
       y: 20,
-      width: type === 'text' || type === 'placeholder' ? 100 : 50,
-      height: type === 'text' || type === 'placeholder' ? 20 : 50,
+      width: type === 'text' || type === 'placeholder' ? 100 : type === 'line' ? 100 : 50,
+      height: type === 'text' || type === 'placeholder' ? 20 : type === 'line' ? 2 : 50,
       fontSize: 12,
       fontFamily: 'Arial',
       fontWeight: 'normal',
@@ -167,10 +178,14 @@ export default function PDFFormEditor({ eventId }: PDFFormEditorProps) {
       color: '#000000',
       backgroundColor: type === 'shape' ? '#f0f0f0' : 'transparent',
       borderColor: '#000000',
-      borderWidth: 0,
+      borderWidth: type === 'line' ? 1 : 0,
       content: type === 'text' ? 'Sample Text' : '',
       shapeType: type === 'shape' ? 'rectangle' : undefined,
-      rotation: 0
+      rotation: 0,
+      // Line-specific properties
+      x2: type === 'line' ? 120 : undefined,
+      y2: type === 'line' ? 22 : undefined,
+      lineStyle: type === 'line' ? 'solid' : undefined
     };
 
     setSelectedTemplate({
@@ -211,6 +226,48 @@ export default function PDFFormEditor({ eventId }: PDFFormEditorProps) {
     if (selectedElement?.id === elementId) {
       setSelectedElement(null);
     }
+
+    toast({ title: 'Element deleted' });
+  };
+
+  // Handle canvas mouse events for drag and drop
+  const handleCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!selectedTemplate) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * selectedTemplate.pageWidth;
+    const y = ((e.clientY - rect.top) / rect.height) * selectedTemplate.pageHeight;
+
+    // Find element at click position
+    const clickedElement = selectedTemplate.elements.find(el => 
+      x >= el.x && x <= el.x + el.width && 
+      y >= el.y && y <= el.y + el.height
+    );
+
+    if (clickedElement) {
+      setSelectedElement(clickedElement);
+      setDragOffset({ x: x - clickedElement.x, y: y - clickedElement.y });
+      setIsDragging(true);
+    } else {
+      setSelectedElement(null);
+    }
+  };
+
+  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging || !selectedElement || !selectedTemplate) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * selectedTemplate.pageWidth;
+    const y = ((e.clientY - rect.top) / rect.height) * selectedTemplate.pageHeight;
+
+    const newX = Math.max(0, Math.min(selectedTemplate.pageWidth - selectedElement.width, x - dragOffset.x));
+    const newY = Math.max(0, Math.min(selectedTemplate.pageHeight - selectedElement.height, y - dragOffset.y));
+
+    updateElement(selectedElement.id, { x: newX, y: newY });
+  };
+
+  const handleCanvasMouseUp = () => {
+    setIsDragging(false);
   };
 
   // Generate preview PDF
@@ -335,6 +392,55 @@ export default function PDFFormEditor({ eventId }: PDFFormEditorProps) {
             const radius = Math.min(element.width, element.height) / 2;
             ctx.arc(element.rotation ? 0 : element.x + radius, element.rotation ? 0 : element.y + radius, radius, 0, 2 * Math.PI);
             ctx.stroke();
+          }
+        }
+      } else if (element.type === 'line') {
+        ctx.strokeStyle = element.borderColor || '#000000';
+        ctx.lineWidth = element.borderWidth || 1;
+        
+        // Set line style
+        if (element.lineStyle === 'dashed') {
+          ctx.setLineDash([5, 5]);
+        } else if (element.lineStyle === 'dotted') {
+          ctx.setLineDash([2, 3]);
+        } else {
+          ctx.setLineDash([]);
+        }
+        
+        ctx.beginPath();
+        ctx.moveTo(element.x, element.y);
+        ctx.lineTo(element.x2 || element.x + element.width, element.y2 || element.y + element.height);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      } else if (element.type === 'image' && element.imageUrl) {
+        // Draw placeholder for image
+        ctx.strokeStyle = '#ccc';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(element.x, element.y, element.width, element.height);
+        ctx.fillStyle = '#f8f8f8';
+        ctx.fillRect(element.x, element.y, element.width, element.height);
+        
+        // Draw image icon placeholder
+        ctx.fillStyle = '#666';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('🖼️', element.x + element.width / 2, element.y + element.height / 2);
+      } else if (element.type === 'qr-code') {
+        // Draw QR code placeholder
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(element.x, element.y, element.width, element.height);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(element.x, element.y, element.width, element.height);
+        
+        // Draw QR pattern
+        const cellSize = element.width / 10;
+        ctx.fillStyle = '#000';
+        for (let i = 0; i < 10; i++) {
+          for (let j = 0; j < 10; j++) {
+            if ((i + j) % 2 === 0) {
+              ctx.fillRect(element.x + i * cellSize, element.y + j * cellSize, cellSize, cellSize);
+            }
           }
         }
       }
@@ -490,33 +596,127 @@ export default function PDFFormEditor({ eventId }: PDFFormEditorProps) {
                       <Square className="h-4 w-4" />
                       QR Code
                     </Button>
+                    <Button
+                      onClick={() => addElement('line')}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <Minus className="h-4 w-4" />
+                      Line
+                    </Button>
+                    <Button
+                      onClick={() => addElement('image')}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <ImageIcon className="h-4 w-4" />
+                      Image
+                    </Button>
+                    {selectedElement && (
+                      <Button
+                        onClick={() => deleteElement(selectedElement.id)}
+                        variant="destructive"
+                        size="sm"
+                        className="flex items-center gap-2 ml-auto"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
               {/* Canvas */}
               <Card>
-                <CardContent className="pt-4">
-                  <div className="border rounded-md p-4 bg-gray-50 overflow-auto">
-                    <canvas
-                      ref={canvasRef}
-                      className="border bg-white cursor-crosshair"
-                      onClick={(e) => {
-                        const rect = canvasRef.current?.getBoundingClientRect();
-                        if (!rect) return;
-                        
-                        const x = e.clientX - rect.left;
-                        const y = e.clientY - rect.top;
-                        
-                        // Find clicked element
-                        const clickedElement = selectedTemplate.elements.find(el => 
-                          x >= el.x && x <= el.x + el.width &&
-                          y >= el.y && y <= el.y + el.height
-                        );
-                        
-                        setSelectedElement(clickedElement || null);
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">Design Canvas</CardTitle>
+                    <Button
+                      onClick={() => setIsCanvasMaximized(!isCanvasMaximized)}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      {isCanvasMaximized ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                      {isCanvasMaximized ? 'Minimize' : 'Maximize'}
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-2">
+                  <div 
+                    className={`border rounded-md p-4 bg-gray-50 overflow-auto transition-all duration-300 ${
+                      isCanvasMaximized ? 'h-[600px]' : 'h-[400px]'
+                    }`}
+                  >
+                    <div
+                      className="relative bg-white border shadow-sm cursor-crosshair"
+                      style={{
+                        width: isCanvasMaximized ? selectedTemplate.pageWidth * 2.5 : selectedTemplate.pageWidth * 1.5,
+                        height: isCanvasMaximized ? selectedTemplate.pageHeight * 2.5 : selectedTemplate.pageHeight * 1.5,
+                        minWidth: '400px',
+                        minHeight: '500px'
                       }}
-                    />
+                      onMouseDown={handleCanvasMouseDown}
+                      onMouseMove={handleCanvasMouseMove}
+                      onMouseUp={handleCanvasMouseUp}
+                    >
+                      <canvas
+                        ref={canvasRef}
+                        width={selectedTemplate.pageWidth * (isCanvasMaximized ? 2.5 : 1.5)}
+                        height={selectedTemplate.pageHeight * (isCanvasMaximized ? 2.5 : 1.5)}
+                        className="absolute inset-0"
+                      />
+                      
+                      {/* Render interactive elements */}
+                      {selectedTemplate.elements.map((element) => (
+                        <div
+                          key={element.id}
+                          className={`absolute border-2 transition-all ${
+                            selectedElement?.id === element.id 
+                              ? 'border-blue-500 border-dashed' 
+                              : 'border-transparent hover:border-gray-300'
+                          }`}
+                          style={{
+                            left: element.x * (isCanvasMaximized ? 2.5 : 1.5),
+                            top: element.y * (isCanvasMaximized ? 2.5 : 1.5),
+                            width: element.width * (isCanvasMaximized ? 2.5 : 1.5),
+                            height: element.height * (isCanvasMaximized ? 2.5 : 1.5),
+                            cursor: isDragging ? 'grabbing' : 'grab'
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedElement(element);
+                          }}
+                        >
+                          {selectedElement?.id === element.id && (
+                            <>
+                              {/* Resize handles */}
+                              <div className="absolute -right-1 -bottom-1 w-3 h-3 bg-blue-500 border border-white cursor-nw-resize" 
+                                   onMouseDown={(e) => {
+                                     e.stopPropagation();
+                                     setIsResizing(true);
+                                   }} />
+                              <div className="absolute -right-1 -top-1 w-3 h-3 bg-blue-500 border border-white cursor-ne-resize" />
+                              <div className="absolute -left-1 -bottom-1 w-3 h-3 bg-blue-500 border border-white cursor-sw-resize" />
+                              <div className="absolute -left-1 -top-1 w-3 h-3 bg-blue-500 border border-white cursor-se-resize" />
+                            </>
+                          )}
+                          
+                          {/* Element content preview */}
+                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-600 bg-gray-50 bg-opacity-50">
+                            {element.type === 'text' && element.content}
+                            {element.type === 'placeholder' && `{${element.placeholder}}`}
+                            {element.type === 'shape' && element.shapeType}
+                            {element.type === 'qr-code' && 'QR'}
+                            {element.type === 'line' && '—'}
+                            {element.type === 'image' && '🖼️'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -611,6 +811,60 @@ export default function PDFFormEditor({ eventId }: PDFFormEditorProps) {
                       </Select>
                     </div>
                   )}
+                  
+                  {selectedElement.type === 'line' && (
+                    <div className="space-y-2">
+                      <Label>Line Style</Label>
+                      <Select
+                        value={selectedElement.lineStyle}
+                        onValueChange={(value: 'solid' | 'dashed' | 'dotted') => updateElement(selectedElement.id, { lineStyle: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="solid">Solid</SelectItem>
+                          <SelectItem value="dashed">Dashed</SelectItem>
+                          <SelectItem value="dotted">Dotted</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  
+                  {selectedElement.type === 'image' && (
+                    <div className="space-y-2">
+                      <Label>Image URL</Label>
+                      <Input
+                        value={selectedElement.imageUrl || ''}
+                        onChange={(e) => updateElement(selectedElement.id, { imageUrl: e.target.value })}
+                        placeholder="Enter image URL or upload file"
+                      />
+                      <Button
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*';
+                          input.onchange = (e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (e) => {
+                                updateElement(selectedElement.id, { imageUrl: e.target?.result as string });
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          };
+                          input.click();
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                      >
+                        <ImageIcon className="h-4 w-4 mr-2" />
+                        Upload Image
+                      </Button>
+                    </div>
+                  )}
                 </TabsContent>
                 
                 <TabsContent value="style" className="space-y-4">
@@ -692,7 +946,7 @@ export default function PDFFormEditor({ eventId }: PDFFormEditorProps) {
                     </>
                   )}
                   
-                  {/* Background */}
+                  {/* Background & Colors */}
                   {selectedElement.type === 'shape' && (
                     <>
                       <div>
@@ -722,6 +976,60 @@ export default function PDFFormEditor({ eventId }: PDFFormEditorProps) {
                       </div>
                     </>
                   )}
+                  
+                  {/* Line Properties */}
+                  {selectedElement.type === 'line' && (
+                    <>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label>End X</Label>
+                          <Input
+                            type="number"
+                            value={selectedElement.x2}
+                            onChange={(e) => updateElement(selectedElement.id, { x2: Number(e.target.value) })}
+                          />
+                        </div>
+                        <div>
+                          <Label>End Y</Label>
+                          <Input
+                            type="number"
+                            value={selectedElement.y2}
+                            onChange={(e) => updateElement(selectedElement.id, { y2: Number(e.target.value) })}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label>Line Color</Label>
+                        <Input
+                          type="color"
+                          value={selectedElement.borderColor}
+                          onChange={(e) => updateElement(selectedElement.id, { borderColor: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Line Width</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={selectedElement.borderWidth}
+                          onChange={(e) => updateElement(selectedElement.id, { borderWidth: Number(e.target.value) })}
+                        />
+                      </div>
+                    </>
+                  )}
+                  
+                  {/* Actions */}
+                  <div className="pt-4 border-t">
+                    <Button
+                      onClick={() => deleteElement(selectedElement.id)}
+                      variant="destructive"
+                      size="sm"
+                      className="w-full flex items-center gap-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete Element
+                    </Button>
+                  </div>
                   
                   {/* Delete Button */}
                   <Separator />
