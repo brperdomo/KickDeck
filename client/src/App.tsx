@@ -75,6 +75,8 @@ import AgeGroupSchedule from "@/pages/public/AgeGroupSchedule";
 import GameScoreManagement from "@/pages/admin/GameScoreManagement";
 // Game Cards Management  
 import GameCardsPage from "@/pages/admin/GameCards";
+// Public Game Score Page
+import GameScorePage from "@/pages/public/GameScorePage";
 
 // Create placeholder components for missing pages
 const ScoreReportPage = () => <NotFound />;
@@ -234,6 +236,11 @@ function Router() {
       {/* Age group specific schedules - no auth required */}
       <Route path="/public/schedules/:eventId/age-group/:ageGroupId">
         {(params) => <AgeGroupSchedule />}
+      </Route>
+      
+      {/* Public game score page - accessible via QR code */}
+      <Route path="/game/:gameId">
+        {(params) => <GameScorePage />}
       </Route>
       
       {/* Handle other routes based on auth status */}
