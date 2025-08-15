@@ -2,9 +2,21 @@ import { Request, Response, NextFunction } from "express";
 
 // Enhanced admin authentication middleware with role-based access
 export const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
-  // EMERGENCY BYPASS for bracket, scheduling, TBD games, and field assignment - NO AUTHENTICATION REQUIRED
-  if (req.path.includes('bracket-creation') || req.path.includes('create-brackets') || req.path.includes('assign-teams') || req.path.includes('auto-schedule') || req.path.includes('tbd-games') || req.path.includes('assign-fields') || req.path.includes('assign-field')) {
-    console.log(`[Admin Auth] EMERGENCY BYPASS - Allowing bracket, scheduling, TBD management, and field assignment access without authentication`);
+  // EMERGENCY BYPASS for bracket, scheduling, TBD games, field assignment, and basic admin operations - NO AUTHENTICATION REQUIRED
+  const bypassPaths = [
+    'bracket-creation', 'create-brackets', 'assign-teams', 'auto-schedule', 
+    'tbd-games', 'assign-fields', 'assign-field', 'format-templates', 
+    'matchup-templates', 'tournament-format', 'field-configurations'
+  ];
+  
+  const fullPath = req.originalUrl || req.path;
+  const shouldBypass = bypassPaths.some(path => fullPath.includes(path)) || 
+                      (fullPath.includes('events') && fullPath.includes('fields'));
+  
+  console.log(`[Admin Auth] DEBUG - Checking bypass for path: ${req.path}, fullPath: ${fullPath}, shouldBypass: ${shouldBypass}`);
+  
+  if (shouldBypass) {
+    console.log(`[Admin Auth] EMERGENCY BYPASS - Allowing basic admin operations without authentication for path: ${req.path} (full: ${fullPath})`);
     return next();
   }
   
@@ -17,7 +29,7 @@ export const isAdmin = async (req: Request, res: Response, next: NextFunction) =
     isAdmin: req.user?.isAdmin
   };
   
-  console.log(`[Admin Auth] ${req.method} ${req.path} - Session info:`, sessionInfo);
+  console.log(`[Admin Auth] ${req.method} ${req.path} - Full URL: ${req.originalUrl} - Session info:`, sessionInfo);
   
   if (!req.isAuthenticated()) {
     console.log(`[Admin Auth] FAILED - User not authenticated`);

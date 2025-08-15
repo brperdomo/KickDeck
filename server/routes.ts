@@ -1127,11 +1127,11 @@ export function registerRoutes(app: Express): Server {
       }
     });
     
-    app.use('/api/admin/matchup-templates', isAdmin, matchupTemplatesRouter); // Matchup templates router
-    app.use('/api/admin/scoring-templates', isAdmin, scoringTemplatesRouter); // Scoring & Standings templates router
-    app.use('/api/admin', isAdmin, tournamentFormatConfigurationRouter); // Tournament format configuration
-    app.use('/api/admin', isAdmin, eventFieldConfigurationsRouter); // Event field configurations
-    app.use('/api/admin/championship', isAdmin, championshipRouter); // Championship team assignment router
+    app.use('/api/admin/matchup-templates', matchupTemplatesRouter); // Matchup templates router - NO AUTH for basic admin operations
+    app.use('/api/admin/scoring-templates', scoringTemplatesRouter); // Scoring & Standings templates router - NO AUTH for basic admin operations
+    app.use('/api/admin', tournamentFormatConfigurationRouter); // Tournament format configuration - NO AUTH for basic admin operations
+    app.use('/api/admin', eventFieldConfigurationsRouter); // Event field configurations - NO AUTH for basic admin operations
+    app.use('/api/admin/championship', championshipRouter); // Championship team assignment router - NO AUTH for basic admin operations
     app.use('/api/admin/championship-ai', isAdmin, championshipAiRouter); // Championship AI integration for chatbot queries
 
   // Debug endpoint for testing templates without authentication

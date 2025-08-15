@@ -16,31 +16,83 @@ router.get('/events/:eventId/format-templates', isAdmin, async (req, res) => {
     
     console.log(`[FORMAT TEMPLATES] Fetching templates for event: ${eventId}`);
     
-    // Fetch all available matchup templates
+    // Fetch all available matchup templates with explicit column selection
     const templates = await db
-      .select()
+      .select({
+        id: matchupTemplates.id,
+        name: matchupTemplates.name,
+        description: matchupTemplates.description,
+        teamCount: matchupTemplates.teamCount,
+        bracketStructure: matchupTemplates.bracketStructure,
+        matchupPattern: sql`${matchupTemplates.matchupPattern}::text`, // Cast to text to avoid auto-parsing
+        totalGames: matchupTemplates.totalGames,
+        hasPlayoffGame: matchupTemplates.hasPlayoffGame,
+        playoffDescription: matchupTemplates.playoffDescription,
+        includeChampionship: matchupTemplates.includeChampionship,
+        championshipDescription: matchupTemplates.championshipDescription,
+        isActive: matchupTemplates.isActive,
+        createdAt: matchupTemplates.createdAt,
+        updatedAt: matchupTemplates.updatedAt,
+      })
       .from(matchupTemplates)
       .where(eq(matchupTemplates.isActive, true))
       .orderBy(desc(matchupTemplates.createdAt));
     
     console.log(`[FORMAT TEMPLATES] Found ${templates.length} active templates`);
+    console.log(`[FORMAT TEMPLATES] Raw template data:`, templates.map(t => ({
+      id: t.id,
+      name: t.name,
+      matchupPattern: typeof t.matchupPattern === 'string' ? t.matchupPattern.substring(0, 50) + '...' : t.matchupPattern
+    })));
+    
+    // Process templates safely with error handling
+    const processedTemplates = [];
+    
+    for (const template of templates) {
+      try {
+        let matchupPattern = [];
+        
+        // Handle matchupPattern parsing
+        if (typeof template.matchupPattern === 'string') {
+          // Check if it's valid JSON
+          if (template.matchupPattern.startsWith('[') || template.matchupPattern.startsWith('{')) {
+            matchupPattern = JSON.parse(template.matchupPattern);
+          } else {
+            // Handle comma-separated format
+            matchupPattern = template.matchupPattern.split(',').map(s => s.trim());
+          }
+        } else if (template.matchupPattern && typeof template.matchupPattern === 'object') {
+          matchupPattern = template.matchupPattern;
+        }
+        
+        processedTemplates.push({
+          id: template.id,
+          name: template.name,
+          description: template.description,
+          teamCount: template.teamCount,
+          bracketStructure: template.bracketStructure,
+          matchupPattern,
+          totalGames: template.totalGames,
+          hasPlayoffGame: template.hasPlayoffGame,
+          playoffDescription: template.playoffDescription,
+          includeChampionship: template.includeChampionship,
+          championshipDescription: template.championshipDescription,
+          isActive: template.isActive,
+          createdAt: template.createdAt,
+          updatedAt: template.updatedAt
+        });
+        
+      } catch (error) {
+        console.error(`[FORMAT TEMPLATES] Error processing template ${template.id} (${template.name}):`, error);
+        console.error(`[FORMAT TEMPLATES] Raw matchupPattern:`, template.matchupPattern);
+        // Skip problematic templates rather than failing the entire request
+        continue;
+      }
+    }
     
     res.json({
       success: true,
-      templates: templates.map(template => ({
-        id: template.id,
-        name: template.name,
-        description: template.description,
-        teamCount: template.teamCount,
-        bracketStructure: template.bracketStructure,
-        matchupPattern: template.matchupPattern ? JSON.parse(template.matchupPattern as string) : [],
-        totalGames: template.totalGames,
-        hasPlayoffGame: template.hasPlayoffGame,
-        playoffDescription: template.playoffDescription,
-        isActive: template.isActive,
-        createdAt: template.createdAt,
-        updatedAt: template.updatedAt
-      }))
+      templates: processedTemplates
     });
     
   } catch (error: any) {
