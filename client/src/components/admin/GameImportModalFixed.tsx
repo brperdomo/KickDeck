@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Upload, AlertTriangle, CheckCircle, X, FileText, Users, MapPin, Clock } from 'lucide-react';
+import { Upload, AlertTriangle, CheckCircle, X, FileText, Users, MapPin, Clock, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ImportPreview {
@@ -163,6 +163,33 @@ export function GameImportModal({ isOpen, onClose, eventId, onImportComplete }: 
     handleClose();
   };
 
+  const downloadTemplate = () => {
+    // Create sample CSV template with proper headers and example data
+    const csvTemplate = [
+      'Date,Time,Home Team,Away Team,Age Group,Field,Status',
+      '2025-08-15,09:00,Team Alpha,Team Beta,U14 Boys,Field 1,Scheduled',
+      '2025-08-15,10:30,Team Gamma,Team Delta,U14 Boys,Field 2,Scheduled',
+      '2025-08-15,12:00,Team Echo,Team Foxtrot,U16 Girls,Field 1,Scheduled',
+      '2025-08-15,13:30,Team Golf,Team Hotel,U16 Girls,Field 3,Scheduled'
+    ].join('\n');
+
+    // Create downloadable blob
+    const blob = new Blob([csvTemplate], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'game-schedule-template.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    toast({
+      title: "Template Downloaded",
+      description: "CSV template has been saved to your downloads folder",
+    });
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
@@ -180,7 +207,20 @@ export function GameImportModal({ isOpen, onClose, eventId, onImportComplete }: 
               <Alert>
                 <FileText className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>CSV Format Required:</strong> Your CSV file must have these columns: Date, Time, Home Team, Away Team, Age Group, Field, Status
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <strong>CSV Format Required:</strong> Your CSV file must have these columns: Date, Time, Home Team, Away Team, Age Group, Field, Status
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={downloadTemplate}
+                      className="ml-4 flex items-center gap-1 text-xs"
+                    >
+                      <Download className="h-3 w-3" />
+                      Download Template
+                    </Button>
+                  </div>
                 </AlertDescription>
               </Alert>
 

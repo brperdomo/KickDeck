@@ -32,6 +32,7 @@ Preferred communication style: Simple, everyday language.
   - **Production-Ready Error Handling**: Added comprehensive validation, conflict detection, and rollback capabilities for failed imports
   - **Scoring System Compatibility**: All imported games are immediately available for score recording and properly contribute to standings for determining TBD games and winners
   - **Admin Interface Integration**: Seamless integration with MasterSchedulePage allowing tournament directors to import, preview, and execute CSV imports with real-time feedback
+  - **CSV Template Download**: Added downloadable sample template (game-schedule-template.csv) with proper format examples for easy tournament setup
 - **QR Code Score Submission System Complete (August 15, 2025)**: Implemented comprehensive QR code system for direct mobile score submission enabling anyone with a game link to enter or edit scores:
   - **GameQRCode Component**: React component using qrcode.react library to generate QR codes linking to /game/:gameId URLs
   - **Mobile-Friendly Score Interface**: GameScorePage provides responsive, touch-optimized interface for score entry with real-time validation
