@@ -3631,9 +3631,10 @@ export function registerRoutes(app: Express): Server {
     app.use('/api/admin/events', isAdmin, eventsRouter);
     app.use('/api/admin/manager-reports', isAdmin, managerReportsRouter);
     app.use('/api/admin', publishedSchedulesRouter); // Published schedules router
-    app.use('/api/public/schedules', publicSchedulesRouter); // Public schedules (no auth required)
-    app.use('/api/public/schedules', ageGroupScheduleRouter); // Age group schedules (no auth required)
-    app.use('/api/public/schedules-fixed', publicSchedulesFixedRouter); // Fixed public schedules (no auth required)
+    // DISABLED OLD BROKEN ROUTES - Using fixed version
+    // app.use('/api/public/schedules', publicSchedulesRouter); // Public schedules (no auth required)
+    // app.use('/api/public/schedules', ageGroupScheduleRouter); // Age group schedules (no auth required)
+    app.use('/api/public/schedules', publicSchedulesFixedRouter); // Fixed public schedules (no auth required)
     app.use('/api/admin/game-score-simple', gameScoreManagementSimpleRouter); // Simplified game score management
 
     // Endpoint to clone an event

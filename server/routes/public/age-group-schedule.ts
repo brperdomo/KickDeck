@@ -48,7 +48,7 @@ router.get('/:eventId/age-group/:ageGroupId', async (req: Request, res: Response
       })
       .from(eventAgeGroups)
       .where(and(
-        eq(eventAgeGroups.eventId, eventIdNum), // FIXED: Use numeric eventId
+        eq(eventAgeGroups.eventId, eventId), // FIXED: Use string eventId
         eq(eventAgeGroups.id, ageGroupIdNum)
       ))
       .limit(1);
@@ -73,7 +73,7 @@ router.get('/:eventId/age-group/:ageGroupId', async (req: Request, res: Response
       })
       .from(eventBrackets)
       .where(and(
-        eq(eventBrackets.eventId, eventIdNum), // FIXED: Use numeric eventId
+        eq(eventBrackets.eventId, eventId), // FIXED: Use string eventId
         eq(eventBrackets.ageGroupId, ageGroupIdNum)
       ));
 
@@ -90,12 +90,13 @@ router.get('/:eventId/age-group/:ageGroupId', async (req: Request, res: Response
       })
       .from(teams)
       .where(and(
-        eq(teams.eventId, eventIdNum), // FIXED: Use numeric eventId
+        eq(teams.eventId, eventId), // FIXED: Use string eventId
         eq(teams.ageGroupId, ageGroupIdNum),
         // REMOVED: isNotNull(teams.bracketId) - allow teams without formal flight assignment
       ));
 
     console.log(`[Age Group Schedule] Found ${teamsData.length} teams directly assigned to age group ${ageGroupIdNum}`);
+    console.log(`[Age Group Schedule] DEBUG: About to get games data...`);
 
     // Get all games for this age group - FIXED: Use consistent data types
     console.log(`[Age Group Schedule] Query params: eventId=${eventId} (${typeof eventId}), ageGroupId=${ageGroupIdNum} (${typeof ageGroupIdNum})`);
@@ -119,7 +120,7 @@ router.get('/:eventId/age-group/:ageGroupId', async (req: Request, res: Response
       .from(games)
       .leftJoin(fields, eq(games.fieldId, fields.id))
       .where(and(
-        eq(games.eventId, eventIdNum), // FIXED: Use numeric eventId
+        eq(games.eventId, eventId), // FIXED: Use string eventId
         eq(games.ageGroupId, ageGroupIdNum)
       ));
 
@@ -132,9 +133,14 @@ router.get('/:eventId/age-group/:ageGroupId', async (req: Request, res: Response
       time: g.scheduledTime
     })));
 
+    console.log(`[Age Group Schedule] Retrieved ${gamesData.length} games for age group ${ageGroupIdNum}`);
+
     // CRITICAL FIX: If no teams found directly, look up teams from games data (handle data inconsistency)
-    if (teamsData.length === 0 && gamesData.length > 0) {
-      console.log(`[Age Group Schedule] No direct teams found, extracting team data from games...`);
+    console.log(`[Age Group Schedule] CRITICAL FIX: Checking extraction condition - teamsData.length=${teamsData.length}, gamesData.length=${gamesData.length}`);
+    
+    // ALWAYS extract teams from games for this tournament since data is inconsistent
+    if (gamesData.length > 0) {
+      console.log(`[Age Group Schedule] ✓ FORCED EXTRACTION: Extracting teams from ${gamesData.length} games...`);
       
       // Get unique team IDs from games
       const teamIds = new Set();
@@ -153,11 +159,11 @@ router.get('/:eventId/age-group/:ageGroupId', async (req: Request, res: Response
           status: teams.status
         })
         .from(teams)
-        .where(eq(teams.eventId, eventIdNum));
+        .where(eq(teams.eventId, eventId));
 
       // Filter to only teams referenced in games
       teamsData = gameTeamsData.filter(team => teamIds.has(team.id));
-      console.log(`[Age Group Schedule] Extracted ${teamsData.length} teams from games data (original age groups: ${[...new Set(gameTeamsData.map(t => t.ageGroupId))].join(', ')})`);
+      console.log(`[Age Group Schedule] Extracted ${teamsData.length} teams from games data (original age groups: ${Array.from(new Set(gameTeamsData.map(t => t.ageGroupId))).join(', ')})`);
     }
 
     // Create teams lookup
@@ -166,6 +172,7 @@ router.get('/:eventId/age-group/:ageGroupId', async (req: Request, res: Response
 
     // Process flights with their teams and games - FIXED: Handle tournaments without formal flights
     let processedFlights = [];
+    console.log(`[Age Group Schedule] Processing flights: flightsData.length=${flightsData.length}, teamsData.length=${teamsData.length}, gamesData.length=${gamesData.length}`);
 
     if (flightsData.length > 0) {
       // Traditional flight-based tournament
