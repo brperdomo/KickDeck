@@ -97,7 +97,8 @@ export function GameImportModal({ isOpen, onClose, eventId, onImportComplete }: 
     try {
       const response = await fetch('/api/admin/csv-import/preview', {
         method: 'POST',
-        body: formData
+        body: formData,
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -141,7 +142,8 @@ export function GameImportModal({ isOpen, onClose, eventId, onImportComplete }: 
     try {
       const response = await fetch('/api/admin/csv-import/execute', {
         method: 'POST',
-        body: formData
+        body: formData,
+        credentials: 'include'
       });
 
       if (!response.ok) {

@@ -1,0 +1,97 @@
+All flight names from games: ['Round 1']
+ScheduleViewerFixed-Dfl8QkH-.js:40 FLIGHT FILTER DEBUG: Unique flights for dropdown: ['Round 1']
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+index-CVTfJ6Se.js:747 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ index-CVTfJ6Se.js:747
+G4 @ index-CVTfJ6Se.js:41
+Nv @ index-CVTfJ6Se.js:41
+k0e @ index-CVTfJ6Se.js:41
+cp @ index-CVTfJ6Se.js:41
+I8 @ index-CVTfJ6Se.js:41
+Sf @ index-CVTfJ6Se.js:39
+(anonymous) @ index-CVTfJ6Se.js:41Understand this warning
+MasterSchedulePage-DmS-ZWf0.js:70  POST https://app.matchpro.ai/api/admin/csv-import/preview 500 (Internal Server Error)
+A @ MasterSchedulePage-DmS-ZWf0.js:70
+Hve @ index-CVTfJ6Se.js:38
+Kve @ index-CVTfJ6Se.js:38
+Yve @ index-CVTfJ6Se.js:38
+s8 @ index-CVTfJ6Se.js:38
+dJ @ index-CVTfJ6Se.js:38
+(anonymous) @ index-CVTfJ6Se.js:38
+CD @ index-CVTfJ6Se.js:41
+IX @ index-CVTfJ6Se.js:38
+aE @ index-CVTfJ6Se.js:38
+ZI @ index-CVTfJ6Se.js:38
+uye @ index-CVTfJ6Se.js:38Understand this error
+MasterSchedulePage-DmS-ZWf0.js:70 Preview error: SyntaxError: Unexpected token 'I', "Internal S"... is not valid JSON
+A @ MasterSchedulePage-DmS-ZWf0.js:70
+await in A
+Hve @ index-CVTfJ6Se.js:38
+Kve @ index-CVTfJ6Se.js:38
+Yve @ index-CVTfJ6Se.js:38
+s8 @ index-CVTfJ6Se.js:38
+dJ @ index-CVTfJ6Se.js:38
+(anonymous) @ index-CVTfJ6Se.js:38
+CD @ index-CVTfJ6Se.js:41
+IX @ index-CVTfJ6Se.js:38
+aE @ index-CVTfJ6Se.js:38
+ZI @ index-CVTfJ6Se.js:38
+uye @ index-CVTfJ6Se.js:38Understand this error
+MasterSchedulePage-DmS-ZWf0.js:70 Fetch failed loading: POST "https://app.matchpro.ai/api/admin/csv-import/preview".
+A @ MasterSchedulePage-DmS-ZWf0.js:70
+Hve @ index-CVTfJ6Se.js:38
+Kve @ index-CVTfJ6Se.js:38
+Yve @ index-CVTfJ6Se.js:38
+s8 @ index-CVTfJ6Se.js:38
+dJ @ index-CVTfJ6Se.js:38
+(anonymous) @ index-CVTfJ6Se.js:38
+CD @ index-CVTfJ6Se.js:41
+IX @ index-CVTfJ6Se.js:38
+aE @ index-CVTfJ6Se.js:38
+ZI @ index-CVTfJ6Se.js:38
+uye @ index-CVTfJ6Se.js:38
+ScheduleViewerFixed-Dfl8QkH-.js:40 FLIGHT FILTER DEBUG: All flight names from games: ['Round 1']
+ScheduleViewerFixed-Dfl8QkH-.js:40 FLIGHT FILTER DEBUG: Unique flights for dropdown: ['Round 1']
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-Dfl8QkH-.js:40 FLIGHT FILTER DEBUG: All flight names from games: ['Round 1']
+ScheduleViewerFixed-Dfl8QkH-.js:40 FLIGHT FILTER DEBUG: Unique flights for dropdown: ['Round 1']
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-Dfl8QkH-.js:40 FLIGHT FILTER DEBUG: All flight names from games: ['Round 1']
+ScheduleViewerFixed-Dfl8QkH-.js:40 FLIGHT FILTER DEBUG: Unique flights for dropdown: ['Round 1']
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-Dfl8QkH-.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
