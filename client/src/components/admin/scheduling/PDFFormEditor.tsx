@@ -74,6 +74,8 @@ interface PDFTemplate {
   pageHeight: number;
   elements: PDFElement[];
   backgroundColor: string;
+  backgroundImage?: string; // Base64 encoded background image
+  backgroundImageScale?: 'fill' | 'fit' | 'stretch'; // How to scale the background image
   createdAt: string;
   updatedAt: string;
 }
@@ -108,9 +110,31 @@ export default function PDFFormEditor({ eventId }: PDFFormEditorProps) {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
+  const [backgroundImageDimensions, setBackgroundImageDimensions] = useState<{width: number, height: number} | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Sync background image state when template changes
+  React.useEffect(() => {
+    if (selectedTemplate?.backgroundImage) {
+      setBackgroundImage(selectedTemplate.backgroundImage);
+      
+      // Get image dimensions if we don't have them
+      if (!backgroundImageDimensions) {
+        const img = new Image();
+        img.onload = () => {
+          setBackgroundImageDimensions({ width: img.width, height: img.height });
+        };
+        img.src = selectedTemplate.backgroundImage;
+      }
+    } else {
+      setBackgroundImage(null);
+      setBackgroundImageDimensions(null);
+    }
+  }, [selectedTemplate?.backgroundImage]);
 
   // Fetch saved templates
   const { data: templates = [], isLoading: templatesLoading } = useQuery({
@@ -152,6 +176,8 @@ export default function PDFFormEditor({ eventId }: PDFFormEditorProps) {
       pageHeight: 297, // A4 height in mm
       elements: [],
       backgroundColor: '#ffffff',
+      backgroundImage: undefined,
+      backgroundImageScale: 'fit',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -268,6 +294,71 @@ export default function PDFFormEditor({ eventId }: PDFFormEditorProps) {
 
   const handleCanvasMouseUp = () => {
     setIsDragging(false);
+  };
+
+  // Handle background image upload
+  const handleBackgroundImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Please select an image file', variant: 'destructive' });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string;
+      
+      // Create an image element to get dimensions
+      const img = new Image();
+      img.onload = () => {
+        const dimensions = { width: img.width, height: img.height };
+        const isHorizontal = img.width > img.height;
+        
+        // Auto-adjust template dimensions based on image orientation
+        const newPageWidth = isHorizontal ? 297 : 210; // A4 landscape vs portrait
+        const newPageHeight = isHorizontal ? 210 : 297;
+        
+        setBackgroundImageDimensions(dimensions);
+        setBackgroundImage(base64);
+        
+        if (selectedTemplate) {
+          setSelectedTemplate({
+            ...selectedTemplate,
+            backgroundImage: base64,
+            backgroundImageScale: 'fit',
+            pageWidth: newPageWidth,
+            pageHeight: newPageHeight,
+            updatedAt: new Date().toISOString()
+          });
+        }
+        
+        toast({ 
+          title: `Background image uploaded (${isHorizontal ? 'Horizontal' : 'Vertical'})`,
+          description: `Template adjusted to ${newPageWidth}x${newPageHeight}mm` 
+        });
+      };
+      img.src = base64;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Remove background image
+  const removeBackgroundImage = () => {
+    setBackgroundImage(null);
+    setBackgroundImageDimensions(null);
+    
+    if (selectedTemplate) {
+      setSelectedTemplate({
+        ...selectedTemplate,
+        backgroundImage: undefined,
+        backgroundImageScale: 'fit',
+        updatedAt: new Date().toISOString()
+      });
+    }
+    
+    toast({ title: 'Background image removed' });
   };
 
   // Generate preview PDF
@@ -556,6 +647,89 @@ export default function PDFFormEditor({ eventId }: PDFFormEditorProps) {
                 </CardHeader>
               </Card>
 
+              {/* Background Image Controls */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Background Settings</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-3 border rounded-lg bg-gray-50">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-sm font-medium">Background Image</Label>
+                      {selectedTemplate?.backgroundImage && (
+                        <Button
+                          onClick={removeBackgroundImage}
+                          variant="destructive"
+                          size="sm"
+                          className="text-xs"
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+                    
+                    {!selectedTemplate?.backgroundImage ? (
+                      <div className="space-y-2">
+                        <Button
+                          onClick={() => fileInputRef.current?.click()}
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                        >
+                          <ImageIcon className="h-4 w-4 mr-2" />
+                          Upload Background Image
+                        </Button>
+                        <p className="text-xs text-muted-foreground">
+                          Upload an image to use as background. Template will auto-adjust to image orientation.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-green-600">
+                          <ImageIcon className="h-4 w-4" />
+                          Background image uploaded
+                          {backgroundImageDimensions && (
+                            <Badge variant="outline" className="text-xs">
+                              {backgroundImageDimensions.width > backgroundImageDimensions.height ? 'Horizontal' : 'Vertical'}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Scale Mode</Label>
+                          <Select
+                            value={selectedTemplate.backgroundImageScale || 'fit'}
+                            onValueChange={(value: 'fill' | 'fit' | 'stretch') => 
+                              setSelectedTemplate({
+                                ...selectedTemplate,
+                                backgroundImageScale: value,
+                                updatedAt: new Date().toISOString()
+                              })
+                            }
+                          >
+                            <SelectTrigger className="h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="fit">Fit (maintain aspect ratio)</SelectItem>
+                              <SelectItem value="fill">Fill (crop to fit)</SelectItem>
+                              <SelectItem value="stretch">Stretch (may distort)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleBackgroundImageUpload}
+                  />
+                </CardContent>
+              </Card>
+
               {/* Toolbar */}
               <Card>
                 <CardContent className="pt-4">
@@ -657,7 +831,12 @@ export default function PDFFormEditor({ eventId }: PDFFormEditorProps) {
                         width: isCanvasMaximized ? selectedTemplate.pageWidth * 2.5 : selectedTemplate.pageWidth * 1.5,
                         height: isCanvasMaximized ? selectedTemplate.pageHeight * 2.5 : selectedTemplate.pageHeight * 1.5,
                         minWidth: '400px',
-                        minHeight: '500px'
+                        minHeight: '500px',
+                        backgroundImage: selectedTemplate.backgroundImage ? `url(${selectedTemplate.backgroundImage})` : 'none',
+                        backgroundSize: selectedTemplate.backgroundImageScale === 'stretch' ? '100% 100%' : 
+                                       selectedTemplate.backgroundImageScale === 'fill' ? 'cover' : 'contain',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat'
                       }}
                       onMouseDown={handleCanvasMouseDown}
                       onMouseMove={handleCanvasMouseMove}
@@ -706,10 +885,9 @@ export default function PDFFormEditor({ eventId }: PDFFormEditorProps) {
                           )}
                           
                           {/* Element content preview */}
-                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-600 bg-gray-50 bg-opacity-50">
+                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-600 bg-white bg-opacity-75 rounded">
                             {element.type === 'text' && element.content}
                             {element.type === 'placeholder' && `{${element.placeholder}}`}
-                            {element.type === 'shape' && element.shapeType}
                             {element.type === 'qr-code' && 'QR'}
                             {element.type === 'line' && '—'}
                             {element.type === 'image' && '🖼️'}
