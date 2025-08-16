@@ -1,0 +1,1321 @@
+FLIGHT FILTER DEBUG: All flight names from games: (12) ['Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1']
+ScheduleViewerFixed-llyI5-QP.js:40 FLIGHT FILTER DEBUG: Unique flights for dropdown: ['Round 1']
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11082, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11082, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11082: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11082, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11082, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11082: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11081, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11081, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11081: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11081, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11081, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11081: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11080, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11080, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11080: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11080, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11080, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11080: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11079, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11079, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11079: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11079, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11079, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11079: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11072, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 17', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11072, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11072: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11072, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 17', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11072, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11072: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11078, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11078, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11078: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11078, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11078, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11078: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11077, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11077, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11077: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11077, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11077, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11077: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11076, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11076, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11076: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11076, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11076, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11076: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11075, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11075, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11075: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11075, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11075, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11075: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11074, homeTeam: 'U7 Girls Team 16', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11074, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11074: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11074, homeTeam: 'U7 Girls Team 16', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11074, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11074: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11073, homeTeam: 'U7 Girls Team 18', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11073, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11073: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11073, homeTeam: 'U7 Girls Team 18', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11073, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11073: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:40 FLIGHT FILTER DEBUG: All flight names from games: (12) ['Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1']
+ScheduleViewerFixed-llyI5-QP.js:40 FLIGHT FILTER DEBUG: Unique flights for dropdown: ['Round 1']
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11082, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11082, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11082: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11082, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11082, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11082: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11081, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11081, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11081: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11081, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11081, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11081: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11080, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11080, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11080: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11080, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11080, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11080: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11079, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11079, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11079: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11079, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11079, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11079: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11072, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 17', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11072, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11072: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11072, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 17', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11072, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11072: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11078, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11078, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11078: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11078, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11078, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11078: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11077, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11077, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11077: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11077, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11077, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11077: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11076, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11076, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11076: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11076, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11076, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11076: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11075, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11075, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11075: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11075, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11075, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11075: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11074, homeTeam: 'U7 Girls Team 16', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11074, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11074: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11074, homeTeam: 'U7 Girls Team 16', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11074, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11074: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11073, homeTeam: 'U7 Girls Team 18', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11073, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11073: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11073, homeTeam: 'U7 Girls Team 18', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11073, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11073: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:11  DELETE https://app.matchpro.ai/api/admin/events/1656618593/games/bulk 500 (Internal Server Error)
+mutationFn @ ScheduleViewerFixed-llyI5-QP.js:11
+fn @ index-CzQqKL6B.js:41
+p @ index-CzQqKL6B.js:41
+start @ index-CzQqKL6B.js:41
+execute @ index-CzQqKL6B.js:41
+await in execute
+mutate @ index-CzQqKL6B.js:41
+(anonymous) @ index-CzQqKL6B.js:41
+fs @ ScheduleViewerFixed-llyI5-QP.js:31
+Hve @ index-CzQqKL6B.js:38
+Kve @ index-CzQqKL6B.js:38
+Yve @ index-CzQqKL6B.js:38
+s8 @ index-CzQqKL6B.js:38
+dJ @ index-CzQqKL6B.js:38
+(anonymous) @ index-CzQqKL6B.js:38
+CD @ index-CzQqKL6B.js:41
+IX @ index-CzQqKL6B.js:38
+aE @ index-CzQqKL6B.js:38
+ZI @ index-CzQqKL6B.js:38
+uye @ index-CzQqKL6B.js:38Understand this error
+ScheduleViewerFixed-llyI5-QP.js:11 Delete all games failed: 500 {"error":"Failed to delete game","details":"update or delete on table \"games\" violates foreign key constraint \"game_score_audit_game_id_fkey\" on table \"game_score_audit\""}
+mutationFn @ ScheduleViewerFixed-llyI5-QP.js:11
+await in mutationFn
+fn @ index-CzQqKL6B.js:41
+p @ index-CzQqKL6B.js:41
+start @ index-CzQqKL6B.js:41
+execute @ index-CzQqKL6B.js:41
+await in execute
+mutate @ index-CzQqKL6B.js:41
+(anonymous) @ index-CzQqKL6B.js:41
+fs @ ScheduleViewerFixed-llyI5-QP.js:31
+Hve @ index-CzQqKL6B.js:38
+Kve @ index-CzQqKL6B.js:38
+Yve @ index-CzQqKL6B.js:38
+s8 @ index-CzQqKL6B.js:38
+dJ @ index-CzQqKL6B.js:38
+(anonymous) @ index-CzQqKL6B.js:38
+CD @ index-CzQqKL6B.js:41
+IX @ index-CzQqKL6B.js:38
+aE @ index-CzQqKL6B.js:38
+ZI @ index-CzQqKL6B.js:38
+uye @ index-CzQqKL6B.js:38Understand this error
+ScheduleViewerFixed-llyI5-QP.js:11 Delete all games mutation error: Error: Failed to delete all games: 500
+    at Object.mutationFn (ScheduleViewerFixed-llyI5-QP.js:11:8453)
+onError @ ScheduleViewerFixed-llyI5-QP.js:11
+execute @ index-CzQqKL6B.js:41
+await in execute
+mutate @ index-CzQqKL6B.js:41
+(anonymous) @ index-CzQqKL6B.js:41
+fs @ ScheduleViewerFixed-llyI5-QP.js:31
+Hve @ index-CzQqKL6B.js:38
+Kve @ index-CzQqKL6B.js:38
+Yve @ index-CzQqKL6B.js:38
+s8 @ index-CzQqKL6B.js:38
+dJ @ index-CzQqKL6B.js:38
+(anonymous) @ index-CzQqKL6B.js:38
+CD @ index-CzQqKL6B.js:41
+IX @ index-CzQqKL6B.js:38
+aE @ index-CzQqKL6B.js:38
+ZI @ index-CzQqKL6B.js:38
+uye @ index-CzQqKL6B.js:38Understand this error
+ScheduleViewerFixed-llyI5-QP.js:11 Fetch failed loading: DELETE "https://app.matchpro.ai/api/admin/events/1656618593/games/bulk".
+mutationFn @ ScheduleViewerFixed-llyI5-QP.js:11
+fn @ index-CzQqKL6B.js:41
+p @ index-CzQqKL6B.js:41
+start @ index-CzQqKL6B.js:41
+execute @ index-CzQqKL6B.js:41
+await in execute
+mutate @ index-CzQqKL6B.js:41
+(anonymous) @ index-CzQqKL6B.js:41
+fs @ ScheduleViewerFixed-llyI5-QP.js:31
+Hve @ index-CzQqKL6B.js:38
+Kve @ index-CzQqKL6B.js:38
+Yve @ index-CzQqKL6B.js:38
+s8 @ index-CzQqKL6B.js:38
+dJ @ index-CzQqKL6B.js:38
+(anonymous) @ index-CzQqKL6B.js:38
+CD @ index-CzQqKL6B.js:41
+IX @ index-CzQqKL6B.js:38
+aE @ index-CzQqKL6B.js:38
+ZI @ index-CzQqKL6B.js:38
+uye @ index-CzQqKL6B.js:38
+ScheduleViewerFixed-llyI5-QP.js:40 FLIGHT FILTER DEBUG: All flight names from games: (12) ['Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1']
+ScheduleViewerFixed-llyI5-QP.js:40 FLIGHT FILTER DEBUG: Unique flights for dropdown: ['Round 1']
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11082, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11082, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11082: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11082, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11082, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11082: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11081, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11081, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11081: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11081, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11081, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11081: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11080, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11080, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11080: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11080, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11080, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11080: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11079, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11079, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11079: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11079, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11079, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11079: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11072, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 17', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11072, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11072: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11072, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 17', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11072, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11072: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11078, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11078, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11078: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11078, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11078, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11078: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11077, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11077, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11077: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11077, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11077, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11077: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11076, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11076, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11076: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11076, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11076, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11076: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11075, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11075, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11075: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11075, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11075, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11075: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11074, homeTeam: 'U7 Girls Team 16', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11074, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11074: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11074, homeTeam: 'U7 Girls Team 16', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11074, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11074: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11073, homeTeam: 'U7 Girls Team 18', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11073, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11073: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11073, homeTeam: 'U7 Girls Team 18', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11073, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11073: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:40 FLIGHT FILTER DEBUG: All flight names from games: (12) ['Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1']
+ScheduleViewerFixed-llyI5-QP.js:40 FLIGHT FILTER DEBUG: Unique flights for dropdown: ['Round 1']
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11082, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11082, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11082: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11082, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11082, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11082: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11081, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11081, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11081: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11081, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11081, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11081: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11080, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11080, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11080: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11080, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11080, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11080: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11079, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11079, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11079: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11079, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11079, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11079: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11072, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 17', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11072, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11072: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11072, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 17', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11072, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11072: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11078, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11078, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11078: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11078, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11078, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11078: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11077, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11077, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11077: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11077, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11077, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11077: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11076, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11076, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11076: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11076, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11076, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11076: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11075, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11075, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11075: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11075, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11075, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11075: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11074, homeTeam: 'U7 Girls Team 16', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11074, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11074: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11074, homeTeam: 'U7 Girls Team 16', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11074, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11074: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11073, homeTeam: 'U7 Girls Team 18', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11073, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11073: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11073, homeTeam: 'U7 Girls Team 18', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11073, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11073: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:40 FLIGHT FILTER DEBUG: All flight names from games: (12) ['Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1']
+ScheduleViewerFixed-llyI5-QP.js:40 FLIGHT FILTER DEBUG: Unique flights for dropdown: ['Round 1']
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11082, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11082, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11082: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11082, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11082, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11082: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11081, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11081, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11081: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11081, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11081, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11081: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11080, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11080, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11080: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11080, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11080, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11080: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11079, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11079, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11079: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11079, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11079, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11079: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11072, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 17', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11072, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11072: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11072, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 17', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11072, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11072: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11078, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11078, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11078: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11078, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11078, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11078: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11077, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11077, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11077: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11077, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11077, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11077: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11076, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11076, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11076: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11076, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11076, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11076: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11075, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11075, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11075: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11075, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11075, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11075: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11074, homeTeam: 'U7 Girls Team 16', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11074, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11074: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11074, homeTeam: 'U7 Girls Team 16', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11074, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11074: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11073, homeTeam: 'U7 Girls Team 18', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11073, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11073: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11073, homeTeam: 'U7 Girls Team 18', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11073, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11073: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:40 FLIGHT FILTER DEBUG: All flight names from games: (12) ['Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1']
+ScheduleViewerFixed-llyI5-QP.js:40 FLIGHT FILTER DEBUG: Unique flights for dropdown: ['Round 1']
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11082, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11082, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11082: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11082, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11082, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11082: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11081, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11081, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11081: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11081, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11081, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11081: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11080, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11080, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11080: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11080, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11080, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11080: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11079, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11079, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11079: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11079, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11079, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11079: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11072, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 17', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11072, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11072: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11072, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 17', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11072, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11072: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11078, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11078, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11078: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11078, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11078, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11078: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11077, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11077, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11077: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11077, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11077, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11077: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11076, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11076, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11076: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11076, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11076, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11076: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11075, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11075, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11075: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11075, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11075, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11075: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11074, homeTeam: 'U7 Girls Team 16', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11074, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11074: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11074, homeTeam: 'U7 Girls Team 16', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11074, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11074: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11073, homeTeam: 'U7 Girls Team 18', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11073, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11073: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11073, homeTeam: 'U7 Girls Team 18', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11073, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11073: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:40 FLIGHT FILTER DEBUG: All flight names from games: (12) ['Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1']
+ScheduleViewerFixed-llyI5-QP.js:40 FLIGHT FILTER DEBUG: Unique flights for dropdown: ['Round 1']
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11082, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11082, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11082: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11082, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11082, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11082: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11081, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11081, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11081: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11081, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11081, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11081: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11080, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11080, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11080: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11080, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11080, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11080: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11079, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11079, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11079: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11079, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11079, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11079: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11072, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 17', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11072, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11072: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11072, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 17', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11072, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11072: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11078, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11078, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11078: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11078, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11078, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11078: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11077, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11077, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11077: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11077, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11077, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11077: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11076, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11076, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11076: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11076, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11076, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11076: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11075, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11075, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11075: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11075, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11075, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11075: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11074, homeTeam: 'U7 Girls Team 16', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11074, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11074: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11074, homeTeam: 'U7 Girls Team 16', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11074, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11074: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11073, homeTeam: 'U7 Girls Team 18', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11073, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11073: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11073, homeTeam: 'U7 Girls Team 18', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11073, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11073: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:11  DELETE https://app.matchpro.ai/api/admin/events/1656618593/games/bulk 500 (Internal Server Error)
+mutationFn @ ScheduleViewerFixed-llyI5-QP.js:11
+fn @ index-CzQqKL6B.js:41
+p @ index-CzQqKL6B.js:41
+start @ index-CzQqKL6B.js:41
+execute @ index-CzQqKL6B.js:41
+await in execute
+mutate @ index-CzQqKL6B.js:41
+(anonymous) @ index-CzQqKL6B.js:41
+fs @ ScheduleViewerFixed-llyI5-QP.js:31
+Hve @ index-CzQqKL6B.js:38
+Kve @ index-CzQqKL6B.js:38
+Yve @ index-CzQqKL6B.js:38
+s8 @ index-CzQqKL6B.js:38
+dJ @ index-CzQqKL6B.js:38
+(anonymous) @ index-CzQqKL6B.js:38
+CD @ index-CzQqKL6B.js:41
+IX @ index-CzQqKL6B.js:38
+aE @ index-CzQqKL6B.js:38
+ZI @ index-CzQqKL6B.js:38
+uye @ index-CzQqKL6B.js:38Understand this error
+ScheduleViewerFixed-llyI5-QP.js:11 Fetch failed loading: DELETE "https://app.matchpro.ai/api/admin/events/1656618593/games/bulk".
+mutationFn @ ScheduleViewerFixed-llyI5-QP.js:11
+fn @ index-CzQqKL6B.js:41
+p @ index-CzQqKL6B.js:41
+start @ index-CzQqKL6B.js:41
+execute @ index-CzQqKL6B.js:41
+await in execute
+mutate @ index-CzQqKL6B.js:41
+(anonymous) @ index-CzQqKL6B.js:41
+fs @ ScheduleViewerFixed-llyI5-QP.js:31
+Hve @ index-CzQqKL6B.js:38
+Kve @ index-CzQqKL6B.js:38
+Yve @ index-CzQqKL6B.js:38
+s8 @ index-CzQqKL6B.js:38
+dJ @ index-CzQqKL6B.js:38
+(anonymous) @ index-CzQqKL6B.js:38
+CD @ index-CzQqKL6B.js:41
+IX @ index-CzQqKL6B.js:38
+aE @ index-CzQqKL6B.js:38
+ZI @ index-CzQqKL6B.js:38
+uye @ index-CzQqKL6B.js:38
+ScheduleViewerFixed-llyI5-QP.js:11 Bulk delete games failed: 500 {"error":"Failed to delete game","details":"update or delete on table \"games\" violates foreign key constraint \"game_score_audit_game_id_fkey\" on table \"game_score_audit\""}
+mutationFn @ ScheduleViewerFixed-llyI5-QP.js:11
+await in mutationFn
+fn @ index-CzQqKL6B.js:41
+p @ index-CzQqKL6B.js:41
+start @ index-CzQqKL6B.js:41
+execute @ index-CzQqKL6B.js:41
+await in execute
+mutate @ index-CzQqKL6B.js:41
+(anonymous) @ index-CzQqKL6B.js:41
+fs @ ScheduleViewerFixed-llyI5-QP.js:31
+Hve @ index-CzQqKL6B.js:38
+Kve @ index-CzQqKL6B.js:38
+Yve @ index-CzQqKL6B.js:38
+s8 @ index-CzQqKL6B.js:38
+dJ @ index-CzQqKL6B.js:38
+(anonymous) @ index-CzQqKL6B.js:38
+CD @ index-CzQqKL6B.js:41
+IX @ index-CzQqKL6B.js:38
+aE @ index-CzQqKL6B.js:38
+ZI @ index-CzQqKL6B.js:38
+uye @ index-CzQqKL6B.js:38Understand this error
+ScheduleViewerFixed-llyI5-QP.js:11 Bulk delete games mutation error: Error: Failed to delete games: 500
+    at Object.mutationFn (ScheduleViewerFixed-llyI5-QP.js:11:7825)
+onError @ ScheduleViewerFixed-llyI5-QP.js:11
+execute @ index-CzQqKL6B.js:41
+await in execute
+mutate @ index-CzQqKL6B.js:41
+(anonymous) @ index-CzQqKL6B.js:41
+fs @ ScheduleViewerFixed-llyI5-QP.js:31
+Hve @ index-CzQqKL6B.js:38
+Kve @ index-CzQqKL6B.js:38
+Yve @ index-CzQqKL6B.js:38
+s8 @ index-CzQqKL6B.js:38
+dJ @ index-CzQqKL6B.js:38
+(anonymous) @ index-CzQqKL6B.js:38
+CD @ index-CzQqKL6B.js:41
+IX @ index-CzQqKL6B.js:38
+aE @ index-CzQqKL6B.js:38
+ZI @ index-CzQqKL6B.js:38
+uye @ index-CzQqKL6B.js:38Understand this error
+ScheduleViewerFixed-llyI5-QP.js:40 FLIGHT FILTER DEBUG: All flight names from games: (12) ['Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1']
+ScheduleViewerFixed-llyI5-QP.js:40 FLIGHT FILTER DEBUG: Unique flights for dropdown: ['Round 1']
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11082, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11082, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11082: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11082, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11082, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11082: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11081, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11081, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11081: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11081, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11081, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11081: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11080, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11080, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11080: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11080, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11080, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11080: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11079, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11079, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11079: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11079, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11079, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11079: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11072, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 17', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11072, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11072: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11072, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 17', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11072, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11072: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11078, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11078, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11078: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11078, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11078, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11078: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11077, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11077, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11077: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11077, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11077, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11077: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11076, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11076, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11076: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11076, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11076, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11076: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11075, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11075, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11075: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11075, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11075, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11075: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11074, homeTeam: 'U7 Girls Team 16', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11074, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11074: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11074, homeTeam: 'U7 Girls Team 16', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11074, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11074: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11073, homeTeam: 'U7 Girls Team 18', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11073, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11073: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11073, homeTeam: 'U7 Girls Team 18', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11073, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11073: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:40 FLIGHT FILTER DEBUG: All flight names from games: (12) ['Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1', 'Round 1']
+ScheduleViewerFixed-llyI5-QP.js:40 FLIGHT FILTER DEBUG: Unique flights for dropdown: ['Round 1']
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11082, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11082, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11082: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11082, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11082, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11082: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11081, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11081, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11081: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11081, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11081, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11081: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11080, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11080, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11080: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11080, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11080, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11080: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11079, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11079, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11079: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11079, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11079, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11079: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11072, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 17', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11072, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11072: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11072, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 17', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11072, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11072: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11071, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 13', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11071, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11071: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11078, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11078, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11078: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11078, homeTeam: 'U7 Girls Team 17', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11078, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11078: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11077, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11077, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11077: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11077, homeTeam: 'U7 Girls Team 13', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11077, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11077: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11076, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11076, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11076: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11076, homeTeam: 'U7 Girls Team 15', awayTeam: 'U7 Girls Team 16', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11076, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11076: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11075, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11075, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11075: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11075, homeTeam: 'U7 Girls Team 12', awayTeam: 'U7 Girls Team 18', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11075, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11075: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11074, homeTeam: 'U7 Girls Team 16', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11074, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11074: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11074, homeTeam: 'U7 Girls Team 16', awayTeam: 'U7 Girls Team 19', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11074, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11074: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11073, homeTeam: 'U7 Girls Team 18', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11073, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11073: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] About to check rest period for game: {gameId: 11073, homeTeam: 'U7 Girls Team 18', awayTeam: 'U7 Girls Team 14', ageGroup: 'U7 Girls', bracketId: 498, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Checking game: {gameId: 11073, bracketId: 498, flightName: 'Round 1', ageGroup: 'U7 Girls', flightConfigDataAvailable: true, …}
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] First few flights: (3) [{…}, {…}, {…}]
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Found flight config for bracket 498: 60 minutes
+ScheduleViewerFixed-llyI5-QP.js:21 [REST PERIOD DEBUG] Final rest period for game 11073: 60 minutes
+UnifiedTournamentControlCenter-b5qnT8lW.js:1  DELETE https://app.matchpro.ai/api/admin/events/1656618593/games/bulk 500 (Internal Server Error)
+mutationFn @ UnifiedTournamentControlCenter-b5qnT8lW.js:1
+fn @ index-CzQqKL6B.js:41
+p @ index-CzQqKL6B.js:41
+start @ index-CzQqKL6B.js:41
+execute @ index-CzQqKL6B.js:41
+await in execute
+mutate @ index-CzQqKL6B.js:41
+(anonymous) @ index-CzQqKL6B.js:41
+Q @ UnifiedTournamentControlCenter-b5qnT8lW.js:1
+Hve @ index-CzQqKL6B.js:38
+Kve @ index-CzQqKL6B.js:38
+Yve @ index-CzQqKL6B.js:38
+s8 @ index-CzQqKL6B.js:38
+dJ @ index-CzQqKL6B.js:38
+(anonymous) @ index-CzQqKL6B.js:38
+CD @ index-CzQqKL6B.js:41
+IX @ index-CzQqKL6B.js:38
+aE @ index-CzQqKL6B.js:38
+ZI @ index-CzQqKL6B.js:38
+uye @ index-CzQqKL6B.js:38Understand this error
+UnifiedTournamentControlCenter-b5qnT8lW.js:1 Fetch failed loading: DELETE "https://app.matchpro.ai/api/admin/events/1656618593/games/bulk".
+mutationFn @ UnifiedTournamentControlCenter-b5qnT8lW.js:1
+fn @ index-CzQqKL6B.js:41
+p @ index-CzQqKL6B.js:41
+start @ index-CzQqKL6B.js:41
+execute @ index-CzQqKL6B.js:41
+await in execute
+mutate @ index-CzQqKL6B.js:41
+(anonymous) @ index-CzQqKL6B.js:41
+Q @ UnifiedTournamentControlCenter-b5qnT8lW.js:1
+Hve @ index-CzQqKL6B.js:38
+Kve @ index-CzQqKL6B.js:38
+Yve @ index-CzQqKL6B.js:38
+s8 @ index-CzQqKL6B.js:38
+dJ @ index-CzQqKL6B.js:38
+(anonymous) @ index-CzQqKL6B.js:38
+CD @ index-CzQqKL6B.js:41
+IX @ index-CzQqKL6B.js:38
+aE @ index-CzQqKL6B.js:38
+ZI @ index-CzQqKL6B.js:38
+uye @ index-CzQqKL6B.js:38
+24Fetch finished loading: GET "<URL>".
+UnifiedTournamentControlCenter-b5qnT8lW.js:1 Flight configs loaded: 72 flights
+UnifiedTournamentControlCenter-b5qnT8lW.js:1 FLIGHT COUNTING FIX: 72 total flights, 2 flights with teams, 2 configured flights
+UnifiedTournamentControlCenter-b5qnT8lW.js:1 Flight configs loaded: 72 flights
+UnifiedTournamentControlCenter-b5qnT8lW.js:1 FLIGHT COUNTING FIX: 72 total flights, 2 flights with teams, 2 configured flights
+UnifiedTournamentControlCenter-b5qnT8lW.js:1 Flight configs loaded: 72 flights
+UnifiedTournamentControlCenter-b5qnT8lW.js:1 FLIGHT COUNTING FIX: 72 total flights, 2 flights with teams, 2 configured flights
+UnifiedTournamentControlCenter-b5qnT8lW.js:1 Flight configs loaded: 72 flights
+UnifiedTournamentControlCenter-b5qnT8lW.js:1 FLIGHT COUNTING FIX: 72 total flights, 2 flights with teams, 2 configured flights
+UnifiedTournamentControlCenter-b5qnT8lW.js:1 Flight configs loaded: 72 flights
+UnifiedTournamentControlCenter-b5qnT8lW.js:1 FLIGHT COUNTING FIX: 72 total flights, 2 flights with teams, 2 configured flights
+UnifiedTournamentControlCenter-b5qnT8lW.js:1 Flight configs loaded: 72 flights
+UnifiedTournamentControlCenter-b5qnT8lW.js:1 FLIGHT COUNTING FIX: 72 total flights, 2 flights with teams, 2 configured flights
+UnifiedTournamentControlCenter-b5qnT8lW.js:1 Flight configs loaded: 72 flights
+UnifiedTournamentControlCenter-b5qnT8lW.js:1 FLIGHT COUNTING FIX: 72 total flights, 2 flights with teams, 2 configured flights

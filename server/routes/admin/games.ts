@@ -163,36 +163,187 @@ router.post('/:eventId/schedule/optimize', isAdmin, async (req, res) => {
   }
 });
 
+// Delete individual game
+router.delete('/game/:gameId', isAdmin, async (req, res) => {
+  try {
+    const gameId = parseInt(req.params.gameId);
+    
+    console.log(`[Game Delete] Attempting to delete game ${gameId}`);
+    
+    // First check if game exists
+    const existingGame = await db.query.games.findFirst({
+      where: eq(games.id, gameId)
+    });
+    
+    if (!existingGame) {
+      return res.status(404).json({ error: 'Game not found' });
+    }
+    
+    // Delete the game
+    const deletedGame = await db
+      .delete(games)
+      .where(eq(games.id, gameId))
+      .returning();
+    
+    console.log(`[Game Delete] Successfully deleted game ${gameId}`);
+    
+    res.json({ 
+      success: true, 
+      message: 'Game deleted successfully',
+      deletedGame: deletedGame[0]
+    });
+    
+  } catch (error) {
+    console.error('[Game Delete] Error:', error);
+    res.status(500).json({ 
+      error: 'Failed to delete game',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Delete all CSV imported games for an event
+router.delete('/:eventId/csv-imports', isAdmin, async (req, res) => {
+  try {
+    const eventId = parseInt(req.params.eventId);
+    
+    console.log(`[CSV Delete] Deleting CSV imported games for event ${eventId}`);
+    
+    // Find games with CSV import notes
+    const csvGames = await db.query.games.findMany({
+      where: sql`${games.notes} LIKE '%Imported from CSV%'`,
+      with: {
+        homeTeam: { columns: { name: true } },
+        awayTeam: { columns: { name: true } }
+      }
+    });
+    
+    console.log(`[CSV Delete] Found ${csvGames.length} CSV imported games`);
+    
+    if (csvGames.length === 0) {
+      return res.json({ 
+        success: true, 
+        message: 'No CSV imported games found',
+        deletedCount: 0
+      });
+    }
+    
+    // Delete CSV imported games
+    const gameIds = csvGames.map(g => g.id);
+    const deletedGames = await db
+      .delete(games)
+      .where(sql`${games.id} = ANY(${gameIds})`)
+      .returning();
+    
+    console.log(`[CSV Delete] Successfully deleted ${deletedGames.length} CSV imported games`);
+    
+    res.json({ 
+      success: true, 
+      message: `Successfully deleted ${deletedGames.length} CSV imported games`,
+      deletedCount: deletedGames.length,
+      deletedGameIds: gameIds
+    });
+    
+  } catch (error) {
+    console.error('[CSV Delete] Error:', error);
+    res.status(500).json({ 
+      error: 'Failed to delete CSV imported games',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // Delete all games for an event
 router.delete('/:eventId/games/bulk', isAdmin, async (req, res) => {
   try {
-    const eventId = req.params.eventId;
+    const eventId = parseInt(req.params.eventId);
     console.log(`[Bulk Delete] Starting deletion of all games for event ${eventId}`);
+    
+    // Get all games for this event through age groups
+    const eventGames = await db.query.games.findMany({
+      with: {
+        ageGroup: {
+          columns: { eventId: true }
+        }
+      }
+    });
+    
+    const gamesToDelete = eventGames.filter(game => game.ageGroup?.eventId === eventId);
+    console.log(`[Bulk Delete] Found ${gamesToDelete.length} games to delete for event ${eventId}`);
+    
+    if (gamesToDelete.length === 0) {
+      return res.json({ 
+        success: true, 
+        message: 'No games found for this event',
+        deletedCount: 0
+      });
+    }
 
-    // Delete all games for this event using direct SQL - skip the count check
-    const deleteResult = await db.execute(sql`
-      DELETE FROM games WHERE event_id = ${eventId}
-    `);
+    // Delete all games
+    const gameIds = gamesToDelete.map(g => g.id);
+    const deletedGames = await db
+      .delete(games)
+      .where(sql`${games.id} = ANY(${gameIds})`)
+      .returning();
 
-    console.log(`[Bulk Delete] Delete operation completed for event ${eventId}`);
-    console.log(`[Bulk Delete] Delete result:`, JSON.stringify(deleteResult, null, 2));
-
-    // Get the number of affected rows from the delete result
-    const deletedCount = deleteResult.rowCount || deleteResult.affectedRows || 0;
-
-    console.log(`[Bulk Delete] Successfully deleted ${deletedCount} games for event ${eventId}`);
+    console.log(`[Bulk Delete] Successfully deleted ${deletedGames.length} games for event ${eventId}`);
 
     res.json({ 
       success: true, 
-      message: `Successfully deleted ${deletedCount} games from the tournament`,
-      deletedCount: deletedCount 
+      message: `Successfully deleted ${deletedGames.length} games from the tournament`,
+      deletedCount: deletedGames.length 
     });
   } catch (error) {
     console.error('Error deleting games:', error);
-    console.error('Error details:', JSON.stringify(error, null, 2));
     res.status(500).json({ 
       error: 'Failed to delete games',
-      details: error.message || 'Unknown error occurred'
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Delete games by age group
+router.delete('/:eventId/age-group/:ageGroupId/games', isAdmin, async (req, res) => {
+  try {
+    const eventId = parseInt(req.params.eventId);
+    const ageGroupId = parseInt(req.params.ageGroupId);
+    
+    console.log(`[Age Group Delete] Deleting games for age group ${ageGroupId} in event ${eventId}`);
+    
+    // Get games for this age group
+    const ageGroupGames = await db.query.games.findMany({
+      where: eq(games.ageGroupId, ageGroupId)
+    });
+    
+    console.log(`[Age Group Delete] Found ${ageGroupGames.length} games for age group ${ageGroupId}`);
+    
+    if (ageGroupGames.length === 0) {
+      return res.json({ 
+        success: true, 
+        message: 'No games found for this age group',
+        deletedCount: 0
+      });
+    }
+    
+    // Delete all games for this age group
+    const deletedGames = await db
+      .delete(games)
+      .where(eq(games.ageGroupId, ageGroupId))
+      .returning();
+    
+    console.log(`[Age Group Delete] Successfully deleted ${deletedGames.length} games`);
+    
+    res.json({ 
+      success: true, 
+      message: `Successfully deleted ${deletedGames.length} games from age group`,
+      deletedCount: deletedGames.length
+    });
+    
+  } catch (error) {
+    console.error('[Age Group Delete] Error:', error);
+    res.status(500).json({ 
+      error: 'Failed to delete age group games',
+      details: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
