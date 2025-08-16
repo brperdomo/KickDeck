@@ -947,7 +947,63 @@ router.post('/execute', upload.single('csvFile'), async (req, res) => {
       }
     }
 
-    // Create missing teams if enabled
+    // Create missing flights/brackets first
+    const flightIdMap: { [key: string]: number } = {};
+    const uniqueFlightsSet = new Set();
+    csvData.forEach(row => {
+      if (row.Flight) {
+        // Create flight key combining age group and flight name
+        let ageGroup = row['Age Group']?.trim();
+        if (!ageGroup && row.Division) {
+          const parsed = parseDivisionCode(row.Division);
+          ageGroup = parsed.ageGroup;
+        }
+        if (ageGroup && row.Flight) {
+          uniqueFlightsSet.add(`${ageGroup}:${row.Flight.trim()}`);
+        }
+      }
+    });
+    const uniqueFlights = Array.from(uniqueFlightsSet) as string[];
+    console.log(`🚁 FLIGHT CREATION: Found ${uniqueFlights.length} unique flights to process:`, uniqueFlights);
+    
+    for (const flightKey of uniqueFlights) {
+      const [ageGroupName, flightName] = flightKey.split(':');
+      const ageGroupId = ageGroupIdMap[ageGroupName];
+      
+      if (ageGroupId) {
+        const existingFlight = await db.query.eventBrackets.findFirst({
+          where: and(
+            eq(eventBrackets.ageGroupId, ageGroupId),
+            eq(eventBrackets.name, flightName)
+          )
+        });
+        
+        if (existingFlight) {
+          flightIdMap[flightKey] = existingFlight.id;
+          console.log(`🚁 Found existing flight: ${flightName} (ID: ${existingFlight.id})`);
+        } else {
+          console.log(`🚁 Creating flight: ${flightName} for age group ${ageGroupName}`);
+          const [newFlight] = await db.insert(eventBrackets).values({
+            eventId: parseInt(eventId),
+            ageGroupId,
+            name: flightName,
+            description: `Flight ${flightName} for ${ageGroupName}`,
+            level: 'Competitive',
+            eligibility: 'Open',
+            tournamentFormat: 'round_robin',
+            maxTeams: 16,
+            isActive: true,
+            sortOrder: 1
+          }).returning();
+          
+          flightIdMap[flightKey] = newFlight.id;
+          importResults.flightsCreated = (importResults.flightsCreated || 0) + 1;
+          console.log(`✅ Created new flight: ${flightName} (ID: ${newFlight.id})`);
+        }
+      }
+    }
+
+    // Create missing teams if enabled with flight assignment
     if (createMissingTeams) {
       const uniqueTeamNamesSet = new Set([
         ...csvData.map(row => row['Home Team']?.trim()).filter(Boolean),
@@ -963,8 +1019,36 @@ router.post('/execute', upload.single('csvFile'), async (req, res) => {
         
         if (existingTeam) {
           teamIdMap[teamName] = existingTeam.id;
+          
+          // Update existing team with flight assignment if not already set
+          if (!existingTeam.bracketId) {
+            const gameWithTeam = csvData.find(row => 
+              row['Home Team']?.trim() === teamName || row['Away Team']?.trim() === teamName
+            );
+            
+            if (gameWithTeam && gameWithTeam.Flight) {
+              let ageGroup = gameWithTeam['Age Group']?.trim();
+              if (!ageGroup && gameWithTeam.Division) {
+                const parsed = parseDivisionCode(gameWithTeam.Division);
+                ageGroup = parsed.ageGroup;
+              }
+              
+              if (ageGroup) {
+                const flightKey = `${ageGroup}:${gameWithTeam.Flight.trim()}`;
+                const bracketId = flightIdMap[flightKey];
+                
+                if (bracketId) {
+                  await db.update(teams)
+                    .set({ bracketId })
+                    .where(eq(teams.id, existingTeam.id));
+                  
+                  console.log(`✅ Updated existing team ${teamName} with flight ${gameWithTeam.Flight} (Bracket ID: ${bracketId})`);
+                }
+              }
+            }
+          }
         } else {
-          // Find age group for this team based on the games they appear in
+          // Find age group and flight for this team based on the games they appear in
           const gameWithTeam = csvData.find(row => 
             row['Home Team']?.trim() === teamName || row['Away Team']?.trim() === teamName
           );
@@ -979,23 +1063,31 @@ router.post('/execute', upload.single('csvFile'), async (req, res) => {
             
             const ageGroupId = ageGroup ? ageGroupIdMap[ageGroup] : null;
             
+            // Get flight/bracket ID for this team
+            let bracketId = null;
+            if (gameWithTeam.Flight && ageGroup) {
+              const flightKey = `${ageGroup}:${gameWithTeam.Flight.trim()}`;
+              bracketId = flightIdMap[flightKey];
+            }
+            
             if (ageGroupId) {
-              console.log(`👥 Creating team: ${teamName} (Age Group: ${ageGroup}, ID: ${ageGroupId})`);
+              console.log(`👥 Creating team: ${teamName} (Age Group: ${ageGroup}, Flight: ${gameWithTeam.Flight}, Bracket ID: ${bracketId})`);
               const [newTeam] = await db.insert(teams).values({
                 eventId: eventId.toString(),
-                name: teamName, // Use 'name' field instead of 'teamName'
+                name: teamName,
                 ageGroupId,
+                bracketId, // CRITICAL: Assign team to their flight
                 status: 'approved',
                 paymentStatus: 'paid',
                 submitterEmail: 'imported@tournament.com',
                 managerName: 'Imported Team',
                 managerEmail: 'imported@tournament.com',
-                notes: `Imported from CSV: ${req.file?.originalname}`
+                notes: `Imported from CSV: ${req.file?.originalname}. Flight: ${gameWithTeam.Flight || 'None'}`
               }).returning();
 
               teamIdMap[teamName] = newTeam.id;
               importResults.teamsCreated++;
-              console.log(`✅ Created new team: ${teamName} (ID: ${newTeam.id})`);
+              console.log(`✅ Created new team: ${teamName} (ID: ${newTeam.id}) assigned to flight ${gameWithTeam.Flight}`);
             } else {
               console.log(`❌ Cannot create team ${teamName}: Age group ${ageGroup} not found`);
             }

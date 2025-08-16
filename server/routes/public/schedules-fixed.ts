@@ -82,12 +82,13 @@ router.get('/:eventId', async (req: Request, res: Response) => {
 
     console.log(`[Public Schedules Fixed] Found ${ageGroupsData.length} age groups`);
 
-    // Get teams data
+    // Get teams data with flight information
     const teamsData = await db
       .select({
         id: teams.id,
         name: teams.name,
         ageGroupId: teams.ageGroupId,
+        bracketId: teams.bracketId,
         status: teams.status
       })
       .from(teams)
@@ -95,6 +96,17 @@ router.get('/:eventId', async (req: Request, res: Response) => {
         eq(teams.eventId, String(eventIdNum)),
         eq(teams.status, 'approved')
       ));
+
+    // Get flight/bracket data
+    const flightsData = await db
+      .select({
+        id: eventBrackets.id,
+        name: eventBrackets.name,
+        ageGroupId: eventBrackets.ageGroupId,
+        description: eventBrackets.description
+      })
+      .from(eventBrackets)
+      .where(eq(eventBrackets.eventId, eventIdNum));
 
     console.log(`[Public Schedules Fixed] Found ${teamsData.length} teams`);
 
@@ -109,19 +121,88 @@ router.get('/:eventId', async (req: Request, res: Response) => {
       });
     });
 
-    // Group games by age group
-    const gamesByAgeGroup = new Map();
-    gamesData.forEach(game => {
-      if (!gamesByAgeGroup.has(game.ageGroupId)) {
-        gamesByAgeGroup.set(game.ageGroupId, []);
-      }
-      gamesByAgeGroup.get(game.ageGroupId).push(game);
+    console.log(`[Public Schedules Fixed] Found ${flightsData.length} flights`);
+
+    // Create flight lookup
+    const flightMap = new Map();
+    flightsData.forEach(flight => {
+      flightMap.set(flight.id, {
+        name: flight.name,
+        description: flight.description,
+        ageGroupId: flight.ageGroupId
+      });
     });
 
-    // Create age group data with games
-    const processedAgeGroups = Array.from(ageGroupMap.entries()).map(([ageGroupId, ageGroupInfo]) => {
-      const ageGroupGames = gamesByAgeGroup.get(ageGroupId) || [];
+    // Group teams by flight
+    const teamsByFlight = new Map();
+    teamsData.forEach(team => {
+      const flightId = team.bracketId || 'unassigned';
+      if (!teamsByFlight.has(flightId)) {
+        teamsByFlight.set(flightId, []);
+      }
+      teamsByFlight.get(flightId).push(team);
+    });
+
+    // Group games by age group and flight
+    const gamesByAgeGroupAndFlight = new Map();
+    gamesData.forEach(game => {
+      // Find the flight for this game by looking at the home team's flight assignment
+      const homeTeam = teamsData.find(t => t.id === game.homeTeamId);
+      const flightId = homeTeam?.bracketId || 'unassigned';
       
+      const key = `${game.ageGroupId}_${flightId}`;
+      if (!gamesByAgeGroupAndFlight.has(key)) {
+        gamesByAgeGroupAndFlight.set(key, []);
+      }
+      gamesByAgeGroupAndFlight.get(key).push(game);
+    });
+
+    // Create age group data with flights and games
+    const processedAgeGroups = Array.from(ageGroupMap.entries()).map(([ageGroupId, ageGroupInfo]) => {
+      // Get all flights for this age group
+      const ageGroupFlights = flightsData.filter(f => f.ageGroupId === ageGroupId);
+      
+      // If no flights exist, create a default one for unassigned teams/games
+      if (ageGroupFlights.length === 0) {
+        ageGroupFlights.push({
+          id: 'unassigned',
+          name: 'Main',
+          ageGroupId: ageGroupId,
+          description: 'Default flight for unassigned teams'
+        });
+      }
+      
+      const flights = ageGroupFlights.map(flight => {
+        const flightTeams = teamsByFlight.get(flight.id) || [];
+        const gameKey = `${ageGroupId}_${flight.id}`;
+        const flightGames = gamesByAgeGroupAndFlight.get(gameKey) || [];
+        
+        return {
+          flightId: flight.id,
+          flightName: flight.name,
+          teamCount: flightTeams.length,
+          teams: flightTeams.map(team => ({
+            id: team.id,
+            name: team.name,
+            status: team.status
+          })),
+          games: flightGames.map(game => ({
+            id: game.id,
+            homeTeam: game.homeTeamName || 'TBD',
+            awayTeam: game.awayTeamName || 'TBD',
+            date: game.scheduledDate,
+            time: game.scheduledTime,
+            field: game.fieldName || 'TBD',
+            status: game.status,
+            homeScore: game.homeScore,
+            awayScore: game.awayScore,
+            matchNumber: game.matchNumber,
+            round: game.round
+          }))
+        };
+      });
+      
+      const allAgeGroupGames = flights.flatMap(flight => flight.games);
 
       return {
         ageGroupId: parseInt(ageGroupId), // Ensure ageGroupId is a number
@@ -129,8 +210,9 @@ router.get('/:eventId', async (req: Request, res: Response) => {
         gender: ageGroupInfo.gender,
         divisionCode: ageGroupInfo.divisionCode,
         displayName: ageGroupInfo.displayName,
-        games: ageGroupGames,
-        totalGames: ageGroupGames.length
+        flights: flights,
+        games: allAgeGroupGames, // For backward compatibility
+        totalGames: allAgeGroupGames.length
       };
     }).filter(ag => ag.totalGames > 0); // Only include age groups with games
 
@@ -440,55 +522,118 @@ router.get('/:eventId/age-group/:ageGroupId', async (req: Request, res: Response
     const teamsMap = new Map();
     teamsData.forEach(team => teamsMap.set(team.id, team));
 
-    // Create synthetic "Main" flight with all games/teams for this age group
-    const uniqueTeamIds = new Set();
-    gamesData.forEach(game => {
-      if (game.homeTeamId) uniqueTeamIds.add(game.homeTeamId);
-      if (game.awayTeamId) uniqueTeamIds.add(game.awayTeamId);
+    // Get flight/bracket data for this age group
+    const flightsData = await db
+      .select({
+        id: eventBrackets.id,
+        name: eventBrackets.name,
+        ageGroupId: eventBrackets.ageGroupId,
+        description: eventBrackets.description
+      })
+      .from(eventBrackets)
+      .where(and(
+        eq(eventBrackets.eventId, eventIdNum),
+        eq(eventBrackets.ageGroupId, ageGroupIdNum)
+      ));
+
+    console.log(`[Age Group Schedule] Found ${flightsData.length} flights for age group ${ageGroupIdNum}`);
+
+    // Group teams by flight for this age group
+    const teamsByFlight = new Map();
+    teamsData.forEach(team => {
+      const flightId = team.bracketId || 'unassigned';
+      if (!teamsByFlight.has(flightId)) {
+        teamsByFlight.set(flightId, []);
+      }
+      teamsByFlight.get(flightId).push(team);
     });
 
-    // Create teams list from game data
-    const syntheticTeams = Array.from(uniqueTeamIds).map(teamId => {
-      const team = teamsMap.get(teamId);
+    // Group games by flight for this age group
+    const gamesByFlight = new Map();
+    gamesData.forEach(game => {
+      const homeTeam = teamsData.find(t => t.id === game.homeTeamId);
+      const flightId = homeTeam?.bracketId || 'unassigned';
+      if (!gamesByFlight.has(flightId)) {
+        gamesByFlight.set(flightId, []);
+      }
+      gamesByFlight.get(flightId).push(game);
+    });
+
+    // Process flights for this age group
+    let flights = flightsData.map(flight => {
+      const flightTeams = teamsByFlight.get(flight.id) || [];
+      const flightGames = gamesByFlight.get(flight.id) || [];
+      
       return {
-        id: teamId,
-        name: team?.name || `Team ${teamId}`,
-        status: team?.status || 'registered'
+        flightId: flight.id,
+        flightName: flight.name,
+        teamCount: flightTeams.length,
+        teams: flightTeams.map(team => ({
+          id: team.id,
+          name: team.name,
+          status: team.status
+        })),
+        games: flightGames.map(game => {
+          const homeTeam = teamsMap.get(game.homeTeamId);
+          const awayTeam = teamsMap.get(game.awayTeamId);
+          return {
+            id: game.id,
+            homeTeam: homeTeam?.name || `Team ${game.homeTeamId}`,
+            awayTeam: awayTeam?.name || `Team ${game.awayTeamId}`,
+            date: game.scheduledDate,
+            time: game.scheduledTime,
+            field: game.fieldName || 'TBD',
+            status: game.status,
+            homeScore: game.homeScore,
+            awayScore: game.awayScore
+          };
+        })
       };
     });
 
-    // Process all games for this age group
-    const syntheticGames = gamesData
-      .map(game => {
-        const homeTeam = teamsMap.get(game.homeTeamId);
-        const awayTeam = teamsMap.get(game.awayTeamId);
-        
-        return {
-          id: game.id,
-          homeTeam: homeTeam?.name || `Team ${game.homeTeamId}`,
-          awayTeam: awayTeam?.name || `Team ${game.awayTeamId}`,
-          date: game.scheduledDate,
-          time: game.scheduledTime,
-          field: game.fieldName || `Field ${game.fieldId}`,
-          status: game.status,
-          homeScore: game.homeScore,
-          awayScore: game.awayScore
-        };
-      })
-      .sort((a, b) => {
-        // Sort by date, then time
+    // If no flights have teams/games, create a fallback "Main" flight for unassigned teams
+    if (flights.length === 0 || flights.every(f => f.teamCount === 0 && f.games.length === 0)) {
+      const unassignedTeams = teamsByFlight.get('unassigned') || [];
+      const unassignedGames = gamesByFlight.get('unassigned') || [];
+      
+      flights = [{
+        flightId: null,
+        flightName: 'Main',
+        teamCount: unassignedTeams.length,
+        teams: unassignedTeams.map(team => ({
+          id: team.id,
+          name: team.name,
+          status: team.status
+        })),
+        games: unassignedGames.map(game => {
+          const homeTeam = teamsMap.get(game.homeTeamId);
+          const awayTeam = teamsMap.get(game.awayTeamId);
+          return {
+            id: game.id,
+            homeTeam: homeTeam?.name || `Team ${game.homeTeamId}`,
+            awayTeam: awayTeam?.name || `Team ${game.awayTeamId}`,
+            date: game.scheduledDate,
+            time: game.scheduledTime,
+            field: game.fieldName || 'TBD',
+            status: game.status,
+            homeScore: game.homeScore,
+            awayScore: game.awayScore
+          };
+        })
+      }];
+    }
+
+    // Sort games within each flight
+    flights.forEach(flight => {
+      flight.games.sort((a, b) => {
         const dateA = new Date(`${a.date}T${a.time}`);
         const dateB = new Date(`${b.date}T${b.time}`);
         return dateA.getTime() - dateB.getTime();
       });
+    });
 
-    const processedFlights = [{
-      flightId: null,
-      flightName: 'Main',
-      teamCount: syntheticTeams.length,
-      teams: syntheticTeams,
-      games: syntheticGames
-    }];
+    const totalTeams = flights.reduce((sum, flight) => sum + flight.teamCount, 0);
+    const totalGames = flights.reduce((sum, flight) => sum + flight.games.length, 0);
 
     const responseData = {
       eventInfo: eventInfo[0],
@@ -499,10 +644,10 @@ router.get('/:eventId/age-group/:ageGroupId', async (req: Request, res: Response
         divisionCode: ageGroupInfo[0].divisionCode,
         displayName: `${ageGroupInfo[0].gender} ${ageGroupInfo[0].birthYear}`
       },
-      flights: processedFlights
+      flights: flights
     };
 
-    console.log(`[Age Group Schedule] SUCCESS: Processed ${processedFlights.length} flights with ${syntheticTeams.length} teams and ${syntheticGames.length} games`);
+    console.log(`[Age Group Schedule] SUCCESS: Processed ${flights.length} flights with ${totalTeams} teams and ${totalGames} games`);
     
     res.json(responseData);
   } catch (error) {

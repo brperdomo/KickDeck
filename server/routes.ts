@@ -57,6 +57,7 @@ import adminBracketsRouter from "./routes/admin/brackets-fixed";
 import aiAssistantRouter from "./routes/admin/ai-assistant";
 import gamecardsRouter from "./routes/admin/gamecards-simple";
 import csvImportRouter from "./routes/admin/csv-import-fixed";
+import fixFlightAssignmentsRouter from "./routes/admin/fix-flight-assignments";
 import ageGroupSchedulesRouter from "./routes/admin/age-group-schedules";
 import publicGamesRouter from "./routes/public/games";
 import publicGameCardsRouter from "./routes/public/game-cards";
@@ -969,6 +970,7 @@ export function registerRoutes(app: Express): Server {
     
     // CSV Import routes - Register very early to avoid Vite catch-all interference
     app.use('/api/admin/csv-import', csvImportRouter);
+    app.use('/api/admin/fix-flight-assignments', isAdmin, fixFlightAssignmentsRouter);
     
     // Safe registration fees middleware temporarily disabled to fix server startup
     
