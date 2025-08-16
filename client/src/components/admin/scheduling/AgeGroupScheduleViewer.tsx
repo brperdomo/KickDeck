@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,8 +14,28 @@ import {
   Circle, 
   Pause,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Trash2,
+  MoreHorizontal
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface AgeGroup {
   id: number;
@@ -74,6 +94,13 @@ interface ScheduleResponse {
 const AgeGroupScheduleViewer = ({ eventId }: { eventId: number }) => {
   const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set());
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<number | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [gameToDelete, setGameToDelete] = useState<Game | null>(null);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [deleteType, setDeleteType] = useState<'individual' | 'csv' | 'all' | 'age-group'>('individual');
+  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: scheduleData, isLoading, error, refetch } = useQuery<ScheduleResponse>({
     queryKey: ['age-group-schedules', eventId],
@@ -86,6 +113,141 @@ const AgeGroupScheduleViewer = ({ eventId }: { eventId: number }) => {
     },
     enabled: !!eventId
   });
+
+  // Individual game delete mutation
+  const deleteGameMutation = useMutation({
+    mutationFn: async (gameId: number) => {
+      const response = await fetch(`/api/admin/games/game/${gameId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete game');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Game Deleted",
+        description: "Game has been successfully deleted.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['age-group-schedules', eventId] });
+      setDeleteDialogOpen(false);
+      setGameToDelete(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete Failed",
+        description: error instanceof Error ? error.message : "Failed to delete game",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Bulk delete mutations
+  const deleteCsvGamesMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/admin/games/${eventId}/csv-imports`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete CSV games');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "CSV Games Deleted",
+        description: `Successfully deleted ${data.deletedCount} CSV imported games.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['age-group-schedules', eventId] });
+      setBulkDeleteDialogOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete Failed",
+        description: error instanceof Error ? error.message : "Failed to delete CSV games",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const deleteAllGamesMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/admin/games/${eventId}/games/bulk`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete all games');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "All Games Deleted",
+        description: `Successfully deleted ${data.deletedCount} games from tournament.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['age-group-schedules', eventId] });
+      setBulkDeleteDialogOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete Failed",
+        description: error instanceof Error ? error.message : "Failed to delete all games",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const deleteAgeGroupGamesMutation = useMutation({
+    mutationFn: async (ageGroupId: number) => {
+      const response = await fetch(`/api/admin/games/${eventId}/age-group/${ageGroupId}/games`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete age group games');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Age Group Games Deleted",
+        description: `Successfully deleted ${data.deletedCount} games from age group.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['age-group-schedules', eventId] });
+      setBulkDeleteDialogOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete Failed",
+        description: error instanceof Error ? error.message : "Failed to delete age group games",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleDeleteGame = (game: Game) => {
+    setGameToDelete(game);
+    setDeleteType('individual');
+    setDeleteDialogOpen(true);
+  };
+
+  const handleBulkDelete = (type: 'csv' | 'all' | 'age-group', ageGroupId?: number) => {
+    setDeleteType(type);
+    setSelectedAgeGroup(ageGroupId || null);
+    setBulkDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteType === 'individual' && gameToDelete) {
+      deleteGameMutation.mutate(gameToDelete.id);
+    } else if (deleteType === 'csv') {
+      deleteCsvGamesMutation.mutate();
+    } else if (deleteType === 'all') {
+      deleteAllGamesMutation.mutate();
+    } else if (deleteType === 'age-group' && selectedAgeGroup) {
+      deleteAgeGroupGamesMutation.mutate(selectedAgeGroup);
+    }
+  };
 
   const toggleGroup = (groupId: number) => {
     const newExpanded = new Set(expandedGroups);
@@ -213,6 +375,28 @@ const AgeGroupScheduleViewer = ({ eventId }: { eventId: number }) => {
               <div className="text-sm text-muted-foreground">Teams</div>
             </div>
           </div>
+          
+          {/* Bulk Delete Options */}
+          <div className="flex gap-2 mt-4 pt-4 border-t">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleBulkDelete('csv')}
+              className="text-orange-600 border-orange-200 hover:bg-orange-50"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete CSV Imports
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleBulkDelete('all')}
+              className="text-destructive border-destructive/20 hover:bg-destructive/5"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear All Games
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -265,6 +449,22 @@ const AgeGroupScheduleViewer = ({ eventId }: { eventId: number }) => {
                         {ageGroupData.statistics.totalTeams}
                       </Badge>
                     </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          onClick={() => handleBulkDelete('age-group', ageGroupData.ageGroup.id)}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete All Games in Age Group
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </CardHeader>
@@ -311,24 +511,42 @@ const AgeGroupScheduleViewer = ({ eventId }: { eventId: number }) => {
                             </div>
                           </div>
 
-                          <div className="text-right">
-                            <div className="flex items-center gap-2 text-sm font-medium">
-                              <CalendarDays className="h-4 w-4" />
-                              {timeInfo.date}
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Clock className="h-4 w-4" />
-                              {timeInfo.time}
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <MapPin className="h-4 w-4" />
-                              {game.fieldName}
-                            </div>
-                            {game.complexName !== 'TBD' && (
-                              <div className="text-xs text-muted-foreground">
-                                {game.complexName}
+                          <div className="flex items-center gap-2">
+                            <div className="text-right">
+                              <div className="flex items-center gap-2 text-sm font-medium">
+                                <CalendarDays className="h-4 w-4" />
+                                {timeInfo.date}
                               </div>
-                            )}
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Clock className="h-4 w-4" />
+                                {timeInfo.time}
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <MapPin className="h-4 w-4" />
+                                {game.fieldName}
+                              </div>
+                              {game.complexName !== 'TBD' && (
+                                <div className="text-xs text-muted-foreground">
+                                  {game.complexName}
+                                </div>
+                              )}
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem 
+                                  onClick={() => handleDeleteGame(game)}
+                                  className="text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete Game
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                         </div>
                       );
@@ -340,6 +558,69 @@ const AgeGroupScheduleViewer = ({ eventId }: { eventId: number }) => {
           );
         })}
       </div>
+
+      {/* Individual Game Delete Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Game</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this game? This action cannot be undone.
+              {gameToDelete && (
+                <div className="mt-2 p-3 bg-muted rounded-lg">
+                  <div className="font-medium">Game #{gameToDelete.gameNumber || gameToDelete.id}</div>
+                  <div className="text-sm">{gameToDelete.homeTeamName} vs {gameToDelete.awayTeamName}</div>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteGameMutation.isPending}
+            >
+              {deleteGameMutation.isPending ? 'Deleting...' : 'Delete Game'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Dialog */}
+      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {deleteType === 'csv' && 'Delete CSV Imported Games'}
+              {deleteType === 'all' && 'Delete All Games'}
+              {deleteType === 'age-group' && 'Delete Age Group Games'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteType === 'csv' && 'This will delete all games that were imported from CSV files. Games created through other methods will remain.'}
+              {deleteType === 'all' && 'This will delete ALL games in the tournament. This action cannot be undone and will clear the entire schedule.'}
+              {deleteType === 'age-group' && 'This will delete all games for this specific age group. Other age groups will not be affected.'}
+              
+              <div className="mt-3 p-3 bg-destructive/10 rounded-lg border border-destructive/20">
+                <div className="flex items-center gap-2 text-destructive font-medium">
+                  <Trash2 className="h-4 w-4" />
+                  Warning: This action cannot be undone
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteCsvGamesMutation.isPending || deleteAllGamesMutation.isPending || deleteAgeGroupGamesMutation.isPending}
+            >
+              {(deleteCsvGamesMutation.isPending || deleteAllGamesMutation.isPending || deleteAgeGroupGamesMutation.isPending) ? 'Deleting...' : 'Delete Games'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
