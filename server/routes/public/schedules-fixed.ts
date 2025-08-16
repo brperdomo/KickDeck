@@ -64,7 +64,7 @@ router.get('/:eventId', async (req: Request, res: Response) => {
       .leftJoin(fields, eq(games.fieldId, fields.id))
       .leftJoin(homeTeamTable, eq(games.homeTeamId, homeTeamTable.id))
       .leftJoin(awayTeamTable, eq(games.awayTeamId, awayTeamTable.id))
-      .where(eq(games.eventId, eventIdNum))
+      .where(eq(games.eventId, String(eventIdNum)))
       .orderBy(games.scheduledDate, games.scheduledTime);
 
     console.log(`[Public Schedules Fixed] Found ${gamesData.length} games`);
@@ -78,7 +78,7 @@ router.get('/:eventId', async (req: Request, res: Response) => {
         divisionCode: eventAgeGroups.divisionCode
       })
       .from(eventAgeGroups)
-      .where(eq(eventAgeGroups.eventId, eventIdNum));
+      .where(eq(eventAgeGroups.eventId, String(eventIdNum)));
 
     console.log(`[Public Schedules Fixed] Found ${ageGroupsData.length} age groups`);
 
@@ -92,7 +92,7 @@ router.get('/:eventId', async (req: Request, res: Response) => {
       })
       .from(teams)
       .where(and(
-        eq(teams.eventId, eventIdNum),
+        eq(teams.eventId, String(eventIdNum)),
         eq(teams.status, 'approved')
       ));
 
@@ -214,16 +214,111 @@ router.get('/:eventId', async (req: Request, res: Response) => {
 
     // Add standings to each age group
     processedAgeGroups.forEach(ageGroup => {
-      ageGroup.standings = calculateStandings(ageGroup.games);
+      (ageGroup as any).standings = calculateStandings(ageGroup.games);
     });
 
     console.log(`[Public Schedules Fixed] Processed ${processedAgeGroups.length} age groups with games`);
 
+    // Flatten all games from all age groups for the games array
+    const allGames = processedAgeGroups.flatMap(ageGroup => 
+      ageGroup.games.map(game => ({
+        id: game.id,
+        homeTeam: game.homeTeamName || 'TBD',
+        awayTeam: game.awayTeamName || 'TBD', 
+        ageGroup: ageGroup.ageGroup,
+        flightName: game.flightName || 'Main',
+        field: game.fieldName || 'TBD',
+        date: game.scheduledDate,
+        time: game.scheduledTime,
+        duration: game.duration || 90,
+        status: game.status || 'scheduled'
+      }))
+    );
+
+    // Flatten all standings from all age groups
+    const allStandings = processedAgeGroups.flatMap(ageGroup => 
+      (ageGroup.standings || []).map(standing => ({
+        teamName: standing.teamName,
+        ageGroup: ageGroup.ageGroup,
+        flightName: 'Main', // Will be enhanced later with flight data
+        gamesPlayed: standing.played,
+        wins: standing.wins,
+        losses: standing.losses,
+        ties: standing.draws,
+        goalsFor: standing.goalsFor,
+        goalsAgainst: standing.goalsAgainst,
+        points: standing.points
+      }))
+    );
+
+    // Group age groups by gender for the frontend
+    const ageGroupsByGender = {
+      boys: processedAgeGroups
+        .filter(ag => ag.gender === 'boys')
+        .map(ag => ({
+          ageGroup: ag.ageGroup,
+          gender: ag.gender,
+          birthYear: 2024, // Will be enhanced with real birth year data
+          divisionCode: ag.divisionCode || ag.ageGroup,
+          displayName: ag.displayName || ag.ageGroup,
+          totalFlights: 1, // Will be enhanced with flight data
+          totalTeams: ag.games.reduce((teams, game) => {
+            const teamIds = new Set();
+            if (game.homeTeamId) teamIds.add(game.homeTeamId);
+            if (game.awayTeamId) teamIds.add(game.awayTeamId);
+            return Math.max(teams, teamIds.size);
+          }, 0),
+          flights: [{
+            flightName: 'Main',
+            teamCount: ag.games.reduce((teams, game) => {
+              const teamIds = new Set();
+              if (game.homeTeamId) teamIds.add(game.homeTeamId);
+              if (game.awayTeamId) teamIds.add(game.awayTeamId);
+              return Math.max(teams, teamIds.size);
+            }, 0),
+            gameCount: ag.games.length
+          }]
+        })),
+      girls: processedAgeGroups
+        .filter(ag => ag.gender === 'girls')
+        .map(ag => ({
+          ageGroup: ag.ageGroup,
+          gender: ag.gender,
+          birthYear: 2024, // Will be enhanced with real birth year data
+          divisionCode: ag.divisionCode || ag.ageGroup,
+          displayName: ag.displayName || ag.ageGroup,
+          totalFlights: 1, // Will be enhanced with flight data
+          totalTeams: ag.games.reduce((teams, game) => {
+            const teamIds = new Set();
+            if (game.homeTeamId) teamIds.add(game.homeTeamId);
+            if (game.awayTeamId) teamIds.add(game.awayTeamId);
+            return Math.max(teams, teamIds.size);
+          }, 0),
+          flights: [{
+            flightName: 'Main',
+            teamCount: ag.games.reduce((teams, game) => {
+              const teamIds = new Set();
+              if (game.homeTeamId) teamIds.add(game.homeTeamId);
+              if (game.awayTeamId) teamIds.add(game.awayTeamId);
+              return Math.max(teams, teamIds.size);
+            }, 0),
+            gameCount: ag.games.length
+          }]
+        }))
+    };
+
     res.json({
       success: true,
-      event: eventInfo[0],
-      ageGroups: processedAgeGroups,
-      totalGames: gamesData.length,
+      eventInfo: {
+        name: eventInfo[0]?.name || 'Tournament',
+        startDate: eventInfo[0]?.startDate || new Date().toISOString(),
+        endDate: eventInfo[0]?.endDate || new Date().toISOString(),
+        logoUrl: eventInfo[0]?.logoUrl
+      },
+      ageGroupsByGender,
+      games: allGames,
+      standings: allStandings,
+      totalGames: allGames.length,
       totalTeams: teamsData.length,
       lastUpdated: new Date().toISOString()
     });
