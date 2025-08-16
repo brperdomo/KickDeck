@@ -5,7 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Download, QrCode, Users, Calendar, MapPin, Paintbrush, Settings } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { FileText, Download, QrCode, Users, Calendar, MapPin, Paintbrush, Settings, Search, Filter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import QRCode from 'qrcode';
 import jsPDF from 'jspdf';
@@ -36,6 +38,9 @@ interface GameCardsGeneratorProps {
 export default function GameCardsGenerator({ eventId }: GameCardsGeneratorProps) {
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedGames, setSelectedGames] = useState<Set<number>>(new Set());
+  const [selectAll, setSelectAll] = useState(false);
   const { toast } = useToast();
 
   // Fetch games data using the public game-cards endpoint (no auth required)
@@ -89,17 +94,36 @@ export default function GameCardsGenerator({ eventId }: GameCardsGeneratorProps)
   
   const tournament = tournamentData?.event || { name: 'Tournament', startDate: '', endDate: '', location: '' };
 
-  // Filter games based on selection
+  // Filter games based on selection and search
   const filteredGames = games.filter(game => {
-    if (selectedFilter === 'all') return true;
-    if (selectedFilter === 'today') {
+    // First apply the dropdown filter
+    let passesFilter = true;
+    if (selectedFilter === 'all') passesFilter = true;
+    else if (selectedFilter === 'today') {
       const today = new Date().toDateString();
-      return new Date(game.gameDate).toDateString() === today;
+      passesFilter = new Date(game.gameDate).toDateString() === today;
     }
-    if (selectedFilter === 'upcoming') {
-      return new Date(game.gameDate) >= new Date();
+    else if (selectedFilter === 'upcoming') {
+      passesFilter = new Date(game.gameDate) >= new Date();
     }
-    return game.ageGroupName === selectedFilter;
+    else {
+      passesFilter = game.ageGroupName === selectedFilter;
+    }
+
+    // Then apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = (
+        game.homeTeamName.toLowerCase().includes(query) ||
+        game.awayTeamName.toLowerCase().includes(query) ||
+        game.id.toString().includes(query) ||
+        game.fieldName.toLowerCase().includes(query) ||
+        game.ageGroupName.toLowerCase().includes(query)
+      );
+      return passesFilter && matchesSearch;
+    }
+
+    return passesFilter;
   });
 
   // Get unique age groups for filter options
@@ -122,7 +146,32 @@ export default function GameCardsGenerator({ eventId }: GameCardsGeneratorProps)
     }
   };
 
-  const generateGameCardPDF = async (selectedGames: Game[]) => {
+  // Handle game selection
+  const handleGameSelection = (gameId: number, checked: boolean) => {
+    const newSelected = new Set(selectedGames);
+    if (checked) {
+      newSelected.add(gameId);
+    } else {
+      newSelected.delete(gameId);
+    }
+    setSelectedGames(newSelected);
+    setSelectAll(newSelected.size === filteredGames.length && filteredGames.length > 0);
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedGames(new Set(filteredGames.map(g => g.id)));
+    } else {
+      setSelectedGames(new Set());
+    }
+    setSelectAll(checked);
+  };
+
+  const getSelectedGames = (): Game[] => {
+    return games.filter(game => selectedGames.has(game.id));
+  };
+
+  const generateGameCardPDF = async (gamesToGenerate: Game[]) => {
     setGeneratingPDF(true);
     
     try {
@@ -160,8 +209,8 @@ export default function GameCardsGenerator({ eventId }: GameCardsGeneratorProps)
 
       const logoDataUrl = await loadLogoImage();
 
-      for (let i = 0; i < selectedGames.length; i++) {
-        const game = selectedGames[i];
+      for (let i = 0; i < gamesToGenerate.length; i++) {
+        const game = gamesToGenerate[i];
         
         if (i > 0) {
           pdf.addPage();
@@ -489,7 +538,7 @@ export default function GameCardsGenerator({ eventId }: GameCardsGeneratorProps)
           pdf.setTextColor(107, 114, 128);
           pdf.text('Professional Tournament Management', pageWidth - 65, yPos + 8);
         }
-        pdf.text(`Page ${currentPage} of ${selectedGames.length}`, pageWidth - 30, pageHeight - 10);
+        pdf.text(`Page ${currentPage} of ${gamesToGenerate.length}`, pageWidth - 30, pageHeight - 10);
       }
 
       // Save the PDF
@@ -498,7 +547,7 @@ export default function GameCardsGenerator({ eventId }: GameCardsGeneratorProps)
       
       toast({
         title: "Game Cards Generated",
-        description: `Successfully generated ${selectedGames.length} game cards`,
+        description: `Successfully generated ${gamesToGenerate.length} game cards`,
       });
       
     } catch (error) {
@@ -609,23 +658,54 @@ export default function GameCardsGenerator({ eventId }: GameCardsGeneratorProps)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-4">
-            <Select value={selectedFilter} onValueChange={setSelectedFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter games..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Games ({games.length})</SelectItem>
-                <SelectItem value="today">Today's Games</SelectItem>
-                <SelectItem value="upcoming">Upcoming Games</SelectItem>
-                {ageGroups.map(ageGroup => (
-                  <SelectItem key={ageGroup} value={ageGroup}>
-                    {ageGroup} ({games.filter(g => g.ageGroupName === ageGroup).length})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col gap-4">
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by team name, game ID, field, or age group..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            <div className="flex flex-wrap gap-4">
+              <Select value={selectedFilter} onValueChange={setSelectedFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filter games..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Games ({games.length})</SelectItem>
+                  <SelectItem value="today">Today's Games</SelectItem>
+                  <SelectItem value="upcoming">Upcoming Games</SelectItem>
+                  {ageGroups.map(ageGroup => (
+                    <SelectItem key={ageGroup} value={ageGroup}>
+                      {ageGroup} ({games.filter(g => g.ageGroupName === ageGroup).length})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
+            <Button 
+              onClick={() => generateGameCardPDF(getSelectedGames())}
+              disabled={generatingPDF || selectedGames.size === 0}
+              variant="outline"
+              className="bg-green-600 hover:bg-green-700 text-white border-green-600"
+            >
+              {generatingPDF ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Generating PDF...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2" />
+                  Generate Selected ({selectedGames.size})
+                </>
+              )}
+            </Button>
+            
             <Button 
               onClick={handleGenerateAll}
               disabled={generatingPDF || filteredGames.length === 0}
@@ -639,10 +719,11 @@ export default function GameCardsGenerator({ eventId }: GameCardsGeneratorProps)
               ) : (
                 <>
                   <Download className="w-4 h-4 mr-2" />
-                  Generate {filteredGames.length} Game Cards
+                  Generate All ({filteredGames.length})
                 </>
               )}
             </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -650,22 +731,43 @@ export default function GameCardsGenerator({ eventId }: GameCardsGeneratorProps)
       {/* Games Preview */}
       <Card>
         <CardHeader>
-          <CardTitle>Games to Generate ({filteredGames.length})</CardTitle>
-          <CardDescription>
-            Preview of games that will be included in the PDF
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Games to Generate ({filteredGames.length})</CardTitle>
+              <CardDescription>
+                Select specific games or generate all filtered games
+              </CardDescription>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="select-all"
+                checked={selectAll}
+                onCheckedChange={handleSelectAll}
+              />
+              <label htmlFor="select-all" className="text-sm font-medium">
+                Select All ({filteredGames.length})
+              </label>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {filteredGames.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>No games match the current filter</p>
+              {searchQuery && (
+                <p className="text-sm mt-2">Try adjusting your search or filter</p>
+              )}
             </div>
           ) : (
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {filteredGames.map((game) => (
                 <div key={game.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                   <div className="flex items-center space-x-4">
+                    <Checkbox
+                      checked={selectedGames.has(game.id)}
+                      onCheckedChange={(checked) => handleGameSelection(game.id, checked as boolean)}
+                    />
                     <div className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
                       #{game.id}
                     </div>
