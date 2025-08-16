@@ -73,7 +73,7 @@ export default function AgeGroupSchedule() {
       // Filter games for this specific age group
       const ageGroupGames = data.games?.filter(game => game.ageGroup === targetAgeGroup.ageGroup) || [];
       
-      // Transform data to match expected interface
+      // Transform data to match expected interface with real flight data
       return {
         eventInfo: data.eventInfo,
         ageGroupInfo: {
@@ -83,11 +83,11 @@ export default function AgeGroupSchedule() {
           divisionCode: targetAgeGroup.divisionCode,
           displayName: targetAgeGroup.displayName,
         },
-        flights: [{
+        flights: targetAgeGroup.flights || [{
           flightId: 1,
           flightName: 'Main',
-          teamCount: targetAgeGroup.totalTeams,
-          teams: [], // Will be populated if needed
+          teamCount: targetAgeGroup.totalTeams || 0,
+          teams: [],
           games: ageGroupGames.map(game => ({
             id: game.id,
             homeTeam: game.homeTeam,
