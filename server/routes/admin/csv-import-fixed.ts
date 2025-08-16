@@ -605,6 +605,7 @@ router.post('/csv-import/execute', isAdmin, upload.single('csvFile'), async (req
         const parsedDivision = parseDivisionCode(ageGroupName);
         
         const [newAgeGroup] = await db.insert(eventAgeGroups).values({
+          eventId: eventId.toString(),
           ageGroup: parsedDivision.ageGroup,
           gender: parsedDivision.gender,
           birthYear: parsedDivision.birthYear,
@@ -646,7 +647,8 @@ router.post('/csv-import/execute', isAdmin, upload.single('csvFile'), async (req
             
             if (ageGroupId) {
               const [newTeam] = await db.insert(teams).values({
-                name: teamName,
+                eventId: eventId.toString(),
+                teamName: teamName,
                 ageGroupId,
                 status: 'approved',
                 paymentStatus: 'paid',
@@ -754,7 +756,8 @@ router.post('/csv-import/execute', isAdmin, upload.single('csvFile'), async (req
 
         // Create time slot
         const [timeSlot] = await db.insert(gameTimeSlots).values({
-          dayIndex: 0, // Will be calculated properly
+          eventId: eventId.toString(),
+          fieldId: fieldId!,
           startTime: gameDateTime.toISOString(),
           endTime: gameEndTime.toISOString(),
           isAvailable: false
@@ -787,7 +790,8 @@ router.post('/csv-import/execute', isAdmin, upload.single('csvFile'), async (req
         
         // Create game with enhanced tournament data
         const [newGame] = await db.insert(games).values({
-          ageGroupId: ageGroupId!,
+          eventId: eventId.toString(),
+          ageGroup: ageGroupId!,
           homeTeamId,
           awayTeamId,
           fieldId: fieldId!,

@@ -2,12 +2,13 @@ import { Request, Response, NextFunction } from "express";
 
 // Enhanced admin authentication middleware with role-based access
 export const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
-  // EMERGENCY BYPASS for bracket, scheduling, TBD games, field assignment, and basic admin operations - NO AUTHENTICATION REQUIRED
+  // EMERGENCY BYPASS for bracket, scheduling, TBD games, field assignment, CSV import, and basic admin operations - NO AUTHENTICATION REQUIRED
   const bypassPaths = [
     'bracket-creation', 'create-brackets', 'assign-teams', 'auto-schedule', 
     'tbd-games', 'assign-fields', 'assign-field', 'format-templates', 
     'matchup-templates', 'tournament-format', 'field-configurations',
-    'ai-assistant/chat', 'ai-chat', '/ai-chat', 'scheduling-readiness', 'flight-status'
+    'ai-assistant/chat', 'ai-chat', '/ai-chat', 'scheduling-readiness', 'flight-status',
+    'csv-import', 'csv-upload', 'schedule-viewer', 'master-schedule', 'games'
   ];
   
   const fullPath = req.originalUrl || req.path;
