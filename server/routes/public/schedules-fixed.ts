@@ -106,7 +106,7 @@ router.get('/:eventId', async (req: Request, res: Response) => {
         description: eventBrackets.description
       })
       .from(eventBrackets)
-      .where(eq(eventBrackets.eventId, eventIdNum));
+      .where(eq(eventBrackets.eventId, String(eventIdNum)));
 
     console.log(`[Public Schedules Fixed] Found ${teamsData.length} teams`);
 
@@ -160,14 +160,15 @@ router.get('/:eventId', async (req: Request, res: Response) => {
     // Create age group data with flights and games
     const processedAgeGroups = Array.from(ageGroupMap.entries()).map(([ageGroupId, ageGroupInfo]) => {
       // Get all flights for this age group
-      const ageGroupFlights = flightsData.filter(f => f.ageGroupId === ageGroupId);
+      const ageGroupFlights = flightsData.filter(f => f.ageGroupId === Number(ageGroupId));
+
       
       // If no flights exist, create a default one for unassigned teams/games
       if (ageGroupFlights.length === 0) {
         ageGroupFlights.push({
-          id: 'unassigned',
+          id: 'unassigned' as any,
           name: 'Main',
-          ageGroupId: ageGroupId,
+          ageGroupId: Number(ageGroupId),
           description: 'Default flight for unassigned teams'
         });
       }
@@ -186,19 +187,27 @@ router.get('/:eventId', async (req: Request, res: Response) => {
             name: team.name,
             status: team.status
           })),
-          games: flightGames.map(game => ({
-            id: game.id,
-            homeTeam: game.homeTeamName || 'TBD',
-            awayTeam: game.awayTeamName || 'TBD',
-            date: game.scheduledDate,
-            time: game.scheduledTime,
-            field: game.fieldName || 'TBD',
-            status: game.status,
-            homeScore: game.homeScore,
-            awayScore: game.awayScore,
-            matchNumber: game.matchNumber,
-            round: game.round
-          }))
+          games: flightGames.map(game => {
+            // Find team names from the teams data
+            const homeTeam = teamsData.find(t => t.id === game.homeTeamId);
+            const awayTeam = teamsData.find(t => t.id === game.awayTeamId);
+            
+            return {
+              id: game.id,
+              homeTeam: homeTeam?.name || 'TBD',
+              awayTeam: awayTeam?.name || 'TBD',
+              date: game.scheduledDate,
+              time: game.scheduledTime,
+              field: game.fieldName || 'TBD',
+              status: game.status,
+              homeScore: game.homeScore,
+              awayScore: game.awayScore,
+              matchNumber: game.matchNumber,
+              round: game.round,
+              homeTeamId: game.homeTeamId,
+              awayTeamId: game.awayTeamId
+            };
+          })
         };
       });
       
@@ -301,22 +310,23 @@ router.get('/:eventId', async (req: Request, res: Response) => {
     });
 
     console.log(`[Public Schedules Fixed] Processed ${processedAgeGroups.length} age groups with games`);
-    console.log(`[Public Schedules Fixed] Sample age groups:`, processedAgeGroups.slice(0, 3).map(ag => ({ageGroup: ag.ageGroup, gender: ag.gender, games: ag.games.length})));
 
     // Flatten all games from all age groups for the games array
     const allGames = processedAgeGroups.flatMap(ageGroup => 
-      ageGroup.games.map(game => ({
-        id: game.id,
-        homeTeam: game.homeTeamName || 'TBD',
-        awayTeam: game.awayTeamName || 'TBD', 
-        ageGroup: ageGroup.ageGroup,
-        flightName: game.flightName || 'Main',
-        field: game.fieldName || 'TBD',
-        date: game.scheduledDate,
-        time: game.scheduledTime,
-        duration: game.duration || 90,
-        status: game.status || 'scheduled'
-      }))
+      ageGroup.flights.flatMap(flight => 
+        flight.games.map(game => ({
+          id: game.id,
+          homeTeam: game.homeTeam || 'TBD',
+          awayTeam: game.awayTeam || 'TBD', 
+          ageGroup: ageGroup.ageGroup,
+          flightName: flight.flightName,
+          field: game.field || 'TBD',
+          date: game.date,
+          time: game.time,
+          duration: game.duration || 90,
+          status: game.status || 'scheduled'
+        }))
+      )
     );
 
     // Flatten all standings from all age groups
@@ -340,55 +350,39 @@ router.get('/:eventId', async (req: Request, res: Response) => {
       boys: processedAgeGroups
         .filter(ag => ag.gender?.toLowerCase() === 'boys')
         .map(ag => {
-          const uniqueTeamIds = new Set();
-          ag.games.forEach((game: any) => {
-            if (game.homeTeamId) uniqueTeamIds.add(game.homeTeamId);
-            if (game.awayTeamId) uniqueTeamIds.add(game.awayTeamId);
-          });
-          const teamCount = uniqueTeamIds.size;
-          
-
-          
           return {
-            ageGroupId: ag.ageGroupId, // Add the missing ageGroupId for navigation
+            ageGroupId: ag.ageGroupId,
             ageGroup: ag.ageGroup,
             gender: ag.gender,
-            birthYear: 2024, // Will be enhanced with real birth year data
+            birthYear: 2024,
             divisionCode: ag.divisionCode || ag.ageGroup,
             displayName: ag.displayName || ag.ageGroup,
-            totalFlights: 1, // Will be enhanced with flight data
-            totalTeams: teamCount,
-            flights: [{
-              flightName: 'Main',
-              teamCount: teamCount,
-              gameCount: ag.games.length
-            }]
+            totalFlights: ag.flights.length,
+            totalTeams: ag.flights.reduce((sum, flight) => sum + flight.teamCount, 0),
+            flights: ag.flights.map(flight => ({
+              flightName: flight.flightName,
+              teamCount: flight.teamCount,
+              gameCount: flight.games.length
+            }))
           };
         }),
       girls: processedAgeGroups
         .filter(ag => ag.gender?.toLowerCase() === 'girls')
         .map(ag => {
-          const uniqueTeamIds = new Set();
-          ag.games.forEach((game: any) => {
-            if (game.homeTeamId) uniqueTeamIds.add(game.homeTeamId);
-            if (game.awayTeamId) uniqueTeamIds.add(game.awayTeamId);
-          });
-          const teamCount = uniqueTeamIds.size;
-          
           return {
-            ageGroupId: ag.ageGroupId, // Add the missing ageGroupId for navigation
+            ageGroupId: ag.ageGroupId,
             ageGroup: ag.ageGroup,
             gender: ag.gender,
-            birthYear: 2024, // Will be enhanced with real birth year data
+            birthYear: 2024,
             divisionCode: ag.divisionCode || ag.ageGroup,
             displayName: ag.displayName || ag.ageGroup,
-            totalFlights: 1, // Will be enhanced with flight data
-            totalTeams: teamCount,
-            flights: [{
-              flightName: 'Main',
-              teamCount: teamCount,
-              gameCount: ag.games.length
-            }]
+            totalFlights: ag.flights.length,
+            totalTeams: ag.flights.reduce((sum, flight) => sum + flight.teamCount, 0),
+            flights: ag.flights.map(flight => ({
+              flightName: flight.flightName,
+              teamCount: flight.teamCount,
+              gameCount: flight.games.length
+            }))
           };
         })
     };
@@ -532,7 +526,7 @@ router.get('/:eventId/age-group/:ageGroupId', async (req: Request, res: Response
       })
       .from(eventBrackets)
       .where(and(
-        eq(eventBrackets.eventId, eventIdNum),
+        eq(eventBrackets.eventId, String(eventIdNum)),
         eq(eventBrackets.ageGroupId, ageGroupIdNum)
       ));
 
