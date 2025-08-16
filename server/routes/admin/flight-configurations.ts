@@ -365,8 +365,18 @@ router.patch('/events/:eventId/flight-configurations/:flightId', isAdmin, async 
     
     res.json({ success: true, message: 'Flight configuration updated successfully' });
   } catch (error) {
-    console.error('Error updating flight configuration:', error);
-    res.status(500).json({ error: 'Failed to update flight configuration' });
+    console.error('[FLIGHT CONFIG PATCH ERROR] Error updating flight configuration:', error);
+    console.error('[FLIGHT CONFIG PATCH ERROR] Error details:', {
+      eventId: req.params.eventId,
+      flightId: req.params.flightId,
+      body: req.body,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      errorStack: error instanceof Error ? error.stack : undefined
+    });
+    res.status(500).json({ 
+      error: 'Failed to update flight configuration',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 
