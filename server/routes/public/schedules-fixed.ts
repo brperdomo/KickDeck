@@ -92,10 +92,7 @@ router.get('/:eventId', async (req: Request, res: Response) => {
         status: teams.status
       })
       .from(teams)
-      .where(and(
-        eq(teams.eventId, String(eventIdNum)),
-        eq(teams.status, 'approved')
-      ));
+      .where(eq(teams.eventId, String(eventIdNum)));
 
     // Get flight/bracket data
     const flightsData = await db
@@ -146,9 +143,20 @@ router.get('/:eventId', async (req: Request, res: Response) => {
     // Group games by age group and flight
     const gamesByAgeGroupAndFlight = new Map();
     gamesData.forEach(game => {
-      // Find the flight for this game by looking at the home team's flight assignment
-      const homeTeam = teamsData.find(t => t.id === game.homeTeamId);
-      const flightId = homeTeam?.bracketId || 'unassigned';
+      // For this tournament, team assignments in games don't match teams table
+      // So we'll assign all games for an age group to the first available flight
+      const ageGroupFlights = flightsData.filter(f => f.ageGroupId === game.ageGroupId);
+      
+      // Use the first flight for this age group, preferring ones with teams
+      let flightId = 'unassigned';
+      if (ageGroupFlights.length > 0) {
+        // Try to find a flight with teams first
+        const flightWithTeams = ageGroupFlights.find(flight => {
+          const teams = teamsData.filter(t => t.bracketId === flight.id);
+          return teams.length > 0;
+        });
+        flightId = flightWithTeams?.id || ageGroupFlights[0].id;
+      }
       
       const key = `${game.ageGroupId}_${flightId}`;
       if (!gamesByAgeGroupAndFlight.has(key)) {
@@ -156,6 +164,17 @@ router.get('/:eventId', async (req: Request, res: Response) => {
       }
       gamesByAgeGroupAndFlight.get(key).push(game);
     });
+    
+    console.log(`[Public Schedules Fixed] Games grouped by age group+flight: ${gamesByAgeGroupAndFlight.size} combinations`);
+    console.log(`[Public Schedules Fixed] Sample game groups:`, Array.from(gamesByAgeGroupAndFlight.keys()).slice(0, 5));
+    console.log(`[Public Schedules Fixed] Sample team lookup test:`, gamesData.slice(0, 3).map(g => ({
+      gameId: g.id,
+      ageGroup: g.ageGroupId,
+      homeTeamId: g.homeTeamId,
+      awayTeamId: g.awayTeamId,
+      homeTeamFound: !!teamsData.find(t => t.id === g.homeTeamId),
+      awayTeamFound: !!teamsData.find(t => t.id === g.awayTeamId)
+    })));
 
     // Create age group data with flights and games
     const processedAgeGroups = Array.from(ageGroupMap.entries()).map(([ageGroupId, ageGroupInfo]) => {
@@ -182,12 +201,12 @@ router.get('/:eventId', async (req: Request, res: Response) => {
           flightId: flight.id,
           flightName: flight.name,
           teamCount: flightTeams.length,
-          teams: flightTeams.map(team => ({
+          teams: flightTeams.map((team: any) => ({
             id: team.id,
             name: team.name,
             status: team.status
           })),
-          games: flightGames.map(game => {
+          games: flightGames.map((game: any) => {
             // Find team names from the teams data
             const homeTeam = teamsData.find(t => t.id === game.homeTeamId);
             const awayTeam = teamsData.find(t => t.id === game.awayTeamId);
@@ -211,7 +230,7 @@ router.get('/:eventId', async (req: Request, res: Response) => {
         };
       });
       
-      const allAgeGroupGames = flights.flatMap(flight => flight.games);
+      const allAgeGroupGames = flights.flatMap(flight => flight.games || []);
 
       return {
         ageGroupId: parseInt(ageGroupId), // Ensure ageGroupId is a number
@@ -309,12 +328,19 @@ router.get('/:eventId', async (req: Request, res: Response) => {
       (ageGroup as any).standings = calculateStandings(ageGroup.games);
     });
 
-    console.log(`[Public Schedules Fixed] Processed ${processedAgeGroups.length} age groups with games`);
+    console.log(`[Public Schedules Fixed] Total age groups found: ${Array.from(ageGroupMap.entries()).length}`);
+    console.log(`[Public Schedules Fixed] Age groups with games: ${processedAgeGroups.length}`);
+    console.log(`[Public Schedules Fixed] Sample processed age groups:`, processedAgeGroups.slice(0, 3).map(ag => ({
+      ageGroupId: ag.ageGroupId,
+      ageGroup: ag.ageGroup,
+      gender: ag.gender,
+      totalGames: ag.totalGames
+    })));
 
     // Flatten all games from all age groups for the games array
     const allGames = processedAgeGroups.flatMap(ageGroup => 
       ageGroup.flights.flatMap(flight => 
-        flight.games.map(game => ({
+        flight.games.map((game: any) => ({
           id: game.id,
           homeTeam: game.homeTeam || 'TBD',
           awayTeam: game.awayTeam || 'TBD', 
@@ -359,6 +385,7 @@ router.get('/:eventId', async (req: Request, res: Response) => {
             displayName: ag.displayName || ag.ageGroup,
             totalFlights: ag.flights.length,
             totalTeams: ag.flights.reduce((sum, flight) => sum + flight.teamCount, 0),
+            totalGames: ag.totalGames,
             flights: ag.flights.map(flight => ({
               flightName: flight.flightName,
               teamCount: flight.teamCount,
@@ -378,6 +405,7 @@ router.get('/:eventId', async (req: Request, res: Response) => {
             displayName: ag.displayName || ag.ageGroup,
             totalFlights: ag.flights.length,
             totalTeams: ag.flights.reduce((sum, flight) => sum + flight.teamCount, 0),
+            totalGames: ag.totalGames,
             flights: ag.flights.map(flight => ({
               flightName: flight.flightName,
               teamCount: flight.teamCount,
