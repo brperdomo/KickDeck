@@ -284,6 +284,9 @@ export const events = pgTable("events", {
   connectChargesEnabled: boolean("connect_charges_enabled").default(false), // Whether charges are enabled
   connectAccountVerified: boolean("connect_account_verified").default(false), // Full verification status
   connectLastUpdated: timestamp("connect_last_updated"), // When Connect status was last checked
+  // Public site visibility toggles
+  showPublicSchedules: boolean("show_public_schedules").default(true).notNull(), // Control visibility of Schedules link
+  showPublicStandings: boolean("show_public_standings").default(true).notNull(), // Control visibility of Standings link
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -340,6 +343,8 @@ export const insertEventSchema = createInsertSchema(events, {
   connectPayoutsEnabled: z.boolean().default(false),
   connectChargesEnabled: z.boolean().default(false),
   connectAccountVerified: z.boolean().default(false),
+  showPublicSchedules: z.boolean().default(true),
+  showPublicStandings: z.boolean().default(true),
 });
 
 export type InsertEvent = typeof events.$inferInsert;

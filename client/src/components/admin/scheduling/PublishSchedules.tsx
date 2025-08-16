@@ -4,10 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { 
   Globe, Eye, Calendar, Users, Trophy, ExternalLink, 
   CheckCircle, Clock, AlertTriangle, Copy, Share2, 
-  RefreshCw, Database, ArrowRight 
+  RefreshCw, Database, ArrowRight, Settings 
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -108,6 +111,17 @@ export function PublishSchedules({ eventId }: PublishSchedulesProps) {
     retry: false
   });
 
+  // Fetch event visibility settings
+  const { data: eventSettings, isLoading: loadingSettings } = useQuery({
+    queryKey: ['event-visibility-settings', eventId],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/events/${eventId}/visibility-settings`);
+      if (!response.ok) throw new Error('Failed to fetch visibility settings');
+      return response.json();
+    },
+    retry: false
+  });
+
   // Publish schedules mutation
   const publishMutation = useMutation({
     mutationFn: async () => {
@@ -154,6 +168,33 @@ export function PublishSchedules({ eventId }: PublishSchedulesProps) {
     onError: (error) => {
       toast({
         title: "Failed to Unpublish Schedules",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Update visibility settings mutation
+  const updateVisibilityMutation = useMutation({
+    mutationFn: async (settings: { showPublicSchedules?: boolean; showPublicStandings?: boolean }) => {
+      const response = await fetch(`/api/admin/events/${eventId}/visibility-settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+      if (!response.ok) throw new Error('Failed to update visibility settings');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Visibility Settings Updated",
+        description: "Public site link visibility has been updated successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['event-visibility-settings', eventId] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to Update Settings",
         description: error.message,
         variant: "destructive",
       });
@@ -303,6 +344,80 @@ export function PublishSchedules({ eventId }: PublishSchedulesProps) {
               </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Public Site Visibility Controls */}
+      <Card className="bg-slate-800 border-slate-700">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Settings className="h-5 w-5 text-purple-400" />
+            Public Site Link Visibility
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="text-slate-300 text-sm mb-4">
+            Control which links are visible on the public tournament site. Even when hidden, direct URLs will still work if shared manually.
+          </div>
+          
+          <div className="space-y-4">
+            {/* Schedules Link Toggle */}
+            <div className="flex items-center justify-between p-4 bg-slate-700 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Calendar className="h-5 w-5 text-blue-400" />
+                <div>
+                  <Label className="text-white font-medium">Show Schedules Link</Label>
+                  <p className="text-slate-400 text-sm">Display "View Schedules" link on the public site</p>
+                </div>
+              </div>
+              <Switch
+                checked={eventSettings?.showPublicSchedules ?? true}
+                onCheckedChange={(checked) => 
+                  updateVisibilityMutation.mutate({ showPublicSchedules: checked })
+                }
+                disabled={loadingSettings || updateVisibilityMutation.isPending}
+              />
+            </div>
+
+            {/* Standings Link Toggle */}
+            <div className="flex items-center justify-between p-4 bg-slate-700 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Trophy className="h-5 w-5 text-yellow-400" />
+                <div>
+                  <Label className="text-white font-medium">Show Standings Link</Label>
+                  <p className="text-slate-400 text-sm">Display "View Standings" link on the public site</p>
+                </div>
+              </div>
+              <Switch
+                checked={eventSettings?.showPublicStandings ?? true}
+                onCheckedChange={(checked) => 
+                  updateVisibilityMutation.mutate({ showPublicStandings: checked })
+                }
+                disabled={loadingSettings || updateVisibilityMutation.isPending}
+              />
+            </div>
+          </div>
+
+          <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Eye className="h-4 w-4 text-blue-400" />
+              <span className="text-blue-200 font-medium">Current Visibility Status:</span>
+            </div>
+            <div className="space-y-1 text-sm">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${eventSettings?.showPublicSchedules ? 'bg-green-400' : 'bg-red-400'}`}></span>
+                <span className="text-slate-300">
+                  Schedules Link: {eventSettings?.showPublicSchedules ? 'Visible' : 'Hidden'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${eventSettings?.showPublicStandings ? 'bg-green-400' : 'bg-red-400'}`}></span>
+                <span className="text-slate-300">
+                  Standings Link: {eventSettings?.showPublicStandings ? 'Visible' : 'Hidden'}
+                </span>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
