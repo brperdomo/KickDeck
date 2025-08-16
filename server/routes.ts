@@ -3638,6 +3638,71 @@ export function registerRoutes(app: Express): Server {
       });
     }
 
+    // Event visibility settings endpoints
+    app.get('/api/admin/events/:eventId/visibility-settings', isAdmin, async (req, res) => {
+      try {
+        const { eventId } = req.params;
+        
+        const result = await db
+          .select({
+            showPublicSchedules: events.showPublicSchedules,
+            showPublicStandings: events.showPublicStandings,
+          })
+          .from(events)
+          .where(eq(events.id, eventId))
+          .limit(1);
+        
+        if (result.length === 0) {
+          return res.status(404).json({ error: 'Event not found' });
+        }
+        
+        res.json(result[0]);
+      } catch (error) {
+        console.error('Error fetching visibility settings:', error);
+        res.status(500).json({ error: 'Failed to fetch visibility settings' });
+      }
+    });
+
+    app.put('/api/admin/events/:eventId/visibility-settings', isAdmin, async (req, res) => {
+      try {
+        const { eventId } = req.params;
+        const { showPublicSchedules, showPublicStandings } = req.body;
+        
+        const updateData: any = {
+          updatedAt: new Date().toISOString(),
+        };
+        
+        if (showPublicSchedules !== undefined) {
+          updateData.showPublicSchedules = showPublicSchedules;
+        }
+        
+        if (showPublicStandings !== undefined) {
+          updateData.showPublicStandings = showPublicStandings;
+        }
+        
+        const result = await db
+          .update(events)
+          .set(updateData)
+          .where(eq(events.id, eventId))
+          .returning({
+            showPublicSchedules: events.showPublicSchedules,
+            showPublicStandings: events.showPublicStandings,
+          });
+        
+        if (result.length === 0) {
+          return res.status(404).json({ error: 'Event not found' });
+        }
+        
+        res.json({
+          success: true,
+          settings: result[0]
+        });
+      } catch (error) {
+        console.error('Error updating visibility settings:', error);
+        res.status(500).json({ error: 'Failed to update visibility settings' });
+      }
+    });
+
     // Use events router for all admin event operations
     app.use('/api/admin/events', isAdmin, eventsRouter);
     app.use('/api/admin/manager-reports', isAdmin, managerReportsRouter);
