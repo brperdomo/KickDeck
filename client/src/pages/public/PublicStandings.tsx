@@ -37,6 +37,8 @@ interface AgeGroupStandings {
   gender: string;
   birthYear: number;
   divisionCode: string;
+  bracketId?: number;
+  flightName?: string;
   displayName: string;
   teamCount: number;
   standings: TeamStanding[];
@@ -74,9 +76,11 @@ interface StandingsData {
     girls: AgeGroupStandings[];
     coed: AgeGroupStandings[];
   };
-  totalAgeGroups: number;
+  totalAgeGroups?: number;
+  totalFlightGroups?: number;
   totalTeams: number;
   lastUpdated: string;
+  flightAware?: boolean;
 }
 
 const PublicStandings = () => {
@@ -85,6 +89,7 @@ const PublicStandings = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeGender, setActiveGender] = useState('boys');
+  const [isFlightAware, setIsFlightAware] = useState(false);
 
   useEffect(() => {
     const loadStandings = async () => {
@@ -94,12 +99,31 @@ const PublicStandings = () => {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(`/api/public/standings/${eventId}`);
-        if (!response.ok) {
-          throw new Error('Failed to load standings data');
+        // Try flight-aware API first for CSV tournaments
+        let response = await fetch(`/api/public/standings-flight-aware/${eventId}`);
+        let data;
+        let flightAware = false;
+
+        if (response.ok) {
+          data = await response.json();
+          if (data.success && data.totalFlightGroups > 0) {
+            flightAware = true;
+            setIsFlightAware(true);
+            console.log(`Using flight-aware standings: ${data.totalFlightGroups} flights with ${data.totalTeams} teams`);
+          }
         }
 
-        const data = await response.json();
+        // Fallback to regular standings API if flight-aware failed or has no data
+        if (!flightAware) {
+          response = await fetch(`/api/public/standings/${eventId}`);
+          if (!response.ok) {
+            throw new Error('Failed to load standings data');
+          }
+          data = await response.json();
+          setIsFlightAware(false);
+          console.log(`Using regular standings: ${data.totalAgeGroups} age groups with ${data.totalTeams} teams`);
+        }
+
         setStandingsData(data);
 
         // Set initial active gender to first available gender with data
@@ -167,7 +191,7 @@ const PublicStandings = () => {
 
   if (!standingsData) return null;
 
-  const { eventInfo, scoringRules, standingsByGender, totalAgeGroups, totalTeams } = standingsData;
+  const { eventInfo, scoringRules, standingsByGender, totalAgeGroups, totalFlightGroups, totalTeams } = standingsData;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
@@ -186,8 +210,13 @@ const PublicStandings = () => {
             </div>
             <div className="flex items-center gap-1">
               <Users className="h-4 w-4" />
-              {totalTeams} Teams in {totalAgeGroups} Divisions
+              {totalTeams} Teams in {isFlightAware ? totalFlightGroups : totalAgeGroups} {isFlightAware ? 'Flights' : 'Divisions'}
             </div>
+            {isFlightAware && (
+              <Badge variant="outline" className="ml-2">
+                Flight-Aware Championships
+              </Badge>
+            )}
           </div>
         </div>
 

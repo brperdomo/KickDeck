@@ -70,6 +70,7 @@ import gameScoreManagementRouter from "./routes/admin/game-score-management-fixe
 import gameScoreManagementSimpleRouter from './routes/admin/game-score-management-simple';
 import publicSchedulesFixedRouter from './routes/public/schedules-fixed';
 import publicStandingsRouter from './routes/public/standings';
+import flightAwareStandingsRouter from './routes/public/standings-flight-aware';
 import empireFixRouter from './routes/public/empire-fix';
 import empireScheduleFixRouter from './routes/public/empire-schedule-fix';
 import adminScoringRulesRouter from './routes/admin/scoring-rules';
@@ -991,6 +992,7 @@ export function registerRoutes(app: Express): Server {
     app.use('/api/public/games', publicGamesRouter);
     app.use('/api/public/game-cards', publicGameCardsRouter);
     app.use('/api/public/standings', publicStandingsRouter);
+    app.use('/api/public/standings-flight-aware', flightAwareStandingsRouter); // Flight-aware standings for CSV tournaments
     app.use('/api/public/schedules', publicSchedulesFixedRouter);
     app.use('/api/public', empireFixRouter); // Empire Super Cup dedicated fix
     app.use('/api/public', empireScheduleFixRouter); // Empire Super Cup schedule fix
