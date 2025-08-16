@@ -406,11 +406,11 @@ router.post('/csv-import/preview', isAdmin, upload.single('csvFile'), async (req
       ageGroupAnalysis: await ageGroupAnalysis,
       gameMetadata: {
         totalGames: csvData.length,
-        gameTypes: [...new Set(csvData.map(r => r.Type || 'Unknown').filter(Boolean))],
-        statuses: [...new Set(csvData.map(r => r.Status).filter(Boolean))],
-        complexes: [...new Set(csvData.map(r => r.Complex).filter(Boolean))],
-        flights: [...new Set(csvData.map(r => r.Flight).filter(Boolean))],
-        divisions: [...new Set(csvData.map(r => r.Division).filter(Boolean))]
+        gameTypes: Array.from(new Set(csvData.map(r => r.Type || 'Unknown').filter(Boolean))),
+        statuses: Array.from(new Set(csvData.map(r => r.Status).filter(Boolean))),
+        complexes: Array.from(new Set(csvData.map(r => r.Complex).filter(Boolean))),
+        flights: Array.from(new Set(csvData.map(r => r.Flight).filter(Boolean))),
+        divisions: Array.from(new Set(csvData.map(r => r.Division).filter(Boolean)))
       }
     };
 
@@ -549,17 +549,13 @@ router.post('/csv-import/execute', isAdmin, upload.single('csvFile'), async (req
     
     for (const ageGroupName of uniqueAgeGroups) {
       const existingAgeGroup = await db.query.eventAgeGroups.findFirst({
-        where: and(
-          eq(eventAgeGroups.eventId, eventId.toString()),
-          eq(eventAgeGroups.ageGroup, ageGroupName)
-        )
+        where: eq(eventAgeGroups.ageGroup, ageGroupName)
       });
       
       if (existingAgeGroup) {
         ageGroupIdMap[ageGroupName] = existingAgeGroup.id;
       } else {
         const [newAgeGroup] = await db.insert(eventAgeGroups).values({
-          eventId: eventId.toString(),
           ageGroup: ageGroupName,
           gender: 'Mixed',
           minAge: 10,
@@ -584,10 +580,7 @@ router.post('/csv-import/execute', isAdmin, upload.single('csvFile'), async (req
 
       for (const teamName of uniqueTeamNames) {
         const existingTeam = await db.query.teams.findFirst({
-          where: and(
-            eq(teams.eventId, eventId.toString()),
-            ilike(teams.name, teamName)
-          )
+          where: ilike(teams.name, teamName)
         });
         
         if (existingTeam) {
@@ -604,7 +597,6 @@ router.post('/csv-import/execute', isAdmin, upload.single('csvFile'), async (req
             if (ageGroupId) {
               const [newTeam] = await db.insert(teams).values({
                 name: teamName,
-                eventId: eventId.toString(),
                 ageGroupId,
                 status: 'approved',
                 paymentStatus: 'paid',
@@ -663,18 +655,12 @@ router.post('/csv-import/execute', isAdmin, upload.single('csvFile'), async (req
         
         const homeTeamId = teamIdMap[homeTeamName] ||
           (await db.query.teams.findFirst({
-            where: and(
-              eq(teams.eventId, eventId.toString()),
-              ilike(teams.name, homeTeamName)
-            )
+            where: ilike(teams.name, homeTeamName)
           }))?.id;
 
         const awayTeamId = teamIdMap[awayTeamName] ||
           (await db.query.teams.findFirst({
-            where: and(
-              eq(teams.eventId, eventId.toString()),
-              ilike(teams.name, awayTeamName)
-            )
+            where: ilike(teams.name, awayTeamName)
           }))?.id;
 
         if (!homeTeamId) {
@@ -700,10 +686,7 @@ router.post('/csv-import/execute', isAdmin, upload.single('csvFile'), async (req
         // Try database lookup if not in cache
         if (!ageGroupId && ageGroupName) {
           const existingAgeGroup = await db.query.eventAgeGroups.findFirst({
-            where: and(
-              eq(eventAgeGroups.eventId, eventId.toString()),
-              eq(eventAgeGroups.ageGroup, ageGroupName)
-            )
+            where: eq(eventAgeGroups.ageGroup, ageGroupName)
           });
           ageGroupId = existingAgeGroup?.id;
         }
@@ -721,7 +704,6 @@ router.post('/csv-import/execute', isAdmin, upload.single('csvFile'), async (req
 
         // Create time slot
         const [timeSlot] = await db.insert(gameTimeSlots).values({
-          eventId: eventId.toString(),
           dayIndex: 0, // Will be calculated properly
           startTime: gameDateTime.toISOString(),
           endTime: gameEndTime.toISOString(),
@@ -755,11 +737,10 @@ router.post('/csv-import/execute', isAdmin, upload.single('csvFile'), async (req
         
         // Create game with enhanced tournament data
         const [newGame] = await db.insert(games).values({
-          eventId: eventId.toString(),
-          ageGroupId,
+          ageGroupId: ageGroupId!,
           homeTeamId,
           awayTeamId,
-          fieldId,
+          fieldId: fieldId!,
           timeSlotId: timeSlot.id,
           status: gameStatus.toLowerCase() === 'on time' ? 'scheduled' : 'postponed',
           round: 1,
