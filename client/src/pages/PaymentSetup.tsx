@@ -180,17 +180,31 @@ export default function PaymentSetup() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
-        {/* Team Information Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Complete Payment Setup
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      {/* MatchPro Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">M</span>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">MatchPro</h1>
+            <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">Payment Center</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-center p-6">
+        <div className="w-full max-w-md space-y-6">
+          {/* Team Information Card */}
+          <Card className="shadow-lg border-0">
+            <CardHeader className="bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-t-lg">
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5" />
+                Complete Payment Setup
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
             <div className="space-y-3">
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="text-sm">
@@ -224,17 +238,26 @@ export default function PaymentSetup() {
           </CardContent>
         </Card>
 
-        {/* Payment Form */}
-        <StripeProvider>
-          <PaymentForm
-            amount={teamInfo.totalAmount}
-            onSuccess={handlePaymentSuccess}
-            isProcessing={isProcessing}
-            setIsProcessing={setIsProcessing}
-            teamId={teamInfo.id}
-            description={`Registration payment for ${teamInfo.name}`}
-          />
-        </StripeProvider>
+          {/* Payment Form */}
+          <StripeProvider>
+            <div className="bg-white rounded-lg shadow-lg">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-t-lg">
+                <h3 className="font-semibold">Secure Payment Processing</h3>
+                <p className="text-sm opacity-90">Your payment information is encrypted and secure</p>
+              </div>
+              <div className="p-1">
+                <PaymentForm
+                  amount={teamInfo.totalAmount}
+                  onSuccess={handlePaymentSuccess}
+                  isProcessing={isProcessing}
+                  setIsProcessing={setIsProcessing}
+                  teamId={teamInfo.id}
+                  description={`Registration payment for ${teamInfo.name}`}
+                />
+              </div>
+            </div>
+          </StripeProvider>
+        </div>
       </div>
     </div>
   );
