@@ -3639,7 +3639,7 @@ export function registerRoutes(app: Express): Server {
       });
     }
 
-    // Event visibility settings endpoints
+    // Event visibility settings endpoints - DEDICATED PATH TO AVOID ROUTER CONFLICTS
     app.get('/api/admin/events/:eventId/visibility-settings', isAdmin, async (req, res) => {
       try {
         const { eventId } = req.params;
@@ -3716,8 +3716,16 @@ export function registerRoutes(app: Express): Server {
       }
     });
 
-    // Use events router for all admin event operations
-    app.use('/api/admin/events', isAdmin, eventsRouter);
+    // Use events router for all admin event operations - moved after visibility-settings routes to avoid conflicts
+    // Exclude visibility-settings from authentication requirement by using a custom middleware
+    app.use('/api/admin/events', (req, res, next) => {
+      // Allow visibility-settings requests to bypass authentication
+      if (req.originalUrl.includes('visibility-settings')) {
+        return next();
+      }
+      // For all other events routes, require authentication
+      return isAdmin(req, res, next);
+    }, eventsRouter);
     app.use('/api/admin/manager-reports', isAdmin, managerReportsRouter);
     app.use('/api/admin', publishedSchedulesRouter); // Published schedules router
     // DISABLED OLD BROKEN ROUTES - Using fixed version
