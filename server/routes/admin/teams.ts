@@ -7,13 +7,13 @@ import { eq, and, sql, desc, asc, like, or } from 'drizzle-orm';
 export async function updateGameScore(req: Request, res: Response) {
   try {
     const gameId = parseInt(req.params.gameId);
-    const { homeTeamScore, awayTeamScore } = req.body;
+    const { homeScore, awayScore } = req.body;
     
     if (isNaN(gameId)) {
       return res.status(400).json({ error: 'Invalid game ID' });
     }
 
-    if (typeof homeTeamScore !== 'number' || typeof awayTeamScore !== 'number') {
+    if (typeof homeScore !== 'number' || typeof awayScore !== 'number') {
       return res.status(400).json({ error: 'Invalid score values' });
     }
 
@@ -21,8 +21,8 @@ export async function updateGameScore(req: Request, res: Response) {
     const [updatedGame] = await db
       .update(games)
       .set({
-        homeScore: homeTeamScore,
-        awayScore: awayTeamScore,
+        homeScore: homeScore,
+        awayScore: awayScore,
         status: 'completed',
         updatedAt: new Date().toISOString(),
       })
@@ -57,16 +57,17 @@ export async function getTeamsOverview(req: Request, res: Response) {
       .select({
         id: teams.id,
         name: teams.name,
-        ageGroup: teams.ageGroup,
-        gender: teams.gender,
+        ageGroupId: teams.ageGroupId,
+        ageGroup: eventAgeGroups.ageGroup,
         status: teams.status,
-        coachName: teams.coachName,
+        coach: teams.coach,
         bracketId: teams.bracketId,
         flightName: eventBrackets.name,
       })
       .from(teams)
       .leftJoin(eventBrackets, eq(teams.bracketId, eventBrackets.id))
-      .where(eq(teams.eventId, eventId))
+      .leftJoin(eventAgeGroups, eq(teams.ageGroupId, eventAgeGroups.id))
+      .where(eq(teams.eventId, eventId.toString()))
       .orderBy(asc(teams.name));
 
     // Get game statistics for each team
@@ -79,23 +80,23 @@ export async function getTeamsOverview(req: Request, res: Response) {
         END`.as('teamId'),
         gamesPlayed: sql<number>`COUNT(*)`.as('gamesPlayed'),
         wins: sql<number>`SUM(CASE 
-          WHEN (${games.homeTeamId} = ${teams.id} AND ${games.homeTeamScore} > ${games.awayTeamScore}) 
-            OR (${games.awayTeamId} = ${teams.id} AND ${games.awayTeamScore} > ${games.homeTeamScore})
+          WHEN (${games.homeTeamId} = ${teams.id} AND ${games.homeScore} > ${games.awayScore}) 
+            OR (${games.awayTeamId} = ${teams.id} AND ${games.awayScore} > ${games.homeScore})
           THEN 1 ELSE 0 END)`.as('wins'),
         losses: sql<number>`SUM(CASE 
-          WHEN (${games.homeTeamId} = ${teams.id} AND ${games.homeTeamScore} < ${games.awayTeamScore}) 
-            OR (${games.awayTeamId} = ${teams.id} AND ${games.awayTeamScore} < ${games.homeTeamScore})
+          WHEN (${games.homeTeamId} = ${teams.id} AND ${games.homeScore} < ${games.awayScore}) 
+            OR (${games.awayTeamId} = ${teams.id} AND ${games.awayScore} < ${games.homeScore})
           THEN 1 ELSE 0 END)`.as('losses'),
         ties: sql<number>`SUM(CASE 
-          WHEN ${games.homeTeamScore} = ${games.awayTeamScore} AND ${games.homeTeamScore} IS NOT NULL
+          WHEN ${games.homeScore} = ${games.awayScore} AND ${games.homeScore} IS NOT NULL
           THEN 1 ELSE 0 END)`.as('ties'),
         goalsFor: sql<number>`SUM(CASE 
-          WHEN ${games.homeTeamId} = ${teams.id} THEN COALESCE(${games.homeTeamScore}, 0)
-          WHEN ${games.awayTeamId} = ${teams.id} THEN COALESCE(${games.awayTeamScore}, 0)
+          WHEN ${games.homeTeamId} = ${teams.id} THEN COALESCE(${games.homeScore}, 0)
+          WHEN ${games.awayTeamId} = ${teams.id} THEN COALESCE(${games.awayScore}, 0)
           ELSE 0 END)`.as('goalsFor'),
         goalsAgainst: sql<number>`SUM(CASE 
-          WHEN ${games.homeTeamId} = ${teams.id} THEN COALESCE(${games.awayTeamScore}, 0)
-          WHEN ${games.awayTeamId} = ${teams.id} THEN COALESCE(${games.homeTeamScore}, 0)
+          WHEN ${games.homeTeamId} = ${teams.id} THEN COALESCE(${games.awayScore}, 0)
+          WHEN ${games.awayTeamId} = ${teams.id} THEN COALESCE(${games.homeScore}, 0)
           ELSE 0 END)`.as('goalsAgainst'),
         totalGames: sql<number>`COUNT(*)`.as('totalGames'),
       })
@@ -103,8 +104,8 @@ export async function getTeamsOverview(req: Request, res: Response) {
       .innerJoin(teams, sql`${teams.id} IN (${games.homeTeamId}, ${games.awayTeamId})`)
       .where(
         and(
-          eq(teams.eventId, eventId),
-          sql`${games.homeTeamScore} IS NOT NULL AND ${games.awayTeamScore} IS NOT NULL`
+          eq(teams.eventId, eventId.toString()),
+          sql`${games.homeScore} IS NOT NULL AND ${games.awayScore} IS NOT NULL`
         )
       )
       .groupBy(teams.id);
@@ -121,7 +122,7 @@ export async function getTeamsOverview(req: Request, res: Response) {
       })
       .from(games)
       .innerJoin(teams, sql`${teams.id} IN (${games.homeTeamId}, ${games.awayTeamId})`)
-      .where(eq(teams.eventId, eventId))
+      .where(eq(teams.eventId, eventId.toString()))
       .groupBy(teams.id);
 
     // Combine team data with statistics
@@ -179,14 +180,12 @@ export async function getTeamsOverview(req: Request, res: Response) {
       });
     });
 
-    // Get unique age groups and genders for filtering
+    // Get unique age groups for filtering
     const ageGroups = [...new Set(teamsData.map(team => team.ageGroup))].filter(Boolean);
-    const genders = [...new Set(teamsData.map(team => team.gender))].filter(Boolean);
 
     res.json({
       teams: teamsWithStats,
       ageGroups,
-      genders,
     });
   } catch (error) {
     console.error('Error fetching teams overview:', error);
@@ -209,17 +208,18 @@ export async function getTeamDetail(req: Request, res: Response) {
       .select({
         id: teams.id,
         name: teams.name,
-        ageGroup: teams.ageGroup,
-        gender: teams.gender,
+        ageGroupId: teams.ageGroupId,
+        ageGroup: eventAgeGroups.ageGroup,
         status: teams.status,
-        coachName: teams.coachName,
+        coach: teams.coach,
         bracketId: teams.bracketId,
         groupId: teams.groupId,
         flightName: eventBrackets.name,
       })
       .from(teams)
       .leftJoin(eventBrackets, eq(teams.bracketId, eventBrackets.id))
-      .where(and(eq(teams.id, teamId), eq(teams.eventId, eventId)))
+      .leftJoin(eventAgeGroups, eq(teams.ageGroupId, eventAgeGroups.id))
+      .where(and(eq(teams.id, teamId), eq(teams.eventId, eventId.toString())))
       .limit(1);
 
     if (teamInfo.length === 0) {
@@ -237,8 +237,8 @@ export async function getTeamDetail(req: Request, res: Response) {
         field: games.field,
         homeTeamId: games.homeTeamId,
         awayTeamId: games.awayTeamId,
-        homeTeamScore: games.homeTeamScore,
-        awayTeamScore: games.awayTeamScore,
+        homeScore: games.homeScore,
+        awayScore: games.awayScore,
         status: games.status,
         homeTeamName: sql<string>`ht.name`.as('homeTeamName'),
         awayTeamName: sql<string>`at.name`.as('awayTeamName'),
@@ -261,8 +261,8 @@ export async function getTeamDetail(req: Request, res: Response) {
       time: game.time,
       field: game.field,
       opponent: game.homeTeamId === teamId ? game.awayTeamName : game.homeTeamName,
-      homeTeamScore: game.homeTeamScore,
-      awayTeamScore: game.awayTeamScore,
+      homeScore: game.homeScore,
+      awayScore: game.awayScore,
       status: game.status || 'scheduled',
       isHomeTeam: game.homeTeamId === teamId,
       homeTeamId: game.homeTeamId,
@@ -274,25 +274,25 @@ export async function getTeamDetail(req: Request, res: Response) {
       .select({
         teamId: teams.id,
         teamName: teams.name,
-        gamesPlayed: sql<number>`COUNT(CASE WHEN ${games.homeTeamScore} IS NOT NULL AND ${games.awayTeamScore} IS NOT NULL THEN 1 END)`.as('gamesPlayed'),
+        gamesPlayed: sql<number>`COUNT(CASE WHEN ${games.homeScore} IS NOT NULL AND ${games.awayScore} IS NOT NULL THEN 1 END)`.as('gamesPlayed'),
         wins: sql<number>`SUM(CASE 
-          WHEN (${games.homeTeamId} = ${teams.id} AND ${games.homeTeamScore} > ${games.awayTeamScore}) 
-            OR (${games.awayTeamId} = ${teams.id} AND ${games.awayTeamScore} > ${games.homeTeamScore})
+          WHEN (${games.homeTeamId} = ${teams.id} AND ${games.homeScore} > ${games.awayScore}) 
+            OR (${games.awayTeamId} = ${teams.id} AND ${games.awayScore} > ${games.homeScore})
           THEN 1 ELSE 0 END)`.as('wins'),
         losses: sql<number>`SUM(CASE 
-          WHEN (${games.homeTeamId} = ${teams.id} AND ${games.homeTeamScore} < ${games.awayTeamScore}) 
-            OR (${games.awayTeamId} = ${teams.id} AND ${games.awayTeamScore} < ${games.homeTeamScore})
+          WHEN (${games.homeTeamId} = ${teams.id} AND ${games.homeScore} < ${games.awayScore}) 
+            OR (${games.awayTeamId} = ${teams.id} AND ${games.awayScore} < ${games.homeScore})
           THEN 1 ELSE 0 END)`.as('losses'),
         ties: sql<number>`SUM(CASE 
-          WHEN ${games.homeTeamScore} = ${games.awayTeamScore} AND ${games.homeTeamScore} IS NOT NULL
+          WHEN ${games.homeScore} = ${games.awayScore} AND ${games.homeScore} IS NOT NULL
           THEN 1 ELSE 0 END)`.as('ties'),
         goalsFor: sql<number>`SUM(CASE 
-          WHEN ${games.homeTeamId} = ${teams.id} THEN COALESCE(${games.homeTeamScore}, 0)
-          WHEN ${games.awayTeamId} = ${teams.id} THEN COALESCE(${games.awayTeamScore}, 0)
+          WHEN ${games.homeTeamId} = ${teams.id} THEN COALESCE(${games.homeScore}, 0)
+          WHEN ${games.awayTeamId} = ${teams.id} THEN COALESCE(${games.awayScore}, 0)
           ELSE 0 END)`.as('goalsFor'),
         goalsAgainst: sql<number>`SUM(CASE 
-          WHEN ${games.homeTeamId} = ${teams.id} THEN COALESCE(${games.awayTeamScore}, 0)
-          WHEN ${games.awayTeamId} = ${teams.id} THEN COALESCE(${games.homeTeamScore}, 0)
+          WHEN ${games.homeTeamId} = ${teams.id} THEN COALESCE(${games.awayScore}, 0)
+          WHEN ${games.awayTeamId} = ${teams.id} THEN COALESCE(${games.homeScore}, 0)
           ELSE 0 END)`.as('goalsAgainst'),
       })
       .from(teams)
@@ -392,8 +392,8 @@ export async function exportTeamSchedule(req: Request, res: Response) {
         field: games.field,
         homeTeamId: games.homeTeamId,
         awayTeamId: games.awayTeamId,
-        homeTeamScore: games.homeTeamScore,
-        awayTeamScore: games.awayTeamScore,
+        homeScore: games.homeScore,
+        awayScore: games.awayScore,
         status: games.status,
         homeTeamName: sql<string>`ht.name`.as('homeTeamName'),
         awayTeamName: sql<string>`at.name`.as('awayTeamName'),
@@ -416,8 +416,8 @@ export async function exportTeamSchedule(req: Request, res: Response) {
         const isHome = game.homeTeamId === teamId;
         const opponent = isHome ? game.awayTeamName : game.homeTeamName;
         const homeAway = isHome ? 'Home' : 'Away';
-        const score = game.homeTeamScore !== null && game.awayTeamScore !== null
-          ? `${isHome ? game.homeTeamScore : game.awayTeamScore}-${isHome ? game.awayTeamScore : game.homeTeamScore}`
+        const score = game.homeScore !== null && game.awayScore !== null
+          ? `${isHome ? game.homeScore : game.awayScore}-${isHome ? game.awayScore : game.homeScore}`
           : 'TBD';
         
         return `${game.id},"${game.date}","${game.time}","${game.field}","${opponent}","${homeAway}","${score}","${game.status || 'scheduled'}"`;
@@ -444,8 +444,8 @@ export async function exportTeamSchedule(req: Request, res: Response) {
         const isHome = game.homeTeamId === teamId;
         const opponent = isHome ? game.awayTeamName : game.homeTeamName;
         const homeAway = isHome ? 'vs' : '@';
-        const score = game.homeTeamScore !== null && game.awayTeamScore !== null
-          ? `${isHome ? game.homeTeamScore : game.awayTeamScore}-${isHome ? game.awayTeamScore : game.homeTeamScore}`
+        const score = game.homeScore !== null && game.awayScore !== null
+          ? `${isHome ? game.homeScore : game.awayScore}-${isHome ? game.awayScore : game.homeScore}`
           : 'TBD';
         
         content += `${game.date} ${game.time} - ${game.field}\n`;

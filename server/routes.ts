@@ -1102,7 +1102,7 @@ export function registerRoutes(app: Express): Server {
     app.use('/api/admin/teams', isAdmin, teamsRouter); // Team management router
     
     // Import and register team management routes for Master Schedule
-    import('./routes/admin/teams.js').then(({ getTeamsOverview, getTeamDetail, exportTeamSchedule, updateGameScore }) => {
+    import('./routes/admin/teams-simple.js').then(({ getTeamsOverview, getTeamDetail, exportTeamSchedule, updateGameScore }) => {
       app.get('/api/admin/events/:eventId/teams/overview', isAdmin, getTeamsOverview);
       app.get('/api/admin/teams/:teamId/detail', isAdmin, getTeamDetail);
       app.get('/api/admin/teams/:teamId/export', isAdmin, exportTeamSchedule);
