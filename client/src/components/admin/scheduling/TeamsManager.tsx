@@ -45,10 +45,20 @@ export default function TeamsManager({ eventId }: TeamsManagerProps) {
 
   const { data: teamsData, isLoading, error } = useQuery({
     queryKey: ['teams-manager', eventId],
-    queryFn: async (): Promise<{ teams: TeamData[], ageGroups: string[], genders: string[] }> => {
-      const response = await fetch(`/api/admin/events/${eventId}/teams/overview`);
-      if (!response.ok) throw new Error('Failed to fetch teams data');
-      return response.json();
+    queryFn: async (): Promise<{ teams: TeamData[], ageGroups: string[] }> => {
+      const response = await fetch(`/api/admin/events/${eventId}/teams/overview`, {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to fetch teams data`);
+      }
+      const data = await response.json();
+      // Ensure we always return the expected structure
+      return {
+        teams: data.teams || [],
+        ageGroups: data.ageGroups || []
+      };
     },
   });
 
@@ -60,7 +70,7 @@ export default function TeamsManager({ eventId }: TeamsManagerProps) {
       const matchesSearch = team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            team.coachName?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesAgeGroup = ageGroupFilter === 'all' || team.ageGroup === ageGroupFilter;
-      const matchesGender = genderFilter === 'all' || team.gender === genderFilter;
+      const matchesGender = genderFilter === 'all';
       
       return matchesSearch && matchesAgeGroup && matchesGender;
     });
@@ -121,6 +131,19 @@ export default function TeamsManager({ eventId }: TeamsManagerProps) {
       <div className="text-center py-8">
         <AlertTriangle className="h-8 w-8 text-red-400 mx-auto mb-4" />
         <p className="text-red-200">Failed to load teams data</p>
+        <p className="text-red-300 text-sm mt-2">
+          {error.message.includes('Authentication') ? 
+            'Please ensure you are logged in as an admin user.' : 
+            error.message
+          }
+        </p>
+        <Button 
+          onClick={() => window.location.reload()} 
+          className="mt-4 bg-purple-600 hover:bg-purple-700"
+        >
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Retry
+        </Button>
       </div>
     );
   }
@@ -208,9 +231,7 @@ export default function TeamsManager({ eventId }: TeamsManagerProps) {
                 className="w-full p-2 rounded-md bg-black/50 border border-purple-400/30 text-white"
               >
                 <option value="all">All Genders</option>
-                {teamsData?.genders.map(gender => (
-                  <option key={gender} value={gender}>{gender}</option>
-                ))}
+
               </select>
             </div>
             <div>
