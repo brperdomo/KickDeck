@@ -184,7 +184,7 @@ router.post('/retry/:teamId', async (req: Request, res: Response) => {
     
     console.log(`RETRY PAYMENT: chargeApprovedTeam result for team ${teamId}:`, result);
     
-    if (result === 'payment_successful') {
+    if (result && typeof result === 'object' && result.success) {
       // Log successful retry
       await db.insert(paymentTransactions).values({
         teamId: teamId,
@@ -214,7 +214,7 @@ router.post('/retry/:teamId', async (req: Request, res: Response) => {
       });
       
       res.status(500).json({ 
-        error: `Payment retry failed: ${result}`,
+        error: `Payment retry failed: ${typeof result === 'string' ? result : 'Unknown error'}`,
         paymentStatus: 'failed'
       });
     }

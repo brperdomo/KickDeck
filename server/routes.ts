@@ -10548,6 +10548,21 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
       try {
         const teamId = parseInt(req.params.teamId);
         
+        if (!teamId || isNaN(teamId)) {
+          return res.status(400).json({ error: "Invalid team ID" });
+        }
+        
+        // Check if team exists first
+        const [team] = await db
+          .select({ id: teams.id, name: teams.name })
+          .from(teams)
+          .where(eq(teams.id, teamId))
+          .limit(1);
+        
+        if (!team) {
+          return res.status(404).json({ error: "Team not found" });
+        }
+        
         const submissions = await db
           .select({
             id: formResponses.id,
@@ -10565,12 +10580,17 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         
         res.json({
           success: true,
-          submissions: submissions
+          submissions: submissions || [],
+          teamName: team.name,
+          message: submissions.length === 0 ? "No form submissions found for this team" : undefined
         });
         
       } catch (error) {
         console.error('Error fetching team form submissions:', error);
-        res.status(500).json({ error: "Failed to fetch team form submissions" });
+        res.status(500).json({ 
+          error: "Failed to fetch team form submissions",
+          details: error instanceof Error ? error.message : "Unknown error"
+        });
       }
     });
 
