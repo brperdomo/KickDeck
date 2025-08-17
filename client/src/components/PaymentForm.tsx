@@ -34,6 +34,9 @@ export default function PaymentForm({
 
   // Create a payment intent when the component loads
   useEffect(() => {
+    // Prevent duplicate intent creation if we already have one
+    if (clientSecret || paymentIntentId) return;
+    
     const createIntent = async () => {
       if (amount <= 0) return;
 
@@ -94,7 +97,7 @@ export default function PaymentForm({
     };
 
     createIntent();
-  }, [amount, description, teamId, eventId, ageGroupId, onSuccess]);
+  }, [amount, description, teamId, eventId, ageGroupId, clientSecret, paymentIntentId]);
 
   // Track if the form has been submitted to prevent multiple submissions
   const [isSubmitted, setIsSubmitted] = useState(false);

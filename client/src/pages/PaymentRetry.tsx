@@ -28,25 +28,21 @@ export default function PaymentRetry() {
 
   const teamId = params?.teamId ? parseInt(params.teamId) : null;
 
-  useEffect(() => {
+  const fetchTeamInfo = async () => {
     if (!teamId) {
       setError('Invalid team ID');
       setLoading(false);
       return;
     }
-
-    fetchTeamInfo();
-  }, [teamId]);
-
-  const fetchTeamInfo = async () => {
+    
     try {
       setLoading(true);
       const response = await fetch(`/api/teams/${teamId}/payment-info`);
       
       if (!response.ok) {
-        throw new Error('Team not found or payment info unavailable');
+        throw new Error('Failed to fetch team information');
       }
-      
+
       const data = await response.json();
       setTeamInfo(data);
     } catch (err) {
@@ -55,6 +51,10 @@ export default function PaymentRetry() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchTeamInfo();
+  }, [teamId]);
 
   const handlePaymentSuccess = async (paymentIntentId: string) => {
     try {
@@ -180,14 +180,31 @@ export default function PaymentRetry() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
-        {/* Team Information Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Payment Retry Required</CardTitle>
-          </CardHeader>
-          <CardContent>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      {/* MatchPro Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">M</span>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">MatchPro</h1>
+            <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">Payment Center</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-center p-6">
+        <div className="w-full max-w-md space-y-6">
+          {/* Team Information Card */}
+          <Card className="shadow-lg border-0">
+            <CardHeader className="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-t-lg">
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                Payment Retry Required
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
             <div className="space-y-3">
               <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <div className="text-sm">
@@ -226,17 +243,26 @@ export default function PaymentRetry() {
           </CardContent>
         </Card>
 
-        {/* Payment Form */}
-        <StripeProvider>
-          <PaymentForm
-            amount={teamInfo.totalAmount}
-            onSuccess={handlePaymentSuccess}
-            isProcessing={isProcessing}
-            setIsProcessing={setIsProcessing}
-            teamId={teamInfo.id}
-            description={`Payment retry for ${teamInfo.name}`}
-          />
-        </StripeProvider>
+          {/* Payment Form */}
+          <StripeProvider>
+            <div className="bg-white rounded-lg shadow-lg">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-t-lg">
+                <h3 className="font-semibold">Secure Payment Processing</h3>
+                <p className="text-sm opacity-90">Your payment information is encrypted and secure</p>
+              </div>
+              <div className="p-1">
+                <PaymentForm
+                  amount={teamInfo.totalAmount}
+                  onSuccess={handlePaymentSuccess}
+                  isProcessing={isProcessing}
+                  setIsProcessing={setIsProcessing}
+                  teamId={teamInfo.id}
+                  description={`Payment retry for ${teamInfo.name}`}
+                />
+              </div>
+            </div>
+          </StripeProvider>
+        </div>
       </div>
     </div>
   );
