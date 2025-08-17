@@ -8,7 +8,8 @@ export const isAdmin = async (req: Request, res: Response, next: NextFunction) =
     'tbd-games', 'assign-fields', 'assign-field', 'format-templates', 
     'matchup-templates', 'tournament-format', 'field-configurations',
     'ai-assistant/chat', 'ai-chat', '/ai-chat', 'scheduling-readiness', 'flight-status',
-    'csv-import', 'csv-upload', 'schedule-viewer', 'master-schedule', 'games'
+    'csv-import', 'csv-upload', 'schedule-viewer', 'master-schedule', 'games',
+    'visibility-settings', 'published-schedules', 'publish-schedules', 'visibility'
   ];
   
   const fullPath = req.originalUrl || req.path;
