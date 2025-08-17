@@ -17,6 +17,12 @@ MatchPro AI is a comprehensive sports event management platform designed for tou
 - Impact: Admin dashboard now shows all 880 approved teams instead of just 100
 - Status: ✅ RESOLVED - Server restarted with fix applied
 
+### Issue 3: Teams missing relationship data (Event and Age Group showing "N/A")
+- Root cause: `teams-simple.ts` only returned basic team data without JOIN queries
+- Fix: Updated getTeams function to include proper LEFT JOIN operations for events, age groups, and clubs
+- Impact: Teams now display complete Event name, Age Group, and Gender information from registration
+- Status: ✅ RESOLVED - Server restarted with comprehensive relationship data fix
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 

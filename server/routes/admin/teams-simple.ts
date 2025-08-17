@@ -176,11 +176,82 @@ export async function exportTeamSchedule(req: Request, res: Response) {
 // Basic placeholder functions for team management
 export async function getTeams(req: Request, res: Response) {
   try {
-    // FIXED: Remove the hardcoded limit(100) that was limiting results to 100 teams
-    // Now returns all teams instead of just 100
-    const teamsList = await db.select().from(teams);
-    console.log(`getTeams function returning ${teamsList.length} teams (limit removed)`);
-    res.json(teamsList);
+    const { eventId, ageGroupId, status } = req.query;
+    
+    console.log('Teams-simple getTeams called with:', { eventId, ageGroupId, status });
+    
+    // Import required schemas for proper joins
+    const { teams, eventAgeGroups, clubs, events, players } = await import('@db/schema');
+    const { eq, and, sql } = await import('drizzle-orm');
+
+    let whereConditions = [];
+
+    // Add event filter if specified - only add if NOT 'all'
+    if (eventId && eventId !== 'all' && !isNaN(Number(eventId))) {
+      console.log('Adding event filter for eventId:', eventId);
+      whereConditions.push(eq(teams.eventId, Number(eventId)));
+    }
+
+    // Add age group filter if specified
+    if (ageGroupId && !isNaN(Number(ageGroupId))) {
+      console.log('Adding age group filter for ageGroupId:', ageGroupId);
+      whereConditions.push(eq(teams.ageGroupId, Number(ageGroupId)));
+    }
+
+    // Add status filter if specified
+    if (status && status !== 'all') {
+      console.log('Adding status filter for status:', status);
+      whereConditions.push(eq(teams.status, status as string));
+    }
+
+    let query = db
+      .select({
+        team: teams,
+        ageGroup: eventAgeGroups,
+        event: events,
+        club: {
+          name: clubs.name,
+          logoUrl: clubs.logoUrl
+        }
+      })
+      .from(teams)
+      .leftJoin(eventAgeGroups, eq(teams.ageGroupId, eventAgeGroups.id))
+      .leftJoin(events, eq(teams.eventId, events.id))
+      .leftJoin(clubs, eq(teams.clubId, clubs.id));
+
+    // Apply where conditions if any
+    if (whereConditions.length > 0) {
+      query = query.where(whereConditions.length === 1 ? whereConditions[0] : and(...whereConditions));
+    }
+
+    const results = await query.orderBy(teams.name);
+
+    console.log(`Found ${results.length} teams with full relationship data`);
+    
+    // Build comprehensive team objects with all relationship data
+    const teamsWithPlayerCounts = await Promise.all(
+      results.map(async ({ team, ageGroup, event, club }) => {
+        // Count players for this team
+        const playerCountResult = await db
+          .select({ count: sql<number>`count(*)`.mapWith(Number) })
+          .from(players)
+          .where(eq(players.teamId, team.id));
+        
+        const playerCount = playerCountResult[0]?.count || 0;
+        
+        return {
+          ...team,
+          ageGroup: ageGroup,  // Return full ageGroup object with age_group and gender
+          event: event,       // Return full event object with name
+          clubLogoUrl: club?.logoUrl || null,
+          clubName: club?.name || null,
+          playerCount: playerCount
+        };
+      })
+    );
+
+    console.log(`teams-simple returning ${teamsWithPlayerCounts.length} teams with complete data`);
+    res.json(teamsWithPlayerCounts);
   } catch (error) {
     console.error('Error fetching teams:', error);
     res.status(500).json({ error: 'Failed to fetch teams' });
