@@ -1122,169 +1122,97 @@ export function registerRoutes(app: Express): Server {
     
     app.use('/api/admin/retry-payment', isAdmin, retryPaymentRouter); // Payment retry system
     
-    // Public payment retry routes for admin-generated URLs
-    app.get('/payment/retry/:teamId', async (req, res) => {
+    // Team payment information API endpoint
+    app.get('/api/teams/:teamId/payment-info', async (req, res) => {
       try {
         const teamId = parseInt(req.params.teamId);
-        const source = req.query.source || 'direct';
         
         if (isNaN(teamId)) {
-          return res.status(400).send('Invalid team ID');
+          return res.status(400).json({ error: 'Invalid team ID' });
         }
         
-        console.log(`PAYMENT RETRY URL: Team ${teamId} accessed retry page (source: ${source})`);
+        console.log(`PAYMENT INFO API: Fetching payment info for team ${teamId}`);
         
-        // Get team information for display
-        const [team] = await db
-          .select({
-            id: teams.id,
-            name: teams.name,
-            paymentStatus: teams.paymentStatus,
-            totalAmount: teams.totalAmount,
-            managerEmail: teams.managerEmail
-          })
-          .from(teams)
-          .where(eq(teams.id, teamId))
-          .limit(1);
+        // Get team information with event details
+        const teamResults = await db.execute(sql`
+          SELECT 
+            t.id,
+            t.name,
+            t.payment_status,
+            t.total_amount,
+            t.manager_email,
+            e.name as event_name
+          FROM teams t
+          LEFT JOIN events e ON CAST(t.event_id AS INTEGER) = e.id
+          WHERE t.id = ${teamId}
+          LIMIT 1
+        `);
         
-        if (!team) {
-          return res.status(404).send('Team not found');
+        if (!teamResults.rows || teamResults.rows.length === 0) {
+          return res.status(404).json({ error: 'Team not found' });
         }
         
-        // Generate HTML page for payment retry
-        const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Retry - ${team.name}</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
-        .card { border: 1px solid #ddd; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .error { color: #e74c3c; }
-        .warning { color: #f39c12; background: #fef9e7; padding: 10px; border-radius: 4px; margin: 10px 0; }
-        .button { background: #3498db; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
-        .button:hover { background: #2980b9; }
-        .amount { font-size: 1.2em; font-weight: bold; color: #27ae60; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h1>Payment Retry Required</h1>
-        <h2>Team: ${team.name}</h2>
+        const team = teamResults.rows[0] as any;
         
-        <div class="warning">
-            <strong>Payment Status:</strong> ${team.paymentStatus}<br>
-            <strong>Amount Due:</strong> <span class="amount">$${(team.totalAmount / 100).toFixed(2)}</span>
-        </div>
-        
-        <p>Your team's payment needs to be completed. This may be due to:</p>
-        <ul>
-            <li>Insufficient funds on the payment method</li>
-            <li>Payment method attachment issues</li>
-            <li>Technical payment processing errors</li>
-        </ul>
-        
-        <p><strong>Next Steps:</strong></p>
-        <ol>
-            <li>Contact the tournament administrator to resolve payment issues</li>
-            <li>Ensure your payment method has sufficient funds</li>
-            <li>If needed, provide a new payment method</li>
-        </ol>
-        
-        <p>For assistance, please contact: <strong>${team.managerEmail}</strong></p>
-        
-        <p><em>Generated ${source === 'admin_generated' ? 'by tournament admin' : 'automatically'} for payment resolution.</em></p>
-    </div>
-</body>
-</html>`;
-        
-        res.send(html);
+        res.json({
+          id: team.id,
+          name: team.name,
+          paymentStatus: team.payment_status,
+          totalAmount: team.total_amount,
+          managerEmail: team.manager_email,
+          eventName: team.event_name
+        });
         
       } catch (error) {
-        console.error('Error serving payment retry page:', error);
-        res.status(500).send('Error loading payment retry page');
+        console.error('Error fetching team payment info:', error);
+        res.status(500).json({ error: 'Failed to fetch team payment information' });
       }
     });
-    
-    // Public payment setup routes for teams that need new payment methods
-    app.get('/payment/setup/:teamId', async (req, res) => {
+
+    // Complete payment intent and update team status to approved
+    app.post('/api/teams/:teamId/complete-payment-intent', async (req, res) => {
       try {
         const teamId = parseInt(req.params.teamId);
-        const source = req.query.source || 'direct';
+        const { paymentIntentId } = req.body;
         
         if (isNaN(teamId)) {
-          return res.status(400).send('Invalid team ID');
+          return res.status(400).json({ error: 'Invalid team ID' });
         }
         
-        console.log(`PAYMENT SETUP URL: Team ${teamId} accessed setup page (source: ${source})`);
-        
-        // Get team information
-        const [team] = await db
-          .select({
-            id: teams.id,
-            name: teams.name,
-            paymentStatus: teams.paymentStatus,
-            totalAmount: teams.totalAmount,
-            managerEmail: teams.managerEmail
-          })
-          .from(teams)
-          .where(eq(teams.id, teamId))
-          .limit(1);
-        
-        if (!team) {
-          return res.status(404).send('Team not found');
+        if (!paymentIntentId) {
+          return res.status(400).json({ error: 'Payment intent ID required' });
         }
         
-        // Generate HTML page for payment setup
-        const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Setup - ${team.name}</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
-        .card { border: 1px solid #ddd; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .info { color: #2980b9; background: #ebf3fd; padding: 10px; border-radius: 4px; margin: 10px 0; }
-        .button { background: #27ae60; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
-        .button:hover { background: #229954; }
-        .amount { font-size: 1.2em; font-weight: bold; color: #27ae60; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h1>Payment Setup Required</h1>
-        <h2>Team: ${team.name}</h2>
+        console.log(`PAYMENT COMPLETE: Processing payment completion for team ${teamId}, paymentIntent: ${paymentIntentId}`);
         
-        <div class="info">
-            <strong>Amount Due:</strong> <span class="amount">$${(team.totalAmount / 100).toFixed(2)}</span><br>
-            <strong>Status:</strong> Payment setup needed
-        </div>
+        // Update team status to approved and set payment info
+        const updateResult = await db.execute(sql`
+          UPDATE teams 
+          SET 
+            payment_status = 'paid',
+            status = 'Approved',
+            payment_intent_id = ${paymentIntentId},
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = ${teamId}
+        `);
         
-        <p>Your team registration requires payment to complete the process.</p>
+        if (updateResult.rowCount === 0) {
+          return res.status(404).json({ error: 'Team not found' });
+        }
         
-        <p><strong>To complete payment:</strong></p>
-        <ol>
-            <li>Contact the tournament administrator</li>
-            <li>Provide your preferred payment method</li>
-            <li>Complete the secure payment process</li>
-        </ol>
+        console.log(`PAYMENT COMPLETE: Successfully updated team ${teamId} status to Approved`);
         
-        <p>For payment assistance, please contact: <strong>${team.managerEmail}</strong></p>
+        // TODO: Send confirmation email to team
+        // This could be added later to notify the team of successful payment
         
-        <p><em>Payment setup link generated ${source === 'admin_generated' ? 'by tournament admin' : 'automatically'}.</em></p>
-    </div>
-</body>
-</html>`;
-        
-        res.send(html);
+        res.json({ 
+          success: true, 
+          message: 'Payment completed and team approved successfully' 
+        });
         
       } catch (error) {
-        console.error('Error serving payment setup page:', error);
-        res.status(500).send('Error loading payment setup page');
+        console.error('Error completing payment:', error);
+        res.status(500).json({ error: 'Failed to complete payment' });
       }
     });
     app.use('/api/admin/files', isAdmin, filesRouter); // File management router

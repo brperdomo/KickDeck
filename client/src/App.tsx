@@ -52,6 +52,8 @@ import PaymentConfirmation from "@/pages/payment-confirmation";
 import PaymentSetupConfirmation from "@/pages/payment-setup-confirmation";
 import CompletePayment from "@/pages/CompletePayment";
 import PaymentRecoveryDashboard from "@/pages/PaymentRecoveryDashboard";
+import PaymentRetry from "@/pages/PaymentRetry";
+import PaymentSetup from "@/pages/PaymentSetup";
 import SendGridSettingsPage from "@/pages/sendgrid-settings";
 import AdminSendGridSetup from "@/pages/admin-sendgrid-setup";
 import { AuthProvider } from "@/hooks/use-auth";
@@ -134,7 +136,9 @@ function Router() {
                        location.startsWith('/event/') ||
                        location === '/score-report' ||
                        location === '/card-report' ||
-                       location.startsWith('/complete-payment');
+                       location.startsWith('/complete-payment') ||
+                       location.startsWith('/payment/retry/') ||
+                       location.startsWith('/payment/setup/');
 
   // Only fetch user data for non-public routes
   const { user, isLoading } = useUser(isPublicRoute);
@@ -232,6 +236,10 @@ function Router() {
       
       {/* Payment completion route for teams with incomplete setup */}
       <Route path="/complete-payment" component={CompletePayment} />
+      
+      {/* Payment retry routes for teams with failed payments */}
+      <Route path="/payment/retry/:teamId" component={PaymentRetry} />
+      <Route path="/payment/setup/:teamId" component={PaymentSetup} />
       
       {/* QR Code accessible score and card reporting - no auth required */}
       <Route path="/score-report/:gameId">
