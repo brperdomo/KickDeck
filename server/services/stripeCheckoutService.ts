@@ -31,7 +31,7 @@ export async function createCheckoutSession(teamId: number): Promise<{
   totalAmountWithFees: number;
 }> {
   try {
-    // Get team details
+    // Get team details INCLUDING Connect account info for refund processing
     const team = await db
       .select({
         id: teams.id,
@@ -40,6 +40,8 @@ export async function createCheckoutSession(teamId: number): Promise<{
         managerEmail: teams.managerEmail,
         submitterEmail: teams.submitterEmail,
         eventName: events.name,
+        eventId: events.id,
+        stripeConnectAccountId: events.stripeConnectAccountId,
       })
       .from(teams)
       .leftJoin(events, eq(teams.eventId, events.id))
@@ -89,11 +91,17 @@ export async function createCheckoutSession(teamId: number): Promise<{
         originalAmount: teamData.totalAmount.toString(),
         platformFees: (totalAmountWithFees - teamData.totalAmount).toString(),
         retryPayment: 'true',
+        // CRITICAL: Include Connect account ID for proper refund processing
+        connectAccountId: teamData.stripeConnectAccountId || '',
+        eventId: teamData.eventId?.toString() || '',
       },
       payment_intent_data: {
         metadata: {
           teamId: teamId.toString(),
           retryPayment: 'true',
+          // CRITICAL: Include Connect account ID in payment intent metadata for refunds
+          connectAccountId: teamData.stripeConnectAccountId || '',
+          eventId: teamData.eventId?.toString() || '',
         },
       },
     });
