@@ -276,6 +276,14 @@ router.post('/webhook', async (req, res) => {
       case 'setup_intent.succeeded':
         await handleSetupIntentSuccess(event.data.object as Stripe.SetupIntent);
         break;
+      case 'checkout.session.completed':
+        // Handle Stripe Checkout completion - this ensures proper Connect account metadata
+        const session = event.data.object as Stripe.Checkout.Session;
+        console.log(`Checkout session completed: ${session.id}`);
+        console.log(`Payment intent: ${session.payment_intent}`);
+        console.log(`Connect account metadata: ${session.metadata?.connectAccountId}`);
+        // The payment_intent.succeeded event will handle the actual payment processing
+        break;
       case 'charge.refunded':
         const charge = event.data.object as Stripe.Charge;
         if (charge.refunds && charge.refunds.data && charge.refunds.data.length > 0) {
