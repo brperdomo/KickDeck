@@ -14,7 +14,8 @@ MatchPro AI is a comprehensive sports event management platform designed for tou
 - **Combined fee display**: Platform fee and processing fee now shown as single "Platform Fee" line item
 - **Fixed logo display**: Replaced broken image with proper MatchPro text branding
 - **CRITICAL REFUND FIX**: Enhanced payment metadata to include Connect account information for proper refund processing
-- **Status**: ✅ COMPLETED - Payment system fully operational with proper webhook handling and Connect account refund routing
+- **NO FALLBACK POLICY**: Removed main account fallback - refunds ONLY processed through tournament Connect accounts
+- **Status**: ✅ COMPLETED - Payment system fully operational with strict Connect account refund enforcement (zero negative balance risk)
 
 **CRITICAL PRODUCTION FIX COMPLETED (Earlier):** Resolved multiple teams data display issues and GUARANTEED original registration data integrity:
 
