@@ -1,6 +1,5 @@
 import express from 'express';
 import Stripe from 'stripe';
-import bodyParser from 'body-parser';
 import { 
   createPaymentIntent, 
   createSetupIntent,
@@ -29,9 +28,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 
 // Create a router for payment-related routes
 const router = express.Router();
-
-// Middleware to parse Stripe webhook events
-const stripeWebhookMiddleware = bodyParser.raw({type: 'application/json'});
 
 // Get Stripe configuration (publishable key)
 router.get('/config', (req, res) => {
@@ -251,7 +247,7 @@ router.post('/update-setup-status', async (req, res) => {
 });
 
 // Webhook for Stripe events
-router.post('/webhook', stripeWebhookMiddleware, async (req, res) => {
+router.post('/webhook', async (req, res) => {
   const sig = req.headers['stripe-signature'];
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
   
