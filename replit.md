@@ -10,7 +10,10 @@ MatchPro AI is a comprehensive sports event management platform designed for tou
 - **Streamlined payment retry flow**: Teams redirected to secure Stripe checkout pages for payment processing
 - **Added PaymentSuccess page**: Proper completion handling with payment confirmation and team status updates
 - **Backend improvements**: New `stripeCheckoutService.ts` with comprehensive checkout session management
-- **Status**: ✅ COMPLETED - Payment system fully operational with Stripe's native interface
+- **Fixed Stripe webhook handling**: Configured Express to handle raw request bodies for webhook signature verification
+- **Combined fee display**: Platform fee and processing fee now shown as single "Platform Fee" line item
+- **Fixed logo display**: Replaced broken image with proper MatchPro text branding
+- **Status**: ✅ COMPLETED - Payment system fully operational with proper webhook handling
 
 **CRITICAL PRODUCTION FIX COMPLETED (Earlier):** Resolved multiple teams data display issues and GUARANTEED original registration data integrity:
 

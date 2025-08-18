@@ -52,7 +52,11 @@ log(`Session Secret: ${process.env.SESSION_SECRET ? "Present" : "Missing"}`);
 
 const app = express();
 
-// Basic middleware setup
+// Special handling for Stripe webhooks - they need raw body for signature verification
+app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
+app.use('/api/stripe-connect/webhook', express.raw({ type: 'application/json' }));
+
+// Basic middleware setup (after webhook routes)
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: false, limit: "50mb" }));
 
