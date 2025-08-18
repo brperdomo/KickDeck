@@ -410,30 +410,85 @@ export async function createRefund(paymentIntentId: string, amount?: number) {
     });
     log(`✅ Refund processed from main MatchPro account: ${refund.id}`);
 
-    // If this was a Connect account payment, create a reversal transfer to offset the refund cost
+    // CRITICAL: Ensure tournament Connect account covers the refund cost
+    const refundAmount = amount || paymentIntent.amount;
+    const teamId = paymentIntent.metadata.teamId || '0';
+    
     if (connectAccountId && connectAccountId.trim() !== '') {
+      log(`Attempting to recover ${refundAmount} cents from Connect account ${connectAccountId}`);
+      
       try {
-        const refundAmount = amount || paymentIntent.amount;
-        log(`Creating transfer reversal from Connect account ${connectAccountId} for ${refundAmount} cents`);
-        
-        // Create a transfer FROM the Connect account TO the main account to offset refund cost
-        const reversal = await stripe.transfers.create({
+        // Create transfer FROM Connect account TO MatchPro to reimburse the refund
+        const offsetTransfer = await stripe.transfers.create({
           amount: refundAmount,
           currency: 'usd',
-          source_transaction: chargeId,
-          destination: process.env.STRIPE_ACCOUNT_ID || 'main', // MatchPro main account
+          description: `Refund cost recovery for payment ${paymentIntentId}`,
+          metadata: {
+            purpose: 'refund_cost_recovery',
+            originalPaymentIntent: paymentIntentId,
+            teamId: teamId,
+            refundId: refund.id
+          }
         }, {
-          stripeAccount: connectAccountId, // Execute from Connect account
+          stripeAccount: connectAccountId, // Execute from tournament Connect account
         });
         
-        log(`✅ Transfer reversal created: ${reversal.id} - Connect account covers refund cost`);
+        log(`✅ SUCCESS: Transfer ${offsetTransfer.id} - Tournament covers ${refundAmount} cents refund cost`);
+        
+        // Record successful cost recovery
+        await db.insert(paymentTransactions).values({
+          teamId: parseInt(teamId),
+          paymentIntentId: paymentIntentId,
+          amount: refundAmount, // Positive - money recovered from tournament
+          status: "completed",
+          transactionType: "refund_cost_recovery",
+          metadata: {
+            transferId: offsetTransfer.id,
+            sourceConnectAccount: connectAccountId,
+            recoveredAmount: refundAmount.toString(),
+            originalRefundId: refund.id,
+            status: 'tournament_covered_refund_cost'
+          },
+        });
+        
       } catch (transferError: any) {
-        log(`⚠️ Transfer reversal failed: ${transferError.message} - MatchPro absorbs refund cost`);
-        // Don't fail the entire refund if transfer reversal fails
-        // This means MatchPro absorbs the cost, but the customer still gets refunded
+        log(`❌ FAILED: Cannot recover from Connect account: ${transferError.message}`);
+        log(`❌ MatchPro absorbs ${refundAmount} cent refund cost`);
+        
+        // Record failed recovery - MatchPro absorbs cost
+        await db.insert(paymentTransactions).values({
+          teamId: parseInt(teamId),
+          paymentIntentId: paymentIntentId,
+          amount: -refundAmount, // Negative - cost absorbed by MatchPro
+          status: "failed",
+          transactionType: "refund_cost_recovery_failed",
+          metadata: {
+            error: transferError.message,
+            connectAccount: connectAccountId,
+            attemptedAmount: refundAmount.toString(),
+            costAbsorbedBy: "matchpro_main_account",
+            originalRefundId: refund.id
+          },
+        });
       }
     } else {
-      log(`⚠️ No Connect account metadata - MatchPro absorbs refund cost`);
+      log(`⚠️ No Connect account - MatchPro absorbs ${refundAmount} cent refund cost`);
+      
+      // Record cost absorption due to missing Connect account
+      await db.insert(paymentTransactions).values({
+        teamId: parseInt(teamId),
+        paymentIntentId: paymentIntentId,
+        amount: -refundAmount, // Negative - cost absorbed by MatchPro
+        status: "completed",
+        transactionType: "refund_cost_absorbed",
+        metadata: {
+          reason: "no_connect_account_metadata",
+          refundAmount: refundAmount.toString(),
+          costAbsorbedBy: "matchpro_main_account",
+          originalRefundId: refund.id,
+          note: "old_payment_or_missing_metadata"
+        },
+      });
     }
 
     // Get the team from the payment intent metadata
