@@ -386,6 +386,16 @@ export async function createRefund(paymentIntentId: string, amount?: number) {
       throw new Error(`Payment intent ${paymentIntentId} not found`);
     }
 
+    // CRITICAL VALIDATION: Ensure refund can only be processed through Connect account
+    const connectAccountId = paymentIntent.metadata?.connectAccountId;
+    if (!connectAccountId || connectAccountId.trim() === '') {
+      const errorMessage = `REFUND BLOCKED: Payment intent ${paymentIntentId} lacks Connect account metadata. This payment was processed before the Connect account system was implemented. Refunds can ONLY be processed through tournament Connect accounts to prevent negative balances on the main MatchPro account. Manual intervention required.`;
+      log(errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    log(`Validated Connect account for refund: ${connectAccountId}`);
+
     // Find the charge associated with this payment intent
     const charges = await stripe.charges.list({
       payment_intent: paymentIntentId,
@@ -397,46 +407,21 @@ export async function createRefund(paymentIntentId: string, amount?: number) {
 
     const chargeId = charges.data[0].id;
 
-    // CRITICAL FIX: Determine if this was a Connect account payment and get the Connect account ID
-    let connectAccountId: string | null = null;
+    // Connect account ID already validated above - no need for fallback detection
+    log(`Using validated Connect account: ${connectAccountId}`);
 
-    // Check if the payment intent has Connect account metadata
-    if (paymentIntent.metadata.connectAccountId) {
-      connectAccountId = paymentIntent.metadata.connectAccountId;
-      log(`Payment was made through Connect account: ${connectAccountId}`);
-    } else {
-      // Check if the charge was made on behalf of a Connect account
-      const charge = await stripe.charges.retrieve(chargeId);
-      if (charge.on_behalf_of) {
-        connectAccountId = charge.on_behalf_of;
-        log(
-          `Payment was made on behalf of Connect account: ${connectAccountId}`,
-        );
-      }
-    }
-
-    // Create the refund in the appropriate account context
-    let refund;
-    if (connectAccountId) {
-      log(`Processing refund from Connect account: ${connectAccountId}`);
-      refund = await stripe.refunds.create(
-        {
-          charge: chargeId,
-          amount: amount, // If not specified, refund the full amount
-        },
-        {
-          stripeAccount: connectAccountId, // This ensures refund comes from Connect account
-        },
-      );
-      log(`Refund processed from Connect account: ${connectAccountId}`);
-    } else {
-      log(`Processing refund from main platform account`);
-      refund = await stripe.refunds.create({
+    // Process refund through tournament Connect account (validation ensures this always exists)
+    log(`Processing refund from Connect account: ${connectAccountId}`);
+    const refund = await stripe.refunds.create(
+      {
         charge: chargeId,
         amount: amount, // If not specified, refund the full amount
-      });
-      log(`Refund processed from main platform account`);
-    }
+      },
+      {
+        stripeAccount: connectAccountId, // This ensures refund comes from Connect account
+      },
+    );
+    log(`✅ Refund processed successfully from Connect account: ${connectAccountId}`);
 
     // Get the team from the payment intent metadata
     const teamId = paymentIntent.metadata.teamId;
@@ -461,15 +446,16 @@ export async function createRefund(paymentIntentId: string, amount?: number) {
         transactionType: "refund",
         refundedAt: new Date(),
         metadata: {
-          refundedFromConnectAccount: connectAccountId || "main_platform",
+          refundedFromConnectAccount: connectAccountId, // Always has value now (no fallback)
           originalPaymentIntent: paymentIntentId,
           refundAmount: (amount || paymentIntent.amount).toString(),
           refundTimestamp: new Date().toISOString(),
+          refundSource: "tournament_connect_account", // Clear audit trail
         },
       });
 
       log(
-        `Refund transaction recorded for team ${teamIdNumber} from ${connectAccountId ? "Connect account" : "main platform"}`,
+        `Refund transaction recorded for team ${teamIdNumber} from Connect account ${connectAccountId}`,
       );
     }
 

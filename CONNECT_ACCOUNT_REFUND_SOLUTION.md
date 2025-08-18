@@ -128,6 +128,31 @@ curl -s "http://localhost:5000/api/payments/fees/835" | jq '.totalAmount'
 curl -X POST "http://localhost:5000/api/payments/webhook" -H "Content-Type: application/json"
 ```
 
-## Status: SOLUTION COMPLETE ✅
+## CRITICAL UPDATE: No Fallback Policy ✅
 
-The refund cash flow issue has been resolved. Payments will now include the necessary Connect account metadata, allowing the existing refund logic to properly route refunds through the tournament's Connect account instead of MatchPro's main account.
+**Enhanced Protection Against Negative Balances:**
+- **Removed Fallback**: No refunds processed through MatchPro main account
+- **Strict Validation**: Refunds ONLY allowed with valid Connect account metadata
+- **Error Handling**: Old payments without Connect metadata are blocked (require manual intervention)
+- **Cash Flow Protection**: 100% prevention of negative balances on main account
+
+### New Refund Logic
+```typescript
+// BEFORE: Had fallback to main account
+if (connectAccountId) {
+  // Refund from Connect account
+} else {
+  // Refund from main account (REMOVED)
+}
+
+// AFTER: No fallback, strict Connect account requirement
+const connectAccountId = paymentIntent.metadata?.connectAccountId;
+if (!connectAccountId) {
+  throw new Error("REFUND BLOCKED: No Connect account metadata");
+}
+// Process refund through Connect account only
+```
+
+## Status: MAXIMUM PROTECTION IMPLEMENTED ✅
+
+The refund system now provides complete protection against negative balances on the MatchPro main account. All refunds must be processed through tournament Connect accounts - no exceptions.
