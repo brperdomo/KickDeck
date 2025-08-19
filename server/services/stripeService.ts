@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { db } from "../../db";
-import { teams, paymentTransactions, events, refunds, users } from "../../db/schema";
+import { teams, paymentTransactions, events, refunds, users, ageGroups } from "../../db/schema";
 import { eq } from "drizzle-orm";
 import { log } from "../vite";
 import { sendRegistrationReceiptEmail } from "./emailService";
@@ -535,7 +535,8 @@ export async function createRefund(paymentIntentId: string, amount?: number) {
 }
 /**
  * Creates a Setup Intent for collecting payment details without charging
- * This allows us to collect card information during registration and only charge upon approval
+ * UPDATED: Now creates customers and setup intents directly on tournament Connect accounts
+ * Following Stripe's recommendations for Connect account customer creation
  */
 export async function createSetupIntent(
   teamId: number | string,
@@ -544,36 +545,67 @@ export async function createSetupIntent(
   try {
     log(`Creating setup intent for team: ${teamId}`);
 
-    // CRITICAL FIX: Create or get customer for charging capability
+    // STEP 1: Get tournament Connect account information
+    let connectAccountId: string | undefined;
     let customerId: string | undefined;
 
-    // For real teams (not temp), create/get customer based on team info
+    // For real teams (not temp), get Connect account from event info
     if (typeof teamId === "number" || !teamId.toString().startsWith("temp-")) {
       try {
         const numericTeamId =
           typeof teamId === "number" ? teamId : parseInt(teamId.toString());
-        const existingTeam = await db.query.teams.findFirst({
-          where: eq(teams.id, numericTeamId),
-          columns: {
-            stripeCustomerId: true,
-            submitterEmail: true,
-            submitterName: true,
-            name: true,
-          },
-        });
+        
+        // Get team with event and Connect account info
+        const teamWithEvent = await db
+          .select({
+            team: {
+              stripeCustomerId: teams.stripeCustomerId,
+              submitterEmail: teams.submitterEmail,
+              submitterName: teams.submitterName,
+              name: teams.name,
+              eventId: teams.eventId,
+            },
+            event: {
+              stripeConnectAccountId: events.stripeConnectAccountId,
+              name: events.name,
+            },
+          })
+          .from(teams)
+          .leftJoin(events, eq(teams.eventId, events.id))
+          .where(eq(teams.id, numericTeamId))
+          .limit(1);
 
-        if (existingTeam?.stripeCustomerId) {
-          customerId = existingTeam.stripeCustomerId;
+        if (!teamWithEvent[0]) {
+          throw new Error(`Team ${teamId} not found`);
+        }
+
+        const { team, event } = teamWithEvent[0];
+        connectAccountId = event?.stripeConnectAccountId;
+
+        if (!connectAccountId) {
+          throw new Error(`Tournament must have Stripe Connect account configured for Setup Intent creation`);
+        }
+
+        log(`Using Connect account: ${connectAccountId} for team ${teamId}`);
+
+        // STEP 2: Create or get customer ON CONNECT ACCOUNT (following Stripe recommendations)
+        if (team.stripeCustomerId) {
+          customerId = team.stripeCustomerId;
           log(`Using existing customer ID: ${customerId} for team ${teamId}`);
-        } else if (existingTeam?.submitterEmail) {
-          // Create new customer for this team
+        } else if (team.submitterEmail) {
+          // Create new customer DIRECTLY on tournament Connect account
           const customer = await stripe.customers.create({
-            email: existingTeam.submitterEmail,
-            name: existingTeam.submitterName || "Team Manager",
+            email: team.submitterEmail,
+            name: team.submitterName || "Team Manager",
             metadata: {
               teamId: teamId.toString(),
-              teamName: existingTeam.name || "Unknown Team",
+              teamName: team.name || "Unknown Team",
+              eventId: team.eventId?.toString() || "",
+              eventName: event?.name || "",
             },
+          }, {
+            // CRITICAL: Create customer on Connect account using stripeAccount parameter
+            stripeAccount: connectAccountId
           });
           customerId = customer.id;
 
@@ -583,49 +615,67 @@ export async function createSetupIntent(
             .set({ stripeCustomerId: customerId })
             .where(eq(teams.id, numericTeamId));
 
-          log(`Created new customer: ${customerId} for team ${teamId}`);
+          log(`Created new customer: ${customerId} on Connect account ${connectAccountId} for team ${teamId}`);
         }
       } catch (customerError: any) {
         log(
           `Could not create/retrieve customer for team ${teamId}: ${customerError.message}`,
         );
-        // Continue without customer - will limit charging ability but still allow Setup Intent creation
+        throw customerError; // Don't continue without proper Connect account setup
       }
     } else {
-      // For temp team IDs during registration, create a customer using metadata
-      if (metadata?.userEmail) {
+      // For temp team IDs during registration, we need to handle differently
+      // Since we don't have event info yet, we'll need to get it from metadata or skip Connect account
+      if (metadata?.eventId) {
         try {
-          const customer = await stripe.customers.create({
-            email: metadata.userEmail,
-            name: metadata.userName || "Team Manager",
-            metadata: {
-              teamId: teamId.toString(),
-              teamName: metadata.teamName || "Unknown Team",
-              createdFor: "temp_team_registration",
-            },
-          });
-          customerId = customer.id;
-          log(
-            `Created customer ${customerId} for temp team ${teamId} during registration`,
-          );
-        } catch (customerError: any) {
-          log(
-            `Could not create customer for temp team ${teamId}: ${customerError.message}`,
-          );
+          // Get Connect account from event ID in metadata
+          const eventInfo = await db
+            .select({ stripeConnectAccountId: events.stripeConnectAccountId })
+            .from(events)
+            .where(eq(events.id, parseInt(metadata.eventId)))
+            .limit(1);
+
+          if (eventInfo[0]?.stripeConnectAccountId) {
+            connectAccountId = eventInfo[0].stripeConnectAccountId;
+            log(`Found Connect account ${connectAccountId} for temp team ${teamId} via event ${metadata.eventId}`);
+
+            // Create customer on Connect account for temp team
+            if (metadata?.userEmail) {
+              const customer = await stripe.customers.create({
+                email: metadata.userEmail,
+                name: metadata.userName || "Team Manager",
+                metadata: {
+                  teamId: teamId.toString(),
+                  teamName: metadata.teamName || "Unknown Team",
+                  createdFor: "temp_team_registration",
+                  eventId: metadata.eventId,
+                },
+              }, {
+                // CRITICAL: Create customer on Connect account for temp team too
+                stripeAccount: connectAccountId
+              });
+              customerId = customer.id;
+              log(`Created customer ${customerId} on Connect account ${connectAccountId} for temp team ${teamId}`);
+            }
+          } else {
+            throw new Error(`Event ${metadata.eventId} does not have Connect account configured`);
+          }
+        } catch (tempError: any) {
+          log(`Error setting up Connect account for temp team: ${tempError.message}`);
+          throw tempError;
         }
       } else {
-        log(
-          `WARNING: No user email provided for temp team ${teamId} - cannot create customer`,
-        );
+        throw new Error('Temp team registration requires eventId in metadata for Connect account setup');
       }
     }
 
+    // STEP 3: Create Setup Intent on Connect account
     const setupIntentData: any = {
-      // Use specific payment_method_types to only allow card payments (no Link)
       payment_method_types: ["card"],
-      usage: "off_session", // This allows for future use without customer being present
+      usage: "off_session", // Allows for future charging without customer present
       metadata: {
         teamId: teamId.toString(),
+        connectAccountId: connectAccountId,
         ...metadata,
       },
     };
@@ -633,62 +683,47 @@ export async function createSetupIntent(
     // Add customer if we have one (critical for charging later)
     if (customerId) {
       setupIntentData.customer = customerId;
-      log(`Setup Intent will be created with customer: ${customerId}`);
+      log(`Setup Intent will be created with customer: ${customerId} on Connect account: ${connectAccountId}`);
     } else {
-      log(
-        `WARNING: Setup Intent created without customer - charging will be limited`,
-      );
+      log(`WARNING: Setup Intent created without customer - charging will be limited`);
     }
 
-    const setupIntent = await stripe.setupIntents.create(setupIntentData);
+    // CRITICAL: Create Setup Intent on Connect account using stripeAccount parameter
+    const setupIntent = await stripe.setupIntents.create(setupIntentData, {
+      stripeAccount: connectAccountId
+    });
 
-    // Only update the team in the database if it's a numeric ID (not a temp ID)
-    // AND only if the team doesn't already have a confirmed Setup Intent
+    log(`✅ Created Setup Intent ${setupIntent.id} on Connect account ${connectAccountId} for team ${teamId}`);
+
+    // STEP 4: Update database records
     if (typeof teamId === "number" || !teamId.toString().startsWith("temp-")) {
       try {
         const numericTeamId =
           typeof teamId === "number" ? teamId : parseInt(teamId.toString());
 
-        // Check if team already has a Setup Intent
-        const existingTeam = await db.query.teams.findFirst({
-          where: eq(teams.id, numericTeamId),
-          columns: {
-            setupIntentId: true,
-            paymentStatus: true,
-          },
-        });
+        // Update team with Setup Intent info
+        await db
+          .update(teams)
+          .set({
+            setupIntentId: setupIntent.id,
+            paymentStatus: "setup_intent_created",
+          })
+          .where(eq(teams.id, numericTeamId));
 
-        // Only update if no existing Setup Intent or existing one is not completed
-        if (
-          !existingTeam?.setupIntentId ||
-          existingTeam?.paymentStatus === "pending"
-        ) {
-          log(
-            `Updating team ${numericTeamId} with Setup Intent: ${setupIntent.id}`,
-          );
-          await db
-            .update(teams)
-            .set({
-              setupIntentId: setupIntent.id,
-              paymentStatus: "payment_info_provided",
-            })
-            .where(eq(teams.id, numericTeamId));
-        } else {
-          log(
-            `Team ${numericTeamId} already has Setup Intent ${existingTeam.setupIntentId}, skipping database update to preserve confirmed payment info`,
-          );
-        }
+        log(`Updated team ${numericTeamId} with Setup Intent ${setupIntent.id}`);
       } catch (dbError: any) {
-        console.warn(
-          `Could not update team record with setup intent ID, likely a temporary team: ${dbError.message}`,
-        );
+        log(`Error updating team database: ${dbError.message}`);
+        // Continue - Setup Intent was created successfully
       }
     }
 
     return {
-      clientSecret: setupIntent.client_secret,
       setupIntentId: setupIntent.id,
+      clientSecret: setupIntent.client_secret!,
+      customerId: customerId,
+      connectAccountId: connectAccountId,
     };
+
   } catch (error: any) {
     console.error("Error creating setup intent:", error);
     throw new Error(`Error creating setup intent: ${error.message}`);
