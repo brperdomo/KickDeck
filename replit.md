@@ -3,16 +3,16 @@
 ## Overview
 MatchPro AI is a comprehensive sports event management platform designed for tournament organizers and sports clubs. Its main purpose is to automate and streamline workflows such as team registrations, payment processing, scoring, standings, and administrative tasks. The system aims to provide a professional, low-maintenance, and intelligent solution for managing tournaments from initial setup and scheduling to real-time updates and financial oversight, with ambitions to offer predictive insights and eliminate manual configuration.
 
-## Recent Changes (August 18, 2025)
-**BREAKTHROUGH: CONNECT ACCOUNT DIRECT PAYMENT SYSTEM IMPLEMENTED:**
-- **ELIMINATED MATCHPRO REFUND RISK**: Implemented Stripe's recommended Connect Account Direct Processing system
-- **Direct payment routing**: Customers now created and charged directly on tournament Connect accounts using `stripeAccount` parameter
-- **Guaranteed refund coverage**: Refunds processed from Connect accounts that received payments - zero MatchPro financial exposure
-- **Zero workflow impact**: Same Stripe Checkout forms, same user experience, same payment flow
-- **Enhanced checkout service**: Modified `stripeCheckoutService.ts` to create sessions on Connect accounts instead of main account
-- **Backward compatibility**: Legacy payments still supported with existing cost recovery system for transition period
-- **Financial guarantee**: 100% of new payments/refunds handled by tournament accounts with no MatchPro absorption risk
-- **Status**: ✅ OPERATIONAL - Zero-risk payment processing achieved while maintaining identical customer experience
+## Recent Changes (August 19, 2025)
+**COMPLETE CONNECT ACCOUNT PAYMENT SYSTEM IMPLEMENTATION:**
+- **FINAL STRIPE RECOMMENDATION COMPLIANCE**: Updated Setup Intent creation to use Connect accounts following Stripe's exact specifications
+- **Full customer ownership transfer**: Both Checkout and Setup Intent flows now create customers directly on tournament Connect accounts
+- **Zero MatchPro financial risk**: All new payment operations (customers, setup intents, payment intents, refunds) occur entirely on Connect accounts
+- **Complete architecture alignment**: System now follows Stripe's recommended Connect account pattern for all payment operations
+- **Enhanced Setup Intent service**: Modified `createSetupIntent` in `stripeService.ts` to require Connect account validation and create all resources on tournament accounts
+- **Future-proof implementation**: New registrations automatically validated against Connect account existence before Setup Intent creation
+- **Backward compatibility maintained**: Legacy customers on MatchPro main account continue to work with existing cost recovery system
+- **Status**: ✅ OPERATIONAL - Complete zero-risk payment architecture achieved per Stripe recommendations
 
 **PREVIOUS PAYMENT OVERHAUL (Completed Earlier):**
 - **Replaced custom payment forms with Stripe Checkout**: Eliminated "Team ID required" errors by using official Stripe hosted payment pages
