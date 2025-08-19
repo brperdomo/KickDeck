@@ -113,6 +113,7 @@ import facilityConstraintRouter from "./routes/admin/facility-constraints";
 import refereeManagementRouter from "./routes/admin/referee-management";
 import paymentCompletionRouter from "./routes/payment-completion";
 import retryPaymentRouter from "./routes/admin/retry-payment";
+import connectRefundsRouter from "./routes/admin/connect-refunds";
 import tournamentsWithSchedulesRouter from "./routes/admin/tournaments-with-schedules";
 import gamesAllTournamentsRouter from "./routes/admin/games-all-tournaments";
 import { 
@@ -1127,6 +1128,7 @@ export function registerRoutes(app: Express): Server {
     });
     
     app.use('/api/admin/retry-payment', isAdmin, retryPaymentRouter); // Payment retry system
+    app.use('/api/admin/connect-refunds', isAdmin, connectRefundsRouter); // Connect account refund management
     
     // Team payment information API endpoint
     app.get('/api/teams/:teamId/payment-info', async (req, res) => {

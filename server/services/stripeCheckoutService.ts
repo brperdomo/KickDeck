@@ -68,8 +68,33 @@ export async function createCheckoutSession(teamId: number): Promise<{
       throw new Error(`Tournament must have Stripe Connect account configured for payments`);
     }
     
+    // Create customer DIRECTLY on Connect account first for guaranteed ownership
+    const customer = await stripe.customers.create({
+      email: teamData.managerEmail || teamData.submitterEmail || `team-${teamId}@tournament.local`,
+      name: `${teamData.name} - Team Manager`,
+      description: `Team: ${teamData.name} | Event: ${teamData.eventName} | TeamID: ${teamId}`,
+      metadata: {
+        teamId: teamId.toString(),
+        teamName: teamData.name || "Unknown Team",
+        eventId: teamData.eventId?.toString() || "",
+        eventName: teamData.eventName || "",
+        managerEmail: teamData.managerEmail || teamData.submitterEmail || "",
+        registrationDate: new Date().toISOString(),
+        internalReference: `TEAM-${teamId}-${teamData.eventId}`,
+        systemSource: "MatchPro",
+        createdFor: "checkout_session",
+        connectAccountType: "tournament_refund_account"
+      },
+    }, {
+      // CRITICAL: Create customer on Connect account
+      stripeAccount: connectAccountId
+    });
+
+    console.log(`Created customer ${customer.id} on Connect account ${connectAccountId} for team ${teamId}`);
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
+      customer: customer.id, // Attach customer to session
       line_items: [
         {
           price_data: {
