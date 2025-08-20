@@ -353,7 +353,7 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
       case 'group_of_4':
         return 'Round-robin format where each team plays every other team in their bracket once';
       case 'group_of_6':
-        return 'Pool A vs Pool B format where teams only play against teams from the opposite pool';
+        return '6 teams in 2 brackets of 3 (crossover): 9 pool games + 1 final (1st vs 2nd in points)';
       case 'group_of_8':
         return 'Two separate 4-team round-robin brackets where teams only play within their own bracket, plus one championship game between bracket winners';
       default:
@@ -537,10 +537,16 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
                           <CardContent className="p-4">
                             <div className="space-y-3">
                               <div className="flex items-start justify-between">
-                                <div>
-                                  <h3 className="font-medium text-white">
-                                    {config.bracketType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} Format
-                                  </h3>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h3 className="font-medium text-white">
+                                      {config.bracketType === 'group_of_6' ? '6-Team Crossover Brackets' : 
+                                       config.bracketType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) + ' Format'}
+                                    </h3>
+                                    {config.bracketType === 'group_of_6' && (
+                                      <Badge className="bg-purple-600 text-white text-xs">Crossover</Badge>
+                                    )}
+                                  </div>
                                   <p className="text-sm text-slate-300 mt-1">
                                     {getBracketTypeDescription(config.bracketType)}
                                   </p>
@@ -550,15 +556,52 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
                                 </Badge>
                               </div>
                               
-                              <div className="text-xs text-slate-400 space-y-1">
-                                <div>• {config.bracketCount} bracket{config.bracketCount > 1 ? 's' : ''} with ~{config.teamsPerBracket} teams each</div>
-                                {config.bracketType === 'group_of_4' && (
-                                  <div>• Each team plays {config.teamsPerBracket - 1} games (round-robin)</div>
-                                )}
-                                {(config.bracketType === 'group_of_6' || config.bracketType === 'group_of_8') && (
-                                  <div>• Teams only play against the opposite pool (crossplay format)</div>
-                                )}
-                              </div>
+                              {config.bracketType === 'group_of_6' && (
+                                <div className="bg-slate-900 rounded-lg p-3 border border-slate-600">
+                                  <div className="grid grid-cols-3 gap-4 text-center mb-3">
+                                    <div>
+                                      <div className="text-lg font-bold text-white">{selectedFlightData.teamCount}</div>
+                                      <div className="text-xs text-slate-400">Teams</div>
+                                    </div>
+                                    <div>
+                                      <div className="text-lg font-bold text-white">10</div>
+                                      <div className="text-xs text-slate-400">Games</div>
+                                    </div>
+                                    <div>
+                                      <div className="text-lg font-bold text-white">Yes</div>
+                                      <div className="text-xs text-slate-400">Final</div>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="border-t border-slate-600 pt-3">
+                                    <div className="text-xs font-medium text-slate-300 mb-2">Matchup Pattern:</div>
+                                    <div className="space-y-1 text-xs text-slate-400">
+                                      <div className="flex justify-between"><span>A1</span><span>vs</span><span>B1</span></div>
+                                      <div className="flex justify-between"><span>A2</span><span>vs</span><span>B2</span></div>
+                                      <div className="flex justify-between"><span>A3</span><span>vs</span><span>B3</span></div>
+                                      <div className="flex justify-between"><span>A1</span><span>vs</span><span>B2</span></div>
+                                      <div className="flex justify-between"><span>A2</span><span>vs</span><span>B3</span></div>
+                                      <div className="flex justify-between"><span>A3</span><span>vs</span><span>B1</span></div>
+                                      <div className="flex justify-between"><span>A1</span><span>vs</span><span>B3</span></div>
+                                      <div className="flex justify-between"><span>A2</span><span>vs</span><span>B1</span></div>
+                                      <div className="flex justify-between"><span>A3</span><span>vs</span><span>B2</span></div>
+                                      <div className="flex justify-between bg-yellow-900/30 px-2 py-1 rounded"><span>1st in Points</span><span>vs</span><span>2nd in Points</span></div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {config.bracketType !== 'group_of_6' && (
+                                <div className="text-xs text-slate-400 space-y-1">
+                                  <div>• {config.bracketCount} bracket{config.bracketCount > 1 ? 's' : ''} with ~{config.teamsPerBracket} teams each</div>
+                                  {config.bracketType === 'group_of_4' && (
+                                    <div>• Each team plays {config.teamsPerBracket - 1} games (round-robin)</div>
+                                  )}
+                                  {config.bracketType === 'group_of_8' && (
+                                    <div>• Teams only play against the opposite pool (crossplay format)</div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </CardContent>
                         </Card>
