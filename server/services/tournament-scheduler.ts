@@ -1012,6 +1012,23 @@ export class TournamentScheduler {
   }
   
   /**
+   * Get event data for the given event ID
+   */
+  private static async getEventData(eventId: string) {
+    const eventRecord = await db
+      .select()
+      .from(events)
+      .where(eq(events.id, parseInt(eventId)))
+      .limit(1);
+    
+    if (eventRecord.length === 0) {
+      throw new Error(`Event ${eventId} not found`);
+    }
+    
+    return eventRecord[0];
+  }
+
+  /**
    * Get available time slots for the event
    */
   private static async getAvailableTimeSlots(eventId: string): Promise<TimeSlot[]> {
@@ -1020,16 +1037,20 @@ export class TournamentScheduler {
       .from(gameTimeSlots)
       .where(eq(gameTimeSlots.eventId, eventId));
     
+    // Get actual event start date
+    const eventData = await this.getEventData(eventId);
+    const tournamentStart = new Date(eventData.startDate);
+    
     return timeSlotsData.map(slot => {
       // Calculate date based on dayIndex (assuming day 0 is tournament start date)
-      const tournamentStart = new Date();
-      tournamentStart.setDate(tournamentStart.getDate() + slot.dayIndex);
+      const slotDate = new Date(tournamentStart);
+      slotDate.setDate(slotDate.getDate() + slot.dayIndex);
       
       return {
         id: slot.id.toString(),
         startTime: slot.startTime,
         endTime: slot.endTime,
-        date: tournamentStart.toISOString().split('T')[0]
+        date: slotDate.toISOString().split('T')[0]
       };
     });
   }
