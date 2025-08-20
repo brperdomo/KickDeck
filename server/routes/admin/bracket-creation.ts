@@ -748,6 +748,19 @@ router.post('/:eventId/bracket-creation/generate-games', async (req, res) => {
 export async function generateGamesForFlight(eventId: string, flightId: number) {
   console.log(`[Game Generation] Starting game generation for flight ${flightId} in event ${eventId}`);
   
+  // Get event dates first
+  const eventData = await db
+    .select({
+      startDate: events.startDate,
+      endDate: events.endDate
+    })
+    .from(events)
+    .where(eq(events.id, parseInt(eventId)))
+    .limit(1);
+
+  const eventStartDate = eventData[0]?.startDate || new Date().toISOString().split('T')[0];
+  console.log(`[Game Generation] Using event start date: ${eventStartDate}`);
+  
   // Get brackets for the specific flight only
   const brackets = await db
     .select({
@@ -857,7 +870,7 @@ export async function generateGamesForFlight(eventId: string, flightId: number) 
             fieldName: assignedField.name,
             startTime,
             endTime,
-            date: new Date().toISOString().split('T')[0] // Today's date
+            date: eventStartDate // Use actual event start date
           };
         });
         
@@ -912,6 +925,19 @@ export async function generateGamesForFlight(eventId: string, flightId: number) 
 // CRITICAL FUNCTION: Generate games for all brackets in an event
 async function generateGamesForEvent(eventId: string) {
   console.log(`[Game Generation] Starting game generation for event ${eventId} (type: ${typeof eventId})`);
+  
+  // Get event dates first
+  const eventData = await db
+    .select({
+      startDate: events.startDate,
+      endDate: events.endDate
+    })
+    .from(events)
+    .where(eq(events.id, parseInt(eventId)))
+    .limit(1);
+
+  const eventStartDate = eventData[0]?.startDate || new Date().toISOString().split('T')[0];
+  console.log(`[Game Generation] Using event start date: ${eventStartDate}`);
   
   // Get all brackets with assigned teams for this event
   const brackets = await db
