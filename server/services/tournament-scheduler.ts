@@ -1440,22 +1440,21 @@ export async function generateGamesForEvent(eventId: string) {
 
       // Save games to database
       for (const game of generatedGames) {
+        console.log(`[Game Generation] Inserting game with eventId: "${eventId}" (type: ${typeof eventId})`);
         await db.insert(games).values({
-          event_id: eventId,
+          eventId: parseInt(eventId), // Convert to integer to match database schema
           ageGroupId: bracket.ageGroupId,
           groupId: game.poolId ? parseInt(game.poolId) : null,
           homeTeamId: game.homeTeamId || null,
           awayTeamId: game.awayTeamId || null,
           round: game.round === 'Pool Play' ? 1 : 2, // Pool play = round 1, finals = round 2
-          gameType: game.gameType === 'pool_play' ? 'regular' : game.gameType,
-          duration: game.duration,
-          gameNumber: game.gameNumber,
           status: 'scheduled',
-          notes: `${game.homeTeamName} vs ${game.awayTeamName}`,
+          duration: game.duration || 90,
+          matchNumber: game.gameNumber || 1,
+          breakTime: 5,
           fieldId: game.fieldId || null,
-          startTime: game.startTime || null,
-          endTime: game.endTime || null,
-          gameDate: game.date || null
+          scheduledDate: game.date || null,
+          scheduledTime: game.startTime || null
         });
       }
 

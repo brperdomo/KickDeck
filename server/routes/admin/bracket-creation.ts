@@ -725,7 +725,7 @@ router.post('/:eventId/generate-games', async (req, res) => {
 
 // CRITICAL FUNCTION: Generate games for all brackets in an event
 async function generateGamesForEvent(eventId: string) {
-  console.log(`[Game Generation] Starting game generation for event ${eventId}`);
+  console.log(`[Game Generation] Starting game generation for event ${eventId} (type: ${typeof eventId})`);
   
   // Get all brackets with assigned teams for this event
   const brackets = await db
