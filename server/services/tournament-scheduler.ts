@@ -1441,7 +1441,7 @@ export async function generateGamesForEvent(eventId: string) {
       // Save games to database
       for (const game of generatedGames) {
         await db.insert(games).values({
-          eventId: eventId,
+          event_id: eventId,
           ageGroupId: bracket.ageGroupId,
           groupId: game.poolId ? parseInt(game.poolId) : null,
           homeTeamId: game.homeTeamId || null,
