@@ -217,6 +217,11 @@ async function testDbConnection() {
     const { default: multiFlightSchedulingRoutes } = await import('./routes/admin/multi-flight-scheduling');
     app.use('/api/admin', multiFlightSchedulingRoutes);
 
+    // Register standalone game generation endpoint (bypasses routes.ts compilation issues)
+    const { default: standaloneGameGenerationRouter } = await import('./standalone-game-generation');
+    app.use(standaloneGameGenerationRouter);
+    log("Standalone game generation endpoint registered");
+
     log("API routes registered");
 
     // Set up appropriate middleware based on environment
