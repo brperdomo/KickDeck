@@ -7,6 +7,14 @@ MatchPro AI is a comprehensive sports event management platform for tournament o
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 20, 2025)
+**CRITICAL GAME SCHEDULING DATE FIX IMPLEMENTED:**
+- **Root Cause Resolved**: Fixed hardcoded August dates in Generate Games functionality that was overriding correct event configuration
+- **Event Date Integration**: Added proper event.startDate retrieval in both `generateGamesForFlight()` and `generateGamesForEvent()` functions
+- **Correct Date Assignment**: Games now use actual event dates (Sep 30 - Oct 1) instead of hardcoded development dates (Aug 19)
+- **Generate Games Button Fix**: The Generate Games button in Bracket Management tab now creates games with correct event dates
+- **Comprehensive Date Validation**: Added event date logging to verify scheduling uses configured tournament dates
+- **User Requirement Fulfilled**: All new games generated moving forward will use the correct event dates as configured in Flight Configuration Overview
+
 **COMPLETE SCHEDULING SYSTEM UNIFICATION IMPLEMENTED:**
 - **System-Wide Scheduling Fix**: Resolved critical issue where ALL scheduling buttons were broken due to 300+ TypeScript compilation errors in routes.ts
 - **Unified API Approach**: Instead of creating conflicting new endpoints, leveraged the working Generate Games API pattern for all scheduling functionality
