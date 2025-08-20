@@ -120,8 +120,11 @@ export class SimpleScheduler {
     
     // Calculate actual time intervals (game + minimum buffer time)
     const minSlotDuration = gameDuration + 15; // Game + 15min buffer between games
-    const eventStartDate = new Date(eventData?.startDate || '2025-08-16');
+    const eventStartDate = new Date(eventData.startDate);
     const dailyStartHour = 8; // 8 AM start
+    
+    console.log(`📅 Using event start date: ${eventData.startDate} (parsed as: ${eventStartDate.toDateString()})`);
+    console.log(`📅 Event end date: ${eventData.endDate}`);
     
     // Schedule pool games with progressive time slots respecting rest periods
     for (let i = 0; i < poolGames.length; i++) {
@@ -190,8 +193,8 @@ export class SimpleScheduler {
       const tbdStartTime = new Date(latestPoolEndDate.getTime() + (restTime * 60 * 1000)); // Add rest period
       
       // Force TBD games to start on Day 2 at 8:00 AM minimum
-      const eventStartDate = new Date(eventData?.startDate || '2025-08-16');
-      const day2Start = new Date(eventStartDate);
+      const eventStartDateForTBD = new Date(eventData.startDate);
+      const day2Start = new Date(eventStartDateForTBD);
       day2Start.setDate(day2Start.getDate() + 1); // Next day
       day2Start.setHours(8, 0, 0, 0); // 8:00 AM
       
