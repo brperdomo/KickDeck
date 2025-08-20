@@ -1364,3 +1364,108 @@ export class TournamentScheduler {
     };
   }
 }
+
+/**
+ * Standalone function to generate games for all brackets in an event
+ * This function processes all brackets with assigned teams and creates the appropriate games
+ */
+export async function generateGamesForEvent(eventId: string) {
+  console.log(`[Game Generation] Starting game generation for event ${eventId}`);
+  
+  // Import necessary modules
+  const { sql } = await import('drizzle-orm');
+  
+  // Get all brackets with assigned teams for this event
+  const brackets = await db
+    .select({
+      bracketId: eventBrackets.id,
+      bracketName: eventBrackets.name,
+      ageGroupId: eventBrackets.ageGroupId,
+      format: eventBrackets.tournamentFormat,
+      teamCount: sql<number>`COUNT(${teams.id})`.as('teamCount')
+    })
+    .from(eventBrackets)
+    .innerJoin(eventAgeGroups, eq(eventBrackets.ageGroupId, eventAgeGroups.id))
+    .leftJoin(teams, and(
+      eq(teams.bracketId, eventBrackets.id),
+      eq(teams.status, 'approved')
+    ))
+    .where(eq(eventAgeGroups.eventId, eventId))
+    .groupBy(eventBrackets.id, eventBrackets.name, eventBrackets.ageGroupId, eventBrackets.tournamentFormat);
+
+  console.log(`[Game Generation] Found ${brackets.length} brackets to process`);
+
+  for (const bracket of brackets) {
+    if (bracket.teamCount === 0) {
+      console.log(`[Game Generation] Skipping bracket ${bracket.bracketName} - no approved teams`);
+      continue;
+    }
+
+    console.log(`[Game Generation] Processing bracket ${bracket.bracketName} with ${bracket.teamCount} teams`);
+
+    // Get teams for this bracket with their seeding positions
+    const bracketTeams = await db
+      .select({
+        id: teams.id,
+        name: teams.name,
+        bracketId: teams.bracketId,
+        groupId: teams.groupId,
+        seedRanking: teams.seedRanking
+      })
+      .from(teams)
+      .where(and(
+        eq(teams.bracketId, bracket.bracketId),
+        eq(teams.status, 'approved')
+      ))
+      .orderBy(teams.seedRanking);
+
+    // Prepare bracket data for tournament scheduler
+    const bracketData = {
+      bracketId: bracket.bracketId,
+      bracketName: bracket.bracketName,
+      format: bracket.format,
+      tournamentFormat: bracket.format,
+      teams: bracketTeams,
+      id: bracket.bracketId,
+      name: bracket.bracketName
+    };
+
+    console.log(`[Game Generation] Generating games for bracket ${bracket.bracketName} using format '${bracket.format}'`);
+
+    try {
+      // Generate games using the TournamentScheduler
+      const generatedGames = await TournamentScheduler.generateBracketGames(bracketData, 1);
+      
+      console.log(`[Game Generation] Generated ${generatedGames.length} games for bracket ${bracket.bracketName}`);
+
+      // Save games to database
+      for (const game of generatedGames) {
+        await db.insert(games).values({
+          eventId: eventId,
+          ageGroupId: bracket.ageGroupId,
+          groupId: game.poolId ? parseInt(game.poolId) : null,
+          homeTeamId: game.homeTeamId || null,
+          awayTeamId: game.awayTeamId || null,
+          round: game.round === 'Pool Play' ? 1 : 2, // Pool play = round 1, finals = round 2
+          gameType: game.gameType === 'pool_play' ? 'regular' : game.gameType,
+          duration: game.duration,
+          gameNumber: game.gameNumber,
+          status: 'scheduled',
+          notes: `${game.homeTeamName} vs ${game.awayTeamName}`,
+          fieldId: game.fieldId || null,
+          startTime: game.startTime || null,
+          endTime: game.endTime || null,
+          gameDate: game.date || null
+        });
+      }
+
+      console.log(`[Game Generation] Successfully saved ${generatedGames.length} games for bracket ${bracket.bracketName}`);
+
+    } catch (error) {
+      console.error(`[Game Generation] Failed to generate games for bracket ${bracket.bracketName}:`, error);
+      throw error;
+    }
+  }
+
+  console.log(`[Game Generation] Completed game generation for event ${eventId}`);
+}
