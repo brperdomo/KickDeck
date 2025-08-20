@@ -175,7 +175,7 @@ export class TournamentScheduler {
   /**
    * Generate games for a specific bracket based on its format
    */
-  private static async generateBracketGames(
+  public static async generateBracketGames(
     bracket: any,
     startingGameNumber: number
   ): Promise<Game[]> {
@@ -495,10 +495,15 @@ export class TournamentScheduler {
       console.log(`✅ Generated 9 crossplay games (Pool A vs Pool B ONLY) for 6-team bracket`);
       
       // Add championship TBD final game (1st in Points vs 2nd in Points across both pools)
+      console.log(`🏆 CHAMPIONSHIP DEBUG: About to generate championship game with gameCounter=${gameCounter}`);
       const championshipGame = this.generateChampionshipGame(bracket, gameCounter);
+      console.log(`🏆 CHAMPIONSHIP DEBUG: Generated game:`, championshipGame);
+      
       if (championshipGame) {
         games.push(championshipGame);
-        console.log(`🏆 Added TBD championship final game`);
+        console.log(`🏆 Added TBD championship final game: ${championshipGame.homeTeamName} vs ${championshipGame.awayTeamName}`);
+      } else {
+        console.error(`❌ CHAMPIONSHIP ERROR: Failed to generate championship game for bracket ${bracket.bracketId}`);
       }
       
       console.log(`🏆 6-Team Crossplay Complete: Generated ${games.length - (championshipGame ? 1 : 0)} crossplay pool games + ${championshipGame ? 1 : 0} TBD championship final = ${games.length} total games`);
@@ -654,10 +659,14 @@ export class TournamentScheduler {
     bracket: any,
     gameNumber: number
   ): Game {
+    console.log(`🏆 CHAMPIONSHIP DEBUG: Entering generateChampionshipGame for bracket:`, bracket);
+    
     // Generate proper winner format descriptions based on bracket format
     const { homeTeamName, awayTeamName } = this.getWinnerFormats(bracket);
     
-    return {
+    console.log(`🏆 CHAMPIONSHIP DEBUG: Winner formats - Home: ${homeTeamName}, Away: ${awayTeamName}`);
+    
+    const championshipGame = {
       id: `${bracket.bracketId}_final_${gameNumber}`,
       homeTeamId: 0, // Placeholder for winner
       homeTeamName: homeTeamName,
@@ -670,6 +679,9 @@ export class TournamentScheduler {
       gameNumber: gameNumber,
       duration: 90
     };
+    
+    console.log(`🏆 CHAMPIONSHIP DEBUG: Created championship game:`, championshipGame);
+    return championshipGame;
   }
 
   /**
