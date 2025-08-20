@@ -246,6 +246,38 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
     }
   });
 
+  // Generate games mutation
+  const generateGamesMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/admin/events/${eventId}/bracket-creation/generate-games`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || 'Failed to generate games');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Games Generated Successfully",
+        description: "Championship games and bracket matches have been created for all brackets"
+      });
+      // Invalidate queries to refresh the game data
+      queryClient.invalidateQueries({ queryKey: ['unified-bracket-manager', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/events', eventId] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Game Generation Failed",
+        description: error.message || "Failed to generate games. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const selectedFlightData = flightData?.find((f: Flight) => f.flightId === selectedFlight);
   
   // Debug logging for tab accessibility
@@ -295,6 +327,10 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
     }
     
     assignTeamsMutation.mutate({ assignments: teamAssignments, flightId: selectedFlight! });
+  };
+
+  const handleGenerateGames = () => {
+    generateGamesMutation.mutate();
   };
 
   // Handle drag and drop with seeding position capture
@@ -828,7 +864,7 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
                   </div>
                 </DragDropContext>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-slate-600">
+                <div className="flex justify-between gap-3 pt-4 border-t border-slate-600">
                   <Button
                     variant="outline"
                     onClick={() => setActiveTab('bracket-config')}
@@ -836,13 +872,22 @@ export function UnifiedBracketManager({ eventId }: UnifiedBracketManagerProps) {
                   >
                     Back to Configuration
                   </Button>
-                  <Button
-                    onClick={handleSaveAssignments}
-                    disabled={Object.keys(teamAssignments).length === 0 || assignTeamsMutation.isPending}
-                    className="bg-green-600 hover:bg-green-500 text-white"
-                  >
-                    {assignTeamsMutation.isPending ? 'Saving...' : 'Save Team Assignments'}
-                  </Button>
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={handleGenerateGames}
+                      disabled={generateGamesMutation.isPending}
+                      className="bg-blue-600 hover:bg-blue-500 text-white"
+                    >
+                      {generateGamesMutation.isPending ? 'Generating...' : 'Generate Games'}
+                    </Button>
+                    <Button
+                      onClick={handleSaveAssignments}
+                      disabled={Object.keys(teamAssignments).length === 0 || assignTeamsMutation.isPending}
+                      className="bg-green-600 hover:bg-green-500 text-white"
+                    >
+                      {assignTeamsMutation.isPending ? 'Saving...' : 'Save Team Assignments'}
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

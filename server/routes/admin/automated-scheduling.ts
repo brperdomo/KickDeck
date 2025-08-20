@@ -8,6 +8,67 @@ import { TournamentScheduler } from '../../services/tournament-scheduler.js';
 
 const router = Router();
 
+// DEBUG: Test template-based game generation 
+router.post('/events/:eventId/scheduling/debug-template', requirePermission('manage_events'), async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    console.log(`🔍 DEBUG: Testing template generation for 6-team crossover`);
+    
+    // Import the dynamic template engine
+    const { findBestTemplate, generateGamesFromTemplate } = await import('../../services/dynamic-matchup-engine.js');
+    
+    // Find the 6-team crossover template
+    const template = await findBestTemplate(6, 'crossover');
+    
+    if (!template) {
+      return res.json({ error: 'No 6-team crossover template found' });
+    }
+    
+    console.log(`🔍 Found template:`, template);
+    
+    // Create mock teams for testing
+    const mockTeams = [
+      { id: 1, name: 'Team A1', bracketId: '1', groupId: 1, seedRanking: 1, poolAssignment: 'A' },
+      { id: 2, name: 'Team A2', bracketId: '1', groupId: 1, seedRanking: 2, poolAssignment: 'A' },
+      { id: 3, name: 'Team A3', bracketId: '1', groupId: 1, seedRanking: 3, poolAssignment: 'A' },
+      { id: 4, name: 'Team B1', bracketId: '1', groupId: 2, seedRanking: 1, poolAssignment: 'B' },
+      { id: 5, name: 'Team B2', bracketId: '1', groupId: 2, seedRanking: 2, poolAssignment: 'B' },
+      { id: 6, name: 'Team B3', bracketId: '1', groupId: 2, seedRanking: 3, poolAssignment: 'B' }
+    ];
+    
+    const bracketInfo = {
+      id: 1,
+      name: 'Test Bracket',
+      tournamentFormat: 'group_of_6'
+    };
+    
+    // Generate games using template
+    const generatedGames = await generateGamesFromTemplate(template.id, mockTeams, bracketInfo);
+    
+    console.log(`🔍 Generated ${generatedGames.length} games:`, generatedGames);
+    
+    // Count pool games vs championship games
+    const poolGames = generatedGames.filter(g => g.gameType === 'pool_play');
+    const championshipGames = generatedGames.filter(g => g.gameType === 'final' || g.isChampionship);
+    
+    res.json({
+      template: template,
+      totalGames: generatedGames.length,
+      poolGames: poolGames.length,
+      championshipGames: championshipGames.length,
+      games: generatedGames,
+      analysis: {
+        hasChampionship: championshipGames.length > 0,
+        championshipDescription: championshipGames.map(g => g.notes || g.homeTeamName + ' vs ' + g.awayTeamName)
+      }
+    });
+    
+  } catch (error: any) {
+    console.error('🔍 DEBUG ERROR:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Generate scheduling preview for automated scheduling
 router.post('/events/:eventId/scheduling/preview', requirePermission('manage_events'), async (req, res) => {
   try {
