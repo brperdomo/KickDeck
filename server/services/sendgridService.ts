@@ -1,42 +1,13 @@
 import { MailService } from "@sendgrid/mail";
 
-// Don't initialize the mail service globally - create it fresh each time
-let mailService: MailService | null = null;
+if (!process.env.SENDGRID_API_KEY) {
+  console.warn("SendGrid API key not found in environment variables");
+}
 
-/**
- * Gets or creates a properly configured MailService instance
- */
-function getMailService(): MailService {
-  // Always create a fresh instance to avoid caching issues
-  const service = new MailService();
-
-  // Get API key from environment
-  const apiKey = process.env.SENDGRID_API_KEY;
-
-  // 🚨 DEBUG: Log the API key details
-  console.log("🔍 SENDGRID DEBUG - Environment check:");
-  console.log("API Key exists:", !!apiKey);
-  console.log("API Key length:", apiKey?.length || 0);
-  console.log("API Key first 10 chars:", apiKey?.substring(0, 10) || "N/A");
-  console.log("API Key starts with SG:", apiKey?.startsWith("SG") || false);
-  console.log("API Key starts with SG.:", apiKey?.startsWith("SG.") || false);
-  console.log("API Key starts with SG2.:", apiKey?.startsWith("SG2.") || false);
-
-  if (!apiKey) {
-    throw new Error("SENDGRID_API_KEY environment variable is not set");
-  }
-
-  // 🚨 DEBUG: Additional validation
-  if (!apiKey.startsWith("SG")) {
-    console.error("❌ API Key format issue - doesn't start with SG");
-    console.error("Full API key (first 20 chars):", apiKey.substring(0, 20));
-  }
-
-  // Set the API key
-  service.setApiKey(apiKey);
-
-  console.log("✅ SendGrid service initialized with API key");
-  return service;
+// Initialize the mail service with the API key
+const mailService = new MailService();
+if (process.env.SENDGRID_API_KEY) {
+  mailService.setApiKey(process.env.SENDGRID_API_KEY);
 }
 
 export interface SendGridEmailParams {
@@ -57,12 +28,12 @@ export interface SendGridDynamicTemplateParams {
 }
 
 /**
- * Set the SendGrid API key (legacy function for compatibility)
+ * Set the SendGrid API key
  * @param apiKey The SendGrid API key
  */
 export function setApiKey(apiKey: string): void {
-  // This function is kept for compatibility but not used
-  console.log("SendGrid API key configured (legacy method)");
+  mailService.setApiKey(apiKey);
+  console.log("SendGrid API key configured");
 }
 
 /**
@@ -72,8 +43,11 @@ export function setApiKey(apiKey: string): void {
  */
 export async function sendEmail(params: SendGridEmailParams): Promise<boolean> {
   try {
-    // Get a fresh mail service instance
-    const service = getMailService();
+    // Check if API key is set
+    if (!process.env.SENDGRID_API_KEY) {
+      console.error("SendGrid API key not configured");
+      return false;
+    }
 
     // Determine if we're using a template or regular email
     const message: any = {
@@ -94,8 +68,7 @@ export async function sendEmail(params: SendGridEmailParams): Promise<boolean> {
         "<p>Please view this email in a compatible email client.</p>";
     }
 
-    console.log(`Sending email to ${params.to} via SendGrid...`);
-    const response = await service.send(message);
+    const response = await mailService.send(message);
     console.log(
       `SendGrid: Email sent to ${params.to}, status: ${response[0].statusCode}`,
     );
@@ -123,12 +96,11 @@ export async function sendDynamicTemplateEmail(
   params: SendGridDynamicTemplateParams,
 ): Promise<boolean> {
   try {
-    // 🚨 DEBUG: Log what we're about to do
-    console.log("🚨 DYNAMIC TEMPLATE DEBUG:");
-    console.log("About to get mail service for dynamic template...");
-
-    // Get a fresh mail service instance
-    const service = getMailService();
+    // Check if API key is set
+    if (!process.env.SENDGRID_API_KEY) {
+      console.error("SendGrid API key not configured");
+      return false;
+    }
 
     if (!params.templateId) {
       console.error("SendGrid template ID is required");
@@ -143,9 +115,6 @@ export async function sendDynamicTemplateEmail(
       dynamicTemplateData: params.dynamicTemplateData || {},
     };
 
-    // 🚨 DEBUG: Log the message we're sending
-    console.log("🚨 MESSAGE TO SENDGRID:", JSON.stringify(message, null, 2));
-
     // Log template data in development mode
     if (process.env.NODE_ENV !== "production") {
       console.log("SendGrid Dynamic Template Email:");
@@ -155,43 +124,24 @@ export async function sendDynamicTemplateEmail(
         JSON.stringify(params.dynamicTemplateData, null, 2),
       );
     }
-
-    console.log(`Sending dynamic template email to ${params.to} via SendGrid...`);
-
-    // 🚨 DEBUG: Just before the actual send
-    console.log("🚨 About to call service.send() with message...");
-
-    const response = await service.send(message);
+    console.log("Setting API key !!!!!!!!!!!!!!!!!!");
+    mailService.setApiKey(process.env.SENDGRID_API_KEY);
+    
+    const response = await mailService.send(message);
     console.log(
       `SendGrid: Dynamic template email sent to ${params.to}, status: ${response[0].statusCode}`,
     );
     return true;
   } catch (error: unknown) {
-    console.error("🚨 SendGrid: Error sending dynamic template email:", error);
-
-    // 🚨 DEBUG: Enhanced error logging
-    console.error("🚨 Error type:", typeof error);
-    console.error("🚨 Error constructor:", error?.constructor?.name);
-
+    console.error("SendGrid: Error sending dynamic template email:", error);
     // Type guard for the SendGrid error response
     if (error && typeof error === "object" && "response" in error) {
       // Safe type assertion after the type guard
-      const sgError = error as { response: { body: any; status?: number } };
-      console.error("🚨 SendGrid Error Status:", sgError.response?.status);
-      console.error("🚨 SendGrid Error Body:", sgError.response?.body);
-
-      // Try to get more details from the error
+      const sgError = error as { response: { body: any } };
       if (sgError.response && sgError.response.body) {
         console.error("SendGrid API response error:", sgError.response.body);
       }
     }
-
-    // Also log the error message if it's a regular Error
-    if (error instanceof Error) {
-      console.error("🚨 Error message:", error.message);
-      console.error("🚨 Error stack:", error.stack);
-    }
-
     return false;
   }
 }
@@ -203,8 +153,9 @@ export async function sendDynamicTemplateEmail(
  */
 export async function verifyConfiguration(testEmail: string): Promise<boolean> {
   try {
-    // Get a fresh mail service instance (this will validate API key)
-    const service = getMailService();
+    if (!process.env.SENDGRID_API_KEY) {
+      throw new Error("SendGrid API key not configured");
+    }
 
     if (!testEmail) {
       throw new Error("Test email address required");
@@ -224,7 +175,7 @@ export async function verifyConfiguration(testEmail: string): Promise<boolean> {
       `,
     };
 
-    const response = await service.send(message);
+    const response = await mailService.send(message);
     console.log(
       `SendGrid configuration verified, status: ${response[0].statusCode}`,
     );
@@ -256,8 +207,9 @@ export async function testDynamicTemplate(
   sampleData: Record<string, any>,
 ): Promise<boolean> {
   try {
-    // Get a fresh mail service instance (this will validate API key)
-    const service = getMailService();
+    if (!process.env.SENDGRID_API_KEY) {
+      throw new Error("SendGrid API key not configured");
+    }
 
     if (!testEmail) {
       throw new Error("Test email address required");
