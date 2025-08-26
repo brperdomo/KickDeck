@@ -6112,9 +6112,11 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
     // Financial export endpoint for approved teams
     app.get('/api/admin/teams/financial-export', isAdmin, async (req, res) => {
       try {
+        console.log('[Financial Export] Request started', { eventId: req.query.eventId });
         const { eventId } = req.query;
         
         // Build the query for approved teams with all necessary financial data
+        console.log('[Financial Export] Building query...');
         let query = db
           .select({
             teamName: teams.name,
@@ -6140,10 +6142,15 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
 
         // Filter by event if specified
         if (eventId && eventId !== 'all') {
-          query = query.where(eq(teams.eventId, parseInt(eventId as string)));
+          console.log('[Financial Export] Adding event filter:', eventId);
+          const parsedEventId = parseInt(eventId as string);
+          if (!isNaN(parsedEventId)) {
+            query = query.where(and(eq(teams.status, 'approved'), eq(teams.eventId, parsedEventId)));
+          }
         }
 
-        const approvedTeams = await query.orderBy(teams.name);
+        console.log('[Financial Export] Executing query...');
+        const approvedTeams = await query;
 
         console.log(`[Financial Export] Found ${approvedTeams.length} approved teams`);
 
@@ -6216,9 +6223,12 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
 
       } catch (error) {
         console.error('Error generating financial export:', error);
+        console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+        console.error('Event ID parameter:', req.query.eventId);
         res.status(500).json({ 
           error: 'Failed to generate financial export',
-          details: error instanceof Error ? error.message : 'Unknown error'
+          details: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
         });
       }
     });

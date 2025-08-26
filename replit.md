@@ -16,6 +16,7 @@ Preferred communication style: Simple, everyday language.
 - **Error Handling**: Includes proper error handling and user feedback via toast notifications
 - **Authentication Protected**: Endpoint requires admin authentication to ensure secure access to financial data
 - **Production Fix**: Fixed authentication issue where frontend wasn't sending session cookies - now uses authenticated fetch with blob download
+- **500 Error Resolution**: Fixed TypeScript compilation errors in routes.ts that were causing server crashes during financial export
 
 **PREVIOUS CHANGES (August 20, 2025)
 **CRITICAL GAME SCHEDULING DATE FIX IMPLEMENTED:**
