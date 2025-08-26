@@ -6145,9 +6145,29 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
 
         const approvedTeams = await query.orderBy(teams.name);
 
+        console.log(`[Financial Export] Found ${approvedTeams.length} approved teams`);
+
+        // Define CSV headers
+        const headers = [
+          'Team Name',
+          'Club', 
+          'Submitter Name',
+          'Submitter Email',
+          'Manager Name', 
+          'Manager Email',
+          'Registration Fee',
+          'Total Amount',
+          'Payment Status',
+          'Payment Date',
+          'Card Brand',
+          'Card Last 4',
+          'Event',
+          'Age Group'
+        ];
+
         // Format for CSV
         const csvData = approvedTeams.map(team => ({
-          'Team Name': team.teamName,
+          'Team Name': team.teamName || '',
           'Club': team.clubName || '',
           'Submitter Name': team.submitterName || '',
           'Submitter Email': team.submitterEmail || '',
@@ -6155,27 +6175,36 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           'Manager Email': team.managerEmail || '',
           'Registration Fee': team.registrationFee ? `$${(team.registrationFee / 100).toFixed(2)}` : '$0.00',
           'Total Amount': team.totalAmount ? `$${(team.totalAmount / 100).toFixed(2)}` : '$0.00',
-          'Payment Status': team.paymentStatus,
+          'Payment Status': team.paymentStatus || '',
           'Payment Date': team.paymentDate ? new Date(team.paymentDate).toLocaleDateString() : '',
           'Card Brand': team.cardBrand || '',
           'Card Last 4': team.cardLast4 || '',
-          'Event': team.eventName,
-          'Age Group': `${team.gender} ${team.ageGroup}`
+          'Event': team.eventName || '',
+          'Age Group': `${team.gender || ''} ${team.ageGroup || ''}`
         }));
 
         // Convert to CSV
-        const csv = [
-          // Header row
-          Object.keys(csvData[0] || {}).join(','),
-          // Data rows
-          ...csvData.map(row => 
-            Object.values(row).map(value => 
-              typeof value === 'string' && value.includes(',') 
-                ? `"${value}"` 
-                : value
-            ).join(',')
-          )
-        ].join('\n');
+        let csv;
+        if (csvData.length === 0) {
+          // If no data, just return headers
+          csv = headers.join(',');
+        } else {
+          csv = [
+            // Header row
+            headers.join(','),
+            // Data rows
+            ...csvData.map(row => 
+              headers.map(header => {
+                const value = row[header as keyof typeof row] || '';
+                // Escape quotes and wrap in quotes if contains comma or quote
+                if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+                  return `"${value.replace(/"/g, '""')}"`;
+                }
+                return value;
+              }).join(',')
+            )
+          ].join('\n');
+        }
 
         // Set response headers for CSV download
         const timestamp = new Date().toISOString().split('T')[0];
