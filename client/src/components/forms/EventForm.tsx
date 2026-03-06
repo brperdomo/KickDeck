@@ -539,9 +539,7 @@ export const EventForm = ({ mode, layout = 'tabs', defaultValues, onSubmit, isSu
       const submitData = {
         ...data,
         seasonalScopeId: scopeIdToSubmit,
-        // CONSTRAINT SAFE: Remove age groups from event update to prevent violations
-        // Age group eligibility is handled separately through dedicated endpoints
-        // ageGroups: undefined, // Don't include age groups in main event update
+        ageGroups, // Include age groups from state (Zod strips them from form data)
         scoringRules,
         settings: updatedSettings, // Use the updated settings
         complexFieldSizes,
