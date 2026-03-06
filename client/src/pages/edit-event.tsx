@@ -26,9 +26,11 @@ export default function EditEvent() {
       const data = await response.json();
 
       // Get seasonal scope ID from settings
-      const seasonalScopeId = data.settings?.find(
-        (s: any) => s.settingKey === 'seasonalScopeId'
-      )?.settingValue;
+      // Server returns settings as { key, value } (mapped from settingKey/settingValue)
+      const scopeSetting = data.settings?.find(
+        (s: any) => s.key === 'seasonalScopeId' || s.settingKey === 'seasonalScopeId'
+      );
+      const seasonalScopeId = scopeSetting?.value || scopeSetting?.settingValue;
 
       return {
         ...data,

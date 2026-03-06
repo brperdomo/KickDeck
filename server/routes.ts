@@ -7060,16 +7060,18 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             .returning();
 
           // Handle age groups if provided
-          if (formData.selectedScopeId && formData.selectedAgeGroupIds) {
+          // Accept both field names: selectedScopeId (legacy) and seasonalScopeId (from form)
+          const scopeId = formData.selectedScopeId || formData.seasonalScopeId;
+          if (scopeId && formData.selectedAgeGroupIds) {
+            // Legacy path: fetch from ageGroupSettings by IDs
             const selectedAgeGroups = await tx
               .select()
               .from(ageGroupSettings)
               .where(and(
-                eq(ageGroupSettings.seasonalScopeId, formData.selectedScopeId),
+                eq(ageGroupSettings.seasonalScopeId, scopeId),
                 inArray(ageGroupSettings.id, formData.selectedAgeGroupIds)
               ));
 
-            // Create event age groups
             for (const group of selectedAgeGroups) {
               await tx
                 .insert(eventAgeGroups)
@@ -7078,12 +7080,31 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
                   ageGroup: group.ageGroup,
                   birthYear: group.birthYear,
                   gender: group.gender,
-                  fieldSize: "11v11", // Default value, can be updated later
-                  projectedTeams: 8, // Default value, can be updated later
+                  fieldSize: "11v11",
+                  projectedTeams: 8,
                   seasonalScopeId: group.seasonalScopeId,
                   createdAt: new Date().toISOString(),
                 });
             }
+          } else if (scopeId && formData.ageGroups && Array.isArray(formData.ageGroups) && formData.ageGroups.length > 0) {
+            // New path: create event_age_groups directly from the form's ageGroups array
+            console.log(`Creating ${formData.ageGroups.length} event age groups from form data`);
+            for (const group of formData.ageGroups) {
+              await tx
+                .insert(eventAgeGroups)
+                .values({
+                  eventId,
+                  ageGroup: group.ageGroup || group.age_group || '',
+                  birthYear: group.birthYear || group.birth_year || 0,
+                  gender: group.gender || '',
+                  fieldSize: group.fieldSize || group.field_size || '11v11',
+                  projectedTeams: 8,
+                  divisionCode: group.divisionCode || group.division_code || null,
+                  seasonalScopeId: scopeId,
+                  createdAt: new Date().toISOString(),
+                });
+            }
+            console.log(`Successfully created ${formData.ageGroups.length} event age groups`);
           }
 
           // Handle event settings (e.g., allowPayLater)
@@ -7133,11 +7154,13 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           }
 
           // Store seasonalScopeId as a setting for later retrieval
-          if (formData.selectedScopeId) {
+          // Accept both field names: selectedScopeId (legacy) and seasonalScopeId (from form)
+          const scopeIdToSave = formData.selectedScopeId || formData.seasonalScopeId;
+          if (scopeIdToSave) {
             await tx.insert(eventSettings).values({
               eventId,
               settingKey: 'seasonalScopeId',
-              settingValue: formData.selectedScopeId.toString(),
+              settingValue: scopeIdToSave.toString(),
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             });
