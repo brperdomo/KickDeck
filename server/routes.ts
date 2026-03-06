@@ -7491,105 +7491,54 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
             throw new Error("Event not found");
           }
 
-          // COMPLETELY DISABLED: All age group processing during event updates
-          // This prevents ANY database constraint violations
-          console.log('All age group processing completely disabled during event updates to prevent constraint violations');
+          // SAFE age group upsert: Only INSERT missing age groups, never delete existing ones
+          // This prevents foreign key constraint violations from teams referencing age groups
+          if (eventData.ageGroups && Array.isArray(eventData.ageGroups) && eventData.ageGroups.length > 0) {
+            const numericEventId = Number(eventId);
+            console.log(`Processing ${eventData.ageGroups.length} age groups for event update ${numericEventId}`);
 
-          // COMPLETELY DISABLED: All age group management during event updates
-          // This prevents ALL foreign key constraint violations
-          // Eligibility is managed through the separate eligibility table only
-          if (false) {
-            const seasonalScopeId = parseInt(eventData.seasonalScopeId.toString());
-            console.log(`Event update is using seasonal scope: ${seasonalScopeId}`);
-            
-            // Get age groups from the seasonal scope
-            const scopeAgeGroups = await tx
+            // Get existing age groups for this event
+            const existingAgeGroups = await tx
               .select()
-              .from(ageGroupSettings)
-              .where(eq(ageGroupSettings.seasonalScopeId, seasonalScopeId));
-            
-            console.log(`Found ${scopeAgeGroups.length} age groups in seasonal scope ${seasonalScopeId}`);
-            
-            if (scopeAgeGroups.length > 0) {
-              // Find any existing age groups from this event that have teams to preserve
-              const ageGroupsToPreserve = new Map();
-              for (const group of existingAgeGroups) {
-                if (ageGroupsWithTeamsMap.has(group.id)) {
-                  // Keep age groups that have teams
-                  ageGroupsToPreserve.set(group.id, group);
-                }
-              }
-              
-              // COMPLETELY REMOVED: All age group processing logic to prevent constraint violations
-              console.log('All age group processing disabled during event updates to prevent foreign key violations');
-              
-              // Skip all age group processing entirely
-              // for (const scopeGroup of response.data.ageGroups) {
-                  // Calculate field size based on age group
-                  // const ageNum = scopeGroup.ageGroup.startsWith('U') ? 
-                  //   parseInt(scopeGroup.ageGroup.substring(1)) : 18;
-                  
-                  // const fieldSize = ageNum <= 7 ? '4v4' : 
-                  //                   ageNum <= 10 ? '7v7' : 
-                  //                   ageNum <= 12 ? '9v9' : '11v11';
-                                    
-                  // DISABLED: Age group insertion completely blocked to prevent constraint violations
-                  console.log('Age group insertion disabled to prevent foreign key constraint violations');
-                  // if (false) await tx
-                  //   .insert(eventAgeGroups)
-                  //   .values({
-                  //     eventId,
-                  //     ageGroup: scopeGroup.ageGroup,
-                  //     birthYear: scopeGroup.birthYear,
-                  //     gender: scopeGroup.gender,
-                  //     divisionCode: scopeGroup.divisionCode,
-                  //     fieldSize: fieldSize,
-                  //     projectedTeams: 8,
-                  //     createdAt: new Date().toISOString(),
-                  //     birthDateStart: new Date(scopeGroup.birthYear, 0, 1).toISOString().split('T')[0],
-                  //     birthDateEnd: new Date(scopeGroup.birthYear, 11, 31).toISOString().split('T')[0],
-                  //     seasonalScopeId: seasonalScopeId,
-                  //     scoringRule: null,
-                  //     amountDue: null,
-                  //   });
-                // }
-              
-              // Save the seasonal scope ID in event settings
-              const existingSetting = await tx
-                .select()
-                .from(eventSettings)
-                .where(and(
-                  eq(eventSettings.eventId, eventId),
-                  eq(eventSettings.settingKey, 'seasonalScopeId')
-                ))
-                .limit(1);
-                
-              if (existingSetting.length > 0) {
+              .from(eventAgeGroups)
+              .where(eq(eventAgeGroups.eventId, numericEventId));
+
+            // Build a set of existing age group keys for quick lookup
+            const existingKeys = new Set(
+              existingAgeGroups.map(ag => `${ag.ageGroup}-${ag.gender}-${ag.birthYear}`)
+            );
+
+            let insertedCount = 0;
+            const scopeId = eventData.seasonalScopeId ? Number(eventData.seasonalScopeId) : null;
+
+            for (const group of eventData.ageGroups) {
+              const ageGroup = group.ageGroup || group.age_group || '';
+              const gender = group.gender || '';
+              const birthYear = group.birthYear || group.birth_year || 0;
+              const key = `${ageGroup}-${gender}-${birthYear}`;
+
+              if (!existingKeys.has(key)) {
                 await tx
-                  .update(eventSettings)
-                  .set({
-                    settingValue: seasonalScopeId.toString(),
-                    updatedAt: new Date().toISOString()
-                  })
-                  .where(eq(eventSettings.id, existingSetting[0].id));
-              } else {
-                await tx
-                  .insert(eventSettings)
+                  .insert(eventAgeGroups)
                   .values({
-                    eventId,
-                    settingKey: 'seasonalScopeId',
-                    settingValue: seasonalScopeId.toString(),
+                    eventId: numericEventId,
+                    ageGroup,
+                    birthYear,
+                    gender,
+                    fieldSize: group.fieldSize || group.field_size || '11v11',
+                    projectedTeams: 8,
+                    divisionCode: group.divisionCode || group.division_code || null,
+                    seasonalScopeId: scopeId,
+                    isEligible: group.isEligible !== false,
                     createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
                   });
+                insertedCount++;
               }
             }
+            console.log(`Inserted ${insertedCount} new age groups, ${existingAgeGroups.length} already existed`);
+          } else {
+            console.log('No age groups in event update data');
           }
-          
-          // CONSTRAINT SAFE: Age group management completely disabled during event updates
-          // All age group eligibility is handled through the separate eligibility table only
-          // This prevents ANY foreign key constraint violations
-          console.log('Age group management during event update is disabled - eligibility handled separately');
 
           // Update complex assignments
           await tx.execute(sql`DELETE FROM event_complexes WHERE event_id = ${eventId}`);
