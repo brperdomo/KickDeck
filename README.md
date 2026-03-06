@@ -1,5 +1,5 @@
 
-# KickDeck Event Management System
+# KickDeck Sports Management System
 
 A comprehensive event management system for sports organizations.
 
