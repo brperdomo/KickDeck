@@ -1,5 +1,8 @@
 import dotenv from "dotenv";
+// Load .env first (local dev), then .env.production (Docker/Railway)
+// dotenv never overrides existing OS-level env vars, so Railway's injected vars take precedence
 dotenv.config();
+dotenv.config({ path: '.env.production' });
 
 import * as schema from "@db/schema";
 
