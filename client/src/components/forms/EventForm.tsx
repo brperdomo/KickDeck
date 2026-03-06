@@ -319,9 +319,13 @@ export const EventForm = ({ mode, layout = 'tabs', defaultValues, onSubmit, isSu
 
   useEffect(() => {
     // Prioritize event age groups over seasonal scope age groups when in edit mode
-    const sourceData = (mode === 'edit' && eventAgeGroupsQuery.data) || ageGroupsQuery.data;
-    
-    if (sourceData) {
+    // IMPORTANT: Use .length > 0 check because empty arrays are truthy in JS
+    // and would otherwise wipe out age groups loaded from the seasonal scope
+    const sourceData = (mode === 'edit' && eventAgeGroupsQuery.data?.length > 0)
+      ? eventAgeGroupsQuery.data
+      : ageGroupsQuery.data;
+
+    if (sourceData && sourceData.length > 0) {
       console.log('Formatting age groups from source:', { mode, sourceData });
       
       // Format and update age groups from query
