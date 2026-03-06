@@ -1062,39 +1062,80 @@ export function registerRoutes(app: Express): Server {
     // Add age group eligibility settings endpoint
     app.put('/api/admin/age-group-eligibility-settings/:ageGroupId', isAdmin, async (req, res) => {
       try {
-        const ageGroupId = parseInt(req.params.ageGroupId);
+        // ageGroupId is VARCHAR(255) in the DB — can be numeric ID or composite key like "Girls-2007-U19"
+        const ageGroupId = req.params.ageGroupId;
         const { isEligible, eventId } = req.body;
-        
-        console.log(`Updating eligibility for age group ${ageGroupId} in event ${eventId} to ${isEligible}`);
-        
-        if (typeof isEligible !== 'boolean' || !eventId) {
+        const numericEventId = Number(eventId);
+
+        console.log(`Updating eligibility for age group ${ageGroupId} in event ${numericEventId} to ${isEligible}`);
+
+        if (typeof isEligible !== 'boolean' || !eventId || isNaN(numericEventId)) {
           return res.status(400).json({ error: 'Invalid request data' });
         }
-        
-        // Check if record exists in eligibility table
-        const existingRecord = await db.execute(sql`
-          SELECT * FROM event_age_group_eligibility 
-          WHERE event_id = ${eventId} AND age_group_id = ${ageGroupId}
-        `);
-        
-        if (existingRecord.rows && existingRecord.rows.length > 0) {
-          // Update existing record
-          await db.execute(sql`
-            UPDATE event_age_group_eligibility 
-            SET is_eligible = ${isEligible}
-            WHERE event_id = ${eventId} AND age_group_id = ${ageGroupId}
-          `);
-          console.log(`Updated existing eligibility record`);
+
+        // Also update the isEligible column on event_age_groups directly
+        // Try by numeric ID first, then by composite key
+        const numericAgeGroupId = Number(ageGroupId);
+        if (!isNaN(numericAgeGroupId)) {
+          await db
+            .update(eventAgeGroups)
+            .set({ isEligible })
+            .where(
+              and(
+                eq(eventAgeGroups.id, numericAgeGroupId),
+                eq(eventAgeGroups.eventId, numericEventId)
+              )
+            );
+          console.log(`Updated isEligible on event_age_groups by numeric ID ${numericAgeGroupId}`);
         } else {
-          // Insert new record
-          await db.execute(sql`
-            INSERT INTO event_age_group_eligibility (event_id, age_group_id, is_eligible)
-            VALUES (${eventId}, ${ageGroupId}, ${isEligible})
-          `);
-          console.log(`Created new eligibility record`);
+          // Composite key like "Girls-2007-U19" — parse and match by fields
+          const parts = ageGroupId.split('-');
+          if (parts.length >= 3) {
+            const gender = parts[0];
+            const birthYear = parseInt(parts[1]);
+            const ageGroup = parts.slice(2).join('-');
+            await db
+              .update(eventAgeGroups)
+              .set({ isEligible })
+              .where(
+                and(
+                  eq(eventAgeGroups.eventId, numericEventId),
+                  eq(eventAgeGroups.gender, gender),
+                  eq(eventAgeGroups.birthYear, birthYear),
+                  eq(eventAgeGroups.ageGroup, ageGroup)
+                )
+              );
+            console.log(`Updated isEligible on event_age_groups by composite key: ${gender}-${birthYear}-${ageGroup}`);
+          }
         }
-        
-        console.log(`Successfully saved eligibility setting: event ${eventId}, age group ${ageGroupId}, eligible: ${isEligible}`);
+
+        // Also upsert into event_age_group_eligibility table (if it exists)
+        try {
+          const existingRecord = await db.execute(sql`
+            SELECT * FROM event_age_group_eligibility
+            WHERE event_id = ${numericEventId} AND age_group_id = ${ageGroupId}
+          `);
+
+          if (existingRecord.rows && existingRecord.rows.length > 0) {
+            await db.execute(sql`
+              UPDATE event_age_group_eligibility
+              SET is_eligible = ${isEligible}
+              WHERE event_id = ${numericEventId} AND age_group_id = ${ageGroupId}
+            `);
+            console.log(`Updated existing eligibility record`);
+          } else {
+            await db.execute(sql`
+              INSERT INTO event_age_group_eligibility (event_id, age_group_id, is_eligible)
+              VALUES (${numericEventId}, ${ageGroupId}, ${isEligible})
+            `);
+            console.log(`Created new eligibility record`);
+          }
+        } catch (eligError) {
+          // Table might not exist yet — that's OK, we already updated event_age_groups directly
+          console.log(`Note: event_age_group_eligibility table operation skipped:`, (eligError as Error).message);
+        }
+
+        console.log(`Successfully saved eligibility setting: event ${numericEventId}, age group ${ageGroupId}, eligible: ${isEligible}`);
         res.json({ success: true });
       } catch (error) {
         console.error('Error updating age group eligibility:', error);

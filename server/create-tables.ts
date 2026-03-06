@@ -114,6 +114,13 @@ export async function createTables() {
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
+
+      CREATE TABLE IF NOT EXISTS event_age_group_eligibility (
+        event_id INTEGER NOT NULL,
+        age_group_id VARCHAR(255) NOT NULL,
+        is_eligible BOOLEAN NOT NULL DEFAULT TRUE,
+        PRIMARY KEY (event_id, age_group_id)
+      );
     `);
 
     console.log('Creating email templates table...');
