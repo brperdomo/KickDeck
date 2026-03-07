@@ -5,12 +5,11 @@ import { eq } from 'drizzle-orm';
 import { getStripeClient } from './stripe-client-factory';
 
 /**
- * Calculate platform fees: 4% + $0.30
+ * Calculate total charge including 4% + $0.30 platform fee
  */
 function calculateWithPlatformFees(baseAmount: number): number {
   const platformFeePercentage = 0.04; // 4%
   const platformFeeFixed = 30; // $0.30 in cents
-  
   return Math.round(baseAmount + (baseAmount * platformFeePercentage) + platformFeeFixed);
 }
 
@@ -249,7 +248,7 @@ export function getPlatformFeeBreakdown(baseAmount: number): {
   totalAmount: number;
 } {
   const platformFeePercentage = Math.round(baseAmount * 0.04);
-  const platformFeeFixed = 30;
+  const platformFeeFixed = 30; // $0.30 in cents
   const totalPlatformFees = platformFeePercentage + platformFeeFixed;
   const totalAmount = baseAmount + totalPlatformFees;
 

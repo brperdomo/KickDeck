@@ -13,22 +13,19 @@ interface FeeBreakdownProps {
   };
 }
 
+// Platform fee constants — must match server-side fee-calculator.ts
+const PLATFORM_FEE_RATE = 0.04; // 4%
+const PLATFORM_FIXED_FEE = 30; // $0.30 in cents
+
 export function FeeBreakdown({
   tournamentCost,
   selectedFeeName = "Registration Fee",
   requiredFees = [],
   appliedCoupon
 }: FeeBreakdownProps) {
-  // Platform fee calculation (matches server logic)
-  const DEFAULT_PLATFORM_FEE_RATE = 0.04; // 4%
-  const STRIPE_PERCENTAGE_FEE = 0.029; // 2.9%
-  const STRIPE_FIXED_FEE = 30; // $0.30 in cents
-
-  // Calculate the total amount needed to cover tournament cost + fees
-  const kickdeckTargetMargin = Math.round(tournamentCost * DEFAULT_PLATFORM_FEE_RATE);
-  const totalChargedAmount = Math.round((tournamentCost + kickdeckTargetMargin + STRIPE_FIXED_FEE) / (1 - STRIPE_PERCENTAGE_FEE));
-  const platformFeeAmount = totalChargedAmount - tournamentCost;
-  const stripeFeeAmount = Math.round(totalChargedAmount * STRIPE_PERCENTAGE_FEE) + STRIPE_FIXED_FEE;
+  // 4% + $0.30 platform fee on top of the tournament cost
+  const platformFeeAmount = Math.round(tournamentCost * PLATFORM_FEE_RATE + PLATFORM_FIXED_FEE);
+  const totalChargedAmount = tournamentCost + platformFeeAmount;
 
   const formatCurrency = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
@@ -97,7 +94,7 @@ export function FeeBreakdown({
             <div>
               <span className="font-medium text-orange-400">Platform & Processing Fee</span>
               <div className="text-xs text-orange-400/80 mt-1">
-                Includes payment processing and platform services (4%)
+                4% + $0.30 per transaction
               </div>
             </div>
             <span className="font-semibold text-orange-400">
@@ -111,7 +108,7 @@ export function FeeBreakdown({
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <CreditCard className="h-5 w-5" />
-              <span className="text-lg font-semibold">Total Amount to be Charged</span>
+              <span className="text-lg font-semibold">Total to be Charged</span>
             </div>
             <span className="text-xl font-bold">
               {formatCurrency(totalChargedAmount)}
@@ -127,7 +124,7 @@ export function FeeBreakdown({
           <div className="font-medium mb-1 text-gray-300">How fees work:</div>
           <ul className="space-y-1 list-disc list-inside">
             <li>Tournament registration fee goes directly to the tournament organizer</li>
-            <li>Platform fee covers payment processing, customer support, and platform services</li>
+            <li>A 4% + $0.30 fee covers payment processing and platform services</li>
             <li>No additional charges - this is the final amount</li>
             <li>Secure payment processing via Stripe</li>
           </ul>

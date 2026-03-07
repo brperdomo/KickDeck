@@ -13,9 +13,9 @@ import { events } from "@db/schema";
 import { eq } from "drizzle-orm";
 
 // Base fee rates
-export const DEFAULT_PLATFORM_FEE_RATE = 0.04; // 4% KickDeck fee
-export const STRIPE_PERCENTAGE_FEE = 0.029; // 2.9%
-export const STRIPE_FIXED_FEE = 30; // $0.30 in cents
+export const DEFAULT_PLATFORM_FEE_RATE = 0.04; // 4% KickDeck fee (covers Stripe fees + KickDeck margin)
+export const STRIPE_PERCENTAGE_FEE = 0.029; // 2.9% (Stripe's cut, for internal tracking)
+export const STRIPE_FIXED_FEE = 30; // $0.30 in cents (Stripe's fixed cut, for internal tracking)
 
 // Volume discount tiers for platform fees
 // Designed to ensure KickDeck profitability while providing volume incentives
@@ -76,28 +76,22 @@ export function calculateStripeFees(totalAmount: number): number {
 
 /**
  * Calculate comprehensive fee breakdown
- * Fee structure: Tournament Cost + 4% + $0.30 total fee
- * Where: Stripe gets 2.9% + $0.30, KickDeck gets 1.1%
+ * Fee structure: Tournament Cost + 4% + $0.30
+ * Distribution: Stripe gets 2.9% + $0.30, KickDeck keeps the remaining ~1.1%
  */
 export function calculateFeeBreakdown(
   tournamentCost: number,
   eventVolume?: number
 ): FeeCalculation {
-  // Total fee structure: 4% + $0.30
-  const totalFeePercentage = 0.04; // 4%
-  const totalFixedFee = 30; // $0.30 in cents
-  
-  // Calculate total platform fee: 4% + $0.30
-  const platformFeeAmount = Math.round(tournamentCost * totalFeePercentage + totalFixedFee);
+  // Platform fee: 4% + $0.30 on top of the tournament cost
+  const platformFeeRate = DEFAULT_PLATFORM_FEE_RATE;
+  const platformFeeAmount = Math.round(tournamentCost * platformFeeRate + STRIPE_FIXED_FEE);
   const totalChargedAmount = tournamentCost + platformFeeAmount;
-  
-  // Calculate actual platform fee rate for reporting
-  const platformFeeRate = platformFeeAmount / tournamentCost;
-  
-  // Stripe gets exactly 2.9% + $0.30 of the tournament cost
-  const stripeFeeAmount = Math.round(tournamentCost * STRIPE_PERCENTAGE_FEE + STRIPE_FIXED_FEE);
-  
-  // KickDeck gets the remaining 1.1% of tournament cost
+
+  // Stripe takes 2.9% + $0.30 from the total charged
+  const stripeFeeAmount = Math.round(totalChargedAmount * STRIPE_PERCENTAGE_FEE + STRIPE_FIXED_FEE);
+
+  // KickDeck keeps the platform fee minus what Stripe takes
   const kickdeckReceives = platformFeeAmount - stripeFeeAmount;
   
   // Distribution calculation

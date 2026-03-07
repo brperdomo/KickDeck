@@ -2347,25 +2347,31 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
     return (total / 100).toFixed(2);
   };
 
-  // Calculate the total charge amount including platform fees (what customer will actually be charged)
-  // This matches the exact server-side logic from server/services/fee-calculator.ts
+  // Calculate the total charge amount including 4% + $0.30 platform fee (what customer will actually be charged)
+  // This matches the server-side logic from server/services/fee-calculator.ts
+  const PLATFORM_FEE_RATE = 0.04; // 4%
+  const PLATFORM_FIXED_FEE = 30; // $0.30 in cents
+
   const calculateTotalChargeAmount = () => {
     const tournamentCostCents = parseFloat(calculateTotalAmount()) * 100;
-    
     if (tournamentCostCents <= 0) return 0;
-    
-    // Constants matching server/services/fee-calculator.ts
-    const DEFAULT_PLATFORM_FEE_RATE = 0.04; // 4%
-    const STRIPE_PERCENTAGE_FEE = 0.029; // 2.9%
-    const STRIPE_FIXED_FEE = 30; // $0.30 in cents
 
-    // Server-side calculation logic (calculateFeeBreakdown function)
-    const kickdeckTargetMargin = Math.round(tournamentCostCents * DEFAULT_PLATFORM_FEE_RATE);
-    
-    // Solve for total amount: totalAmount = (tournamentCost + kickdeckMargin + 30) / (1 - 0.029)
-    const totalChargedAmount = Math.round((tournamentCostCents + kickdeckTargetMargin + STRIPE_FIXED_FEE) / (1 - STRIPE_PERCENTAGE_FEE));
-    
-    return totalChargedAmount; // Return in cents
+    // 4% + $0.30 platform fee on top
+    const platformFee = Math.round(tournamentCostCents * PLATFORM_FEE_RATE + PLATFORM_FIXED_FEE);
+    return tournamentCostCents + platformFee; // Return in cents
+  };
+
+  // Format the total charge amount in dollars for display
+  const formatTotalCharge = () => {
+    const totalCents = calculateTotalChargeAmount();
+    return (totalCents / 100).toFixed(2);
+  };
+
+  // Calculate just the platform fee amount in cents
+  const calculatePlatformFee = () => {
+    const tournamentCostCents = parseFloat(calculateTotalAmount()) * 100;
+    if (tournamentCostCents <= 0) return 0;
+    return Math.round(tournamentCostCents * PLATFORM_FEE_RATE + PLATFORM_FIXED_FEE);
   };
 
   // Function to validate coupon code
@@ -4766,11 +4772,19 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                                 </div>
                               )}
                               
-                              {/* Total amount */}
+                              {/* Subtotal */}
                               <div className="border-t pt-2">
-                                <div className="flex justify-between font-bold">
-                                  <span>Total Amount</span>
+                                <div className="flex justify-between text-sm text-gray-300">
+                                  <span>Subtotal</span>
                                   <span>${calculateTotalAmount()}</span>
+                                </div>
+                                <div className="flex justify-between text-sm text-orange-400 mt-1">
+                                  <span>Platform Fee (4% + $0.30)</span>
+                                  <span>${(calculatePlatformFee() / 100).toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between font-bold mt-2">
+                                  <span>Total to be Charged</span>
+                                  <span>${formatTotalCharge()}</span>
                                 </div>
                               </div>
                             </div>
@@ -4935,7 +4949,7 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                                   </div>
                                 } />
                                 <span>
-                                  <strong>Two-step payment process:</strong> Your payment information will be securely stored by Stripe, but your card will only be charged after your team registration is reviewed and approved by event administrators. The total amount of ${(parseFloat(calculateTotalAmount())).toFixed(2)} will be charged at that time.
+                                  <strong>Two-step payment process:</strong> Your payment information will be securely stored by Stripe, but your card will only be charged after your team registration is reviewed and approved by event administrators. The total amount of ${formatTotalCharge()} (including 4% + $0.30 processing fee) will be charged at that time.
                                 </span>
                               </p>
                             </div>
@@ -5151,13 +5165,22 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                     {(requiredFees.length > 0 || selectedFee) && (
                       <>
                         <Separator />
-                        <div className="flex justify-between text-lg font-bold">
-                          <span>Total Amount</span>
+                        <div className="flex justify-between text-sm text-gray-300">
+                          <span>Registration Subtotal</span>
                           <span>${calculateTotalAmount()}</span>
+                        </div>
+                        <div className="flex justify-between text-sm text-orange-400 mt-1">
+                          <span>Platform Fee (4% + $0.30)</span>
+                          <span>${(calculatePlatformFee() / 100).toFixed(2)}</span>
+                        </div>
+                        <Separator className="my-2" />
+                        <div className="flex justify-between text-lg font-bold">
+                          <span>Total to be Charged</span>
+                          <span>${formatTotalCharge()}</span>
                         </div>
                       </>
                     )}
-                    
+
                     <div className="p-4 rounded" style={{ backgroundColor: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
                       <h4 className="font-medium text-blue-300 mb-2">Payment Process</h4>
                       <ul className="text-sm text-blue-400 space-y-1">
