@@ -169,8 +169,8 @@ async function testDbConnection() {
     // Initialize standard folder structure
     await initializeStandardFolders();
 
-    // Get port configuration - Cloud Run uses PORT environment variable
-    const PORT = Number(process.env.PORT) || 8080; // Cloud Run default port is 8080
+    // Get port configuration - Railway injects PORT environment variable
+    const PORT = Number(process.env.PORT) || 8080;
 
     // Set up authentication BEFORE registering routes
     setupAuth(app);

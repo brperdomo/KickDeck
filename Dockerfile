@@ -23,5 +23,8 @@ RUN npx vite build
 
 ENV NODE_ENV=production
 
+# Railway injects PORT at runtime — do NOT hardcode port 80
+EXPOSE ${PORT:-8080}
+
 # At startup: push Drizzle schema to create core tables, then start the server
 CMD ["sh", "-c", "npx drizzle-kit push --force && npx tsx server/index.ts"]
