@@ -1,278 +1,543 @@
-import React from 'react';
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Loader2 } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import {
+  CreditCard,
+  Eye,
+  EyeOff,
+  Check,
+  Trash2,
+  Zap,
+  Loader2,
+  ExternalLink,
+  ShieldCheck,
+  AlertCircle,
+  TestTube2,
+} from "lucide-react";
 
-const stripeConfigSchema = z.object({
-  testMode: z.boolean(),
-  publishableKey: z.string().min(1, "Publishable key is required"),
-  secretKey: z.string().min(1, "Secret key is required"),
-  webhookSecret: z.string().optional(),
-  priceId: z.string().optional(),
-});
-
-type StripeConfigFormValues = z.infer<typeof stripeConfigSchema>;
+interface StripeStatus {
+  configured: boolean;
+  source: "organization" | "platform" | "none";
+  secretKeyPreview: string | null;
+  publishableKeyPreview: string | null;
+  webhookConfigured: boolean;
+  testMode: boolean | null;
+}
 
 export function StripeSettingsView() {
+  const [secretKey, setSecretKey] = useState("");
+  const [publishableKey, setPublishableKey] = useState("");
+  const [webhookSecret, setWebhookSecret] = useState("");
+  const [testMode, setTestMode] = useState(true);
+  const [showSecretKey, setShowSecretKey] = useState(false);
+  const [showPublishableKey, setShowPublishableKey] = useState(false);
+  const [showWebhookSecret, setShowWebhookSecret] = useState(false);
+  const [status, setStatus] = useState<StripeStatus | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [testResult, setTestResult] = useState<{
+    success: boolean;
+    message: string;
+    livemode?: boolean;
+  } | null>(null);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  const { data: stripeConfig, isLoading } = useQuery({
-    queryKey: ["stripe-config"],
-    queryFn: async () => {
-      const response = await fetch("/api/admin/stripe-config");
-      if (!response.ok) throw new Error("Failed to fetch Stripe configuration");
-      return response.json();
-    },
-  });
+  // Load Stripe status on mount
+  useEffect(() => {
+    fetchStatus();
+  }, []);
 
-  const form = useForm<StripeConfigFormValues>({
-    resolver: zodResolver(stripeConfigSchema),
-    defaultValues: {
-      testMode: true,
-      publishableKey: "",
-      secretKey: "",
-      webhookSecret: "",
-      priceId: "",
-    },
-  });
-
-  // Update form when data is loaded
-  React.useEffect(() => {
-    if (stripeConfig) {
-      form.reset(stripeConfig);
-    }
-  }, [stripeConfig, form]);
-
-  const mutation = useMutation({
-    mutationFn: async (values: StripeConfigFormValues) => {
-      const response = await fetch("/api/admin/stripe-config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to save Stripe configuration");
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["stripe-config"] });
-      toast({
-        title: "Success",
-        description: "Stripe configuration saved successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to save Stripe configuration",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const testConnection = async () => {
+  const fetchStatus = async () => {
     try {
-      const isValid = await form.trigger();
-      if (!isValid) {
-        toast({
-          title: "Validation Error",
-          description: "Please fill in all required fields correctly",
-          variant: "destructive",
-        });
-        return;
+      setLoading(true);
+      const res = await fetch("/api/admin/organization-settings/stripe-status", {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setStatus(data);
       }
-
-      const response = await fetch("/api/admin/stripe-config/test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form.getValues()),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Connection test failed");
-      }
-
-      toast({
-        title: "Success",
-        description: "Stripe connection test successful",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to test Stripe connection",
-        variant: "destructive",
-      });
+    } catch (error) {
+      console.error("Failed to fetch Stripe status:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (isLoading) {
+  const handleSaveKeys = async () => {
+    if (!secretKey.trim()) {
+      toast({
+        title: "Secret key required",
+        description: "Please enter your Stripe secret key.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!publishableKey.trim()) {
+      toast({
+        title: "Publishable key required",
+        description: "Please enter your Stripe publishable key.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setTestResult(null);
+      const res = await fetch("/api/admin/organization-settings/stripe-keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          secretKey: secretKey.trim(),
+          publishableKey: publishableKey.trim(),
+          webhookSecret: webhookSecret.trim() || undefined,
+          testMode,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        toast({
+          title: "Stripe keys saved",
+          description: `Keys saved securely (${data.secretKeyPreview}).`,
+        });
+        setSecretKey("");
+        setPublishableKey("");
+        setWebhookSecret("");
+        await fetchStatus();
+      } else {
+        const err = await res.json();
+        toast({
+          title: "Failed to save",
+          description: err.error || "Could not save the Stripe keys.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Network error saving Stripe keys.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleTestConnection = async () => {
+    try {
+      setTesting(true);
+      setTestResult(null);
+      const body = secretKey.trim()
+        ? { secretKey: secretKey.trim() }
+        : {};
+      const res = await fetch(
+        "/api/admin/organization-settings/stripe-keys/test",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(body),
+        }
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        setTestResult({
+          success: data.success,
+          message: data.success
+            ? `Connection successful — ${data.livemode ? "live" : "test"} mode key is valid!`
+            : data.error || "Test failed",
+          livemode: data.livemode,
+        });
+      }
+    } catch (error) {
+      setTestResult({
+        success: false,
+        message: "Network error testing the Stripe key.",
+      });
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  const handleRemoveKeys = async () => {
+    try {
+      setRemoving(true);
+      setTestResult(null);
+      const res = await fetch("/api/admin/organization-settings/stripe-keys", {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        toast({
+          title: "Stripe keys removed",
+          description:
+            "Payment features will use environment defaults or be disabled until new keys are added.",
+        });
+        await fetchStatus();
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to remove the Stripe keys.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Network error removing Stripe keys.",
+        variant: "destructive",
+      });
+    } finally {
+      setRemoving(false);
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
+  const isConfigured = status?.configured === true;
+  const sourceLabel =
+    status?.source === "organization"
+      ? "Organization Keys"
+      : status?.source === "platform"
+        ? "Platform Default"
+        : "Not Configured";
+
   return (
     <div className="space-y-6">
+      <div className="mb-4">
+        <h3 className="text-xl font-semibold">Payment Configuration</h3>
+        <p className="text-muted-foreground text-sm">
+          Configure your Stripe API keys to enable payment processing for team
+          registrations and tournament payouts.
+        </p>
+      </div>
+
+      {/* Status Card */}
       <Card>
-        <CardHeader>
-          <CardTitle>Stripe Payment Gateway Settings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="testMode"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">Test Mode</FormLabel>
-                      <FormDescription>
-                        Enable test mode to use Stripe's test environment
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div
+                className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                  isConfigured
+                    ? "bg-green-500/10 text-green-500"
+                    : "bg-gray-500/10 text-gray-400"
+                }`}
+              >
+                {isConfigured ? (
+                  <ShieldCheck className="h-5 w-5" />
+                ) : (
+                  <AlertCircle className="h-5 w-5" />
                 )}
-              />
-
-              <FormField
-                control={form.control}
-                name="publishableKey"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Publishable Key</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder={form.watch("testMode") ? "pk_test_..." : "pk_live_..."}
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Your Stripe publishable key for {form.watch("testMode") ? "test" : "live"} mode
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="secretKey"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Secret Key</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="password"
-                        placeholder={form.watch("testMode") ? "sk_test_..." : "sk_live_..."}
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Your Stripe secret key for {form.watch("testMode") ? "test" : "live"} mode
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="webhookSecret"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Webhook Secret</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="password"
-                        placeholder="whsec_..."
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Optional: Your Stripe webhook signing secret for secure webhook handling
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="priceId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Default Price ID</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="price_..."
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Optional: The default Stripe Price ID for subscriptions
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex justify-between space-x-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={testConnection}
-                  className="flex-1"
-                >
-                  Test Connection
-                </Button>
-                <Button 
-                  type="submit" 
-                  className="flex-1"
-                  disabled={mutation.isPending}
-                >
-                  {mutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Settings"
-                  )}
-                </Button>
               </div>
-            </form>
-          </Form>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium">
+                    {isConfigured
+                      ? "Stripe Payments Active"
+                      : "Stripe Payments Disabled"}
+                  </span>
+                  <Badge
+                    variant={isConfigured ? "default" : "secondary"}
+                    className="text-xs"
+                  >
+                    {sourceLabel}
+                  </Badge>
+                  {status?.testMode !== null && isConfigured && (
+                    <Badge
+                      variant="outline"
+                      className={`text-xs ${
+                        status?.testMode
+                          ? "border-yellow-500/50 text-yellow-600"
+                          : "border-green-500/50 text-green-600"
+                      }`}
+                    >
+                      {status?.testMode ? (
+                        <>
+                          <TestTube2 className="h-3 w-3 mr-1" />
+                          Test Mode
+                        </>
+                      ) : (
+                        "Live Mode"
+                      )}
+                    </Badge>
+                  )}
+                </div>
+                {status?.secretKeyPreview && (
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    Secret:{" "}
+                    <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                      {status.secretKeyPreview}
+                    </code>
+                  </p>
+                )}
+                {status?.publishableKeyPreview && (
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    Publishable:{" "}
+                    <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                      {status.publishableKeyPreview}
+                    </code>
+                  </p>
+                )}
+                {isConfigured && (
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    Webhook:{" "}
+                    <span
+                      className={
+                        status?.webhookConfigured
+                          ? "text-green-600"
+                          : "text-yellow-600"
+                      }
+                    >
+                      {status?.webhookConfigured
+                        ? "Configured"
+                        : "Not configured"}
+                    </span>
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {isConfigured && status?.source === "organization" && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleRemoveKeys}
+                disabled={removing}
+              >
+                {removing ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                ) : (
+                  <Trash2 className="h-4 w-4 mr-1" />
+                )}
+                Remove Keys
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* API Key Input */}
+      <Card>
+        <CardContent className="pt-6 space-y-4">
+          {/* Test Mode Toggle */}
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label className="text-sm font-medium">Test Mode</Label>
+              <p className="text-xs text-muted-foreground">
+                Enable test mode to use Stripe's test environment (sk_test_ / pk_test_ keys)
+              </p>
+            </div>
+            <Switch checked={testMode} onCheckedChange={setTestMode} />
+          </div>
+
+          {/* Secret Key */}
+          <div>
+            <Label htmlFor="stripe-secret-key" className="text-sm font-medium">
+              Secret Key
+            </Label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Your Stripe secret key — encrypted before storage.
+            </p>
+            <div className="relative">
+              <Input
+                id="stripe-secret-key"
+                type={showSecretKey ? "text" : "password"}
+                placeholder={testMode ? "sk_test_..." : "sk_live_..."}
+                value={secretKey}
+                onChange={(e) => setSecretKey(e.target.value)}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowSecretKey(!showSecretKey)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showSecretKey ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Publishable Key */}
+          <div>
+            <Label
+              htmlFor="stripe-publishable-key"
+              className="text-sm font-medium"
+            >
+              Publishable Key
+            </Label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Your Stripe publishable key — used client-side for payment forms.
+            </p>
+            <div className="relative">
+              <Input
+                id="stripe-publishable-key"
+                type={showPublishableKey ? "text" : "password"}
+                placeholder={testMode ? "pk_test_..." : "pk_live_..."}
+                value={publishableKey}
+                onChange={(e) => setPublishableKey(e.target.value)}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPublishableKey(!showPublishableKey)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPublishableKey ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Webhook Secret */}
+          <div>
+            <Label
+              htmlFor="stripe-webhook-secret"
+              className="text-sm font-medium"
+            >
+              Webhook Secret{" "}
+              <span className="text-muted-foreground font-normal">
+                (Optional)
+              </span>
+            </Label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Your Stripe webhook signing secret for verifying incoming events.
+            </p>
+            <div className="relative">
+              <Input
+                id="stripe-webhook-secret"
+                type={showWebhookSecret ? "text" : "password"}
+                placeholder="whsec_..."
+                value={webhookSecret}
+                onChange={(e) => setWebhookSecret(e.target.value)}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowWebhookSecret(!showWebhookSecret)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showWebhookSecret ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              onClick={handleSaveKeys}
+              disabled={saving || (!secretKey.trim() && !publishableKey.trim())}
+            >
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : (
+                <Check className="h-4 w-4 mr-1" />
+              )}
+              Save Keys
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleTestConnection}
+              disabled={testing}
+            >
+              {testing ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : (
+                <Zap className="h-4 w-4 mr-1" />
+              )}
+              Test Connection
+            </Button>
+          </div>
+
+          {/* Test Result */}
+          {testResult && (
+            <div
+              className={`flex items-center gap-2 text-sm px-3 py-2 rounded-md ${
+                testResult.success
+                  ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                  : "bg-red-500/10 text-red-600 dark:text-red-400"
+              }`}
+            >
+              {testResult.success ? (
+                <Check className="h-4 w-4 flex-shrink-0" />
+              ) : (
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              )}
+              {testResult.message}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Info Card */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-start gap-3">
+            <CreditCard className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                <strong>How to get API keys:</strong> Visit{" "}
+                <a
+                  href="https://dashboard.stripe.com/apikeys"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline inline-flex items-center gap-0.5"
+                >
+                  dashboard.stripe.com/apikeys
+                  <ExternalLink className="h-3 w-3" />
+                </a>{" "}
+                to find or create your Stripe API keys.
+              </p>
+              <p>
+                <strong>Test vs Live:</strong> Use test mode keys (sk_test_ /
+                pk_test_) during development. Switch to live keys (sk_live_ /
+                pk_live_) for production. Test mode allows simulated payments
+                without real charges.
+              </p>
+              <p>
+                <strong>Webhook setup:</strong> For real-time payment
+                notifications, configure a webhook endpoint in your Stripe
+                dashboard pointing to your app's{" "}
+                <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                  /api/payments/webhook
+                </code>{" "}
+                URL.
+              </p>
+              <p>
+                <strong>Security:</strong> All keys are encrypted with
+                AES-256-GCM before storage. Secret keys are never exposed in API
+                responses or logs.
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -1,19 +1,10 @@
 import type { Express } from "express";
 import Stripe from "stripe";
+import { getStripeClient, getStripeWebhookSecret } from "../services/stripe-client-factory";
 import { db } from "@db";
 import { events } from "@db/schema";
 import { eq } from "drizzle-orm";
 import { isAdmin } from "../middleware";
-
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.warn("Warning: STRIPE_SECRET_KEY not set. Stripe features will be unavailable.");
-}
-
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2025-02-24.acacia",
-    })
-  : null;
 
 /**
  * Registers Stripe Connect routes for tournament banking
@@ -91,6 +82,11 @@ export function registerStripeConnectRoutes(app: Express) {
           error: "Connect account already exists for this event",
           accountId: event.stripeConnectAccountId
         });
+      }
+
+      const stripe = await getStripeClient();
+      if (!stripe) {
+        return res.status(500).json({ error: "Stripe is not configured" });
       }
 
       // Create Stripe Connect account with secure form data
@@ -251,6 +247,11 @@ export function registerStripeConnectRoutes(app: Express) {
         });
       }
 
+      const stripe = await getStripeClient();
+      if (!stripe) {
+        return res.status(500).json({ error: "Stripe is not configured" });
+      }
+
       // Get latest account info from Stripe
       const account = await stripe.accounts.retrieve(event.stripeConnectAccountId);
       
@@ -308,6 +309,11 @@ export function registerStripeConnectRoutes(app: Express) {
         return res.status(404).json({ error: "Connect account not found" });
       }
 
+      const stripe = await getStripeClient();
+      if (!stripe) {
+        return res.status(500).json({ error: "Stripe is not configured" });
+      }
+
       // Create new account link
       const accountLink = await stripe.accountLinks.create({
         account: event.stripeConnectAccountId,
@@ -349,6 +355,11 @@ export function registerStripeConnectRoutes(app: Express) {
 
       if (!event || !event.stripeConnectAccountId) {
         return res.status(404).json({ error: "Connect account not found" });
+      }
+
+      const stripe = await getStripeClient();
+      if (!stripe) {
+        return res.status(500).json({ error: "Stripe is not configured" });
       }
 
       // Get account details to check type
@@ -397,16 +408,18 @@ export function registerStripeConnectRoutes(app: Express) {
   // Webhook endpoint for Connect account updates
   app.post("/api/stripe/webhook", async (req, res) => {
     const sig = req.headers['stripe-signature'];
+    const stripe = await getStripeClient();
+    const webhookSecret = await getStripeWebhookSecret();
 
-    if (!sig || !process.env.STRIPE_WEBHOOK_SECRET) {
-      return res.status(400).json({ error: 'Missing signature or webhook secret' });
+    if (!sig || !webhookSecret || !stripe) {
+      return res.status(400).json({ error: 'Missing signature, webhook secret, or Stripe not configured' });
     }
 
     try {
       const event = stripe.webhooks.constructEvent(
         req.body,
         sig,
-        process.env.STRIPE_WEBHOOK_SECRET
+        webhookSecret
       );
 
       // Handle Connect account updates

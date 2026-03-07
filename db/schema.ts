@@ -30,6 +30,10 @@ export const organizationSettings = pgTable("organization_settings", {
   secondaryColor: text("secondary_color"),
   logoUrl: text("logo_url"),
   openaiApiKey: text("openai_api_key"),  // Encrypted with AES-256-GCM
+  stripeSecretKey: text("stripe_secret_key"),           // Encrypted with AES-256-GCM
+  stripePublishableKey: text("stripe_publishable_key"), // Encrypted for consistency
+  stripeWebhookSecret: text("stripe_webhook_secret"),   // Encrypted with AES-256-GCM
+  stripeTestMode: boolean("stripe_test_mode").default(true),
   createdAt: text("created_at").notNull().default(new Date().toISOString()),
   updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
 });

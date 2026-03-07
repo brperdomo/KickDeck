@@ -2,16 +2,7 @@ import Stripe from 'stripe';
 import { db } from 'db';
 import { teams, events } from '@db/schema';
 import { eq } from 'drizzle-orm';
-
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.warn("Warning: STRIPE_SECRET_KEY not set. Stripe features will be unavailable.");
-}
-
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2023-10-16" as any,
-    })
-  : null;
+import { getStripeClient } from './stripe-client-factory';
 
 /**
  * Calculate platform fees: 4% + $0.30
@@ -32,6 +23,9 @@ export async function createCheckoutSession(teamId: number): Promise<{
   sessionId: string;
   totalAmountWithFees: number;
 }> {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   try {
     // Get team details INCLUDING Connect account info for refund processing
     const team = await db
@@ -129,8 +123,11 @@ export async function createCheckoutSession(teamId: number): Promise<{
         eventId: teamData.eventId?.toString() || '',
       },
       payment_intent_data: {
+        statement_descriptor_suffix: (teamData.name || 'Tournament').substring(0, 22),
         metadata: {
           teamId: teamId.toString(),
+          teamName: teamData.name || '',
+          eventName: teamData.eventName || '',
           retryPayment: 'true',
           connectAccountId: connectAccountId,
           eventId: teamData.eventId?.toString() || '',
@@ -170,6 +167,9 @@ export async function handleCheckoutSuccess(sessionId: string): Promise<{
   paymentIntentId: string;
   amount: number;
 }> {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   try {
     // First try to retrieve session from main account (for backward compatibility)
     let session;

@@ -4,18 +4,10 @@ import { teams, paymentTransactions, events, refunds, users } from "../../db/sch
 import { eq } from "drizzle-orm";
 import { log } from "../vite";
 import { sendRegistrationReceiptEmail } from "./emailService";
-
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.warn("Warning: STRIPE_SECRET_KEY not set. Stripe features will be unavailable.");
-}
+import { getStripeClient } from "./stripe-client-factory";
 
 // In production, we can add a version check to ensure our API version stays current
 const STRIPE_API_VERSION = "2023-10-16" as any;
-
-// Initialize Stripe client with proper API version (null if no key)
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: STRIPE_API_VERSION })
-  : null;
 
 // Check Stripe API version on startup (only in production)
 if (process.env.NODE_ENV === "production") {
@@ -43,6 +35,9 @@ export async function createPaymentIntent(
   teamId: number | string,
   metadata?: Record<string, string>,
 ) {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   try {
     // Fetch team details to create meaningful description
     let description = "Team Registration Payment";
@@ -140,6 +135,9 @@ export async function createPaymentIntent(
 export async function handlePaymentSuccess(
   paymentIntent: Stripe.PaymentIntent,
 ) {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   try {
     const teamId = paymentIntent.metadata.teamId;
     if (!teamId) {
@@ -376,6 +374,9 @@ export async function createTestPaymentIntent(
 //   }
 // }
 export async function createRefund(paymentIntentId: string, amount?: number) {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   try {
     log(`Creating refund for payment intent ${paymentIntentId}`);
 
@@ -542,6 +543,9 @@ export async function createSetupIntent(
   teamId: number | string,
   metadata?: Record<string, string>,
 ) {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   try {
     log(`Creating setup intent for team: ${teamId}`);
 
@@ -760,6 +764,9 @@ export async function processPaymentForApprovedTeam(
   teamId: number,
   amount: number,
 ) {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   try {
     log(`Processing payment for approved team: ${teamId}`);
 
@@ -944,6 +951,9 @@ export async function updatePaymentIntentStatus(
   paymentIntentId: string,
   status: string,
 ) {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   // This function is only for development and testing
   if (process.env.NODE_ENV === "production") {
     throw new Error("This function is only available in development mode");
@@ -991,6 +1001,9 @@ export async function updatePaymentIntentStatus(
 export async function attachTestPaymentMethodToSetupIntent(
   setupIntentId: string,
 ) {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   if (process.env.NODE_ENV === "production") {
     throw new Error("This function is only available in development mode");
   }
@@ -1048,6 +1061,9 @@ export async function attachTestPaymentMethodToSetupIntent(
 export async function handleSetupIntentSuccess(
   setupIntent: Stripe.SetupIntent,
 ) {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   try {
     const teamId = setupIntent.metadata.teamId;
     if (!teamId) {
@@ -1210,6 +1226,9 @@ export async function intelligentPaymentRecovery(
   error?: string;
   amount?: number;
 }> {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   try {
     log(
       `🔧 INTELLIGENT RECOVERY: Starting recovery for team ${teamId} (${team.name})`,
@@ -1379,6 +1398,9 @@ async function sendApprovalEmailWithPaymentDetails(
   paymentIntent: Stripe.PaymentIntent,
   eventData: any,
 ) {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   try {
     // Get payment method details for receipt
     const paymentMethod = await stripe.paymentMethods.retrieve(
@@ -1441,6 +1463,9 @@ export async function processConnectRefund({
   adminNotes?: string;
   processedByUserId: number;
 }) {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   try {
     console.log(`🔄 REFUND: Starting refund process for Team ${teamId}`);
 

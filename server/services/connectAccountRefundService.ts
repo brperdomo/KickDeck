@@ -1,17 +1,8 @@
-import Stripe from 'stripe';
+
 import { db } from 'db';
 import { teams, events, paymentTransactions } from '@db/schema';
 import { eq, and } from 'drizzle-orm';
-
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.warn("Warning: STRIPE_SECRET_KEY not set. Stripe features will be unavailable.");
-}
-
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2024-06-20",
-    })
-  : null;
+import { getStripeClient } from './stripe-client-factory';
 
 /**
  * CONNECT ACCOUNT REFUND SERVICE
@@ -50,6 +41,9 @@ interface RefundResult {
  * Guarantees tournament organizer pays the refund, not KickDeck
  */
 export async function processConnectAccountRefund(request: RefundRequest): Promise<RefundResult> {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   try {
     console.log(`🔄 Processing Connect account refund for team ${request.teamId}`);
     

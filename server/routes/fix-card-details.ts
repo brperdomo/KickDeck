@@ -3,15 +3,19 @@ import { db } from '@db';
 import { teams } from '@db/schema';
 import { eq } from 'drizzle-orm';
 import Stripe from 'stripe';
+import { getStripeClient } from '../services/stripe-client-factory';
 
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY)
-  : null;
+
 
 /**
  * Fix missing card details for teams with setup intents
  */
 export async function fixCardDetails(req: Request, res: Response) {
+  const stripe = await getStripeClient();
+  if (!stripe) {
+    return res.status(500).json({ success: false, error: 'Stripe is not configured' });
+  }
+
   try {
     console.log('Starting card details fix...');
     

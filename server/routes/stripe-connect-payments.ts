@@ -7,6 +7,7 @@
 
 import type { Express } from "express";
 import Stripe from "stripe";
+import { getStripeClient, getStripeWebhookSecret } from "../services/stripe-client-factory";
 import { db } from "@db";
 import { teams, events, paymentTransactions } from "@db/schema";
 import { eq, and } from "drizzle-orm";
@@ -16,16 +17,6 @@ import {
   formatErrorForAdmin,
   type DetailedPaymentError,
 } from "../utils/stripeErrorHandler";
-
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.warn("Warning: STRIPE_SECRET_KEY not set. Stripe features will be unavailable.");
-}
-
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2023-10-16",
-    })
-  : null;
 
 import {
   calculateEventFees,
@@ -48,6 +39,11 @@ export async function processDestinationCharge(
   isPreCalculated: boolean = false,
   customerId: string | null = null,
 ) {
+  const stripe = await getStripeClient();
+  if (!stripe) {
+    throw new Error("Stripe is not configured. Cannot process destination charge.");
+  }
+
   try {
     // Get team and event information for receipt email
     const [teamInfo] = await db
@@ -166,6 +162,7 @@ export async function processDestinationCharge(
         amount: chargeAmount,
         currency: "usd",
         description: description, // Add meaningful description
+        statement_descriptor_suffix: (team.name || "Tournament").substring(0, 22),
         payment_method: paymentMethodId,
         confirm: true,
         // NOTE: Removed receipt_email to ensure consistent receipt handling
@@ -225,14 +222,20 @@ export async function processDestinationCharge(
             currency: "usd",
             destination: connectAccountId,
             source_transaction: paymentIntent.latest_charge as string,
+            description: `${event.name} - ${team.name} Registration`,
             metadata: {
               teamId: teamId.toString(),
+              teamName: team.name || "",
+              eventName: event.name || "",
+              eventId: eventId,
               paymentIntentId: paymentIntent.id,
               type: "link_tournament_payout",
               totalCharged: chargeAmount.toString(),
               platformFeeAmount: feeCalculation.platformFeeAmount.toString(),
               stripeFeeAmount: feeCalculation.stripeFeeAmount.toString(),
               kickdeckNetRevenue: feeCalculation.kickdeckReceives.toString(),
+              registrationDate: new Date().toISOString(),
+              systemSource: "KickDeck",
             },
           });
 
@@ -285,6 +288,7 @@ export async function processDestinationCharge(
         amount: chargeAmount,
         currency: "usd",
         description: description, // Add meaningful description
+        statement_descriptor_suffix: (team.name || "Tournament").substring(0, 22),
         payment_method: paymentMethodId,
         confirm: true,
         on_behalf_of: connectAccountId,
@@ -605,6 +609,50 @@ export async function processDestinationCharge(
       // Continue without card details rather than failing the entire transaction
     }
 
+    // Update the auto-created transfer with team/event description for Connect account visibility
+    // This ensures tournament directors see meaningful info in their Stripe dashboard
+    if (paymentIntent.status === "succeeded" && paymentIntent.latest_charge) {
+      try {
+        const chargeForTransfer = await stripe.charges.retrieve(
+          paymentIntent.latest_charge as string,
+          { expand: ["transfer"] }
+        );
+
+        if (chargeForTransfer.transfer) {
+          const transferId =
+            typeof chargeForTransfer.transfer === "string"
+              ? chargeForTransfer.transfer
+              : chargeForTransfer.transfer.id;
+
+          await stripe.transfers.update(transferId, {
+            description: `${event.name} - ${team.name} Registration`,
+            metadata: {
+              teamId: teamId.toString(),
+              teamName: team.name || "",
+              eventName: event.name || "",
+              eventId: eventId,
+              registrationDate: new Date().toISOString(),
+              totalCharged: chargeAmount.toString(),
+              tournamentReceives: feeCalculation.tournamentReceives.toString(),
+              platformFee: feeCalculation.platformFeeAmount.toString(),
+              paymentIntentId: paymentIntent.id,
+              systemSource: "KickDeck",
+            },
+          });
+
+          console.log(
+            `✅ Updated transfer ${transferId} with team/event metadata for Connect account visibility`,
+          );
+        }
+      } catch (transferUpdateError) {
+        console.warn(
+          "Could not update transfer metadata (non-fatal):",
+          transferUpdateError,
+        );
+        // Non-fatal: payment succeeded, metadata update is best-effort
+      }
+    }
+
     // CRITICAL DATABASE VALIDATION - Ensure platform fees are recorded
     if (
       !feeCalculation.platformFeeAmount ||
@@ -738,6 +786,11 @@ export async function processDestinationCharge(
  * Processes payment when a team is approved by tournament admin
  */
 export async function chargeApprovedTeam(teamId: number) {
+  const stripe = await getStripeClient();
+  if (!stripe) {
+    throw new Error("Stripe is not configured. Cannot charge approved team.");
+  }
+
   try {
     console.log(`CONNECT DEBUG: chargeApprovedTeam called for team ${teamId}`);
     // Get team and event information
@@ -1019,12 +1072,18 @@ export function registerConnectPaymentRoutes(app: Express) {
       return res.status(400).send("Missing Stripe signature");
     }
 
+    const stripe = await getStripeClient();
+    const webhookSecret = await getStripeWebhookSecret();
+    if (!stripe || !webhookSecret) {
+      return res.status(500).send("Stripe is not configured");
+    }
+
     let event;
     try {
       event = stripe.webhooks.constructEvent(
         req.body,
         sig,
-        process.env.STRIPE_CONNECT_WEBHOOK_SECRET!,
+        webhookSecret,
       );
     } catch (err) {
       console.log("Webhook signature verification failed.", err);

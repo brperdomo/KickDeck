@@ -2,16 +2,9 @@
  * Refund Cost Recovery Service
  * Ensures tournament Connect accounts cover refund costs instead of KickDeck main account
  */
-
-import Stripe from 'stripe';
 import { db } from '../db';
 import { paymentTransactions } from '../db/schema';
-
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2023-10-16',
-    })
-  : null;
+import { getStripeClient } from './stripe-client-factory';
 
 export interface RefundCostRecoveryResult {
   success: boolean;
@@ -34,7 +27,9 @@ export async function recoverRefundCost(
   paymentIntentId: string,
   teamId: string
 ): Promise<RefundCostRecoveryResult> {
-  
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   if (!connectAccountId || connectAccountId.trim() === '') {
     return {
       success: false,

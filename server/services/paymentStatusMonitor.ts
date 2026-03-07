@@ -2,16 +2,7 @@ import { db } from 'db';
 import { teams, paymentTransactions } from '@db/schema';
 import { eq, and, isNull, gte } from 'drizzle-orm';
 import Stripe from 'stripe';
-
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.warn("Warning: STRIPE_SECRET_KEY not set. Stripe features will be unavailable.");
-}
-
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2023-10-16" as any,
-    })
-  : null;
+import { getStripeClient, getStripeWebhookSecret } from './stripe-client-factory';
 
 /**
  * Real-time Payment Status Monitoring Service
@@ -32,6 +23,9 @@ export interface PaymentStatusInfo {
  * Get comprehensive payment status for a team
  */
 export async function getTeamPaymentStatus(teamId: number): Promise<PaymentStatusInfo> {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   const team = await db.query.teams.findFirst({
     where: eq(teams.id, teamId),
     with: {
@@ -96,6 +90,9 @@ export async function monitorPaymentStatuses(): Promise<{
   };
   teamsNeedingAttention: PaymentStatusInfo[];
 }> {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   console.log('🔍 Starting payment status monitoring...');
 
   // Get all teams with potential payment issues
@@ -168,6 +165,9 @@ export async function monitorPaymentStatuses(): Promise<{
 }
 
 async function updateTeamToApproved(teamId: number, paymentIntent: Stripe.PaymentIntent) {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   const charges = await stripe.charges.list({
     payment_intent: paymentIntent.id,
   });
@@ -212,8 +212,10 @@ export async function verifyWebhookStatus(): Promise<{
 }> {
   const issues: string[] = [];
   
-  if (!process.env.STRIPE_WEBHOOK_SECRET) {
-    issues.push('STRIPE_WEBHOOK_SECRET not configured');
+  const webhookSecret = await getStripeWebhookSecret();
+  
+  if (!webhookSecret) {
+    issues.push('Stripe webhook secret not configured');
   }
 
   // In production, we can check recent webhook deliveries
@@ -222,7 +224,7 @@ export async function verifyWebhookStatus(): Promise<{
   try {
     // This would require webhook endpoint ID to check delivery logs
     // For now, we'll indicate webhook status based on secret presence
-    if (process.env.STRIPE_WEBHOOK_SECRET) {
+    if (webhookSecret) {
       lastWebhookReceived = 'Webhook secret configured - unable to verify deliveries without endpoint ID';
     }
   } catch (error) {
@@ -230,7 +232,7 @@ export async function verifyWebhookStatus(): Promise<{
   }
 
   return {
-    webhookConfigured: !!process.env.STRIPE_WEBHOOK_SECRET,
+    webhookConfigured: !!webhookSecret,
     endpointUrl: `${process.env.BACKEND_URL || 'https://app.kickdeck.io'}/api/payments/webhook`,
     enabledEvents: [
       'payment_intent.succeeded',

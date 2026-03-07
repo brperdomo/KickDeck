@@ -9,12 +9,7 @@ import { db } from "../../db/index.js";
 import { teams, events } from "../../db/schema.js";
 import { eq, and, isNotNull, or } from "drizzle-orm";
 import Stripe from "stripe";
-
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2024-06-20",
-    })
-  : null;
+import { getStripeClient } from "./stripe-client-factory";
 
 export interface RetroactiveUpdateResult {
   teamId: number;
@@ -34,6 +29,9 @@ export interface RetroactiveUpdateResult {
  * Update metadata for a specific team's Stripe objects
  */
 export async function updateTeamPaymentMetadata(teamId: number): Promise<RetroactiveUpdateResult> {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   console.log(`🔄 RETROACTIVE UPDATE: Starting for Team ${teamId}`);
 
   // Get team with event details

@@ -1,6 +1,7 @@
 import express from 'express';
 import { Request, Response } from 'express';
 import Stripe from 'stripe';
+import { getStripeClient } from '../../services/stripe-client-factory';
 import { db } from '@db';
 import { teams, events, paymentTransactions } from '@db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -9,20 +10,17 @@ import { parseStripeError, formatErrorForDatabase } from '../../utils/stripeErro
 
 const router = express.Router();
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.warn("Warning: STRIPE_SECRET_KEY not set. Stripe features will be unavailable.");
-}
 
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2023-10-16" as any,
-    })
-  : null;
 
 /**
  * Fix PaymentMethod attachment issues and retry payment
  */
 async function fixPaymentMethodAttachment(teamId: number, paymentMethodId: string) {
+  const stripe = await getStripeClient();
+  if (!stripe) {
+    return { success: false, error: "Stripe is not configured" };
+  }
+
   try {
     console.log(`RETRY PAYMENT: Fixing PaymentMethod attachment for team ${teamId}, payment method ${paymentMethodId}`);
     
@@ -136,7 +134,11 @@ router.post('/retry/:teamId', async (req: Request, res: Response) => {
     
     // If no direct payment method, try to get it from setup intent
     if (!paymentMethodId && team.setupIntentId) {
+      const stripe = await getStripeClient();
       try {
+        if (!stripe) {
+          return res.status(500).json({ error: 'Stripe is not configured' });
+        }
         const setupIntent = await stripe.setupIntents.retrieve(team.setupIntentId);
         if (setupIntent.status === 'succeeded' && setupIntent.payment_method) {
           paymentMethodId = setupIntent.payment_method as string;

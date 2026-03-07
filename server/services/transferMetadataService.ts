@@ -9,12 +9,7 @@ import Stripe from "stripe";
 import { db } from "../../db/index.js";
 import { teams, events, paymentTransactions } from "../../db/schema.js";
 import { eq, and } from "drizzle-orm";
-
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2024-06-20",
-    })
-  : null;
+import { getStripeClient } from "./stripe-client-factory";
 
 export interface TransferMetadataResult {
   transferId: string;
@@ -41,6 +36,9 @@ export async function createTransferWithMetadata({
   eventId: number;
   description?: string;
 }): Promise<TransferMetadataResult> {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   try {
     // Get team and event details for metadata
     const teamData = await db
@@ -122,6 +120,9 @@ export async function updateTransferMetadata({
   teamId: number;
   eventId: number;
 }): Promise<TransferMetadataResult> {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   try {
     // Get team and event details
     const teamData = await db
@@ -252,6 +253,9 @@ export async function getTransferWithMetadata(transferId: string): Promise<{
   metadataKeys: string[];
   error?: string;
 }> {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   try {
     const transfer = await stripe.transfers.retrieve(transferId);
     

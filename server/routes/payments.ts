@@ -1,5 +1,6 @@
 import express from 'express';
 import Stripe from 'stripe';
+import { getStripeClient, getStripeWebhookSecret, getStripePublishableKey } from '../services/stripe-client-factory';
 import { 
   createPaymentIntent, 
   createSetupIntent,
@@ -17,24 +18,14 @@ import { db } from 'db';
 import { teams } from '@db/schema';
 import { eq } from 'drizzle-orm';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.warn("Warning: STRIPE_SECRET_KEY not set. Stripe features will be unavailable.");
-}
-
-// Initialize Stripe with the secret key
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2023-10-16" as any,
-    })
-  : null;
-
 // Create a router for payment-related routes
 const router = express.Router();
 
 // Get Stripe configuration (publishable key)
-router.get('/config', (req, res) => {
+router.get('/config', async (req, res) => {
+  const pk = await getStripePublishableKey();
   res.json({
-    publishableKey: process.env.VITE_STRIPE_PUBLIC_KEY,
+    publishableKey: pk,
   });
 });
 
@@ -58,6 +49,10 @@ router.post('/create-intent', async (req, res) => {
 // Get payment intent status
 router.get('/status/:paymentIntentId', async (req, res) => {
   try {
+    const stripe = await getStripeClient();
+    if (!stripe) {
+      return res.status(500).json({ error: 'Stripe is not configured' });
+    }
     const { paymentIntentId } = req.params;
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
     
@@ -164,6 +159,10 @@ router.post('/process-approved-payment', async (req, res) => {
 // Get setup intent status
 router.get('/setup-status/:setupIntentId', async (req, res) => {
   try {
+    const stripe = await getStripeClient();
+    if (!stripe) {
+      return res.status(500).json({ error: 'Stripe is not configured' });
+    }
     const { setupIntentId } = req.params;
     const setupIntent = await stripe.setupIntents.retrieve(setupIntentId);
     
@@ -181,6 +180,10 @@ router.get('/setup-status/:setupIntentId', async (req, res) => {
 // Get payment method details
 router.get('/payment-method/:paymentMethodId', async (req, res) => {
   try {
+    const stripe = await getStripeClient();
+    if (!stripe) {
+      return res.status(500).json({ error: 'Stripe is not configured' });
+    }
     const { paymentMethodId } = req.params;
     
     // Retrieve the payment method from Stripe
@@ -251,10 +254,11 @@ router.post('/update-setup-status', async (req, res) => {
 // Webhook for Stripe events
 router.post('/webhook', async (req, res) => {
   const sig = req.headers['stripe-signature'];
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const stripe = await getStripeClient();
+  const endpointSecret = await getStripeWebhookSecret();
   
-  if (!sig || !endpointSecret) {
-    return res.status(400).json({ error: 'Missing Stripe signature or webhook secret' });
+  if (!sig || !endpointSecret || !stripe) {
+    return res.status(400).json({ error: 'Missing Stripe signature, webhook secret, or Stripe not configured' });
   }
   
   let event;
@@ -312,6 +316,10 @@ router.post('/simulate-webhook', async (req, res) => {
   }
   
   try {
+    const stripe = await getStripeClient();
+    if (!stripe) {
+      return res.status(500).json({ error: 'Stripe is not configured' });
+    }
     const { paymentIntentId, setupIntentId } = req.body;
     
     if (paymentIntentId) {
@@ -363,6 +371,10 @@ router.post('/test-attach-payment-method', async (req, res) => {
 // Resend payment receipt email for members
 router.post('/resend-receipt', async (req, res) => {
   try {
+    const stripe = await getStripeClient();
+    if (!stripe) {
+      return res.status(500).json({ error: 'Stripe is not configured' });
+    }
     const { paymentIntentId } = req.body;
     
     if (!paymentIntentId) {
@@ -450,11 +462,12 @@ router.post('/sync-status/:teamId', async (req, res) => {
 });
 
 // Test webhook connectivity
-router.get('/test-webhook', (req, res) => {
+router.get('/test-webhook', async (req, res) => {
+  const webhookSecret = await getStripeWebhookSecret();
   res.json({ 
     success: true, 
     message: 'Webhook endpoint is accessible',
-    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ? 'configured' : 'missing',
+    webhookSecret: webhookSecret ? 'configured' : 'missing',
     timestamp: new Date().toISOString()
   });
 });

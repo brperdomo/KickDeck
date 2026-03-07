@@ -2,16 +2,7 @@ import { db } from 'db';
 import { teams, paymentTransactions } from '@db/schema';
 import { eq, and, isNull, inArray } from 'drizzle-orm';
 import Stripe from 'stripe';
-
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.warn("Warning: STRIPE_SECRET_KEY not set. Stripe features will be unavailable.");
-}
-
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2023-10-16" as any,
-    })
-  : null;
+import { getStripeClient } from './stripe-client-factory';
 
 /**
  * Automated Payment Recovery Service
@@ -19,6 +10,9 @@ const stripe = process.env.STRIPE_SECRET_KEY
  */
 
 export async function recoverFailedPayments() {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   console.log('🔄 Starting automated payment recovery process...');
   
   try {
@@ -80,7 +74,7 @@ export async function recoverFailedPayments() {
               recoveredCount++;
             } else if (paymentIntent.status === 'requires_payment_method') {
               // Payment failed, create new payment intent
-              await createRetryPaymentIntent(team);
+              await createRetryPaymentIntent(stripe, team);
             }
           } catch (error) {
             console.warn(`⚠️ Could not retrieve payment intent ${team.paymentIntentId}:`, error);
@@ -94,7 +88,7 @@ export async function recoverFailedPayments() {
             
             if (setupIntent.status === 'succeeded' && setupIntent.payment_method) {
               console.log(`✅ Found successful setup intent for team ${team.id} - processing payment`);
-              await processSetupIntentPayment(team, setupIntent.payment_method as string);
+              await processSetupIntentPayment(stripe, team, setupIntent.payment_method as string);
               recoveredCount++;
             }
           } catch (error) {
@@ -127,6 +121,9 @@ export async function recoverFailedPayments() {
 }
 
 async function updateTeamToApproved(teamId: number, paymentIntent: Stripe.PaymentIntent) {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   const charges = await stripe.charges.list({
     payment_intent: paymentIntent.id,
   });
@@ -159,7 +156,7 @@ async function updateTeamToApproved(teamId: number, paymentIntent: Stripe.Paymen
   console.log(`✅ Team ${teamId} status updated to approved`);
 }
 
-async function createRetryPaymentIntent(team: any) {
+async function createRetryPaymentIntent(stripe: Stripe, team: any) {
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: team.totalAmount,
@@ -184,7 +181,7 @@ async function createRetryPaymentIntent(team: any) {
   }
 }
 
-async function processSetupIntentPayment(team: any, paymentMethodId: string) {
+async function processSetupIntentPayment(stripe: Stripe, team: any, paymentMethodId: string) {
   try {
     // Create payment intent using the saved payment method
     const paymentIntent = await stripe.paymentIntents.create({
@@ -220,6 +217,9 @@ async function processSetupIntentPayment(team: any, paymentMethodId: string) {
  * Synchronize payment status with Stripe for specific team
  */
 export async function syncTeamPaymentStatus(teamId: number) {
+  const stripe = await getStripeClient();
+  if (!stripe) throw new Error('Stripe not configured');
+
   try {
     const team = await db.query.teams.findFirst({
       where: eq(teams.id, teamId),

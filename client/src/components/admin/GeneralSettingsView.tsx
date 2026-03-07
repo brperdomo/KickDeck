@@ -13,7 +13,8 @@ import {
   Palette,
   Mail,
   ServerCog,
-  Brain
+  Brain,
+  CreditCard
 } from "lucide-react";
 
 export function GeneralSettingsView() {
@@ -44,6 +45,10 @@ export function GeneralSettingsView() {
               <TabsTrigger value="emailProvider" className="flex items-center gap-1.5 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none py-3">
                 <ServerCog className="h-4 w-4" />
                 <span>Email Provider</span>
+              </TabsTrigger>
+              <TabsTrigger value="stripe" className="flex items-center gap-1.5 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none py-3">
+                <CreditCard className="h-4 w-4" />
+                <span>Payments</span>
               </TabsTrigger>
               <TabsTrigger value="ai" className="flex items-center gap-1.5 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none py-3">
                 <Brain className="h-4 w-4" />
@@ -78,6 +83,10 @@ export function GeneralSettingsView() {
 
               <TabsContent value="emailProvider" className="m-0">
                 <EmailProviderSettings />
+              </TabsContent>
+
+              <TabsContent value="stripe" className="m-0">
+                <StripeSettingsView />
               </TabsContent>
 
               <TabsContent value="ai" className="m-0">

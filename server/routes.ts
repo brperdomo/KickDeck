@@ -5618,6 +5618,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         } else {
           await db.insert(organizationSettings).values({
             name: 'Default Organization',
+            primaryColor: '#7c3aed',
             openaiApiKey: encryptedKey,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -5625,9 +5626,12 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
         }
 
         res.json({ success: true, preview: maskApiKey(apiKey.trim()) });
-      } catch (error) {
+      } catch (error: any) {
         console.error('[AI Key] Error saving API key:', error);
-        res.status(500).json({ error: 'Failed to save API key' });
+        res.status(500).json({
+          error: 'Failed to save API key',
+          details: error?.message || String(error),
+        });
       }
     });
 
@@ -5718,6 +5722,184 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
       } catch (error) {
         console.error('[AI Key] Error checking AI status:', error);
         res.status(500).json({ error: 'Failed to check AI status' });
+      }
+    });
+
+    // ─── Stripe Key Management ───────────────────────────────────
+    // Save encrypted Stripe keys for the organization
+    app.post('/api/admin/organization-settings/stripe-keys', isAdmin, async (req, res) => {
+      try {
+        const { secretKey, publishableKey, webhookSecret, testMode } = req.body;
+
+        if (!secretKey || typeof secretKey !== 'string' || secretKey.trim().length < 10) {
+          return res.status(400).json({ error: 'A valid Stripe secret key is required' });
+        }
+        if (!publishableKey || typeof publishableKey !== 'string' || publishableKey.trim().length < 10) {
+          return res.status(400).json({ error: 'A valid Stripe publishable key is required' });
+        }
+
+        // Validate key prefixes
+        const sk = secretKey.trim();
+        const pk = publishableKey.trim();
+        if (!sk.startsWith('sk_test_') && !sk.startsWith('sk_live_')) {
+          return res.status(400).json({ error: 'Secret key must start with sk_test_ or sk_live_' });
+        }
+        if (!pk.startsWith('pk_test_') && !pk.startsWith('pk_live_')) {
+          return res.status(400).json({ error: 'Publishable key must start with pk_test_ or pk_live_' });
+        }
+
+        const { encrypt, maskApiKey } = await import('./services/encryption');
+        const { clearStripeClientCache } = await import('./services/stripe-client-factory');
+
+        const encryptedSecret = encrypt(sk);
+        const encryptedPublishable = encrypt(pk);
+        const encryptedWebhook = webhookSecret && typeof webhookSecret === 'string' && webhookSecret.trim()
+          ? encrypt(webhookSecret.trim())
+          : null;
+        const isTestMode = testMode === true || sk.startsWith('sk_test_');
+
+        const [existing] = await db
+          .select({ id: organizationSettings.id })
+          .from(organizationSettings)
+          .limit(1);
+
+        if (existing) {
+          await db
+            .update(organizationSettings)
+            .set({
+              stripeSecretKey: encryptedSecret,
+              stripePublishableKey: encryptedPublishable,
+              stripeWebhookSecret: encryptedWebhook,
+              stripeTestMode: isTestMode,
+              updatedAt: new Date().toISOString(),
+            })
+            .where(eq(organizationSettings.id, existing.id));
+          clearStripeClientCache(existing.id);
+        } else {
+          await db.insert(organizationSettings).values({
+            name: 'Default Organization',
+            primaryColor: '#7c3aed',
+            stripeSecretKey: encryptedSecret,
+            stripePublishableKey: encryptedPublishable,
+            stripeWebhookSecret: encryptedWebhook,
+            stripeTestMode: isTestMode,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+        }
+
+        res.json({
+          success: true,
+          secretKeyPreview: maskApiKey(sk),
+          publishableKeyPreview: maskApiKey(pk),
+          testMode: isTestMode,
+        });
+      } catch (error: any) {
+        console.error('[Stripe Keys] Error saving Stripe keys:', error);
+        res.status(500).json({
+          error: 'Failed to save Stripe keys',
+          details: error?.message || String(error),
+        });
+      }
+    });
+
+    // Remove stored Stripe keys
+    app.delete('/api/admin/organization-settings/stripe-keys', isAdmin, async (req, res) => {
+      try {
+        const { clearStripeClientCache } = await import('./services/stripe-client-factory');
+
+        const [existing] = await db
+          .select({ id: organizationSettings.id })
+          .from(organizationSettings)
+          .limit(1);
+
+        if (existing) {
+          await db
+            .update(organizationSettings)
+            .set({
+              stripeSecretKey: null,
+              stripePublishableKey: null,
+              stripeWebhookSecret: null,
+              stripeTestMode: true,
+              updatedAt: new Date().toISOString(),
+            })
+            .where(eq(organizationSettings.id, existing.id));
+          clearStripeClientCache(existing.id);
+        }
+
+        res.json({ success: true });
+      } catch (error: any) {
+        console.error('[Stripe Keys] Error removing Stripe keys:', error);
+        res.status(500).json({ error: 'Failed to remove Stripe keys' });
+      }
+    });
+
+    // Test a Stripe key with a lightweight call
+    app.post('/api/admin/organization-settings/stripe-keys/test', isAdmin, async (req, res) => {
+      try {
+        const { secretKey } = req.body; // Optional — test this key directly
+        let keyToTest: string | null = null;
+
+        if (secretKey && typeof secretKey === 'string') {
+          keyToTest = secretKey.trim();
+        } else {
+          // Use the stored key
+          const { decrypt } = await import('./services/encryption');
+          const [org] = await db
+            .select({ stripeSecretKey: organizationSettings.stripeSecretKey })
+            .from(organizationSettings)
+            .limit(1);
+
+          if (org?.stripeSecretKey) {
+            keyToTest = decrypt(org.stripeSecretKey);
+          }
+        }
+
+        if (!keyToTest) {
+          // Try env var fallback
+          keyToTest = process.env.STRIPE_SECRET_KEY || null;
+        }
+
+        if (!keyToTest) {
+          return res.json({ success: false, error: 'No Stripe key configured' });
+        }
+
+        // Lightweight test: retrieve balance (no cost, quick response)
+        const Stripe = (await import('stripe')).default;
+        const testClient = new Stripe(keyToTest, { apiVersion: '2024-06-20' as any });
+        const balance = await testClient.balance.retrieve();
+
+        res.json({
+          success: true,
+          message: 'Stripe connection is valid!',
+          livemode: balance.livemode,
+        });
+      } catch (error: any) {
+        console.error('[Stripe Keys] Test failed:', error?.message);
+        const msg = error?.statusCode === 401
+          ? 'Invalid Stripe key — authentication failed'
+          : error?.statusCode === 403
+            ? 'Stripe key is valid but lacks permissions. Check key type.'
+            : `Connection test failed: ${error?.message || 'Unknown error'}`;
+        res.json({ success: false, error: msg });
+      }
+    });
+
+    // Get Stripe configuration status (never exposes full keys)
+    app.get('/api/admin/organization-settings/stripe-status', isAdmin, async (req, res) => {
+      try {
+        const { getStripeStatus } = await import('./services/stripe-client-factory');
+
+        const [org] = await db
+          .select({ id: organizationSettings.id })
+          .from(organizationSettings)
+          .limit(1);
+
+        const status = await getStripeStatus(org?.id);
+        res.json(status);
+      } catch (error) {
+        console.error('[Stripe Keys] Error checking Stripe status:', error);
+        res.status(500).json({ error: 'Failed to check Stripe status' });
       }
     });
 
