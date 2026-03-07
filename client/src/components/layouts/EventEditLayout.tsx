@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import {
@@ -53,6 +53,9 @@ export function EventEditLayout({
 }: EventEditLayoutProps) {
   const [, setLocation] = useLocation();
   const tabConfig = EDIT_TAB_CONFIG[activeTab];
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   // Apply dashboard dark theme to body for portalled elements
   useEffect(() => {
@@ -61,6 +64,36 @@ export function EventEditLayout({
       document.body.classList.remove("dashboard-dark-active");
     };
   }, []);
+
+  // Check scroll overflow for fade indicators
+  const updateScrollIndicators = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    updateScrollIndicators();
+    el.addEventListener("scroll", updateScrollIndicators, { passive: true });
+    window.addEventListener("resize", updateScrollIndicators);
+    return () => {
+      el.removeEventListener("scroll", updateScrollIndicators);
+      window.removeEventListener("resize", updateScrollIndicators);
+    };
+  }, [updateScrollIndicators, tabs]);
+
+  // Auto-scroll active tab into view
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const activeBtn = el.querySelector(`[data-tab="${activeTab}"]`) as HTMLElement | null;
+    if (activeBtn) {
+      activeBtn.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    }
+  }, [activeTab]);
 
   return (
     <div
@@ -149,60 +182,49 @@ export function EventEditLayout({
 
       {/* Horizontal tab navigation */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-5 pb-2">
-        <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-none">
-          {tabs.map((tab) => {
-            const config = EDIT_TAB_CONFIG[tab];
-            const isActive = activeTab === tab;
-            const Icon = config.icon;
+        <div className="relative">
+          {/* Left fade indicator (mobile) */}
+          {canScrollLeft && (
+            <div className="absolute left-0 top-0 bottom-2 w-8 z-10 pointer-events-none sm:hidden bg-gradient-to-r from-[#0f0f1a] to-transparent" />
+          )}
+          {/* Right fade indicator (mobile) */}
+          {canScrollRight && (
+            <div className="absolute right-0 top-0 bottom-2 w-8 z-10 pointer-events-none sm:hidden bg-gradient-to-l from-[#0f0f1a] to-transparent" />
+          )}
 
-            return (
-              <button
-                key={tab}
-                onClick={() => onTabChange(tab)}
-                className="relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-200 shrink-0"
-                style={{
-                  background: isActive
-                    ? "linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(109,40,217,0.15) 100%)"
-                    : "transparent",
-                  color: isActive ? "#ffffff" : "rgba(156, 163, 175, 0.8)",
-                  border: isActive
-                    ? "1px solid rgba(124,58,237,0.3)"
-                    : "1px solid transparent",
-                  boxShadow: isActive
-                    ? "0 0 15px rgba(124,58,237,0.15), 0 0 30px rgba(124,58,237,0.05)"
-                    : "none",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background =
-                      "rgba(255,255,255,0.05)";
-                    e.currentTarget.style.color = "rgba(255,255,255,0.9)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.color = "rgba(156, 163, 175, 0.8)";
-                  }
-                }}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{config.shortLabel}</span>
-                {/* Mobile: show only icon */}
-                {isActive && (
-                  <motion.div
-                    className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full"
-                    style={{
-                      background:
-                        "linear-gradient(90deg, rgba(124,58,237,0) 0%, rgba(124,58,237,0.6) 50%, rgba(124,58,237,0) 100%)",
-                    }}
-                    layoutId="editTabIndicator"
-                    transition={{ duration: 0.25, ease: "easeOut" }}
-                  />
-                )}
-              </button>
-            );
-          })}
+          <div
+            ref={scrollContainerRef}
+            className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none"
+          >
+            {tabs.map((tab) => {
+              const config = EDIT_TAB_CONFIG[tab];
+              const isActive = activeTab === tab;
+              const Icon = config.icon;
+
+              return (
+                <button
+                  key={tab}
+                  data-tab={tab}
+                  onClick={() => onTabChange(tab)}
+                  className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 shrink-0 ${
+                    isActive
+                      ? "text-white bg-violet-500/15 border border-violet-500/30 shadow-[0_0_15px_rgba(124,58,237,0.15)]"
+                      : "text-gray-400/80 border border-transparent hover:bg-white/5 hover:text-white/90"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className={isActive ? "inline" : "hidden sm:inline"}>{config.shortLabel}</span>
+                  {isActive && (
+                    <motion.div
+                      className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-gradient-to-r from-transparent via-violet-500/60 to-transparent"
+                      layoutId="editTabIndicator"
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 

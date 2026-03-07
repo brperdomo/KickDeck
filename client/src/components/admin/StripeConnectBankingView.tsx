@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, ExternalLink, AlertCircle, CheckCircle, Clock, XCircle, Shield, Info, BarChart3, Users, RotateCcw } from "lucide-react";
+import { Loader2, ExternalLink, AlertCircle, CheckCircle, Clock, XCircle, Shield, Info, BarChart3, Users, RotateCcw, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useForm } from "react-hook-form";
@@ -15,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { PaymentReportsView } from "./PaymentReportsView";
 import { RegistrationAnalytics } from "./RegistrationAnalytics";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface StripeConnectBankingViewProps {
   eventId: string;
@@ -55,23 +56,24 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showSetupForm, setShowSetupForm] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   // Check for success parameter from Stripe redirect
   React.useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const success = urlParams.get('success');
-    
+
     if (success === 'true') {
       toast({
         title: "Banking Setup Progress",
         description: "Successfully completed step in Stripe. Your banking information has been updated.",
         duration: 5000,
       });
-      
+
       // Clean up URL parameters
       const newUrl = window.location.pathname + window.location.hash;
       window.history.replaceState({}, '', newUrl);
-      
+
       // Refresh account status
       queryClient.invalidateQueries({ queryKey: ['stripe-connect-account', eventId] });
     }
@@ -120,11 +122,11 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
       const response = await fetch(`/api/events/${eventId}/connect-account`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          email: formData.email, 
+        body: JSON.stringify({
+          email: formData.email,
           businessName: formData.businessName,
-          country: 'US', 
-          type: 'standard' 
+          country: 'US',
+          type: 'standard'
         }),
       });
 
@@ -143,7 +145,7 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
     onSuccess: (data) => {
       setShowSetupForm(false);
       form.reset();
-      
+
       // Redirect to Stripe onboarding
       if (data.onboardingUrl) {
         window.open(data.onboardingUrl, '_blank');
@@ -222,7 +224,7 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
   const dashboardMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(`/api/events/${eventId}/connect-account/dashboard`);
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Failed to get dashboard link');
@@ -232,7 +234,7 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
     },
     onSuccess: (data) => {
       window.open(data.dashboardUrl, '_blank');
-      
+
       // Show different messages based on dashboard type
       if (data.hasExpressDashboard) {
         toast({
@@ -265,20 +267,20 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
       case 'restricted':
         return <XCircle className="h-4 w-4 text-red-500" />;
       default:
-        return <AlertCircle className="h-4 w-4 text-gray-400" />;
+        return <AlertCircle className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>;
+        return <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">Active</Badge>;
       case 'pending':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pending Setup</Badge>;
+        return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Pending Setup</Badge>;
       case 'rejected':
-        return <Badge variant="destructive">Rejected</Badge>;
+        return <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20">Rejected</Badge>;
       case 'restricted':
-        return <Badge variant="destructive">Restricted</Badge>;
+        return <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20">Restricted</Badge>;
       default:
         return <Badge variant="outline">Not Connected</Badge>;
     }
@@ -341,8 +343,8 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
           <strong>Banking Access Error:</strong> {error.message}
           {error.message.includes('Authentication') && (
             <div className="mt-2">
-              <button 
-                onClick={() => window.location.reload()} 
+              <button
+                onClick={() => window.location.reload()}
                 className="text-sm underline hover:no-underline"
               >
                 Click here to refresh and try again
@@ -364,18 +366,18 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
       </div>
 
       <Tabs defaultValue="setup" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="setup" className="flex items-center gap-2">
+        <TabsList className="w-full border-b rounded-none justify-start bg-transparent">
+          <TabsTrigger value="setup" className="flex items-center gap-1.5 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent py-3">
             <Shield className="h-4 w-4" />
-            Banking Setup
+            <span>Banking Setup</span>
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2">
+          <TabsTrigger value="analytics" className="flex items-center gap-1.5 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent py-3">
             <Users className="h-4 w-4" />
-            Registration Analytics
+            <span>Registration Analytics</span>
           </TabsTrigger>
-          <TabsTrigger value="reports" className="flex items-center gap-2">
+          <TabsTrigger value="reports" className="flex items-center gap-1.5 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent py-3">
             <BarChart3 className="h-4 w-4" />
-            Payment Reports
+            <span>Payment Reports</span>
           </TabsTrigger>
         </TabsList>
 
@@ -396,7 +398,7 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Bank account setup required:</strong> To receive registration payments for this tournament, 
+                  <strong>Bank account setup required:</strong> To receive registration payments for this tournament,
                   you'll need to connect a bank account through Stripe. This is a secure, one-time setup process.
                 </AlertDescription>
               </Alert>
@@ -421,18 +423,18 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
                   Set Up Secure Bank Account
                 </Button>
               ) : (
-                <Card className="border-2 border-blue-200 bg-blue-50/50">
+                <Card className="border border-primary/20 bg-primary/5">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-blue-800">
+                    <CardTitle className="flex items-center gap-2 text-primary">
                       <Shield className="h-5 w-5" />
                       Secure Bank Account Setup
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Alert className="mb-4 border-blue-200 bg-blue-50">
-                      <Shield className="h-4 w-4 text-blue-600" />
-                      <AlertDescription className="text-blue-800">
-                        This form uses secure validation and encryption. Your information is protected 
+                    <Alert className="mb-4 border-primary/20 bg-primary/5">
+                      <Shield className="h-4 w-4 text-primary" />
+                      <AlertDescription className="text-muted-foreground">
+                        This form uses secure validation and encryption. Your information is protected
                         and only shared with Stripe for account verification.
                       </AlertDescription>
                     </Alert>
@@ -446,8 +448,8 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
                             <FormItem>
                               <FormLabel>Bank Account Holder Email *</FormLabel>
                               <FormControl>
-                                <Input 
-                                  {...field} 
+                                <Input
+                                  {...field}
                                   type="email"
                                   placeholder="Enter email address"
                                   className="w-full"
@@ -465,8 +467,8 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
                             <FormItem>
                               <FormLabel>Confirm Email Address *</FormLabel>
                               <FormControl>
-                                <Input 
-                                  {...field} 
+                                <Input
+                                  {...field}
                                   type="email"
                                   placeholder="Confirm email address"
                                   className="w-full"
@@ -484,8 +486,8 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
                             <FormItem>
                               <FormLabel>Business/Organization Name (Optional)</FormLabel>
                               <FormControl>
-                                <Input 
-                                  {...field} 
+                                <Input
+                                  {...field}
                                   placeholder="Enter business name"
                                   className="w-full"
                                 />
@@ -584,9 +586,9 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
                         <li key={index} className="text-sm">• {req.replace(/_/g, ' ')}</li>
                       ))}
                     </ul>
-                    <div className="mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
-                      <p className="text-sm text-blue-800">
-                        <strong>How to resume:</strong> Click "Continue Setup" below to return to Stripe and complete the missing information. 
+                    <div className="mt-3 p-3 bg-primary/5 rounded-md border border-primary/20">
+                      <p className="text-sm text-muted-foreground">
+                        <strong>How to resume:</strong> Click "Continue Setup" below to return to Stripe and complete the missing information.
                         Your progress has been saved and you can pick up where you left off.
                       </p>
                     </div>
@@ -616,13 +618,13 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
                 >
                   Refresh Status
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   onClick={() => resetBankingMutation.mutate()}
                   disabled={resetBankingMutation.isPending}
                   size="sm"
-                  className="text-orange-600 border-orange-200 hover:bg-orange-50"
+                  className="text-orange-400 border-orange-500/20 hover:bg-orange-500/10"
                 >
                   {resetBankingMutation.isPending ? 'Resetting...' : 'Reset Banking Setup'}
                 </Button>
@@ -632,7 +634,6 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
                     onClick={() => reauthMutation.mutate()}
                     disabled={reauthMutation.isPending}
                     size="sm"
-                    className="bg-blue-600 hover:bg-blue-700"
                   >
                     {reauthMutation.isPending ? (
                       <>
@@ -674,22 +675,22 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
       </Card>
 
       {connectStatus?.status === 'pending' && (
-        <Card className="border-2 border-yellow-200 bg-yellow-50/50">
+        <Card className="border border-yellow-500/20 bg-yellow-500/5">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-yellow-800">
+            <CardTitle className="flex items-center gap-2 text-yellow-500">
               <Clock className="h-5 w-5" />
               Banking Setup In Progress
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-white p-4 rounded-md border border-yellow-200">
-              <p className="text-sm text-gray-700 mb-3">
-                <strong>Setup Status:</strong> You've started the banking setup process but haven't completed all required steps.
+            <div className="bg-muted/50 p-4 rounded-md border border-border">
+              <p className="text-sm text-muted-foreground mb-3">
+                <strong className="text-foreground">Setup Status:</strong> You've started the banking setup process but haven't completed all required steps.
               </p>
-              
+
               <div className="space-y-2">
-                <h4 className="font-medium text-gray-800">To resume your setup:</h4>
-                <ol className="text-sm text-gray-600 space-y-1 ml-4">
+                <h4 className="font-medium">To resume your setup:</h4>
+                <ol className="text-sm text-muted-foreground space-y-1 ml-4">
                   <li>1. Click "Continue Banking Setup" below</li>
                   <li>2. Complete any missing information in Stripe</li>
                   <li>3. Submit required verification documents</li>
@@ -698,9 +699,9 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
               </div>
 
               {connectStatus?.requirements && connectStatus.requirements.length > 0 && (
-                <div className="mt-3 p-3 bg-red-50 rounded-md border border-red-200">
-                  <p className="text-sm text-red-800 font-medium">Still needed:</p>
-                  <ul className="text-sm text-red-700 mt-1 space-y-1">
+                <div className="mt-3 p-3 bg-red-500/5 rounded-md border border-red-500/20">
+                  <p className="text-sm text-red-400 font-medium">Still needed:</p>
+                  <ul className="text-sm text-red-400 mt-1 space-y-1">
                     {connectStatus.requirements.map((req, index) => (
                       <li key={index}>• {req.replace(/_/g, ' ')}</li>
                     ))}
@@ -713,7 +714,7 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
               <Button
                 onClick={() => reauthMutation.mutate()}
                 disabled={reauthMutation.isPending}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                className="flex-1"
               >
                 {reauthMutation.isPending ? (
                   <>
@@ -740,22 +741,22 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
       )}
 
       {connectStatus?.status === 'restricted' && (
-        <Card className="border-2 border-red-200 bg-red-50/50">
+        <Card className="border border-red-500/20 bg-red-500/5">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-800">
+            <CardTitle className="flex items-center gap-2 text-red-400">
               <XCircle className="h-5 w-5" />
               Account Restricted
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-white p-4 rounded-md border border-red-200">
-              <p className="text-sm text-gray-700 mb-3">
-                <strong>Status:</strong> Your account has been restricted and requires immediate attention.
+            <div className="bg-muted/50 p-4 rounded-md border border-border">
+              <p className="text-sm text-muted-foreground mb-3">
+                <strong className="text-foreground">Status:</strong> Your account has been restricted and requires immediate attention.
               </p>
-              
+
               <div className="space-y-2">
-                <h4 className="font-medium text-gray-800">To resolve restrictions:</h4>
-                <ol className="text-sm text-gray-600 space-y-1 ml-4">
+                <h4 className="font-medium">To resolve restrictions:</h4>
+                <ol className="text-sm text-muted-foreground space-y-1 ml-4">
                   <li>1. Click "View Dashboard" to access your Stripe account</li>
                   <li>2. Review and address all flagged issues</li>
                   <li>3. Provide any requested additional information</li>
@@ -764,9 +765,9 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
               </div>
 
               {connectStatus?.requirements && connectStatus.requirements.length > 0 && (
-                <div className="mt-3 p-3 bg-red-100 rounded-md border border-red-300">
-                  <p className="text-sm text-red-800 font-medium">Required actions:</p>
-                  <ul className="text-sm text-red-700 mt-1 space-y-1">
+                <div className="mt-3 p-3 bg-red-500/10 rounded-md border border-red-500/20">
+                  <p className="text-sm text-red-400 font-medium">Required actions:</p>
+                  <ul className="text-sm text-red-400 mt-1 space-y-1">
                     {connectStatus.requirements.map((req, index) => (
                       <li key={index}>• {req.replace(/_/g, ' ')}</li>
                     ))}
@@ -779,7 +780,8 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
               <Button
                 onClick={() => dashboardMutation.mutate()}
                 disabled={dashboardMutation.isPending}
-                className="flex-1 bg-red-600 hover:bg-red-700"
+                variant="destructive"
+                className="flex-1"
               >
                 {dashboardMutation.isPending ? (
                   <>
@@ -806,22 +808,22 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
       )}
 
       {connectStatus?.status === 'rejected' && (
-        <Card className="border-2 border-red-200 bg-red-50/50">
+        <Card className="border border-red-500/20 bg-red-500/5">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-800">
+            <CardTitle className="flex items-center gap-2 text-red-400">
               <XCircle className="h-5 w-5" />
               Account Application Rejected
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-white p-4 rounded-md border border-red-200">
-              <p className="text-sm text-gray-700 mb-3">
-                <strong>Status:</strong> Your banking setup application has been rejected.
+            <div className="bg-muted/50 p-4 rounded-md border border-border">
+              <p className="text-sm text-muted-foreground mb-3">
+                <strong className="text-foreground">Status:</strong> Your banking setup application has been rejected.
               </p>
-              
+
               <div className="space-y-2">
-                <h4 className="font-medium text-gray-800">Next steps:</h4>
-                <ol className="text-sm text-gray-600 space-y-1 ml-4">
+                <h4 className="font-medium">Next steps:</h4>
+                <ol className="text-sm text-muted-foreground space-y-1 ml-4">
                   <li>1. Review the rejection reasons in your Stripe dashboard</li>
                   <li>2. Address any issues with your business information</li>
                   <li>3. Contact Stripe support for guidance</li>
@@ -834,7 +836,8 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
               <Button
                 onClick={() => dashboardMutation.mutate()}
                 disabled={dashboardMutation.isPending}
-                className="flex-1 bg-red-600 hover:bg-red-700"
+                variant="destructive"
+                className="flex-1"
               >
                 {dashboardMutation.isPending ? (
                   <>
@@ -861,74 +864,84 @@ export function StripeConnectBankingView({ eventId }: StripeConnectBankingViewPr
       )}
 
       {connectStatus?.status === 'active' && (
-        <Card>
+        <Card className="border border-green-500/20 bg-green-500/5">
           <CardHeader>
-            <CardTitle className="text-green-700">✓ Ready to Receive Payments</CardTitle>
+            <CardTitle className="text-green-500 flex items-center gap-2">
+              <CheckCircle className="h-5 w-5" />
+              Ready to Receive Payments
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Your bank account is successfully connected and verified. Registration payments 
-              for this tournament will be automatically deposited to your account, typically 
+              Your bank account is successfully connected and verified. Registration payments
+              for this tournament will be automatically deposited to your account, typically
               within 2-7 business days.
             </p>
           </CardContent>
         </Card>
       )}
 
-      {/* Banking Setup Guide */}
-      <Card className="border border-blue-200 bg-blue-50/30">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-800">
-            <Info className="h-5 w-5" />
-            Banking Setup Guide
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <h4 className="font-medium text-gray-800">Account Status Meanings:</h4>
-                <div className="space-y-1 text-sm">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="h-3 w-3 text-gray-400" />
-                    <span><strong>Not Connected:</strong> No banking setup started</span>
+      {/* Banking Setup Guide — Collapsible */}
+      <Collapsible open={guideOpen} onOpenChange={setGuideOpen}>
+        <Card className="border border-border">
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors">
+              <CardTitle className="flex items-center gap-2 text-muted-foreground">
+                <Info className="h-5 w-5" />
+                Banking Setup Guide
+                <ChevronDown className={`h-4 w-4 ml-auto transition-transform duration-200 ${guideOpen ? 'rotate-180' : ''}`} />
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Account Status Meanings:</h4>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-3 w-3 text-muted-foreground" />
+                        <span><strong>Not Connected:</strong> No banking setup started</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-3 w-3 text-yellow-500" />
+                        <span><strong>Pending:</strong> Setup in progress, verification needed</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-3 w-3 text-green-500" />
+                        <span><strong>Active:</strong> Ready to receive payments</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <XCircle className="h-3 w-3 text-red-500" />
+                        <span><strong>Restricted:</strong> Additional information required</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-3 w-3 text-yellow-500" />
-                    <span><strong>Pending:</strong> Setup in progress, verification needed</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-3 w-3 text-green-500" />
-                    <span><strong>Active:</strong> Ready to receive payments</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <XCircle className="h-3 w-3 text-red-500" />
-                    <span><strong>Restricted:</strong> Additional information required</span>
+
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Typical Setup Timeline:</h4>
+                    <div className="space-y-1 text-sm text-muted-foreground">
+                      <div>• Initial setup: 5-10 minutes</div>
+                      <div>• Document verification: 1-3 business days</div>
+                      <div>• Account activation: 1-7 business days</div>
+                      <div>• First payout: 2-7 business days after first payment</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="font-medium text-gray-800">Typical Setup Timeline:</h4>
-                <div className="space-y-1 text-sm text-gray-600">
-                  <div>• Initial setup: 5-10 minutes</div>
-                  <div>• Document verification: 1-3 business days</div>
-                  <div>• Account activation: 1-7 business days</div>
-                  <div>• First payout: 2-7 business days after first payment</div>
+
+                <div className="mt-4 p-3 bg-muted/50 rounded-md border border-border">
+                  <p className="text-sm text-muted-foreground">
+                    <strong className="text-foreground">Note:</strong> You can safely leave and return to this page during setup.
+                    Your progress is automatically saved and you can resume where you left off using the
+                    "Continue Banking Setup" button when your status is pending.
+                  </p>
                 </div>
               </div>
-            </div>
-            
-            <div className="mt-4 p-3 bg-white rounded-md border border-blue-200">
-              <p className="text-sm text-gray-700">
-                <strong>Note:</strong> You can safely leave and return to this page during setup. 
-                Your progress is automatically saved and you can resume where you left off using the 
-                "Continue Banking Setup" button when your status is pending.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
           </div>
         </TabsContent>
 
