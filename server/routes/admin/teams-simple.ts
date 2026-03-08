@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { db } from 'db';
 import { teams, games, events, eventBrackets, eventAgeGroups } from 'db/schema';
-import { eq, and, sql, desc, asc } from 'drizzle-orm';
+import { eq, and, sql, desc, asc, inArray } from 'drizzle-orm';
 
 // Update game score
 export async function updateGameScore(req: Request, res: Response) {
@@ -289,7 +289,65 @@ export async function updateTeamStatus(req: Request, res: Response) {
   try {
     const teamId = parseInt(req.params.teamId);
     const { status } = req.body;
-    
+
+    // If approving a team that has a saved payment method, process the charge
+    if (status === 'approved' || status === 'registered') {
+      const existingTeam = await db.query.teams.findFirst({
+        where: eq(teams.id, teamId),
+      });
+
+      if (existingTeam?.paymentMethodId && existingTeam?.totalAmount && existingTeam.totalAmount > 0) {
+        try {
+          const { processPaymentForApprovedTeam } = await import('../../services/stripeService');
+          // totalAmount is stored in cents; processPaymentForApprovedTeam expects cents
+          const paymentResult = await processPaymentForApprovedTeam(teamId, existingTeam.totalAmount);
+          console.log(`✅ Payment processed for team ${teamId}: ${paymentResult.status}`);
+
+          // Map Stripe status to our app status: Stripe returns "succeeded", our UI expects "paid"
+          const mappedPaymentStatus = paymentResult.status === 'succeeded' ? 'paid' : paymentResult.status;
+
+          // Update status + payment result together
+          const [updatedTeam] = await db
+            .update(teams)
+            .set({
+              status,
+              paymentStatus: mappedPaymentStatus,
+              paymentIntentId: paymentResult.paymentIntentId,
+              paymentDate: new Date(),
+            })
+            .where(eq(teams.id, teamId))
+            .returning();
+
+          return res.json({
+            success: true,
+            team: updatedTeam,
+            paymentProcessed: true,
+            paymentStatus: mappedPaymentStatus,
+          });
+        } catch (paymentError: any) {
+          console.error(`❌ Payment failed for team ${teamId}:`, paymentError.message);
+          // Still update status but note the payment failure
+          const [updatedTeam] = await db
+            .update(teams)
+            .set({
+              status,
+              paymentStatus: 'failed',
+              paymentErrorMessage: paymentError.message,
+            })
+            .where(eq(teams.id, teamId))
+            .returning();
+
+          return res.json({
+            success: true,
+            team: updatedTeam,
+            paymentProcessed: false,
+            paymentError: paymentError.message,
+          });
+        }
+      }
+    }
+
+    // Default: just update the status (no payment to process)
     const [updatedTeam] = await db
       .update(teams)
       .set({ status })
@@ -314,8 +372,146 @@ export async function deleteTeam(req: Request, res: Response) {
   }
 }
 
+export async function bulkApproveTeams(req: Request, res: Response) {
+  try {
+    const { teamIds, notes } = req.body;
+
+    if (!Array.isArray(teamIds) || teamIds.length === 0) {
+      return res.status(400).json({ error: 'teamIds array is required' });
+    }
+
+    const results: { teamId: number; success: boolean; error?: string; paymentStatus?: string }[] = [];
+
+    for (const teamId of teamIds) {
+      try {
+        const existingTeam = await db.query.teams.findFirst({
+          where: eq(teams.id, teamId),
+        });
+
+        if (!existingTeam) {
+          results.push({ teamId, success: false, error: 'Team not found' });
+          continue;
+        }
+
+        // If team has payment method and amount, process payment
+        if (existingTeam.paymentMethodId && existingTeam.totalAmount && existingTeam.totalAmount > 0) {
+          try {
+            const { processPaymentForApprovedTeam } = await import('../../services/stripeService');
+            const paymentResult = await processPaymentForApprovedTeam(teamId, existingTeam.totalAmount);
+            const mappedStatus = paymentResult.status === 'succeeded' ? 'paid' : paymentResult.status;
+
+            await db.update(teams).set({
+              status: 'approved',
+              paymentStatus: mappedStatus,
+              paymentIntentId: paymentResult.paymentIntentId,
+              paymentDate: new Date(),
+              notes: notes || undefined,
+            }).where(eq(teams.id, teamId));
+
+            results.push({ teamId, success: true, paymentStatus: mappedStatus });
+          } catch (paymentError: any) {
+            console.error(`Bulk approve payment failed for team ${teamId}:`, paymentError.message);
+            await db.update(teams).set({
+              status: 'approved',
+              paymentStatus: 'failed',
+              paymentErrorMessage: paymentError.message,
+              notes: notes || undefined,
+            }).where(eq(teams.id, teamId));
+            results.push({ teamId, success: true, paymentStatus: 'failed', error: paymentError.message });
+          }
+        } else {
+          // No payment to process, just update status
+          await db.update(teams).set({
+            status: 'approved',
+            notes: notes || undefined,
+          }).where(eq(teams.id, teamId));
+          results.push({ teamId, success: true });
+        }
+      } catch (err: any) {
+        results.push({ teamId, success: false, error: err.message });
+      }
+    }
+
+    const successful = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success).length;
+    const warnings = results.filter(r => r.success && r.paymentStatus === 'failed').length;
+
+    res.json({
+      summary: { successful, failed, warnings },
+      results,
+    });
+  } catch (error) {
+    console.error('Bulk approve error:', error);
+    res.status(500).json({ error: 'Failed to bulk approve teams' });
+  }
+}
+
+export async function bulkRejectTeams(req: Request, res: Response) {
+  try {
+    const { teamIds, notes } = req.body;
+
+    if (!Array.isArray(teamIds) || teamIds.length === 0) {
+      return res.status(400).json({ error: 'teamIds array is required' });
+    }
+
+    await db.update(teams).set({
+      status: 'rejected',
+      notes: notes || 'Bulk rejection',
+    }).where(inArray(teams.id, teamIds));
+
+    res.json({
+      summary: { successful: teamIds.length, failed: 0, warnings: 0 },
+      results: teamIds.map(id => ({ teamId: id, success: true })),
+    });
+  } catch (error) {
+    console.error('Bulk reject error:', error);
+    res.status(500).json({ error: 'Failed to bulk reject teams' });
+  }
+}
+
 export async function processRefund(req: Request, res: Response) {
-  res.json({ success: true, message: 'Refund processed successfully' });
+  try {
+    const { teamId } = req.params;
+    const { refundAmount, refundReason, adminNotes, postRefundStatus } = req.body;
+    const userId = (req as any).user?.id || (req as any).session?.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    if (!refundAmount || !refundReason) {
+      return res.status(400).json({
+        error: 'Refund amount and reason are required'
+      });
+    }
+
+    console.log(`🔄 API REFUND: Processing refund for Team ${teamId}`);
+
+    const { processConnectRefund } = await import('../../services/stripeService');
+    const result = await processConnectRefund({
+      teamId: parseInt(teamId),
+      refundAmount,
+      refundReason,
+      adminNotes,
+      processedByUserId: userId,
+      postRefundStatus: postRefundStatus || undefined,
+    });
+
+    res.json({
+      success: true,
+      message: `Refund processed successfully for ${result.teamName}`,
+      refundId: result.refundId,
+      refundAmount: result.refundAmount,
+      platformFeeRefund: result.platformFeeRefund,
+      status: result.status
+    });
+  } catch (error: any) {
+    console.error('🚨 API REFUND ERROR:', error);
+    res.status(500).json({
+      error: 'REFUND_FAILED',
+      message: error.message
+    });
+  }
 }
 
 export async function processTeamPaymentAfterSetup(req: Request, res: Response) {

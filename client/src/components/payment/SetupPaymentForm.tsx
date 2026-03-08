@@ -17,6 +17,7 @@ interface SetupPaymentFormProps {
   onError?: (error: Error) => void;
   teamName?: string;
   eventName?: string;
+  eventId?: string | number;
   returnUrl?: string;
   hideSubmitButton?: boolean;
 }
@@ -304,6 +305,7 @@ export function SetupPaymentForm(props: SetupPaymentFormProps) {
         const response = await createSetupIntent(props.teamId, {
           teamName: props.teamName || '',
           eventName: props.eventName || '',
+          eventId: props.eventId?.toString() || '',
           expectedAmount: props.expectedAmount.toString()
         });
 

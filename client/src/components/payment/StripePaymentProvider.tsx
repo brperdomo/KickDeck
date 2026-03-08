@@ -1,19 +1,52 @@
 import { useState, useEffect } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
+import { loadStripe, Stripe, StripeElementsOptions } from '@stripe/stripe-js';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
-// Initialize Stripe
-if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  console.error('Missing Stripe public key. Payment functionality will not work properly.');
-}
+/**
+ * Resolve Stripe publishable key from env vars or server API, then load Stripe.
+ * Cached so the fetch + loadStripe only happen once across the entire app.
+ */
+let _stripePromise: Promise<Stripe | null> | null = null;
 
-// Load Stripe outside of component render
-const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
-  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
-  : null;
+function getStripePromise(): Promise<Stripe | null> {
+  if (_stripePromise) return _stripePromise;
+
+  _stripePromise = (async () => {
+    // 1. Check server-injected key
+    let key = (window as any).__STRIPE_PK__;
+
+    // 2. Try env vars
+    if (!key) {
+      key = import.meta.env.VITE_STRIPE_PUBLIC_KEY ||
+        import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+    }
+
+    // 3. Fall back to server API (database-stored keys)
+    if (!key) {
+      try {
+        const response = await fetch('/api/payments/config');
+        if (response.ok) {
+          const config = await response.json();
+          key = config.publishableKey;
+        }
+      } catch (error) {
+        console.error('Failed to fetch Stripe config from server:', error);
+      }
+    }
+
+    if (!key) {
+      console.error('Stripe publishable key not found (checked env vars and server API)');
+      return null;
+    }
+
+    return loadStripe(key);
+  })();
+
+  return _stripePromise;
+}
 
 interface StripePaymentProviderProps {
   children: React.ReactNode;
@@ -39,7 +72,13 @@ export default function StripePaymentProvider({
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
   const { toast } = useToast();
+
+  // Resolve Stripe (env var or server API) on mount
+  useEffect(() => {
+    setStripePromise(getStripePromise());
+  }, []);
 
   useEffect(() => {
     // Create payment intent when the component mounts

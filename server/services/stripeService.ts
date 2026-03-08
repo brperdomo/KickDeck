@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { log } from "../vite";
 import { sendRegistrationReceiptEmail } from "./emailService";
 import { getStripeClient } from "./stripe-client-factory";
+import { calculateEventFees, calculateFeeBreakdown, DEFAULT_PLATFORM_FEE_RATE, STRIPE_FIXED_FEE } from "./fee-calculator";
 
 // In production, we can add a version check to ensure our API version stays current
 const STRIPE_API_VERSION = "2023-10-16" as any;
@@ -387,145 +388,90 @@ export async function createRefund(paymentIntentId: string, amount?: number) {
       throw new Error(`Payment intent ${paymentIntentId} not found`);
     }
 
-    // Get Connect account metadata for transfer reversal logic
     const connectAccountId = paymentIntent.metadata?.connectAccountId;
-    log(`Connect account from metadata: ${connectAccountId || 'none'}`);
-
-    // Find the charge associated with this payment intent
-    const charges = await stripe.charges.list({
-      payment_intent: paymentIntentId,
-    });
-
-    if (charges.data.length === 0) {
-      throw new Error(`No charges found for payment intent ${paymentIntentId}`);
-    }
-
-    const chargeId = charges.data[0].id;
-
-    // CORRECT REFUND LOGIC: Refund from KickDeck main account (where charge was received)
-    // Then reverse the transfer from Connect account to offset the cost
-    log(`Processing refund from main KickDeck account (original charge location)`);
-    const refund = await stripe.refunds.create({
-      charge: chargeId,
-      amount: amount, // If not specified, refund the full amount
-    });
-    log(`✅ Refund processed from main KickDeck account: ${refund.id}`);
-
-    // CRITICAL: Ensure tournament Connect account covers the refund cost
-    const refundAmount = amount || paymentIntent.amount;
     const teamId = paymentIntent.metadata.teamId || '0';
-    
-    if (connectAccountId && connectAccountId.trim() !== '') {
-      log(`Attempting to recover ${refundAmount} cents from Connect account ${connectAccountId}`);
-      
-      try {
-        // Create transfer FROM Connect account TO KickDeck to reimburse the refund
-        const offsetTransfer = await stripe.transfers.create({
-          amount: refundAmount,
-          currency: 'usd',
-          description: `Refund cost recovery for payment ${paymentIntentId}`,
-          metadata: {
-            purpose: 'refund_cost_recovery',
-            originalPaymentIntent: paymentIntentId,
-            teamId: teamId,
-            refundId: refund.id
-          }
-        }, {
-          stripeAccount: connectAccountId, // Execute from tournament Connect account
-        });
-        
-        log(`✅ SUCCESS: Transfer ${offsetTransfer.id} - Tournament covers ${refundAmount} cents refund cost`);
-        
-        // Record successful cost recovery
-        await db.insert(paymentTransactions).values({
-          teamId: parseInt(teamId),
-          paymentIntentId: paymentIntentId,
-          amount: refundAmount, // Positive - money recovered from tournament
-          status: "completed",
-          transactionType: "refund_cost_recovery",
-          metadata: {
-            transferId: offsetTransfer.id,
-            sourceConnectAccount: connectAccountId,
-            recoveredAmount: refundAmount.toString(),
-            originalRefundId: refund.id,
-            status: 'tournament_covered_refund_cost'
-          },
-        });
-        
-      } catch (transferError: any) {
-        log(`❌ FAILED: Cannot recover from Connect account: ${transferError.message}`);
-        log(`❌ KickDeck absorbs ${refundAmount} cent refund cost`);
-        
-        // Record failed recovery - KickDeck absorbs cost
-        await db.insert(paymentTransactions).values({
-          teamId: parseInt(teamId),
-          paymentIntentId: paymentIntentId,
-          amount: -refundAmount, // Negative - cost absorbed by KickDeck
-          status: "failed",
-          transactionType: "refund_cost_recovery_failed",
-          metadata: {
-            error: transferError.message,
-            connectAccount: connectAccountId,
-            attemptedAmount: refundAmount.toString(),
-            costAbsorbedBy: "kickdeck_main_account",
-            originalRefundId: refund.id
-          },
-        });
-      }
+    const hasConnectAccount = connectAccountId && connectAccountId.trim() !== '';
+
+    // Determine refund amount:
+    // - If explicit amount passed (partial refund), use that
+    // - Otherwise refund the tournament cost (registration fee only, NOT platform fee)
+    //   KickDeck keeps its platform fee on refunds
+    let refundAmount: number;
+    if (amount) {
+      refundAmount = amount;
     } else {
-      log(`⚠️ No Connect account - KickDeck absorbs ${refundAmount} cent refund cost`);
-      
-      // Record cost absorption due to missing Connect account
-      await db.insert(paymentTransactions).values({
-        teamId: parseInt(teamId),
-        paymentIntentId: paymentIntentId,
-        amount: -refundAmount, // Negative - cost absorbed by KickDeck
-        status: "completed",
-        transactionType: "refund_cost_absorbed",
-        metadata: {
-          reason: "no_connect_account_metadata",
-          refundAmount: refundAmount.toString(),
-          costAbsorbedBy: "kickdeck_main_account",
-          originalRefundId: refund.id,
-          note: "old_payment_or_missing_metadata"
-        },
-      });
+      // Get tournament cost from metadata or team record
+      const tournamentCost = paymentIntent.metadata?.tournamentAmount
+        ? parseInt(paymentIntent.metadata.tournamentAmount)
+        : null;
+
+      if (tournamentCost && tournamentCost > 0) {
+        refundAmount = tournamentCost;
+      } else if (teamId && teamId !== '0') {
+        // Fallback: get from team record
+        const teamRecord = await db.query.teams.findFirst({
+          where: eq(teams.id, parseInt(teamId)),
+        });
+        refundAmount = teamRecord?.totalAmount || paymentIntent.amount;
+      } else {
+        refundAmount = paymentIntent.amount;
+      }
     }
 
-    // Update team status using already extracted teamId
+    log(`Refund amount: $${(refundAmount / 100).toFixed(2)} | Connect: ${connectAccountId || 'none'} | Has transfer: ${hasConnectAccount ? 'yes' : 'no'}`);
+
+    // Create refund with reverse_transfer to pull funds from Connect account
+    // - reverse_transfer: true → reverses the transfer to the Connect account
+    // - refund_application_fee: false → KickDeck keeps its platform fee
+    // This ensures tournament (Connect account) bears the refund cost, not KickDeck
+    const refundParams: any = {
+      payment_intent: paymentIntentId,
+      amount: refundAmount,
+    };
+
+    if (hasConnectAccount) {
+      refundParams.reverse_transfer = true;
+      refundParams.refund_application_fee = false;
+      log(`Using reverse_transfer to pull $${(refundAmount / 100).toFixed(2)} from Connect account ${connectAccountId}`);
+    }
+
+    const refund = await stripe.refunds.create(refundParams);
+    log(`✅ Refund ${refund.id} processed: $${(refundAmount / 100).toFixed(2)} | reverse_transfer: ${hasConnectAccount}`);
+
+    // Update team status
     if (teamId && teamId !== '0') {
       const teamIdNumber = parseInt(teamId);
 
-      // Update the team status
+      const isFullRefund = refundAmount >= (parseInt(paymentIntent.metadata?.tournamentAmount || '0') || paymentIntent.amount);
+
       await db
         .update(teams)
         .set({
-          paymentStatus: "refunded",
+          paymentStatus: isFullRefund ? "refunded" : "partially_refunded",
           refundDate: new Date().toISOString(),
+          refundAmount: refundAmount,
         })
         .where(eq(teams.id, teamIdNumber));
 
-      // Record the refund transaction with Connect account context
+      // Record the refund transaction
       await db.insert(paymentTransactions).values({
         teamId: teamIdNumber,
         paymentIntentId: paymentIntentId,
-        amount: -(amount || paymentIntent.amount), // Negative amount for refund
+        amount: -refundAmount,
         status: "refunded",
         transactionType: "refund",
-        refundedAt: new Date(),
         metadata: {
-          refundSource: "main_kickdeck_account", // Refund always from main account
-          transferReversalAttempted: connectAccountId ? "yes" : "no",
+          refundId: refund.id,
           connectAccountId: connectAccountId || "none",
+          reverseTransfer: hasConnectAccount ? "true" : "false",
+          applicationFeeRefunded: "false",
           originalPaymentIntent: paymentIntentId,
-          refundAmount: (amount || paymentIntent.amount).toString(),
+          refundAmount: refundAmount.toString(),
           refundTimestamp: new Date().toISOString(),
         },
       });
 
-      log(
-        `Refund transaction recorded for team ${teamIdNumber} - refund from main account${connectAccountId ? ', transfer reversal attempted from Connect account' : ''}`,
-      );
+      log(`Refund recorded for team ${teamIdNumber} — ${hasConnectAccount ? 'funds pulled from Connect account' : 'no Connect account'}`);
     }
 
     return refund;
@@ -584,20 +530,20 @@ export async function createSetupIntent(
         }
 
         const { team, event } = teamWithEvent[0];
-        connectAccountId = event?.stripeConnectAccountId;
+        connectAccountId = event?.stripeConnectAccountId || undefined;
 
         if (!connectAccountId) {
-          throw new Error(`Tournament must have Stripe Connect account configured for Setup Intent creation`);
+          log(`⚠️ No Connect account for event — using platform account for team ${teamId}`);
+        } else {
+          log(`Using Connect account: ${connectAccountId} for team ${teamId}`);
         }
 
-        log(`Using Connect account: ${connectAccountId} for team ${teamId}`);
-
-        // STEP 2: Create or get customer ON CONNECT ACCOUNT (following Stripe recommendations)
+        // STEP 2: Create or get customer on PLATFORM account
+        // Destination charges require customers/payment methods on the platform account
         if (team.stripeCustomerId) {
           customerId = team.stripeCustomerId;
           log(`Using existing customer ID: ${customerId} for team ${teamId}`);
         } else if (team.submitterEmail) {
-          // Create new customer DIRECTLY on tournament Connect account with COMPREHENSIVE metadata
           const customer = await stripe.customers.create({
             email: team.submitterEmail,
             name: `${team.name} - ${team.submitterName || "Team Manager"}`,
@@ -612,11 +558,8 @@ export async function createSetupIntent(
               registrationDate: new Date().toISOString(),
               internalReference: `TEAM-${teamId}-${team.eventId}`,
               systemSource: "KickDeck",
-              customerType: "ConnectAccount"
+              connectAccountId: connectAccountId || "",
             },
-          }, {
-            // CRITICAL: Create customer on Connect account using stripeAccount parameter
-            stripeAccount: connectAccountId
           });
           customerId = customer.id;
 
@@ -626,7 +569,7 @@ export async function createSetupIntent(
             .set({ stripeCustomerId: customerId })
             .where(eq(teams.id, numericTeamId));
 
-          log(`Created new customer: ${customerId} on Connect account ${connectAccountId} for team ${teamId}`);
+          log(`Created new customer: ${customerId} on platform account for team ${teamId}`);
         }
       } catch (customerError: any) {
         log(
@@ -649,34 +592,46 @@ export async function createSetupIntent(
           if (eventInfo[0]?.stripeConnectAccountId) {
             connectAccountId = eventInfo[0].stripeConnectAccountId;
             log(`Found Connect account ${connectAccountId} for temp team ${teamId} via event ${metadata.eventId}`);
-
-            // Create customer on Connect account for temp team
-            if (metadata?.userEmail) {
-              const customer = await stripe.customers.create({
-                email: metadata.userEmail,
-                name: metadata.userName || "Team Manager",
-                metadata: {
-                  teamId: teamId.toString(),
-                  teamName: metadata.teamName || "Unknown Team",
-                  createdFor: "temp_team_registration",
-                  eventId: metadata.eventId,
-                },
-              }, {
-                // CRITICAL: Create customer on Connect account for temp team too
-                stripeAccount: connectAccountId
-              });
-              customerId = customer.id;
-              log(`Created customer ${customerId} on Connect account ${connectAccountId} for temp team ${teamId}`);
-            }
           } else {
-            throw new Error(`Event ${metadata.eventId} does not have Connect account configured`);
+            log(`⚠️ No Connect account for event ${metadata.eventId} — using platform account for temp team ${teamId}`);
+          }
+
+          // Create customer on PLATFORM account (destination charges require platform customers)
+          if (metadata?.userEmail) {
+            const customer = await stripe.customers.create({
+              email: metadata.userEmail,
+              name: metadata.userName || "Team Manager",
+              metadata: {
+                teamId: teamId.toString(),
+                teamName: metadata.teamName || "Unknown Team",
+                createdFor: "temp_team_registration",
+                eventId: metadata.eventId,
+                connectAccountId: connectAccountId || "",
+              },
+            });
+            customerId = customer.id;
+            log(`Created customer ${customerId} on platform account for temp team ${teamId}`);
           }
         } catch (tempError: any) {
           log(`Error setting up Connect account for temp team: ${tempError.message}`);
           throw tempError;
         }
       } else {
-        throw new Error('Temp team registration requires eventId in metadata for Connect account setup');
+        log(`⚠️ Temp team ${teamId} has no eventId in metadata — using platform account`);
+        // Still create a customer on the platform account so payment can be charged later
+        if (metadata?.userEmail) {
+          const customer = await stripe.customers.create({
+            email: metadata.userEmail,
+            name: metadata.userName || "Team Manager",
+            metadata: {
+              teamId: teamId.toString(),
+              teamName: metadata.teamName || "Unknown Team",
+              createdFor: "temp_team_registration_no_event",
+            },
+          });
+          customerId = customer.id;
+          log(`Created customer ${customerId} on platform account for temp team ${teamId}`);
+        }
       }
     }
 
@@ -709,17 +664,16 @@ export async function createSetupIntent(
     // Add customer if we have one (critical for charging later)
     if (customerId) {
       setupIntentData.customer = customerId;
-      log(`Setup Intent will be created with customer: ${customerId} on Connect account: ${connectAccountId}`);
+      log(`Setup Intent will be created with customer: ${customerId} for team ${teamId}`);
     } else {
       log(`WARNING: Setup Intent created without customer - charging will be limited`);
     }
 
-    // CRITICAL: Create Setup Intent on Connect account using stripeAccount parameter
-    const setupIntent = await stripe.setupIntents.create(setupIntentData, {
-      stripeAccount: connectAccountId
-    });
+    // Create Setup Intent on PLATFORM account
+    // Destination charges require the payment method to live on the platform account
+    const setupIntent = await stripe.setupIntents.create(setupIntentData);
 
-    log(`✅ Created Setup Intent ${setupIntent.id} on Connect account ${connectAccountId} for team ${teamId}`);
+    log(`✅ Created Setup Intent ${setupIntent.id} on platform account for team ${teamId} (Connect: ${connectAccountId || 'none'})`);
 
     // STEP 4: Update database records
     if (typeof teamId === "number" || !teamId.toString().startsWith("temp-")) {
@@ -798,82 +752,125 @@ export async function processPaymentForApprovedTeam(
       // For Link payments, we cannot attach to customers and must process differently
       customerId = null;
     } else {
-      // For regular payment methods, create/use customer and attach as usual
-      if (!customerId) {
-        // Get Connect account for this team's event
-        const teamWithEvent = await db
-          .select({
-            event: { stripeConnectAccountId: events.stripeConnectAccountId }
-          })
-          .from(teams)
-          .leftJoin(events, eq(teams.eventId, events.id))
-          .where(eq(teams.id, teamId))
-          .limit(1);
-        
-        const connectAccountId = teamWithEvent[0]?.event?.stripeConnectAccountId;
-        
-        log(`Creating Stripe customer for team: ${teamId} on Connect account: ${connectAccountId || 'main account'}`);
-        const customer = await stripe.customers.create({
-          name: team.name || `Team ${teamId}`,
-          email: team.submitterEmail || `team-${teamId}@example.com`,
-          metadata: {
-            teamId: teamId.toString(),
-            eventId: team.eventId?.toString() || "",
-            teamName: team.name || "Unknown Team",
-            systemSource: "KickDeck",
-            createdFor: "payment_retry"
-          },
-        }, connectAccountId ? { stripeAccount: connectAccountId } : {});
-        customerId = customer.id;
+      // For regular payment methods, ensure PM is attached to a platform customer
+      const existingPmCustomer = paymentMethod.customer as string | null;
 
-        // Save the customer ID to the team record
-        await db
-          .update(teams)
-          .set({ stripeCustomerId: customerId })
-          .where(eq(teams.id, teamId));
-
-        // Attach the payment method to the customer
-        await stripe.paymentMethods.attach(team.paymentMethodId, {
-          customer: customerId,
-        });
-      } else {
-        // Verify if payment method is attached to this customer
-        log(`Using existing Stripe customer for team: ${teamId}`);
-
+      if (customerId && existingPmCustomer === customerId) {
+        // PM already attached to the correct platform customer — nothing to do
+        log(`Payment method already attached to correct customer ${customerId}`);
+      } else if (existingPmCustomer) {
+        // PM is attached to a different customer (likely a Connect-account customer from old flow)
+        // Verify if that customer exists on the platform account
+        let existingCustomerOnPlatform = false;
         try {
-          if (paymentMethod.customer !== customerId) {
-            // If not attached, attach it now
-            log(
-              `Attaching payment method ${team.paymentMethodId} to customer ${customerId}`,
-            );
-            await stripe.paymentMethods.attach(team.paymentMethodId, {
-              customer: customerId,
-            });
+          await stripe.customers.retrieve(existingPmCustomer);
+          existingCustomerOnPlatform = true;
+        } catch (e: any) {
+          if (e.code === 'resource_missing') {
+            existingCustomerOnPlatform = false;
           }
-        } catch (error) {
-          // If an error occurred, the payment method might be attached to another customer
-          // In this case we need to detach it first and then attach to our customer
-          log(`Detaching and re-attaching payment method for team: ${teamId}`);
+        }
 
+        if (existingCustomerOnPlatform) {
+          // Customer exists on platform — use it directly
+          log(`Payment method attached to platform customer ${existingPmCustomer} — using it`);
+          customerId = existingPmCustomer;
+          await db
+            .update(teams)
+            .set({ stripeCustomerId: customerId })
+            .where(eq(teams.id, teamId));
+        } else {
+          // Customer is on Connect account (old flow) — detach PM and re-attach to new platform customer
+          log(`Payment method attached to non-platform customer ${existingPmCustomer} — detaching and re-attaching`);
           try {
             await stripe.paymentMethods.detach(team.paymentMethodId);
           } catch (detachError) {
-            // If detach fails, let's continue and try to attach anyway
             log(`Failed to detach payment method: ${detachError}`);
           }
 
-          // Attach to our customer
+          // Create new platform customer
+          const customer = await stripe.customers.create({
+            name: team.name || `Team ${teamId}`,
+            email: team.submitterEmail || `team-${teamId}@example.com`,
+            metadata: {
+              teamId: teamId.toString(),
+              eventId: team.eventId?.toString() || "",
+              teamName: team.name || "Unknown Team",
+              systemSource: "KickDeck",
+              createdFor: "payment_approved",
+              migratedFrom: existingPmCustomer,
+            },
+          });
+          customerId = customer.id;
+
+          await db
+            .update(teams)
+            .set({ stripeCustomerId: customerId })
+            .where(eq(teams.id, teamId));
+
           await stripe.paymentMethods.attach(team.paymentMethodId, {
             customer: customerId,
           });
+          log(`Attached payment method to new platform customer ${customerId}`);
         }
+      } else {
+        // PM not attached to any customer — create platform customer and attach
+        if (!customerId) {
+          log(`Creating Stripe customer for team: ${teamId} on platform account`);
+          const customer = await stripe.customers.create({
+            name: team.name || `Team ${teamId}`,
+            email: team.submitterEmail || `team-${teamId}@example.com`,
+            metadata: {
+              teamId: teamId.toString(),
+              eventId: team.eventId?.toString() || "",
+              teamName: team.name || "Unknown Team",
+              systemSource: "KickDeck",
+              createdFor: "payment_approved"
+            },
+          });
+          customerId = customer.id;
+
+          await db
+            .update(teams)
+            .set({ stripeCustomerId: customerId })
+            .where(eq(teams.id, teamId));
+        }
+
+        await stripe.paymentMethods.attach(team.paymentMethodId, {
+          customer: customerId,
+        });
+        log(`Attached payment method to customer ${customerId}`);
       }
     }
 
+    // STEP: Calculate platform fee (4% + $0.30) on top of the tournament cost
+    // teams.totalAmount stores the tournament subtotal (base fee + required fees - coupons) in cents
+    const tournamentCost = Math.round(amount); // Already in cents
+    const platformFeeAmount = Math.round(tournamentCost * DEFAULT_PLATFORM_FEE_RATE + STRIPE_FIXED_FEE); // 4% + $0.30
+    const totalChargeAmount = tournamentCost + platformFeeAmount;
+
+    // STEP: Get Connect account for this team's event (for destination charges)
+    let connectAccountId: string | undefined;
+    if (team.eventId) {
+      try {
+        const eventInfo = await db
+          .select({ stripeConnectAccountId: events.stripeConnectAccountId, name: events.name })
+          .from(events)
+          .where(eq(events.id, team.eventId))
+          .limit(1);
+        connectAccountId = eventInfo[0]?.stripeConnectAccountId || undefined;
+      } catch (e) {
+        log(`⚠️ Could not look up Connect account for event ${team.eventId}: ${e}`);
+      }
+    }
+
+    log(
+      `💰 APPROVE CHARGE: Tournament cost $${(tournamentCost / 100).toFixed(2)} + platform fee $${(platformFeeAmount / 100).toFixed(2)} = total $${(totalChargeAmount / 100).toFixed(2)} | Connect: ${connectAccountId || "platform only"}`,
+    );
+
     // Create a payment intent with the saved payment method
-    // For Link payments, we cannot include customer parameter
     const paymentIntentParams: any = {
-      amount: Math.round(amount * 100), // Convert to cents
+      amount: totalChargeAmount, // Tournament cost + platform fee (4% + $0.30)
       currency: "usd",
       payment_method: team.paymentMethodId,
       confirm: true, // Immediately attempt to confirm the payment
@@ -882,8 +879,21 @@ export async function processPaymentForApprovedTeam(
       metadata: {
         teamId: teamId.toString(),
         eventId: team.eventId?.toString() || "",
+        teamName: team.name || "Unknown Team",
         description: `Team registration payment for ${team.name}`,
+        tournamentAmount: tournamentCost.toString(),
+        platformFee: platformFeeAmount.toString(),
+        connectAccountId: connectAccountId || "",
       },
+      // Route payment to Connect account if available (destination charge)
+      // KickDeck keeps the application_fee_amount (platform fee)
+      // The tournament organizer receives the rest via their Connect account
+      ...(connectAccountId && {
+        application_fee_amount: platformFeeAmount,
+        transfer_data: {
+          destination: connectAccountId,
+        },
+      }),
     };
 
     // Only add customer for non-Link payment methods
@@ -892,17 +902,26 @@ export async function processPaymentForApprovedTeam(
     }
 
     log(
-      `Creating payment intent for team ${teamId}, payment method type: ${paymentMethod.type}, customer: ${customerId || "none"}`,
+      `Creating payment intent for team ${teamId}, amount: $${(totalChargeAmount / 100).toFixed(2)}, payment method type: ${paymentMethod.type}, customer: ${customerId || "none"}, connect: ${connectAccountId || "none"}`,
     );
     const paymentIntent =
       await stripe.paymentIntents.create(paymentIntentParams);
 
+    log(
+      `✅ Payment intent ${paymentIntent.id} created with status ${paymentIntent.status} for team ${teamId}`,
+    );
+    log(
+      `DESTINATION CHARGE VERIFY: application_fee_amount=${paymentIntent.application_fee_amount}, transfer_data=${JSON.stringify(paymentIntent.transfer_data)}`,
+    );
+
     // Update the team with the payment intent ID
+    // Map Stripe status to app status: "succeeded" → "paid" for UI consistency
+    const mappedStatus = paymentIntent.status === 'succeeded' ? 'paid' : paymentIntent.status;
     await db
       .update(teams)
       .set({
         paymentIntentId: paymentIntent.id,
-        paymentStatus: paymentIntent.status,
+        paymentStatus: mappedStatus,
         paymentDate: new Date(), // Use Date object directly for timestamp fields
       })
       .where(eq(teams.id, teamId));
@@ -911,7 +930,7 @@ export async function processPaymentForApprovedTeam(
     await db.insert(paymentTransactions).values({
       status: paymentIntent.status,
       transactionType: "registration_payment",
-      amount: amount,
+      amount: totalChargeAmount,
       paymentIntentId: paymentIntent.id,
       setupIntentId: team.setupIntentId,
       eventId: team.eventId,
@@ -924,6 +943,9 @@ export async function processPaymentForApprovedTeam(
       success: true,
       paymentIntentId: paymentIntent.id,
       status: paymentIntent.status,
+      totalCharged: totalChargeAmount,
+      tournamentCost: tournamentCost,
+      platformFee: platformFeeAmount,
     };
   } catch (error: any) {
     // Handle specific Stripe errors
@@ -1104,19 +1126,7 @@ export async function handleSetupIntentSuccess(
     let customerId = existingTeam.stripeCustomerId;
 
     if (!customerId) {
-      // Get Connect account for this team's event
-      const teamWithEvent = await db
-        .select({
-          event: { stripeConnectAccountId: events.stripeConnectAccountId }
-        })
-        .from(teams)
-        .leftJoin(events, eq(teams.eventId, events.id))
-        .where(eq(teams.id, teamIdNumber))
-        .limit(1);
-      
-      const connectAccountId = teamWithEvent[0]?.event?.stripeConnectAccountId;
-      
-      // Create a new customer on Connect account
+      // Create customer on PLATFORM account (destination charges require platform customers)
       const customer = await stripe.customers.create({
         name: existingTeam.name || `Team ${teamId}`,
         email: existingTeam.submitterEmail || `team-${teamId}@example.com`,
@@ -1127,7 +1137,7 @@ export async function handleSetupIntentSuccess(
           systemSource: "KickDeck",
           createdFor: "setup_intent_success"
         },
-      }, connectAccountId ? { stripeAccount: connectAccountId } : {});
+      });
       customerId = customer.id;
 
       // Attach the payment method to the customer
@@ -1455,13 +1465,15 @@ export async function processConnectRefund({
   refundAmount,
   refundReason,
   adminNotes,
-  processedByUserId
+  processedByUserId,
+  postRefundStatus
 }: {
   teamId: number;
   refundAmount: number;
   refundReason: string;
   adminNotes?: string;
   processedByUserId: number;
+  postRefundStatus?: string;
 }) {
   const stripe = await getStripeClient();
   if (!stripe) throw new Error('Stripe not configured');
@@ -1515,19 +1527,24 @@ export async function processConnectRefund({
     // Calculate platform fee refund (4% + $0.30)
     const platformFeeRefund = Math.round(refundAmount * 0.04) + 30;
 
-    // Create refund through Connect account
+    // Create refund on PLATFORM account with reverse_transfer to pull funds from Connect account
+    // Destination charges live on the platform, so refund must be issued here
+    // reverse_transfer: true → reverses the transfer, debiting the Connect account
+    // refund_application_fee: false → KickDeck keeps its platform fee
     const refund = await stripe.refunds.create({
       payment_intent: teamData.paymentIntentId,
       amount: refundAmount,
+      reverse_transfer: true,
+      refund_application_fee: false,
       reason: 'requested_by_customer',
       metadata: {
         teamId: teamId.toString(),
         teamName: teamData.name,
         refundReason: refundReason,
         processedByUserId: processedByUserId.toString(),
+        connectAccountId: eventData.stripeConnectAccountId,
+        refundType: "destination_charge_reversal",
       }
-    }, {
-      stripeAccount: eventData.stripeConnectAccountId
     });
 
     console.log(`✅ REFUND: Stripe refund created: ${refund.id}`);
@@ -1555,13 +1572,18 @@ export async function processConnectRefund({
       .returning();
 
     // Update team status
+    const teamUpdate: any = {
+      paymentStatus: 'refunded',
+      refundDate: new Date(),
+      notes: adminNotes ? `REFUND: ${refundReason}. ${adminNotes}` : `REFUND: ${refundReason}`
+    };
+    // Allow caller to specify what team status to set after refund
+    if (postRefundStatus) {
+      teamUpdate.status = postRefundStatus;
+    }
     await db
       .update(teams)
-      .set({
-        paymentStatus: 'refunded',
-        refundDate: new Date(),
-        notes: adminNotes ? `REFUND: ${refundReason}. ${adminNotes}` : `REFUND: ${refundReason}`
-      })
+      .set(teamUpdate)
       .where(eq(teams.id, teamId));
 
     // Create refund transaction record

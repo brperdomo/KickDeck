@@ -307,9 +307,14 @@ export function TeamModal({ isOpen, onClose, team }: TeamModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900">
         <DialogHeader>
-          <DialogTitle>Edit Team Details</DialogTitle>
+          <DialogTitle className="text-xl">Edit Team Details</DialogTitle>
+          {team && (
+            <p className="text-sm text-muted-foreground">
+              {team.event?.name} &mdash; {team.ageGroup?.ageGroup} {team.ageGroup?.gender}
+            </p>
+          )}
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -327,9 +332,9 @@ export function TeamModal({ isOpen, onClose, team }: TeamModalProps) {
               )}
             />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Manager Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4 p-4 rounded-lg border bg-slate-50/50 dark:bg-slate-800/30">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Manager Information</h3>
                 <FormField
                   control={form.control}
                   name="managerName"
@@ -379,8 +384,8 @@ export function TeamModal({ isOpen, onClose, team }: TeamModalProps) {
                 />
               </div>
               
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Head Coach Information</h3>
+              <div className="space-y-4 p-4 rounded-lg border bg-slate-50/50 dark:bg-slate-800/30">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Head Coach Information</h3>
                 <FormField
                   control={form.control}
                   name="headCoachName"
@@ -431,9 +436,9 @@ export function TeamModal({ isOpen, onClose, team }: TeamModalProps) {
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Assistant Coach Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4 p-4 rounded-lg border bg-slate-50/50 dark:bg-slate-800/30">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Assistant Coach Information</h3>
                 <FormField
                   control={form.control}
                   name="assistantCoachName"
@@ -483,8 +488,8 @@ export function TeamModal({ isOpen, onClose, team }: TeamModalProps) {
                 />
               </div>
               
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Team Organization</h3>
+              <div className="space-y-4 p-4 rounded-lg border bg-slate-50/50 dark:bg-slate-800/30">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Team Organization</h3>
                 
                 {/* Current Registration Information - Read Only Display */}
                 {team && (
@@ -642,10 +647,10 @@ export function TeamModal({ isOpen, onClose, team }: TeamModalProps) {
             
             {/* Team Status Section */}
             <div className="border-t pt-4">
-              <h3 className="text-lg font-medium mb-4">Team Status Management</h3>
-              <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-4">
-                <p className="text-sm text-amber-800">
-                  <strong>Silent Status Change:</strong> Changing the team status here will not send emails or trigger payment processing. Use this for administrative adjustments only.
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-4">Team Status</h3>
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-md p-3 mb-4">
+                <p className="text-sm text-amber-800 dark:text-amber-300">
+                  <strong>Silent Status Change:</strong> No emails or payment processing will be triggered.
                 </p>
               </div>
               <FormField

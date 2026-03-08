@@ -96,6 +96,7 @@ interface PaymentSetupWrapperProps {
   onError?: (error: Error) => void;
   teamName?: string;
   eventName?: string;
+  eventId?: string | number;
   returnUrl?: string;
   hideSubmitButton?: boolean;
 }
@@ -107,6 +108,7 @@ export function PaymentSetupWrapper({
   onError,
   teamName = '',
   eventName = '',
+  eventId,
   returnUrl = '',
   hideSubmitButton = false
 }: PaymentSetupWrapperProps) {
@@ -138,7 +140,13 @@ export function PaymentSetupWrapper({
           },
           body: JSON.stringify({
             teamId,
-            expectedAmount
+            expectedAmount,
+            metadata: {
+              teamName: teamName || '',
+              eventName: eventName || '',
+              eventId: eventId?.toString() || '',
+              expectedAmount: expectedAmount.toString(),
+            }
           }),
         });
 
@@ -223,6 +231,7 @@ export function PaymentSetupWrapper({
         onError={onError}
         teamName={teamName}
         eventName={eventName}
+        eventId={eventId}
         returnUrl={returnUrl}
         hideSubmitButton={hideSubmitButton}
       />

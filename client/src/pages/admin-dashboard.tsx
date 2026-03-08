@@ -3219,6 +3219,7 @@ function TeamsView() {
   const [refundReason, setRefundReason] = useState("");
   const [isPartialRefund, setIsPartialRefund] = useState(false);
   const [refundAmount, setRefundAmount] = useState<string>("");
+  const [postRefundStatus, setPostRefundStatus] = useState<string>("refunded");
   const [isPlayerDialogOpen, setIsPlayerDialogOpen] = useState(false);
   const [isDeletePlayerDialogOpen, setIsDeletePlayerDialogOpen] = useState(false);
   const [isCsvUploadDialogOpen, setIsCsvUploadDialogOpen] = useState(false);
@@ -3516,14 +3517,17 @@ function TeamsView() {
 
   // Mutation for processing refunds
   const processRefundMutation = useMutation({
-    mutationFn: async ({ teamId, reason, amount }: { teamId: number, reason: string, amount?: number | null }) => {
+    mutationFn: async ({ teamId, refundReason, refundAmount, adminNotes, postRefundStatus }: { teamId: number, refundReason: string, refundAmount: number, adminNotes?: string, postRefundStatus?: string }) => {
       const response = await fetch(`/api/admin/teams/${teamId}/refund`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason, amount })
+        body: JSON.stringify({ refundReason, refundAmount, adminNotes, postRefundStatus })
       });
-      
-      if (!response.ok) throw new Error('Failed to process refund');
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || 'Failed to process refund');
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -3918,6 +3922,10 @@ function TeamsView() {
   // Handle refund request
   const handleRefundRequest = (team: any) => {
     setSelectedTeam(team);
+    setPostRefundStatus("refunded");
+    setIsPartialRefund(false);
+    setRefundAmount("");
+    setRefundReason("");
     setIsRefundDialogOpen(true);
   };
   
@@ -3943,17 +3951,26 @@ function TeamsView() {
   // Confirm refund
   const confirmRefund = () => {
     if (!selectedTeam) return;
-    
-    // Calculate the refund amount based on whether it's a partial refund or not
-    const amount = isPartialRefund ? 
-      // Convert string dollar amount to cents
-      Math.round(parseFloat(refundAmount) * 100) : 
-      null;
-    
+
+    // Calculate the refund amount in cents
+    const amount = isPartialRefund
+      ? Math.round(parseFloat(refundAmount) * 100)
+      : (selectedTeam.totalAmount || selectedTeam.registrationFee || 0);
+
+    if (!amount || amount <= 0) {
+      toast({
+        title: "Invalid refund amount",
+        description: "Could not determine the refund amount. The team may not have a recorded payment.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     processRefundMutation.mutate({
       teamId: selectedTeam.id,
-      reason: refundReason,
-      amount
+      refundReason: refundReason || 'Admin-initiated refund',
+      refundAmount: amount,
+      postRefundStatus: postRefundStatus || undefined,
     });
   };
 
@@ -3973,7 +3990,12 @@ function TeamsView() {
       // Map the status field to a paymentStatus property
       // This fixes the issue where the UI expects paymentStatus but DB uses status field
       let paymentStatus = teamData.paymentStatus || 'Unpaid';
-      
+
+      // Normalize Stripe's "succeeded" status to our "paid" status
+      if (paymentStatus === 'succeeded') {
+        paymentStatus = 'paid';
+      }
+
       // If there's no explicit paymentStatus field, try to infer it from other fields
       if (!teamData.paymentStatus) {
         if (teamData.status === 'paid') {
@@ -4644,14 +4666,23 @@ function TeamsView() {
                                       <Check className="h-4 w-4 mr-1" />
                                       Approve
                                     </Button>
-                                    <Button 
-                                      variant="outline" 
-                                      size="sm" 
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
                                       className="text-destructive team-edit-button team-status-button"
                                       onClick={() => handleStatusUpdate(team, 'rejected')}
                                     >
                                       <X className="h-4 w-4 mr-1" />
                                       Reject
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="team-status-button"
+                                      onClick={() => handleStatusUpdate(team, 'registered')}
+                                    >
+                                      <ArrowLeft className="h-4 w-4 mr-1" />
+                                      Reset
                                     </Button>
                                   </div>
                                 </TableCell>
@@ -4662,7 +4693,7 @@ function TeamsView() {
                     </Table>
                   </div>
                 </TabsContent>
-                
+
                 <TabsContent value="approved">
                   <div className="mb-4 flex justify-between items-center">
                     <h4 className="font-semibold text-lg">Approved Teams</h4>
@@ -4738,9 +4769,9 @@ function TeamsView() {
                                       <Eye className="h-4 w-4 mr-1" />
                                       Details
                                     </Button>
-                                    {team.paymentStatus === 'paid' && (
-                                      <Button 
-                                        variant="outline" 
+                                    {(team.paymentStatus === 'paid' || team.paymentStatus === 'succeeded') && (
+                                      <Button
+                                        variant="outline"
                                         size="sm"
                                         className="team-status-button team-edit-button"
                                         onClick={() => handleRefundRequest(team)}
@@ -4903,13 +4934,22 @@ function TeamsView() {
                                 <TableCell>{formatCurrency(team.totalAmount || team.registrationFee || 0)}</TableCell>
                                 <TableCell className="text-right">
                                   <div className="flex justify-end gap-2">
-                                    <Button 
-                                      variant="outline" 
+                                    <Button
+                                      variant="outline"
                                       size="sm"
                                       onClick={() => handleViewTeamDetails(team)}
                                     >
                                       <Eye className="h-4 w-4 mr-1" />
                                       Details
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="team-status-button"
+                                      onClick={() => handleStatusUpdate(team, 'registered')}
+                                    >
+                                      <ArrowLeft className="h-4 w-4 mr-1" />
+                                      Reset
                                     </Button>
                                   </div>
                                 </TableCell>
@@ -5056,18 +5096,36 @@ function TeamsView() {
               </div>
             )}
             
-            <Textarea 
+            <Textarea
               placeholder="Reason for refund (for internal records)"
               value={refundReason}
               onChange={(e) => setRefundReason(e.target.value)}
             />
+
+            <div className="space-y-2">
+              <Label>Team status after refund</Label>
+              <Select value={postRefundStatus} onValueChange={setPostRefundStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="refunded">Refunded</SelectItem>
+                  <SelectItem value="withdrawn">Withdrawn</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="registered">Pending Review</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Payment status will be set to "refunded" regardless. This controls the team's registration status.
+              </p>
+            </div>
           </div>
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsRefundDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={confirmRefund}
               disabled={processRefundMutation.isPending || (isPartialRefund && (!refundAmount || isNaN(parseFloat(refundAmount))))}
               className="team-status-button team-edit-button"
@@ -5202,18 +5260,6 @@ function TeamsView() {
                     <div className="grid grid-cols-3 gap-1">
                       <div className="font-medium">Coach Phone:</div>
                       <div className="col-span-2">{selectedTeam.coachData?.headCoachPhone ? formatPhoneNumber(selectedTeam.coachData.headCoachPhone) : 'N/A'}</div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-1">
-                      <div className="font-medium">Asst. Coach:</div>
-                      <div className="col-span-2">{selectedTeam.coachData?.assistantCoachName || 'N/A'}</div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-1">
-                      <div className="font-medium">Asst. Email:</div>
-                      <div className="col-span-2">{selectedTeam.coachData?.assistantCoachEmail || 'N/A'}</div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-1">
-                      <div className="font-medium">Asst. Phone:</div>
-                      <div className="col-span-2">{selectedTeam.coachData?.assistantCoachPhone ? formatPhoneNumber(selectedTeam.coachData.assistantCoachPhone) : 'N/A'}</div>
                     </div>
                     <div className="grid grid-cols-3 gap-1">
                       <div className="font-medium">Club/Org:</div>
@@ -5441,7 +5487,7 @@ function TeamsView() {
                     {selectedTeam.paymentIntentId && (
                       <div className="grid grid-cols-3 gap-1">
                         <div className="font-medium">Payment ID:</div>
-                        <div className="col-span-2 font-mono text-xs bg-slate-50 p-1 rounded">
+                        <div className="col-span-2 font-mono text-xs bg-muted p-1.5 rounded">
                           {selectedTeam.paymentIntentId}
                         </div>
                       </div>
@@ -5533,31 +5579,13 @@ function TeamsView() {
                     
                     {/* Fee breakdown section */}
                     {selectedTeam.selectedFeeIds && (
-                      <div className="mt-4 border-t pt-4">
-                        <h4 className="font-medium mb-2">Fee Breakdown</h4>
-                        <div className="bg-slate-50 rounded-md p-2">
-                          <p className="text-sm text-slate-500 mb-2">
-                            Selected fees: {selectedTeam.selectedFeeIds.split(',').length}
-                          </p>
-                          
-                          <DetailedFeeBreakdown 
-            teamId={selectedTeam.id} 
-            selectedFeeIds={selectedTeam.selectedFeeIds}
-            totalAmount={selectedTeam.totalAmount}
-            appliedCoupon={selectedTeam.appliedCoupon}
-          />
-                          
-                          <div className="flex justify-between py-1 font-semibold mt-2 border-t border-slate-200 pt-2">
-                            <span>Total</span>
-                            <span>
-                              {selectedTeam.totalAmount 
-                                ? formatCurrency(selectedTeam.totalAmount) 
-                                : selectedTeam.registrationFee 
-                                  ? formatCurrency(selectedTeam.registrationFee) 
-                                  : 'N/A'}
-                            </span>
-                          </div>
-                        </div>
+                      <div className="mt-4 border-t border-border pt-4">
+                        <DetailedFeeBreakdown
+                          teamId={selectedTeam.id}
+                          selectedFeeIds={selectedTeam.selectedFeeIds}
+                          totalAmount={selectedTeam.totalAmount}
+                          appliedCoupon={selectedTeam.appliedCoupon}
+                        />
                       </div>
                     )}
                   </div>
@@ -5639,235 +5667,191 @@ function TeamsView() {
                 </CardContent>
               </Card>
               
-              <DialogFooter className="gap-2 flex-wrap">
-                {/* Universal action buttons for all teams */}
-                <Button 
-                  variant="outline"
-                  onClick={() => {
-                    setIsDetailsDialogOpen(false);
-                    handleStatusUpdate(selectedTeam, 'rejected');
-                  }}
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  Reject Team
-                </Button>
-                
-                <Button 
-                  onClick={() => {
-                    setIsDetailsDialogOpen(false);
-                    handleStatusUpdate(selectedTeam, 'approved');
-                  }}
-                >
-                  <Check className="h-4 w-4 mr-1" />
-                  Approve Team
-                </Button>
-                
-                <Button 
-                  variant="outline"
-                  onClick={() => {
-                    setIsDetailsDialogOpen(false);
-                    const skipPayment = selectedTeam.payment_status === 'paid';
-                    handleStatusUpdate(selectedTeam, 'approved', null, skipPayment, true); // skipEmail=true
-                  }}
-                >
-                  <Check className="h-4 w-4 mr-1" />
-                  Approve Without Email
-                </Button>
-                
-                {selectedTeam.payment_status === 'paid' && (
-                  <Button 
-                    variant="outline"
+              {/* Action Bar */}
+              <div className="border-t border-border pt-5 space-y-3">
+                {/* Primary Actions Row */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
                     onClick={() => {
                       setIsDetailsDialogOpen(false);
-                      handleStatusUpdate(selectedTeam, 'approved', null, true); // skipPayment=true
+                      handleStatusUpdate(selectedTeam, 'approved');
                     }}
                   >
-                    <Check className="h-4 w-4 mr-1" />
-                    Approve Without Payment
+                    <Check className="h-3.5 w-3.5 mr-1.5" />
+                    Approve
                   </Button>
-                )}
-                
-                <Button 
-                  variant="outline"
-                  onClick={() => {
-                    setIsDetailsDialogOpen(false);
-                    handleStatusUpdate(selectedTeam, 'withdrawn');
-                  }}
-                >
-                  <UserMinus className="h-4 w-4 mr-1" />
-                  Mark Withdrawn
-                </Button>
-                
 
-                
-                {/* Status-specific buttons */}
-                {selectedTeam.status === 'approved' && (
-                  <Button 
+                  <Button
+                    size="sm"
                     variant="outline"
-                    onClick={() => {
-                      resendApprovalEmailMutation.mutate(selectedTeam.id);
-                    }}
-                    disabled={resendApprovalEmailMutation.isPending}
-                  >
-                    {resendApprovalEmailMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                    ) : (
-                      <Mail className="h-4 w-4 mr-1" />
-                    )}
-                    Resend Approval Email
-                  </Button>
-                )}
-                
-                {selectedTeam.paymentStatus === 'paid' && (
-                  <Button 
-                    variant="outline"
+                    className="border-red-500/40 text-red-500 hover:bg-red-500/10 hover:text-red-400"
                     onClick={() => {
                       setIsDetailsDialogOpen(false);
-                      handleRefundRequest(selectedTeam);
+                      handleStatusUpdate(selectedTeam, 'rejected');
                     }}
                   >
-                    <RefreshCcw className="h-4 w-4 mr-1" />
-                    Process Refund
+                    <X className="h-3.5 w-3.5 mr-1.5" />
+                    Reject
                   </Button>
-                )}
-                
-                {(selectedTeam.payment_status === 'payment_pending' || 
-                  selectedTeam.payment_status === 'payment_failed' || 
-                  selectedTeam.payment_status === 'setup_intent_completed') && 
-                 (selectedTeam.paymentIntentId || selectedTeam.setupIntentId) && (
-                  <Button 
+
+                  <Button
+                    size="sm"
                     variant="outline"
-                    onClick={async () => {
-                      try {
-                        // Determine which endpoint to use based on payment method
-                        const endpoint = selectedTeam.paymentIntentId 
-                          ? `/api/admin/teams/${selectedTeam.id}/generate-payment-intent-completion-url`
-                          : `/api/admin/teams/${selectedTeam.id}/generate-completion-url`;
-                        
-                        const response = await fetch(endpoint, {
-                          method: 'POST',
-                        });
-                        const data = await response.json();
-                        
-                        if (data.success && data.completionUrl) {
-                          navigator.clipboard.writeText(data.completionUrl);
-                          toast({
-                            title: "Success",
-                            description: "Payment completion URL copied to clipboard",
-                          });
-                        } else {
-                          // Check if we should refresh the page
-                          if (data.shouldRefresh) {
+                    className="text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      setIsDetailsDialogOpen(false);
+                      handleStatusUpdate(selectedTeam, 'withdrawn');
+                    }}
+                  >
+                    <UserMinus className="h-3.5 w-3.5 mr-1.5" />
+                    Withdraw
+                  </Button>
+
+                  <div className="flex-1" />
+
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-muted-foreground hover:text-foreground"
+                    onClick={handleEditTeam}
+                  >
+                    <Edit className="h-3.5 w-3.5 mr-1.5" />
+                    Edit
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-muted-foreground hover:text-foreground"
+                    onClick={() => setIsDetailsDialogOpen(false)}
+                  >
+                    Close
+                  </Button>
+                </div>
+
+                {/* Secondary Actions Row - contextual */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs h-7 text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      setIsDetailsDialogOpen(false);
+                      const skipPayment = selectedTeam.payment_status === 'paid';
+                      handleStatusUpdate(selectedTeam, 'approved', null, skipPayment, true);
+                    }}
+                  >
+                    <Check className="h-3 w-3 mr-1" />
+                    Approve (No Email)
+                  </Button>
+
+                  {selectedTeam.payment_status === 'paid' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs h-7 text-muted-foreground hover:text-foreground"
+                      onClick={() => {
+                        setIsDetailsDialogOpen(false);
+                        handleStatusUpdate(selectedTeam, 'approved', null, true);
+                      }}
+                    >
+                      <Check className="h-3 w-3 mr-1" />
+                      Approve (No Payment)
+                    </Button>
+                  )}
+
+                  {selectedTeam.status === 'approved' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs h-7 text-muted-foreground hover:text-foreground"
+                      onClick={() => resendApprovalEmailMutation.mutate(selectedTeam.id)}
+                      disabled={resendApprovalEmailMutation.isPending}
+                    >
+                      {resendApprovalEmailMutation.isPending ? (
+                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      ) : (
+                        <Mail className="h-3 w-3 mr-1" />
+                      )}
+                      Resend Email
+                    </Button>
+                  )}
+
+                  {(selectedTeam.paymentStatus === 'paid' || selectedTeam.paymentStatus === 'succeeded') && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs h-7 border-amber-500/40 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400"
+                      onClick={() => {
+                        setIsDetailsDialogOpen(false);
+                        handleRefundRequest(selectedTeam);
+                      }}
+                    >
+                      <RefreshCcw className="h-3 w-3 mr-1" />
+                      Process Refund
+                    </Button>
+                  )}
+
+                  {(selectedTeam.payment_status === 'payment_pending' ||
+                    selectedTeam.payment_status === 'payment_failed' ||
+                    selectedTeam.payment_status === 'setup_intent_completed') &&
+                   (selectedTeam.paymentIntentId || selectedTeam.setupIntentId) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs h-7 text-muted-foreground hover:text-foreground"
+                      onClick={async () => {
+                        try {
+                          const endpoint = selectedTeam.paymentIntentId
+                            ? `/api/admin/teams/${selectedTeam.id}/generate-payment-intent-completion-url`
+                            : `/api/admin/teams/${selectedTeam.id}/generate-completion-url`;
+                          const response = await fetch(endpoint, { method: 'POST' });
+                          const data = await response.json();
+                          if (data.success && data.completionUrl) {
+                            navigator.clipboard.writeText(data.completionUrl);
+                            toast({ title: "Success", description: "Payment URL copied to clipboard" });
+                          } else if (data.shouldRefresh) {
                             teamsQuery.refetch();
                             setIsDetailsDialogOpen(false);
-                            toast({
-                              title: "Payment Complete",
-                              description: "Payment has been completed successfully",
-                            });
-                            return;
+                            toast({ title: "Payment Complete", description: "Payment has been completed successfully" });
+                          } else {
+                            throw new Error(data.error || 'Failed to generate completion URL');
                           }
-                          throw new Error(data.error || 'Failed to generate completion URL');
+                        } catch (error) {
+                          toast({ title: "Error", description: error instanceof Error ? error.message : "Failed to generate URL", variant: "destructive" });
                         }
-                      } catch (error) {
-                        toast({
-                          title: "Error", 
-                          description: error instanceof Error ? error.message : "Failed to generate completion URL",
-                          variant: "destructive",
-                        });
-                      }
-                    }}
-                  >
-                    <Link className="h-4 w-4 mr-1" />
-                    Generate Payment URL
-                  </Button>
-                )}
-                
-                {/* Force Payment URL Generation - Override for problematic teams */}
-                <Button 
-                  variant="outline"
-                  className="border-orange-500 text-orange-600 hover:bg-orange-50"
-                  onClick={async () => {
-                    if (!confirm(`Force generate payment URL for "${selectedTeam.name}"?\n\nThis will bypass all payment status checks and create a new payment URL regardless of current status.`)) {
-                      return;
-                    }
-                    
-                    try {
-                      // Determine which endpoint to use based on payment method
-                      const endpoint = selectedTeam.paymentIntentId 
-                        ? `/api/admin/teams/${selectedTeam.id}/generate-payment-intent-completion-url`
-                        : `/api/admin/teams/${selectedTeam.id}/generate-completion-url`;
-                      
-                      const response = await fetch(endpoint, {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ forceGenerate: true }),
-                      });
-                      const data = await response.json();
-                      
-                      if (data.success && data.completionUrl) {
-                        navigator.clipboard.writeText(data.completionUrl);
-                        toast({
-                          title: "Success - Override Applied",
-                          description: "Payment URL generated (bypassed status checks) and copied to clipboard",
-                        });
-                      } else {
-                        throw new Error(data.error || 'Failed to generate completion URL');
-                      }
-                    } catch (error) {
-                      toast({
-                        title: "Error", 
-                        description: error instanceof Error ? error.message : "Failed to force generate completion URL",
-                        variant: "destructive",
-                      });
-                    }
-                  }}
-                >
-                  <AlertTriangle className="h-4 w-4 mr-1" />
-                  Force Payment URL
-                </Button>
+                      }}
+                    >
+                      <Link className="h-3 w-3 mr-1" />
+                      Payment URL
+                    </Button>
+                  )}
 
-                
-                <Button 
-                  variant="outline" 
-                  onClick={handleEditTeam}
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Edit Team
-                </Button>
-                
-                {/* Delete button only for teams in registered/pending review status */}
-                {selectedTeam.status === 'registered' && (
-                  <Button 
-                    variant="outline"
-                    className="border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700"
-                    onClick={() => {
-                      if (confirm(`Are you sure you want to delete team "${selectedTeam.name}"? This action cannot be undone.`)) {
-                        deleteTeamMutation.mutate(selectedTeam.id);
-                        setIsDetailsDialogOpen(false);
-                      }
-                    }}
-                    disabled={deleteTeamMutation.isPending}
-                  >
-                    {deleteTeamMutation.isPending ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                        Deleting...
-                      </>
-                    ) : (
-                      <>
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Delete Team
-                      </>
-                    )}
-                  </Button>
-                )}
-                
-                <Button variant="outline" onClick={() => setIsDetailsDialogOpen(false)}>
-                  Close
-                </Button>
-              </DialogFooter>
+                  {selectedTeam.status === 'registered' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs h-7 border-red-500/40 text-red-500 hover:bg-red-500/10 hover:text-red-400"
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to delete team "${selectedTeam.name}"? This action cannot be undone.`)) {
+                          deleteTeamMutation.mutate(selectedTeam.id);
+                          setIsDetailsDialogOpen(false);
+                        }
+                      }}
+                      disabled={deleteTeamMutation.isPending}
+                    >
+                      {deleteTeamMutation.isPending ? (
+                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-3 w-3 mr-1" />
+                      )}
+                      Delete
+                    </Button>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </DialogContent>

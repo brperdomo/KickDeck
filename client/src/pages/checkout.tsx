@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useStripe, useElements, Elements, PaymentElement } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
@@ -16,10 +16,45 @@ import { Button } from "@/components/ui/button";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-// Initialize Stripe (lazy - null if no key configured)
-const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY
-  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
-  : null;
+// Resolve Stripe publishable key from env vars or server API, then load Stripe
+let _checkoutStripePromise: Promise<Stripe | null> | null = null;
+
+function getCheckoutStripePromise(): Promise<Stripe | null> {
+  if (_checkoutStripePromise) return _checkoutStripePromise;
+
+  _checkoutStripePromise = (async () => {
+    // 1. Check server-injected key
+    let key = (window as any).__STRIPE_PK__;
+
+    // 2. Try env vars
+    if (!key) {
+      key = import.meta.env.VITE_STRIPE_PUBLIC_KEY ||
+        import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+    }
+
+    // 3. Fall back to server API
+    if (!key) {
+      try {
+        const response = await fetch('/api/payments/config');
+        if (response.ok) {
+          const config = await response.json();
+          key = config.publishableKey;
+        }
+      } catch (error) {
+        console.error('Failed to fetch Stripe config from server:', error);
+      }
+    }
+
+    if (!key) {
+      console.error('Stripe publishable key not found');
+      return null;
+    }
+
+    return loadStripe(key);
+  })();
+
+  return _checkoutStripePromise;
+}
 
 // The checkout form component that uses Stripe Elements
 const CheckoutForm = () => {
@@ -121,8 +156,14 @@ export default function Checkout() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [orderDetails, setOrderDetails] = useState<any>(null);
+  const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
   const { toast } = useToast();
   const [location] = useLocation();
+
+  // Resolve Stripe (env var or server API) on mount
+  useEffect(() => {
+    setStripePromise(getCheckoutStripePromise());
+  }, []);
 
   useEffect(() => {
     // Extract order ID and amount from URL query parameters

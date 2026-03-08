@@ -88,12 +88,13 @@ function hexToRgba(hex: string, alpha: number): string {
 }
 
 // Payment Completion Form Component - Prevents registration until payment setup is complete
-function PaymentCompletionForm({ 
-  teamId, 
-  expectedAmount, 
-  teamName, 
-  eventName, 
-  onPaymentComplete, 
+function PaymentCompletionForm({
+  teamId,
+  expectedAmount,
+  teamName,
+  eventName,
+  eventId,
+  onPaymentComplete,
   onError,
   isProcessing
 }: {
@@ -101,6 +102,7 @@ function PaymentCompletionForm({
   expectedAmount: number;
   teamName: string;
   eventName: string;
+  eventId?: string | number;
   onPaymentComplete: (setupIntentId: string, paymentMethodId: string) => void;
   onError: (error: Error) => void;
   isProcessing: boolean;
@@ -126,11 +128,12 @@ function PaymentCompletionForm({
 
   return (
     <div className="space-y-4">
-      <SetupPaymentForm 
+      <SetupPaymentForm
         teamId={teamId}
         expectedAmount={expectedAmount}
         teamName={teamName}
         eventName={eventName}
+        eventId={eventId}
         returnUrl={window.location.origin + '/payment-setup-confirmation'}
         onSuccess={(paymentMethodId) => {
           // Get the actual setup intent ID that was confirmed
@@ -518,7 +521,8 @@ function PaymentForm({ amount, onSuccess, isProcessing, setIsProcessing, isPrevi
           expectedAmount: amount, // amount is in cents - but we're not charging yet
           metadata: {
             isNewRegistration: teamId ? 'false' : 'true', // Flag if this is a new registration
-            expectedAmount: amount.toString()
+            expectedAmount: amount.toString(),
+            eventId: eventId?.toString() || '',
           }
         }),
       });
@@ -4954,11 +4958,12 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                               </p>
                             </div>
                             
-                            <PaymentCompletionForm 
+                            <PaymentCompletionForm
                               teamId={stableTeamId}
                               expectedAmount={parseFloat(calculateTotalAmount()) * 100}
                               teamName={teamForm.getValues().name}
                               eventName={event?.name || 'tournament'}
+                              eventId={eventId}
                               onPaymentComplete={(confirmedSetupIntentId, confirmedPaymentMethodId) => {
                                 console.log(`🎯 Payment setup completed: ${confirmedSetupIntentId}, Payment method: ${confirmedPaymentMethodId}`);
                                 console.log(`🎯 addRosterLater value: ${addRosterLater}`);
@@ -5235,11 +5240,12 @@ export default function EventRegistration({ isPreview = false, eventIdOverride }
                         {/* Payment Setup Form */}
                         <div className="border-t pt-4">
                           <StripeProvider>
-                            <PaymentSetupWrapper 
+                            <PaymentSetupWrapper
                               teamId={stableTeamId}
                               expectedAmount={calculateTotalChargeAmount()}
                               teamName={teamForm.getValues().name}
                               eventName={event?.name || 'tournament'}
+                              eventId={eventId}
                               onSuccess={(setupIntentId, paymentMethodId) => {
                                 // Verify both IDs are present before proceeding
                                 if (!setupIntentId || !paymentMethodId) {

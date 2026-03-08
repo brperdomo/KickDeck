@@ -358,12 +358,22 @@ export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
   
   try {
-    // Initialize Stripe
-    const stripe = process.env.STRIPE_SECRET_KEY
-      ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-          apiVersion: '2023-10-16',
-        })
-      : null;
+    // Initialize Stripe via factory (supports env var or database-stored keys)
+    // Resolves asynchronously but is ready before any requests arrive
+    let stripe: Stripe | null = null;
+    (async () => {
+      try {
+        const { getStripeClient } = await import('./services/stripe-client-factory');
+        stripe = await getStripeClient();
+        if (stripe) {
+          log('Stripe initialized via factory (env or database)');
+        } else {
+          log('WARNING: Stripe not configured — payment features will be unavailable');
+        }
+      } catch (err) {
+        log(`WARNING: Failed to initialize Stripe: ${err}`);
+      }
+    })();
     
     // Authentication is already set up in index.ts, no need to call setupAuth again
     log("Using existing authentication middleware");
@@ -3211,11 +3221,12 @@ export function registerRoutes(app: Express): Server {
           
           // Verify Setup Intent is actually completed in Stripe
           try {
-            const stripe = (await import('stripe')).default;
-            const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY!, {
-              apiVersion: '2023-10-16',
-            });
-            
+            const { getStripeClient } = await import('./services/stripe-client-factory');
+            const stripeInstance = await getStripeClient();
+            if (!stripeInstance) {
+              throw new Error('Stripe not configured');
+            }
+
             const setupIntent = await stripeInstance.setupIntents.retrieve(setupIntentId);
             
             if (setupIntent.status !== 'succeeded' || !setupIntent.payment_method) {
@@ -3570,11 +3581,10 @@ export function registerRoutes(app: Express): Server {
                 eventConnectInfo.connectAccountStatus === 'active' && 
                 eventConnectInfo.connectChargesEnabled) {
               
-              // Import Stripe processing from the Connect routes
-              const stripe = (await import('stripe')).default;
-              const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY!, {
-                apiVersion: '2023-10-16',
-              });
+              // Use Stripe factory (supports database-stored keys)
+              const { getStripeClient: getFactory } = await import('./services/stripe-client-factory');
+              const stripeInstance = await getFactory();
+              if (!stripeInstance) throw new Error('Stripe not configured');
 
               // Create a setup intent with destination charge for the tournament's account
               const setupIntent = await stripeInstance.setupIntents.create({
@@ -3609,10 +3619,9 @@ export function registerRoutes(app: Express): Server {
               console.warn(`Event ${eventId} does not have a properly configured Stripe Connect account. Payment will fall back to platform account.`);
               
               // Fall back to platform account setup intent
-              const stripe = (await import('stripe')).default;
-              const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY!, {
-                apiVersion: '2023-10-16',
-              });
+              const { getStripeClient: getFactory2 } = await import('./services/stripe-client-factory');
+              const stripeInstance = await getFactory2();
+              if (!stripeInstance) throw new Error('Stripe not configured');
 
               const setupIntent = await stripeInstance.setupIntents.create({
                 customer: result.team.stripeCustomerId || undefined,
@@ -8677,11 +8686,12 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           });
         }
 
-        // Import Stripe
-        const Stripe = (await import('stripe')).default;
-        const stripe = process.env.STRIPE_SECRET_KEY
-          ? new Stripe(process.env.STRIPE_SECRET_KEY)
-          : null;
+        // Use Stripe factory (supports database-stored keys)
+        const { getStripeClient: getStripeFactory } = await import('./services/stripe-client-factory');
+        const stripe = await getStripeFactory();
+        if (!stripe) {
+          return res.status(500).json({ error: 'Stripe not configured' });
+        }
 
         // Get Setup Intent details
         const setupIntent = await stripe.setupIntents.retrieve(team.setupIntentId);
@@ -13000,12 +13010,13 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           });
         }
         
-        // Initialize Stripe
-        const stripe = (await import('stripe')).default;
-        const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY!, {
-          apiVersion: '2023-10-16',
-        });
-        
+        // Use Stripe factory (supports database-stored keys)
+        const { getStripeClient: getStripeFactoryLate } = await import('./services/stripe-client-factory');
+        const stripeInstance = await getStripeFactoryLate();
+        if (!stripeInstance) {
+          return res.status(500).json({ error: 'Stripe not configured' });
+        }
+
         // Get setup intent from Stripe
         const setupIntent = await stripeInstance.setupIntents.retrieve(team.setupIntentId);
         

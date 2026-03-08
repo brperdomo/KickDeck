@@ -760,22 +760,22 @@ body.dashboard-dark-active > [role="dialog"],
 body.dashboard-dark-active > [role="alertdialog"],
 body.dashboard-dark-active [role="dialog"].fixed,
 body.dashboard-dark-active [role="alertdialog"].fixed {
-  background: rgba(15, 15, 35, 0.92) !important;
-  background-color: rgba(15, 15, 35, 0.92) !important;
+  background: rgba(30, 32, 55, 0.96) !important;
+  background-color: rgba(30, 32, 55, 0.96) !important;
   backdrop-filter: blur(24px) !important;
   -webkit-backdrop-filter: blur(24px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow:
-    0 0 30px rgba(124, 58, 237, 0.15),
-    0 0 60px rgba(6, 182, 212, 0.08),
-    0 25px 50px rgba(0, 0, 0, 0.5) !important;
-  color: hsl(240 5% 90%) !important;
+    0 0 30px rgba(124, 58, 237, 0.12),
+    0 0 60px rgba(6, 182, 212, 0.06),
+    0 25px 50px rgba(0, 0, 0, 0.4) !important;
+  color: hsl(240 5% 93%) !important;
 }
 
 /* Dialog overlay — violet tinted with blur */
 body.dashboard-dark-active [data-radix-portal] [data-state="open"].fixed.inset-0,
 body.dashboard-dark-active > [data-state="open"].fixed.inset-0 {
-  background-color: rgba(10, 5, 30, 0.75) !important;
+  background-color: rgba(10, 5, 30, 0.6) !important;
   backdrop-filter: blur(4px) !important;
   -webkit-backdrop-filter: blur(4px) !important;
 }
@@ -800,9 +800,9 @@ body.dashboard-dark-active [role="dialog"] div {
 body.dashboard-dark-active [role="dialog"] input,
 body.dashboard-dark-active [role="dialog"] textarea,
 body.dashboard-dark-active [role="dialog"] select {
-  background-color: rgba(255, 255, 255, 0.06) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  color: hsl(240 5% 92%) !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: hsl(240 5% 95%) !important;
 }
 
 body.dashboard-dark-active [role="dialog"] input:focus,
@@ -837,7 +837,7 @@ body.dashboard-dark-active [role="dialog"] button[class*="absolute"][class*="rig
 body.dashboard-dark-active [role="dialog"] .bg-gray-50,
 body.dashboard-dark-active [role="dialog"] [class*="hover:bg-gray-50"]:hover,
 body.dashboard-dark-active [role="dialog"] [class*="bg-muted"] {
-  background-color: rgba(124, 58, 237, 0.06) !important;
+  background-color: rgba(124, 58, 237, 0.08) !important;
 }
 
 /* Dialog separator/dividers */
@@ -850,9 +850,9 @@ body.dashboard-dark-active [role="dialog"] [role="combobox"],
 body.dashboard-dark-active [role="dialog"] button[role="combobox"],
 body.dashboard-dark-active [role="dialog"] [data-slot="control"],
 body.dashboard-dark-active [role="dialog"] .bg-background {
-  background-color: rgba(255, 255, 255, 0.06) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  color: hsl(240 5% 90%) !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: hsl(240 5% 93%) !important;
 }
 
 /* Dialog alert/warning areas */

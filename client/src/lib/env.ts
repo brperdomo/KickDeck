@@ -2,7 +2,7 @@
 export const googleMapsApiKey = import.meta.env.GOOGLE_MAPS_API_KEY || ""; // Use environment API key
 export const mapboxApiKey = import.meta.env.VITE_MAPBOX_API_KEY || "";
 export const tinymceApiKey = import.meta.env.VITE_TINYMCE_API_KEY || "";
-export const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "";
+export const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || import.meta.env.VITE_STRIPE_PUBLIC_KEY || "";
 export const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === "true";
 export const hostUrl = import.meta.env.VITE_HOST || "";
 

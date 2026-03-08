@@ -53,6 +53,7 @@ import PaymentRecoveryDashboard from "@/pages/PaymentRecoveryDashboard";
 import PaymentRetry from "@/pages/PaymentRetry";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import PaymentSetup from "@/pages/PaymentSetup";
+import ConnectOnboardingSuccess from "@/pages/connect-onboarding-success";
 import SendGridSettingsPage from "@/pages/sendgrid-settings";
 import AdminSendGridSetup from "@/pages/admin-sendgrid-setup";
 import { AuthProvider } from "@/hooks/use-auth";
@@ -372,6 +373,9 @@ function Router() {
           </Route>
           <Route path="/admin/events/preview">
             {user.isAdmin ? <EventPreviewSelector /> : <NotFound />}
+          </Route>
+          <Route path="/admin/events/:id/settings">
+            {user.isAdmin ? <ConnectOnboardingSuccess /> : <NotFound />}
           </Route>
           <Route path="/admin/events/:id">
             {user.isAdmin ? <EditEvent /> : <NotFound />}

@@ -7,6 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 import { type Server } from "http";
 import viteConfig from "../vite.config";
+import { getStripePublishableKey } from "./services/stripe-client-factory";
 
 
 const viteLogger = createLogger();
@@ -55,7 +56,17 @@ export async function setupVite(app: Express, server: Server) {
       );
 
       // always reload the index.html file from disk incase it changes
-      const template = await fs.promises.readFile(clientTemplate, "utf-8");
+      let template = await fs.promises.readFile(clientTemplate, "utf-8");
+
+      // Inject Stripe publishable key so the client can read it without a fetch
+      const stripePk = await getStripePublishableKey();
+      if (stripePk) {
+        template = template.replace(
+          '<div id="root"></div>',
+          `<script>window.__STRIPE_PK__="${stripePk}";</script>\n    <div id="root"></div>`
+        );
+      }
+
       const page = await vite.transformIndexHtml(url, template);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {
@@ -77,7 +88,23 @@ export function serveStatic(app: Express) {
   app.use(express.static(distPath));
 
   // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
+  // Inject Stripe publishable key for faster client-side loading
+  app.use("*", async (_req, res) => {
+    try {
+      const indexPath = path.resolve(distPath, "index.html");
+      let html = await fs.promises.readFile(indexPath, "utf-8");
+
+      const stripePk = await getStripePublishableKey();
+      if (stripePk) {
+        html = html.replace(
+          '<div id="root"></div>',
+          `<script>window.__STRIPE_PK__="${stripePk}";</script>\n    <div id="root"></div>`
+        );
+      }
+
+      res.status(200).set({ "Content-Type": "text/html" }).end(html);
+    } catch (e) {
+      res.sendFile(path.resolve(distPath, "index.html"));
+    }
   });
 }

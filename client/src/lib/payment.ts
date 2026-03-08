@@ -1,20 +1,66 @@
 import { loadStripe, Stripe, StripeElements } from '@stripe/stripe-js';
 
-let stripePromise: Promise<Stripe | null>;
+let stripePromise: Promise<Stripe | null> | null = null;
 let stripeLoadAttempts = 0;
 const MAX_STRIPE_LOAD_ATTEMPTS = 3;
 
+// Cache for the publishable key fetched from the server
+let cachedPublishableKey: string | null = null;
+
 /**
- * Initializes the Stripe instance with enhanced error handling and retry logic
+ * Resolve the Stripe publishable key.
+ * 1. Check window.__STRIPE_PK__ (injected by server into HTML)
+ * 2. Check Vite env vars
+ * 3. Fall back to server API /api/payments/config (database-stored keys)
  */
-export function getStripe(): Promise<Stripe | null> {
+async function resolvePublishableKey(): Promise<string | null> {
+  // 1. Check server-injected key (most reliable — no async, no env vars needed)
+  const injectedKey = (window as any).__STRIPE_PK__;
+  if (injectedKey) {
+    console.log('✅ Stripe publishable key found (server-injected)');
+    return injectedKey;
+  }
+
+  // 2. Try env vars (two names are used across the codebase)
+  const envKey =
+    import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+    import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+  if (envKey) return envKey;
+
+  // 3. Return cached server key if we already fetched it
+  if (cachedPublishableKey) return cachedPublishableKey;
+
+  // 4. Fetch from server (reads from database via stripe-client-factory)
+  try {
+    console.log('No Stripe key found — fetching from server...');
+    const response = await fetch('/api/payments/config');
+    if (response.ok) {
+      const config = await response.json();
+      if (config.publishableKey) {
+        cachedPublishableKey = config.publishableKey;
+        console.log('✅ Stripe publishable key fetched from server');
+        return cachedPublishableKey;
+      }
+    }
+  } catch (error) {
+    console.error('Failed to fetch Stripe config from server:', error);
+  }
+
+  return null;
+}
+
+/**
+ * Initializes the Stripe instance with enhanced error handling and retry logic.
+ * Resolves the publishable key from env vars or the server API.
+ */
+export async function getStripe(): Promise<Stripe | null> {
   if (!stripePromise) {
-    const key = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+    const key = await resolvePublishableKey();
     if (!key) {
-      console.error('Stripe public key is missing');
+      console.error('Stripe public key is missing (checked env vars and server API)');
       return Promise.reject(new Error('Stripe public key is missing'));
     }
-    
+
     stripePromise = loadStripeWithRetry(key);
   }
   return stripePromise;

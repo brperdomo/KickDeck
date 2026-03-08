@@ -1,20 +1,5 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
@@ -35,64 +20,37 @@ interface DetailedFeeBreakdownProps {
 }
 
 export function DetailedFeeBreakdown({ teamId, selectedFeeIds, totalAmount, appliedCoupon }: DetailedFeeBreakdownProps) {
-  // Fetch detailed fee information for the selected team
   const feesQuery = useQuery({
     queryKey: ['/api/admin/teams', teamId, 'fees', selectedFeeIds],
     queryFn: async () => {
-      // Don't make the API call if we don't have the necessary data
-      if (!teamId || !selectedFeeIds) {
-        return [];
-      }
-      
-      console.log(`Fetching fees for team ${teamId} with fee IDs ${selectedFeeIds}`);
+      if (!teamId || !selectedFeeIds) return [];
       const response = await fetch(`/api/admin/teams/${teamId}/fees?selectedFeeIds=${selectedFeeIds}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch fee details');
-      }
-      const data = await response.json() as Fee[];
-      console.log('Received fee data from server:', data);
-      return data;
+      if (!response.ok) throw new Error('Failed to fetch fee details');
+      return response.json() as Promise<Fee[]>;
     },
     enabled: !!teamId && !!selectedFeeIds && selectedFeeIds !== ''
   });
 
-  // Group fees by type for better organization
   const groupedFees = useMemo(() => {
-    if (!feesQuery.data || feesQuery.data.length === 0) {
-      return {};
-    }
-
+    if (!feesQuery.data || feesQuery.data.length === 0) return {};
     const groups: Record<string, Fee[]> = {};
-    
     feesQuery.data.forEach((fee) => {
       const type = fee.feeType || 'Other';
-      if (!groups[type]) {
-        groups[type] = [];
-      }
+      if (!groups[type]) groups[type] = [];
       groups[type].push(fee);
     });
-    
     return groups;
   }, [feesQuery.data]);
 
-  // Calculate the subtotal of all fees before discounts
   const feesSubtotal = useMemo(() => {
-    if (!feesQuery.data || feesQuery.data.length === 0) {
-      return 0;
-    }
-    
+    if (!feesQuery.data || feesQuery.data.length === 0) return 0;
     return feesQuery.data.reduce((sum, fee) => sum + fee.amount, 0);
   }, [feesQuery.data]);
 
-  // Calculate discount information
   const discountInfo = useMemo(() => {
-    if (!totalAmount || !feesSubtotal || totalAmount >= feesSubtotal) {
-      return null;
-    }
-    
+    if (!totalAmount || !feesSubtotal || totalAmount >= feesSubtotal) return null;
     const discountAmount = feesSubtotal - totalAmount;
     const discountPercentage = Math.round((discountAmount / feesSubtotal) * 100);
-    
     return {
       amount: discountAmount,
       percentage: discountPercentage,
@@ -100,139 +58,93 @@ export function DetailedFeeBreakdown({ teamId, selectedFeeIds, totalAmount, appl
     };
   }, [feesSubtotal, totalAmount, appliedCoupon]);
 
-  // Get formatted fee types for better display
   const formatFeeType = (type: string): string => {
     switch (type.toLowerCase()) {
-      case 'registration':
-        return 'Registration Fees';
-      case 'uniform':
-        return 'Uniform Fees';
-      case 'equipment':
-        return 'Equipment Fees';
-      case 'tournament':
-        return 'Tournament Fees';
-      case 'other':
-      default:
-        return 'Other Fees';
+      case 'registration': return 'Registration Fees';
+      case 'uniform': return 'Uniform Fees';
+      case 'equipment': return 'Equipment Fees';
+      case 'tournament': return 'Tournament Fees';
+      default: return 'Other Fees';
     }
   };
 
-  // Show a loading state while fetching data
   if (feesQuery.isLoading) {
     return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="text-lg">Fee Breakdown</CardTitle>
-          <CardDescription>Loading fee details...</CardDescription>
-        </CardHeader>
-        <CardContent className="flex justify-center py-6">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </CardContent>
-      </Card>
+      <div className="flex items-center gap-2 py-3">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        <span className="text-sm text-muted-foreground">Loading fees...</span>
+      </div>
     );
   }
 
-  // Show an error state if the query failed
   if (feesQuery.isError) {
     return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="text-lg">Fee Breakdown</CardTitle>
-          <CardDescription className="text-red-500">
-            Error loading fee details: {feesQuery.error instanceof Error ? feesQuery.error.message : 'Unknown error'}
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <p className="text-sm text-destructive py-2">
+        Error loading fee details
+      </p>
     );
   }
 
-  // Show an empty state if no fees were found
   if (!feesQuery.data || feesQuery.data.length === 0) {
     return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="text-lg">Fee Breakdown</CardTitle>
-          <CardDescription>No fee details available</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">No fees were found for this team.</p>
-        </CardContent>
-      </Card>
+      <p className="text-sm text-muted-foreground py-2">
+        No fee details available
+      </p>
     );
   }
 
-  // Main component when data is available
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-lg">Fee Breakdown</CardTitle>
-        <CardDescription>Detailed breakdown of fees for this team</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {Object.entries(groupedFees).map(([feeType, fees]) => (
-          <div key={feeType} className="mb-4">
-            <h3 className="text-md font-medium mb-2">{formatFeeType(feeType)}</h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Fee Description</TableHead>
-                  <TableHead className="w-24 text-right">Amount</TableHead>
-                  <TableHead className="w-28 text-center">Required</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {fees.map((fee) => (
-                  <TableRow key={fee.id}>
-                    <TableCell>{fee.name}</TableCell>
-                    <TableCell className="text-right font-medium">
-                      {formatCurrency(fee.amount)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {fee.isRequired ? (
-                        <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200">
-                          Required
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-blue-50 text-blue-800 hover:bg-blue-100">
-                          Optional
-                        </Badge>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        ))}
-        
-        <div className="mt-6 pt-4 border-t">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Total Amount</h3>
-            <span className="text-lg font-semibold">{formatCurrency(feesSubtotal)}</span>
-          </div>
-          
-          {/* Show discount information if applicable */}
-          {discountInfo && (
-            <>
-              <div className="flex justify-between items-center mt-2 text-green-600">
-                <span className="text-sm">
-                  {discountInfo.code} ({discountInfo.percentage}% off)
-                </span>
-                <span className="text-sm font-medium">
-                  -{formatCurrency(discountInfo.amount)}
+    <div className="space-y-3">
+      {Object.entries(groupedFees).map(([feeType, fees]) => (
+        <div key={feeType}>
+          <h4 className="text-sm font-medium text-muted-foreground mb-2">{formatFeeType(feeType)}</h4>
+          <div className="space-y-1">
+            {fees.map((fee) => (
+              <div key={fee.id} className="flex items-center justify-between py-1.5 px-2 rounded">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">{fee.name}</span>
+                  {fee.isRequired ? (
+                    <Badge variant="outline" className="text-xs px-1.5 py-0 border-emerald-500/40 text-emerald-600 dark:text-emerald-400">
+                      Required
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-xs px-1.5 py-0">
+                      Optional
+                    </Badge>
+                  )}
+                </div>
+                <span className="text-sm font-medium tabular-nums">
+                  {formatCurrency(fee.amount)}
                 </span>
               </div>
-              
-              <div className="flex justify-between items-center mt-3 pt-2 border-t border-green-200">
-                <h3 className="text-lg font-bold text-green-700">Final Total</h3>
-                <span className="text-lg font-bold text-green-700">
-                  {formatCurrency(totalAmount)}
-                </span>
-              </div>
-            </>
-          )}
+            ))}
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      ))}
+
+      <div className="border-t border-border pt-3 space-y-1.5">
+        {discountInfo ? (
+          <>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span className="tabular-nums">{formatCurrency(feesSubtotal)}</span>
+            </div>
+            <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
+              <span>{discountInfo.code} ({discountInfo.percentage}% off)</span>
+              <span className="tabular-nums">-{formatCurrency(discountInfo.amount)}</span>
+            </div>
+            <div className="flex justify-between font-semibold pt-1.5 border-t border-border">
+              <span>Total</span>
+              <span className="tabular-nums">{formatCurrency(totalAmount)}</span>
+            </div>
+          </>
+        ) : (
+          <div className="flex justify-between font-semibold">
+            <span>Total</span>
+            <span className="tabular-nums">{formatCurrency(feesSubtotal)}</span>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

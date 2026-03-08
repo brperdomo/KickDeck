@@ -3,19 +3,19 @@ import { db } from 'db';
 import { teams, events } from '@db/schema';
 import { eq } from 'drizzle-orm';
 import { getStripeClient } from './stripe-client-factory';
+import { DEFAULT_PLATFORM_FEE_RATE, STRIPE_FIXED_FEE } from './fee-calculator';
 
 /**
- * Calculate total charge including 4% + $0.30 platform fee
+ * Calculate total charge including platform fee (4% + $0.30)
  */
-function calculateWithPlatformFees(baseAmount: number): number {
-  const platformFeePercentage = 0.04; // 4%
-  const platformFeeFixed = 30; // $0.30 in cents
-  return Math.round(baseAmount + (baseAmount * platformFeePercentage) + platformFeeFixed);
+function calculateWithPlatformFees(baseAmount: number): { total: number; platformFee: number } {
+  const platformFee = Math.round(baseAmount * DEFAULT_PLATFORM_FEE_RATE + STRIPE_FIXED_FEE);
+  return { total: baseAmount + platformFee, platformFee };
 }
 
 /**
  * Create Stripe Checkout Session for payment retry
- * This provides a hosted payment page that handles all payment complexity
+ * Uses DESTINATION CHARGE pattern: charge on platform, transfer to Connect account
  */
 export async function createCheckoutSession(teamId: number): Promise<{
   checkoutUrl: string;
@@ -26,7 +26,7 @@ export async function createCheckoutSession(teamId: number): Promise<{
   if (!stripe) throw new Error('Stripe not configured');
 
   try {
-    // Get team details INCLUDING Connect account info for refund processing
+    // Get team details INCLUDING Connect account info
     const team = await db
       .select({
         id: teams.id,
@@ -48,22 +48,20 @@ export async function createCheckoutSession(teamId: number): Promise<{
     }
 
     const teamData = team[0];
-    
+
     if (!teamData.totalAmount) {
       throw new Error('Team registration amount not found');
     }
 
-    // Calculate total amount including platform fees
-    const totalAmountWithFees = calculateWithPlatformFees(teamData.totalAmount);
-
-    // Create checkout session - DIRECTLY on Connect account for guaranteed refund coverage
     const connectAccountId = teamData.stripeConnectAccountId;
-    
     if (!connectAccountId) {
       throw new Error(`Tournament must have Stripe Connect account configured for payments`);
     }
-    
-    // Create customer DIRECTLY on Connect account first for guaranteed ownership
+
+    // Calculate total amount including platform fees
+    const { total: totalAmountWithFees, platformFee } = calculateWithPlatformFees(teamData.totalAmount);
+
+    // Create customer on PLATFORM account (destination charges require platform-owned customers)
     const customer = await stripe.customers.create({
       email: teamData.managerEmail || teamData.submitterEmail || `team-${teamId}@tournament.local`,
       name: `${teamData.name} - Team Manager`,
@@ -78,18 +76,16 @@ export async function createCheckoutSession(teamId: number): Promise<{
         internalReference: `TEAM-${teamId}-${teamData.eventId}`,
         systemSource: "KickDeck",
         createdFor: "checkout_session",
-        connectAccountType: "tournament_refund_account"
       },
-    }, {
-      // CRITICAL: Create customer on Connect account
-      stripeAccount: connectAccountId
     });
 
-    console.log(`Created customer ${customer.id} on Connect account ${connectAccountId} for team ${teamId}`);
+    console.log(`Created customer ${customer.id} on platform account for team ${teamId}`);
 
+    // Create checkout session on PLATFORM account with destination charge
+    // Funds are routed to Connect account via transfer_data, KickDeck keeps application_fee
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      customer: customer.id, // Attach customer to session
+      customer: customer.id,
       line_items: [
         {
           price_data: {
@@ -111,30 +107,31 @@ export async function createCheckoutSession(teamId: number): Promise<{
       mode: 'payment',
       success_url: `${process.env.FRONTEND_URL || 'https://app.kickdeck.io'}/payment/success?session_id={CHECKOUT_SESSION_ID}&team_id=${teamId}`,
       cancel_url: `${process.env.FRONTEND_URL || 'https://app.kickdeck.io'}/payment/retry/${teamId}?cancelled=true`,
-      customer_email: teamData.managerEmail || teamData.submitterEmail || undefined,
       metadata: {
         teamId: teamId.toString(),
         originalAmount: teamData.totalAmount.toString(),
-        platformFees: (totalAmountWithFees - teamData.totalAmount).toString(),
+        platformFees: platformFee.toString(),
         retryPayment: 'true',
-        // CRITICAL: Include Connect account ID for proper refund processing
-        connectAccountId: teamData.stripeConnectAccountId || '',
+        connectAccountId: connectAccountId,
         eventId: teamData.eventId?.toString() || '',
       },
       payment_intent_data: {
+        application_fee_amount: platformFee,
+        transfer_data: {
+          destination: connectAccountId,
+        },
         statement_descriptor_suffix: (teamData.name || 'Tournament').substring(0, 22),
         metadata: {
           teamId: teamId.toString(),
           teamName: teamData.name || '',
           eventName: teamData.eventName || '',
+          tournamentAmount: teamData.totalAmount.toString(),
+          platformFee: platformFee.toString(),
           retryPayment: 'true',
           connectAccountId: connectAccountId,
           eventId: teamData.eventId?.toString() || '',
         },
       },
-    }, {
-      // CRITICAL: Create session on Connect account - charges go directly there
-      stripeAccount: connectAccountId
     });
 
     // Update team with new payment session info
@@ -142,9 +139,11 @@ export async function createCheckoutSession(teamId: number): Promise<{
       .update(teams)
       .set({
         paymentIntentId: null, // Clear old payment intent
-        // Store checkout session ID in a comment or metadata field if available
+        stripeCustomerId: customer.id,
       })
       .where(eq(teams.id, teamId));
+
+    console.log(`✅ Checkout session created on platform with destination to Connect ${connectAccountId} | Total: $${(totalAmountWithFees / 100).toFixed(2)} | Platform fee: $${(platformFee / 100).toFixed(2)}`);
 
     return {
       checkoutUrl: session.url!,
@@ -170,37 +169,10 @@ export async function handleCheckoutSuccess(sessionId: string): Promise<{
   if (!stripe) throw new Error('Stripe not configured');
 
   try {
-    // First try to retrieve session from main account (for backward compatibility)
-    let session;
-    try {
-      session = await stripe.checkout.sessions.retrieve(sessionId, {
-        expand: ['payment_intent'],
-      });
-    } catch (mainAccountError) {
-      // If not found in main account, try Connect accounts
-      // This requires the Connect account ID - we'll get it from team data
-      const teamId = parseInt(sessionId.split('_')[1] || '0');
-      if (teamId > 0) {
-        const team = await db
-          .select({ stripeConnectAccountId: events.stripeConnectAccountId })
-          .from(teams)
-          .leftJoin(events, eq(teams.eventId, events.id))
-          .where(eq(teams.id, teamId))
-          .limit(1);
-          
-        if (team[0]?.stripeConnectAccountId) {
-          session = await stripe.checkout.sessions.retrieve(sessionId, {
-            expand: ['payment_intent'],
-          }, {
-            stripeAccount: team[0].stripeConnectAccountId
-          });
-        } else {
-          throw mainAccountError;
-        }
-      } else {
-        throw mainAccountError;
-      }
-    }
+    // Retrieve session from platform account (destination charges live on platform)
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['payment_intent'],
+    });
 
     if (!session.metadata?.teamId) {
       throw new Error('Team ID not found in session metadata');
@@ -220,7 +192,7 @@ export async function handleCheckoutSuccess(sessionId: string): Promise<{
         })
         .where(eq(teams.id, teamId));
 
-      console.log(`✅ Team ${teamId} payment completed via Stripe Checkout`);
+      console.log(`✅ Team ${teamId} payment completed via Stripe Checkout (destination charge)`);
 
       return {
         teamId,
@@ -247,8 +219,8 @@ export function getPlatformFeeBreakdown(baseAmount: number): {
   totalPlatformFees: number;
   totalAmount: number;
 } {
-  const platformFeePercentage = Math.round(baseAmount * 0.04);
-  const platformFeeFixed = 30; // $0.30 in cents
+  const platformFeePercentage = Math.round(baseAmount * DEFAULT_PLATFORM_FEE_RATE);
+  const platformFeeFixed = STRIPE_FIXED_FEE;
   const totalPlatformFees = platformFeePercentage + platformFeeFixed;
   const totalAmount = baseAmount + totalPlatformFees;
 

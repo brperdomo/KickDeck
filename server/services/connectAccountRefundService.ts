@@ -90,30 +90,43 @@ export async function processConnectAccountRefund(request: RefundRequest): Promi
       throw new Error(`Team ${request.teamId} payment status is ${team.paymentStatus} - cannot refund`);
     }
 
-    console.log(`✅ Found payment ${team.paymentIntentId} on Connect account ${event.stripeConnectAccountId}`);
+    console.log(`✅ Found payment ${team.paymentIntentId} for Connect account ${event.stripeConnectAccountId}`);
 
-    // Get payment intent from Connect account
-    const paymentIntent = await stripe.paymentIntents.retrieve(team.paymentIntentId, {
-      stripeAccount: event.stripeConnectAccountId
-    });
+    // Retrieve payment intent from PLATFORM account (destination charges live on platform)
+    const paymentIntent = await stripe.paymentIntents.retrieve(team.paymentIntentId);
 
     if (paymentIntent.status !== 'succeeded') {
       throw new Error(`Payment ${team.paymentIntentId} status is ${paymentIntent.status} - cannot refund`);
     }
 
-    // Calculate refund amount
-    const refundAmount = request.amount || paymentIntent.amount;
-    
+    // Determine refund amount:
+    // - If explicit amount passed (partial refund), use that
+    // - Otherwise refund the tournament cost only (KickDeck keeps platform fee)
+    let refundAmount: number;
+    if (request.amount) {
+      refundAmount = request.amount;
+    } else {
+      // Get tournament cost from metadata or team record — NOT the full charge with platform fee
+      const tournamentCost = paymentIntent.metadata?.tournamentAmount
+        ? parseInt(paymentIntent.metadata.tournamentAmount)
+        : (team.totalAmount || paymentIntent.amount);
+      refundAmount = tournamentCost;
+    }
+
     if (refundAmount > paymentIntent.amount) {
       throw new Error(`Refund amount ${refundAmount} cannot exceed original payment ${paymentIntent.amount}`);
     }
 
-    // Create refund on Connect account
-    console.log(`💰 Creating refund of $${refundAmount / 100} on Connect account ${event.stripeConnectAccountId}`);
-    
+    // Refund on PLATFORM account with reverse_transfer to pull funds from Connect account
+    // - reverse_transfer: true → reverses the transfer, debiting the Connect account
+    // - refund_application_fee: false → KickDeck keeps its platform fee
+    console.log(`💰 Refunding $${refundAmount / 100} via reverse_transfer from Connect account ${event.stripeConnectAccountId}`);
+
     const refund = await stripe.refunds.create({
       payment_intent: team.paymentIntentId,
       amount: refundAmount,
+      reverse_transfer: true,
+      refund_application_fee: false,
       reason: 'requested_by_customer',
       metadata: {
         teamId: request.teamId.toString(),
@@ -125,14 +138,12 @@ export async function processConnectAccountRefund(request: RefundRequest): Promi
         processedBy: request.adminId?.toString() || "system",
         originalAmount: paymentIntent.amount.toString(),
         refundAmount: refundAmount.toString(),
+        connectAccountId: event.stripeConnectAccountId,
         internalReference: `REFUND-${request.teamId}-${event.id}`,
         systemSource: "KickDeck",
-        refundType: "connect_account_refund",
+        refundType: "destination_charge_reversal",
         processedDate: new Date().toISOString(),
       }
-    }, {
-      // CRITICAL: Process refund on Connect account
-      stripeAccount: event.stripeConnectAccountId
     });
 
     console.log(`✅ Refund created: ${refund.id} for $${refund.amount / 100}`);

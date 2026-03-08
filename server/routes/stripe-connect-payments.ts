@@ -333,63 +333,34 @@ export async function processDestinationCharge(
         );
       }
 
-      // Handle customer attachment for payment methods
+      // Handle customer attachment for payment methods (all on platform account)
       if (customerIdToUse) {
         try {
-          // CRITICAL FIX: Check customer in Connect account first, then main platform account
-          let customer;
+          // Verify customer exists on platform account
           let customerExists = false;
 
-          if (connectAccountId) {
-            try {
-              // First, try to retrieve customer from Connect account
-              customer = await stripe.customers.retrieve(customerIdToUse, {
-                stripeAccount: connectAccountId,
-              });
-              customerExists = true;
-              console.log(
-                `Verified customer ${customerIdToUse} exists in Connect account ${connectAccountId}`,
-              );
-            } catch (connectCustomerError: any) {
-              if (connectCustomerError.code === "resource_missing") {
-                console.log(
-                  `Customer ${customerIdToUse} not found in Connect account ${connectAccountId}, checking main platform account`,
-                );
-                // Customer not in Connect account, check main platform account
-                try {
-                  customer = await stripe.customers.retrieve(customerIdToUse);
-                  customerExists = true;
-                  console.log(
-                    `Customer ${customerIdToUse} found in main platform account`,
-                  );
-                } catch (mainCustomerError: any) {
-                  if (mainCustomerError.code === "resource_missing") {
-                    console.log(
-                      `Customer ${customerIdToUse} not found in either account`,
-                    );
-                    customerExists = false;
-                  } else {
-                    throw mainCustomerError;
-                  }
-                }
-              } else {
-                throw connectCustomerError;
-              }
-            }
-          } else {
-            // No Connect account, check main platform account
-            customer = await stripe.customers.retrieve(customerIdToUse);
+          try {
+            await stripe.customers.retrieve(customerIdToUse);
             customerExists = true;
             console.log(
-              `Verified customer ${customerIdToUse} exists in main platform account`,
+              `Verified customer ${customerIdToUse} exists on platform account`,
             );
+          } catch (customerError: any) {
+            if (customerError.code === "resource_missing") {
+              console.log(
+                `Customer ${customerIdToUse} not found on platform account`,
+              );
+              customerExists = false;
+            } else {
+              throw customerError;
+            }
           }
 
           if (!customerExists) {
-            throw new Error("Customer not found in any account");
+            throw new Error("Customer not found on platform account");
           }
 
-          // CRITICAL FIX: Check if payment method is attached and handle properly
+          // Check if payment method is attached and handle properly
           const paymentMethod =
             await stripe.paymentMethods.retrieve(paymentMethodId);
 
@@ -398,125 +369,94 @@ export async function processDestinationCharge(
           );
 
           if (!paymentMethod.customer) {
+            // PM not attached to any customer — attach to the verified platform customer
             console.log(
               `PaymentMethod ${paymentMethodId} not attached - attaching to customer ${customerIdToUse}`,
             );
-            try {
-              if (connectAccountId && customerExists) {
-                // Attach to customer in Connect account
-                await stripe.paymentMethods.attach(
-                  paymentMethodId,
-                  {
-                    customer: customerIdToUse,
-                  },
-                  {
-                    stripeAccount: connectAccountId,
-                  },
-                );
-                console.log(
-                  `Successfully attached payment method to customer in Connect account`,
-                );
-              } else {
-                // Attach to customer in main platform account
-                await stripe.paymentMethods.attach(paymentMethodId, {
-                  customer: customerIdToUse,
-                });
-                console.log(
-                  `Successfully attached payment method to customer in main platform account`,
-                );
-              }
-            } catch (attachError: any) {
-              if (
-                attachError.message &&
-                (attachError.message.includes("was previously used without being attached") ||
-                 attachError.message.includes("cannot be attached"))
-              ) {
-                console.log(
-                  `Payment method ${paymentMethodId} attachment failed: ${attachError.message}`,
-                );
-                throw new Error(
-                  `Payment method ${paymentMethodId} was previously used and cannot be reused. Team needs to provide new payment method.`,
-                );
-              } else {
-                throw attachError;
-              }
-            }
-          } else if (paymentMethod.customer !== customerIdToUse) {
+            await stripe.paymentMethods.attach(paymentMethodId, {
+              customer: customerIdToUse,
+            });
             console.log(
-              `PaymentMethod attached to different customer: ${paymentMethod.customer}, expected: ${customerIdToUse}`,
+              `Successfully attached payment method to customer on platform account`,
             );
-            // Use the existing customer instead of re-attaching
-            console.log(
-              `Using existing customer ${paymentMethod.customer} instead of ${customerIdToUse}`,
-            );
-            customerIdToUse = paymentMethod.customer as string;
-          } else {
+          } else if (paymentMethod.customer === customerIdToUse) {
             console.log(
               `PaymentMethod ${paymentMethodId} already properly attached to customer ${customerIdToUse} - proceeding`,
             );
+          } else {
+            // PM attached to a different customer — check if that customer is on the platform
+            const pmCustomerId = paymentMethod.customer as string;
+            console.log(
+              `PaymentMethod attached to different customer: ${pmCustomerId}, expected: ${customerIdToUse}`,
+            );
+
+            let pmCustomerOnPlatform = false;
+            try {
+              await stripe.customers.retrieve(pmCustomerId);
+              pmCustomerOnPlatform = true;
+            } catch (e: any) {
+              if (e.code === 'resource_missing') {
+                pmCustomerOnPlatform = false;
+              }
+            }
+
+            if (pmCustomerOnPlatform) {
+              // PM's customer exists on platform — use it
+              console.log(`Using existing platform customer ${pmCustomerId}`);
+              customerIdToUse = pmCustomerId;
+            } else {
+              // PM's customer is on Connect account (old flow) — detach and re-attach to platform customer
+              console.log(`PM customer ${pmCustomerId} not on platform — detaching and re-attaching`);
+              try {
+                await stripe.paymentMethods.detach(paymentMethodId);
+              } catch (detachErr) {
+                console.warn(`Failed to detach PM: ${detachErr}`);
+              }
+              await stripe.paymentMethods.attach(paymentMethodId, {
+                customer: customerIdToUse,
+              });
+              console.log(`Re-attached PM to platform customer ${customerIdToUse}`);
+            }
           }
 
           paymentIntentParams.customer = customerIdToUse;
           console.log(`Using customer: ${customerIdToUse}`);
         } catch (customerError: any) {
-          if (customerError.code === "resource_missing") {
+          if (customerError.code === "resource_missing" ||
+              (customerError.message && customerError.message.includes("Customer not found"))) {
             console.log(
-              `Customer ${customerIdToUse} does not exist in Stripe, creating new customer`,
+              `Customer ${customerIdToUse} does not exist on platform, creating new customer`,
             );
 
-            // CRITICAL FIX: Create customer in Connect account instead of main platform account
-            let newCustomer;
-
-            if (connectAccountId) {
-              console.log(
-                `Creating customer in Connect account: ${connectAccountId}`,
-              );
-              // Create customer in the Connect account
-              newCustomer = await stripe.customers.create(
-                {
-                  email: team.submitterEmail || "noemail@example.com",
-                  name: team.submitterName || team.name,
-                  metadata: {
-                    teamId: teamId.toString(),
-                    teamName: team.name || "Unknown Team",
-                    eventId: eventId,
-                    eventName: event.name || "Unknown Event",
-                    originalCustomerId: customerIdToUse,
-                    replacementReason: "Original customer not found in Stripe",
-                    createdInConnectAccount: connectAccountId,
-                  },
-                },
-                {
-                  stripeAccount: connectAccountId, // This creates the customer in the Connect account
-                },
-              );
-
-              console.log(
-                `Created new customer ${newCustomer.id} in Connect account ${connectAccountId} for team ${teamId}`,
-              );
-            } else {
-              console.log(
-                `No Connect account available, creating customer in main platform account`,
-              );
-              // Fallback to main platform account if no Connect account
-              newCustomer = await stripe.customers.create({
-                email: team.submitterEmail || "noemail@example.com",
-                name: team.submitterName || team.name,
-                metadata: {
-                  teamId: teamId.toString(),
-                  teamName: team.name || "Unknown Team",
-                  eventId: eventId,
-                  eventName: event.name || "Unknown Event",
-                  originalCustomerId: customerIdToUse,
-                  replacementReason: "Original customer not found in Stripe",
-                  createdInMainAccount: "true",
-                },
-              });
-
-              console.log(
-                `Created new customer ${newCustomer.id} in main platform account for team ${teamId}`,
-              );
+            // Check if PM is attached to a non-platform customer and detach if needed
+            const pmCheck = await stripe.paymentMethods.retrieve(paymentMethodId);
+            if (pmCheck.customer) {
+              console.log(`Detaching PM from non-platform customer ${pmCheck.customer}`);
+              try {
+                await stripe.paymentMethods.detach(paymentMethodId);
+              } catch (detachErr) {
+                console.warn(`Failed to detach PM: ${detachErr}`);
+              }
             }
+
+            // Create customer on PLATFORM account (destination charges require platform customers)
+            const newCustomer = await stripe.customers.create({
+              email: team.submitterEmail || "noemail@example.com",
+              name: team.submitterName || team.name,
+              metadata: {
+                teamId: teamId.toString(),
+                teamName: team.name || "Unknown Team",
+                eventId: eventId,
+                eventName: event.name || "Unknown Event",
+                originalCustomerId: customerIdToUse,
+                replacementReason: "Original customer not found on platform",
+                connectAccountId: connectAccountId || "",
+              },
+            });
+
+            console.log(
+              `Created new customer ${newCustomer.id} on platform account for team ${teamId}`,
+            );
 
             // Update team record with new customer ID
             await db
@@ -524,48 +464,13 @@ export async function processDestinationCharge(
               .set({ stripeCustomerId: newCustomer.id })
               .where(eq(teams.id, teamId));
 
-            // Attach payment method to new customer
-            try {
-              if (connectAccountId) {
-                // Attach payment method in Connect account context
-                await stripe.paymentMethods.attach(
-                  paymentMethodId,
-                  {
-                    customer: newCustomer.id,
-                  },
-                  {
-                    stripeAccount: connectAccountId,
-                  },
-                );
-                console.log(
-                  `Attached payment method to new customer in Connect account ${connectAccountId}`,
-                );
-              } else {
-                // Attach payment method in main account context
-                await stripe.paymentMethods.attach(paymentMethodId, {
-                  customer: newCustomer.id,
-                });
-                console.log(
-                  `Attached payment method to new customer in main platform account`,
-                );
-              }
-            } catch (attachError: any) {
-              if (
-                attachError.message &&
-                attachError.message.includes(
-                  "was previously used without being attached",
-                )
-              ) {
-                console.log(
-                  `Payment method ${paymentMethodId} is burned (previously used without customer), cannot be reused`,
-                );
-                throw new Error(
-                  `Payment method ${paymentMethodId} was previously used and cannot be reused. Team needs to provide new payment method.`,
-                );
-              } else {
-                throw attachError;
-              }
-            }
+            // Attach payment method to new customer on platform account
+            await stripe.paymentMethods.attach(paymentMethodId, {
+              customer: newCustomer.id,
+            });
+            console.log(
+              `Attached payment method to new customer on platform account`,
+            );
 
             paymentIntentParams.customer = newCustomer.id;
             console.log(`Using new customer: ${newCustomer.id}`);
