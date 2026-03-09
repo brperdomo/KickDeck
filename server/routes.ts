@@ -12526,28 +12526,32 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
       try {
         let templates = await db.select().from(emailTemplates);
 
-        // Auto-seed if the table is empty
-        if (templates.length === 0) {
-          console.log('email_templates table is empty — seeding standard email types...');
-          const standardTemplates = [
-            { name: 'Welcome Email', type: 'welcome_email', subject: 'Welcome to KickDeck!', description: 'Sent when a new user registers' },
-            { name: 'Admin Welcome', type: 'admin_welcome', subject: 'Welcome to KickDeck Admin', description: 'Sent when a new admin is invited' },
-            { name: 'Password Reset', type: 'password_reset', subject: 'Reset Your Password', description: 'Sent when a user requests a password reset' },
-            { name: 'Registration Receipt', type: 'registration_receipt', subject: 'Registration Confirmation', description: 'Sent after a team registers for an event' },
-            { name: 'Registration Under Review', type: 'registration_under_review', subject: 'Registration Under Review', description: 'Sent when a registration is pending review' },
-            { name: 'Payment Confirmation', type: 'payment_confirmation', subject: 'Payment Received', description: 'Sent after a successful payment' },
-            { name: 'Payment Completion Notification', type: 'payment_completion_notification', subject: 'Payment Complete', description: 'Sent when full payment is completed' },
-            { name: 'Payment Refunded', type: 'payment_refunded', subject: 'Payment Refunded', description: 'Sent when a payment is refunded' },
-            { name: 'Team Approved', type: 'team_approved', subject: 'Team Approved', description: 'Sent when a team registration is approved' },
-            { name: 'Team Approved With Payment', type: 'team_approved_with_payment', subject: 'Team Approved — Payment Required', description: 'Sent when a team is approved and payment is needed' },
-            { name: 'Team Rejected', type: 'team_rejected', subject: 'Registration Update', description: 'Sent when a team registration is rejected' },
-            { name: 'Team Waitlisted', type: 'team_waitlisted', subject: 'Team Waitlisted', description: 'Sent when a team is placed on a waitlist' },
-            { name: 'Team Withdrawn', type: 'team_withdrawn', subject: 'Team Withdrawn', description: 'Sent when a team registration is withdrawn' },
-            { name: 'Team Status Update', type: 'team_status_update', subject: 'Team Status Update', description: 'General team status change notification' },
-            { name: 'Newsletter Confirmation', type: 'newsletter_confirmation', subject: 'Newsletter Subscription Confirmed', description: 'Sent when a user subscribes to the newsletter' },
-          ];
+        // Ensure all standard email types exist — insert any that are missing
+        const standardTemplates = [
+          { name: 'Welcome Email', type: 'welcome', subject: 'Welcome to KickDeck!', description: 'Sent when a new user registers' },
+          { name: 'Admin Welcome', type: 'admin_welcome', subject: 'Welcome to KickDeck Admin', description: 'Sent when a new admin is invited' },
+          { name: 'Password Reset', type: 'password_reset', subject: 'Reset Your Password', description: 'Sent when a user requests a password reset' },
+          { name: 'Registration Confirmation', type: 'registration_confirmation', subject: 'Registration Received', description: 'Sent when a team submits registration (setup intent flow)' },
+          { name: 'Registration Receipt', type: 'registration_receipt', subject: 'Registration Confirmation', description: 'Sent after a team registers for an event' },
+          { name: 'Registration Under Review', type: 'registration_under_review', subject: 'Registration Under Review', description: 'Sent when a registration is pending review' },
+          { name: 'Payment Confirmation', type: 'payment_confirmation', subject: 'Payment Received', description: 'Sent after a successful payment' },
+          { name: 'Payment Completion Notification', type: 'payment_completion_notification', subject: 'Payment Complete', description: 'Sent when full payment is completed' },
+          { name: 'Payment Refunded', type: 'payment_refunded', subject: 'Payment Refunded', description: 'Sent when a payment is refunded' },
+          { name: 'Team Approved', type: 'team_approved', subject: 'Team Approved', description: 'Sent when a team registration is approved' },
+          { name: 'Team Approved With Payment', type: 'team_approved_with_payment', subject: 'Team Approved — Payment Required', description: 'Sent when a team is approved and payment is needed' },
+          { name: 'Team Rejected', type: 'team_rejected', subject: 'Registration Update', description: 'Sent when a team registration is rejected' },
+          { name: 'Team Waitlisted', type: 'team_waitlisted', subject: 'Team Waitlisted', description: 'Sent when a team is placed on a waitlist' },
+          { name: 'Team Withdrawn', type: 'team_withdrawn', subject: 'Team Withdrawn', description: 'Sent when a team registration is withdrawn' },
+          { name: 'Team Status Update', type: 'team_status_update', subject: 'Team Status Update', description: 'General team status change notification' },
+          { name: 'Newsletter Confirmation', type: 'newsletter_confirmation', subject: 'Newsletter Subscription Confirmed', description: 'Sent when a user subscribes to the newsletter' },
+        ];
 
-          for (const tmpl of standardTemplates) {
+        const existingTypes = new Set(templates.map(t => t.type));
+        const missing = standardTemplates.filter(s => !existingTypes.has(s.type));
+
+        if (missing.length > 0) {
+          console.log(`Seeding ${missing.length} missing email template types: ${missing.map(m => m.type).join(', ')}`);
+          for (const tmpl of missing) {
             await db.insert(emailTemplates).values({
               name: tmpl.name,
               type: tmpl.type,
@@ -12561,7 +12565,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           }
 
           templates = await db.select().from(emailTemplates);
-          console.log(`Seeded ${templates.length} email template types`);
+          console.log(`email_templates now has ${templates.length} types total`);
         }
 
         res.json(templates);
