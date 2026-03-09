@@ -11362,6 +11362,89 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
       }
     });
 
+    // Resend registration confirmation email
+    app.post('/api/admin/teams/:id/resend-registration-email', isAdmin, async (req, res) => {
+      try {
+        const teamId = parseInt(req.params.id);
+
+        // Get team details with event and age group information
+        const teamResult = await db
+          .select({
+            team: teams,
+            event: {
+              id: events.id,
+              name: events.name,
+              adminEmail: events.adminEmail
+            }
+          })
+          .from(teams)
+          .leftJoin(events, eq(teams.eventId, events.id))
+          .where(eq(teams.id, teamId))
+          .limit(1);
+
+        if (teamResult.length === 0) {
+          return res.status(404).json({ error: 'Team not found' });
+        }
+
+        const { team, event } = teamResult[0];
+
+        // Get age group info for division display
+        let ageGroupInfo = null;
+        if (team.ageGroupId) {
+          const [agResult] = await db
+            .select()
+            .from(eventAgeGroups)
+            .where(eq(eventAgeGroups.id, team.ageGroupId));
+          ageGroupInfo = agResult || null;
+        }
+
+        const division = [ageGroupInfo?.ageGroup, ageGroupInfo?.gender].filter(Boolean).join(' ') || 'N/A';
+
+        // Determine recipients
+        const recipients: string[] = [];
+        if (team.submitterEmail) {
+          recipients.push(team.submitterEmail);
+        }
+        if (team.managerEmail && team.managerEmail !== team.submitterEmail) {
+          recipients.push(team.managerEmail);
+        }
+
+        if (recipients.length === 0) {
+          return res.status(400).json({ error: 'No email recipients found for this team' });
+        }
+
+        // Send registration confirmation email to each recipient
+        for (const recipient of recipients) {
+          await sendTemplatedEmail(
+            recipient,
+            'registration_under_review',
+            {
+              firstName: team.submitterName || team.managerName || 'Team Manager',
+              teamName: team.name || 'your team',
+              eventName: event?.name || 'Tournament',
+              ageGroup: division,
+              registrationDate: team.createdAt
+                ? new Date(team.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+              EVENT_ADMIN_EMAIL: event?.adminEmail || 'support@kickdeck.xyz',
+            }
+          );
+        }
+
+        res.json({
+          success: true,
+          message: `Registration email resent successfully to ${recipients.length} recipient(s)`,
+          recipients: recipients,
+          teamName: team.name,
+          eventName: event?.name
+        });
+
+      } catch (error) {
+        console.error('Error resending registration email:', error);
+        res.status(500).json({ error: 'Failed to resend registration email' });
+      }
+    });
+
     app.post('/api/admin/form-templates', isAdmin, async (req, res) => {
       try {
         const { name, description, isPublished, fields, eventId } = req.body;

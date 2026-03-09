@@ -3484,6 +3484,36 @@ function TeamsView() {
     }
   });
 
+  // Resend registration confirmation email mutation
+  const resendRegistrationEmailMutation = useMutation({
+    mutationFn: async (teamId: number) => {
+      const response = await fetch(`/api/admin/teams/${teamId}/resend-registration-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to resend registration email');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Email Sent Successfully",
+        description: `Registration email resent to ${data.recipients.length} recipient(s) for ${data.teamName}`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Email Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
   // Mutation for deleting team registration
   const deleteTeamMutation = useMutation({
     mutationFn: async (teamId: number) => {
@@ -5762,6 +5792,21 @@ function TeamsView() {
                     </Button>
                   )}
 
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs h-7 text-muted-foreground hover:text-foreground"
+                    onClick={() => resendRegistrationEmailMutation.mutate(selectedTeam.id)}
+                    disabled={resendRegistrationEmailMutation.isPending}
+                  >
+                    {resendRegistrationEmailMutation.isPending ? (
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    ) : (
+                      <Mail className="h-3 w-3 mr-1" />
+                    )}
+                    Resend Registration Email
+                  </Button>
+
                   {selectedTeam.status === 'approved' && (
                     <Button
                       size="sm"
@@ -5775,7 +5820,7 @@ function TeamsView() {
                       ) : (
                         <Mail className="h-3 w-3 mr-1" />
                       )}
-                      Resend Email
+                      Resend Approval Email
                     </Button>
                   )}
 
