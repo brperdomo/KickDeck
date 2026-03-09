@@ -129,16 +129,11 @@ export async function createCoachAccount(
 
   // Send welcome email
   try {
-    await sendTemplatedEmail({
-      to: email,
-      templateType: 'welcome_email',
-      data: {
-        firstName,
-        lastName,
-        email,
-        username: email,
-        password: tempPassword // Include the generated password (only sent via email)
-      }
+    await sendTemplatedEmail(email, 'welcome', {
+      firstName,
+      lastName,
+      email,
+      username: email,
     });
     console.log(`Welcome email sent to new coach/manager account: ${email}`);
   } catch (emailError) {

@@ -240,77 +240,13 @@ router.post('/send-notifications', async (req, res) => {
           teamName: team.name,
           eventName: team.eventName || 'Tournament',
           ageGroup,
-          amount: (team.totalAmount / 100).toFixed(2),
+          totalAmount: `$${(team.totalAmount / 100).toFixed(2)}`,
           paymentLink: completionUrl,
+          EVENT_ADMIN_EMAIL: team.eventAdminEmail || 'support@kickdeck.xyz',
         };
 
-        // Email template
-        const subject = 'Complete Your Team Registration Payment - Action Required';
-        const htmlContent = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-              <h1 style="margin: 0; font-size: 28px;">Complete Your Registration</h1>
-              <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Secure your team's spot in the tournament</p>
-            </div>
-            
-            <div style="background: white; border: 1px solid #e0e0e0; border-top: none; padding: 30px; border-radius: 0 0 10px 10px;">
-              <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
-                <h2 style="color: #333; margin: 0 0 15px 0; font-size: 20px;">Team: ${emailData.teamName}</h2>
-                <p style="margin: 5px 0; color: #666;"><strong>Event:</strong> ${emailData.eventName}</p>
-                <p style="margin: 5px 0; color: #666;"><strong>Division:</strong> ${emailData.ageGroup}</p>
-                <p style="margin: 5px 0; color: #666;"><strong>Registration Fee:</strong> <span style="font-size: 18px; color: #2e7d32; font-weight: bold;">$${emailData.amount}</span></p>
-              </div>
-              
-              <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
-                <h3 style="color: #856404; margin: 0 0 10px 0;">Payment Setup Required</h3>
-                <p style="color: #856404; margin: 0; line-height: 1.5;">
-                  Your team registration is incomplete. To secure your spot and avoid losing your registration, 
-                  please complete your payment setup using the secure link below.
-                </p>
-              </div>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${emailData.paymentLink}" 
-                   style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                          color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; 
-                          font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
-                  🔒 Complete Payment Setup
-                </a>
-              </div>
-              
-              <div style="background: #e8f5e8; border: 1px solid #c8e6c9; padding: 20px; border-radius: 8px; margin: 25px 0;">
-                <h4 style="color: #2e7d32; margin: 0 0 10px 0;">What happens next?</h4>
-                <ul style="color: #2e7d32; margin: 0; padding-left: 20px; line-height: 1.6;">
-                  <li>Click the secure link above to add your payment method</li>
-                  <li>Your card will be saved securely with Stripe (industry-standard security)</li>
-                  <li>Payment will be processed automatically once your team is approved</li>
-                  <li>You'll receive a confirmation email with your receipt</li>
-                </ul>
-              </div>
-              
-              <div style="border-top: 1px solid #e0e0e0; padding-top: 20px; margin-top: 30px;">
-                <p style="color: #666; font-size: 14px; margin: 0 0 10px 0;">
-                  <strong>Important:</strong> This payment link is secure and unique to your team. 
-                  Please complete your payment setup within 7 days to avoid registration cancellation.
-                </p>
-                <p style="color: #666; font-size: 14px; margin: 0 0 6px 0;">
-                  Event inquiries: <a href="mailto:${team.eventAdminEmail || 'support@kickdeck.xyz'}" style="color: #667eea;">${team.eventAdminEmail || 'support@kickdeck.xyz'}</a>
-                </p>
-                <p style="color: #666; font-size: 14px; margin: 0;">
-                  Technical support: <a href="mailto:support@kickdeck.xyz" style="color: #667eea;">support@kickdeck.xyz</a>
-                </p>
-              </div>
-            </div>
-          </div>
-        `;
-
         if (!testMode) {
-          await sendTemplatedEmail({
-            to: contactEmail,
-            subject,
-            html: htmlContent,
-            templateType: 'payment_completion_notification'
-          });
+          await sendTemplatedEmail(contactEmail, 'payment_completion_notification', emailData);
         }
 
         sentCount++;

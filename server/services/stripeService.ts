@@ -3,7 +3,7 @@ import { db } from "../../db";
 import { teams, paymentTransactions, events, refunds, users } from "../../db/schema";
 import { eq } from "drizzle-orm";
 import { log } from "../vite";
-import { sendRegistrationReceiptEmail } from "./emailService";
+import { sendRegistrationReceiptEmail, sendTemplatedEmail } from "./emailService";
 import { getStripeClient } from "./stripe-client-factory";
 import { calculateEventFees, calculateFeeBreakdown, DEFAULT_PLATFORM_FEE_RATE, STRIPE_FIXED_FEE } from "./fee-calculator";
 
