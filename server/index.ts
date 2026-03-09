@@ -40,7 +40,7 @@ if (!process.env.BREVO_API_KEY && nodeEnv === "development") {
   console.warn("BREVO_API_KEY not set for development - email sending will fail");
 }
 if (!process.env.DEFAULT_FROM_EMAIL) {
-  process.env.DEFAULT_FROM_EMAIL = "support@kickdeck.io";
+  console.warn("DEFAULT_FROM_EMAIL not set — will use value from Brevo provider settings or fallback");
 }
 
 // Log critical environment variables for debugging (without exposing secrets)

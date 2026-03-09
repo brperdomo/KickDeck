@@ -183,6 +183,7 @@ import retroactiveMetadataRoutes from "./routes/retroactiveMetadata.js";
 import transferMetadataRoutes from "./routes/transferMetadata.js";
 // Email service for registration emails - uses Brevo API
 import { sendEmail as brevoSendEmail } from './services/brevoService';
+import { getFromEmail } from './services/emailService';
 
 const REGISTRATION_CONFIRMATION_TEMPLATE_ID = process.env.BREVO_REGISTRATION_TEMPLATE_ID
   ? parseInt(process.env.BREVO_REGISTRATION_TEMPLATE_ID, 10)
@@ -195,7 +196,7 @@ const sendRegistrationConfirmationEmail = async (
   ageGroupInfo: any,
   bracketInfo: any
 ) => {
-  const fromEmail = process.env.DEFAULT_FROM_EMAIL || 'support@kickdeck.io';
+  const fromEmail = await getFromEmail();
   const division = [ageGroupInfo?.name, ageGroupInfo?.gender].filter(Boolean).join(' ') || 'N/A';
   const submittedDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -247,7 +248,7 @@ const sendRegistrationConfirmationEmail = async (
               <p style="color: #2e7d32; margin: 0; font-size: 14px;">You don't need to do anything else right now. We'll notify you by email once your registration has been reviewed.</p>
             </div>
             <div style="border-top: 1px solid #e0e0e0; padding-top: 20px;">
-              <p style="color: #666; font-size: 14px;">Questions? <a href="mailto:support@kickdeck.io" style="color: #667eea;">support@kickdeck.io</a></p>
+              <p style="color: #666; font-size: 14px;">Questions? <a href="mailto:${fromEmail}" style="color: #667eea;">${fromEmail}</a></p>
             </div>
           </div>
         </div>
@@ -263,7 +264,7 @@ const sendRegistrationReceiptEmail = async (
   paymentData: any,
   eventName: string
 ) => {
-  const fromEmail = process.env.DEFAULT_FROM_EMAIL || 'support@kickdeck.io';
+  const fromEmail = await getFromEmail();
   const amount = paymentData?.amount ? (paymentData.amount / 100).toFixed(2) : '0.00';
 
   await brevoSendEmail({
@@ -286,7 +287,7 @@ const sendRegistrationReceiptEmail = async (
             <p style="margin: 5px 0; color: #666;"><strong>Payment Status:</strong> ${paymentData?.status || 'Processing'}</p>
           </div>
           <div style="border-top: 1px solid #e0e0e0; padding-top: 20px;">
-            <p style="color: #666; font-size: 14px;">Questions? <a href="mailto:support@kickdeck.io" style="color: #667eea;">support@kickdeck.io</a></p>
+            <p style="color: #666; font-size: 14px;">Questions? <a href="mailto:${fromEmail}" style="color: #667eea;">${fromEmail}</a></p>
           </div>
         </div>
       </div>

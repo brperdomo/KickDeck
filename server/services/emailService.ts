@@ -22,8 +22,49 @@ let emailTransporter: Transporter | null = null;
 let emailTransporterLastFetch: number = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// Cache for from email
+let cachedFromEmail: string | null = null;
+let fromEmailLastFetch: number = 0;
+
 // Brevo specific types
 type EmailProvider = "smtp" | "brevo";
+
+/**
+ * Gets the configured "from" email address.
+ * Priority: DB provider settings → DEFAULT_FROM_EMAIL env var → fallback
+ * Cached for 5 minutes to avoid repeated DB queries.
+ */
+export async function getFromEmail(): Promise<string> {
+  const now = Date.now();
+  if (cachedFromEmail && now - fromEmailLastFetch < CACHE_TTL) {
+    return cachedFromEmail;
+  }
+
+  try {
+    const provider = await getEmailProvider();
+    const fromAddr = (provider.settings as any)?.from;
+    if (fromAddr) {
+      cachedFromEmail = fromAddr;
+      fromEmailLastFetch = now;
+      return fromAddr;
+    }
+  } catch {
+    // Provider not configured yet — fall through
+  }
+
+  const fallback = process.env.DEFAULT_FROM_EMAIL || "support@kickdeck.io";
+  cachedFromEmail = fallback;
+  fromEmailLastFetch = now;
+  return fallback;
+}
+
+/**
+ * Gets the formatted "From" header: "KickDeck <from@email.com>"
+ */
+export async function getFormattedFrom(): Promise<string> {
+  const email = await getFromEmail();
+  return `KickDeck <${email}>`;
+}
 
 /**
  * Gets the configured email provider settings, prioritizing Brevo as the primary provider
@@ -256,7 +297,7 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
     // Use Brevo to send the email
     const from =
       options.from ||
-      `${provider.providerName} <${(provider.settings as any).from || "support@kickdeck.io"}>`;
+      `KickDeck <${(provider.settings as any).from || await getFromEmail()}>`;
 
     const result = await brevoService.sendEmail({
       to: options.to,
@@ -463,7 +504,7 @@ function createFallbackTemplate(
         </div>
       `,
       senderName: "KickDeck",
-      senderEmail: "support@kickdeck.io",
+      senderEmail: cachedFromEmail || process.env.DEFAULT_FROM_EMAIL || "support@kickdeck.io",
       isActive: true,
       type: templateType,
       providerId: null,
@@ -485,7 +526,7 @@ function createFallbackTemplate(
         </div>
       `,
       senderName: "KickDeck",
-      senderEmail: "support@kickdeck.io",
+      senderEmail: cachedFromEmail || process.env.DEFAULT_FROM_EMAIL || "support@kickdeck.io",
       isActive: true,
       type: templateType,
       providerId: null,
@@ -692,7 +733,7 @@ export async function sendRegistrationConfirmationEmail(
       setupIntentId: teamData.setupIntentId || "",
       addRosterLater: teamData.addRosterLater || false,
       loginLink: loginLink,
-      supportEmail: "support@kickdeck.io",
+      supportEmail: cachedFromEmail || process.env.DEFAULT_FROM_EMAIL || "support@kickdeck.io",
       organizationName: "KickDeck",
       currentYear: new Date().getFullYear(),
     };

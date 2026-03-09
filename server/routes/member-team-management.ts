@@ -12,6 +12,7 @@ import { eq, or, sql } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 import * as z from 'zod';
 import { sendEmail } from '../services/brevoService';
+import { getFromEmail } from '../services/emailService';
 
 const router = Router();
 
@@ -112,7 +113,7 @@ async function findOrCreateUser(email: string, name?: string): Promise<{ user: a
   try {
     await sendEmail({
       to: email,
-      from: process.env.DEFAULT_FROM_EMAIL || 'support@kickdeck.io',
+      from: `KickDeck <${await getFromEmail()}>`,
       subject: 'Welcome to KickDeck - Team Management Account Created',
       templateId: 'welcome_new_account', // We'll need to create this template
       dynamicTemplateData: {

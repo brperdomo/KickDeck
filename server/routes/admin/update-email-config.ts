@@ -2,18 +2,18 @@
  * Email Configuration Update Route
  *
  * Admin-only route that updates the email configuration to use Brevo
- * and sets support@kickdeck.io as the sender for all templates.
+ * and sets the configured sender email for all templates.
  */
 
 import { Router, Request, Response } from 'express';
 import { db } from '@db';
 import { emailProviderSettings, emailTemplates } from '@db/schema';
 import { eq } from 'drizzle-orm';
+import { getFromEmail } from '../../services/emailService';
 
 const router = Router();
 
 // Constants
-const SENDER_EMAIL = 'support@kickdeck.io';
 const SENDER_NAME = 'KickDeck';
 
 // Admin-only route to update email configuration
@@ -53,6 +53,8 @@ async function setupBrevoProvider(): Promise<number | null> {
   try {
     console.log('Setting up Brevo as the primary email provider...');
 
+    const senderEmail = await getFromEmail();
+
     // First, check if we already have a Brevo provider
     const existingProviders = await db
       .select()
@@ -75,7 +77,7 @@ async function setupBrevoProvider(): Promise<number | null> {
           is_default: true,
           settings: {
             apiKey: process.env.BREVO_API_KEY,
-            from: SENDER_EMAIL
+            from: senderEmail
           },
           updated_at: new Date().toISOString()
         })
@@ -93,7 +95,7 @@ async function setupBrevoProvider(): Promise<number | null> {
           providerName: 'Brevo Email Service',
           settings: {
             apiKey: process.env.BREVO_API_KEY,
-            from: SENDER_EMAIL
+            from: senderEmail
           },
           is_active: true,
           is_default: true,
@@ -138,13 +140,14 @@ async function setupBrevoProvider(): Promise<number | null> {
 }
 
 /**
- * Updates all email templates to use support@kickdeck.io as the sender
+ * Updates all email templates to use the configured sender email
  * @param providerId The ID of the Brevo provider
  * @returns The number of templates updated
  */
 async function updateEmailTemplates(providerId: number | null): Promise<number> {
   try {
-    console.log('Updating all email templates to use standard sender...');
+    const senderEmail = await getFromEmail();
+    console.log(`Updating all email templates to use sender: ${senderEmail}`);
 
     // Get all templates
     const templates = await db
@@ -161,7 +164,7 @@ async function updateEmailTemplates(providerId: number | null): Promise<number> 
       await db
         .update(emailTemplates)
         .set({
-          sender_email: SENDER_EMAIL,
+          sender_email: senderEmail,
           sender_name: SENDER_NAME,
           provider_id: providerId,
           updated_at: new Date()
