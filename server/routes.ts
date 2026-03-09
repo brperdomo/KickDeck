@@ -6298,7 +6298,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           tournamentAdmin: '#4CAF50',
           scoreAdmin: '#4169E1',
           financeAdmin: '#9C27B0',
-          logoUrl: settings?.logoUrl || '/uploads/KickDeck_Linear_Black.png',
+          logoUrl: settings?.logoUrl || '/kickdeckclear.png',
           youtubeVideoId: '8DFc6wHHWPY'
         };
 

@@ -372,7 +372,7 @@ function LogoBanner() {
       <div className="container mx-auto px-4 py-2">
         <div className="flex justify-center items-center">
           <img
-            src={settings?.logoUrl || "/attached_assets/KickDeck_Stacked_Color.png"}
+            src={settings?.logoUrl || "/kickdeckclear.png"}
             alt="Organization Logo"
             className="w-auto h-48 md:h-60 max-w-[840px] md:max-w-[960px] object-contain"
           />

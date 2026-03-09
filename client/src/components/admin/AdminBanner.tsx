@@ -214,7 +214,7 @@ export function AdminBanner() {
               transition={{ delay: 0.15 }}
             >
               <img 
-                src={settings?.logoUrl || "/uploads/KickDeck_Linear_Black.png"}
+                src={settings?.logoUrl || "/kickdeckclear.png"}
                 alt="KickDeck" 
                 className="h-8 mr-2"
               />

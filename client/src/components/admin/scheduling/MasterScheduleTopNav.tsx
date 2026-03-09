@@ -72,7 +72,7 @@ export function MasterScheduleTopNav({
             <div className="h-6 w-px bg-violet-500/20 hidden sm:block" />
 
             <img
-              src={logoUrl || '/uploads/KickDeck_Linear_White.png'}
+              src={logoUrl || '/kickdeckclear.png'}
               alt="KickDeck"
               className="h-6 object-contain hidden sm:block"
               style={{ filter: 'drop-shadow(0 0 10px rgba(124, 58, 237, 0.15))' }}

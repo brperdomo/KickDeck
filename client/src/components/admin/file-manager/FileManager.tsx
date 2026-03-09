@@ -1,118 +1,80 @@
-import React, { useState, useCallback } from 'react';
-import { FileManagerProvider } from './FileManagerContext';
-import { useFileManager } from './FileManagerContext';
-import Breadcrumbs from './Breadcrumbs';
-import Toolbar from './Toolbar';
-import FileManagerContent from './FileManagerContent';
-import FileUploader from './FileUploader';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useDropzone } from 'react-dropzone';
+import { useRef, useCallback } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { cn } from '@/lib/utils';
-import { Upload, FolderPlus } from 'lucide-react';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { AdminPageWrapper } from '@/components/admin/AdminPageWrapper';
+import { FileManagerProvider, useFileManager } from './FileManagerContext';
+import { useUploadFile } from './hooks/useFileActions';
+import { FolderTreeSidebar } from './sidebar/FolderTreeSidebar';
+import { ContentArea } from './content/ContentArea';
+import { useToast } from '@/hooks/use-toast';
 
-// Internal component that has access to context
-const FileManagerWithDnd: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('browse');
-  const { uploadFiles, currentFolder, isDraggingOver } = useFileManager();
-  
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (acceptedFiles?.length) {
-      uploadFiles(acceptedFiles as unknown as FileList, currentFolder?.id || null);
-      // Switch to browse tab to see the uploaded files
-      setActiveTab('browse');
-    }
-  }, [uploadFiles, currentFolder, setActiveTab]);
-  
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
-    onDrop,
-    noClick: true,
-    noKeyboard: true 
-  });
-  
+function FileManagerInner() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { currentFolderId } = useFileManager();
+  const uploadFile = useUploadFile();
+  const { toast } = useToast();
+
+  const handleFilesSelected = useCallback(
+    async (files: FileList) => {
+      const fileArray = Array.from(files);
+      toast({ title: `Uploading ${fileArray.length} file${fileArray.length > 1 ? 's' : ''}...` });
+      for (const file of fileArray) {
+        try {
+          await uploadFile.mutateAsync({
+            file,
+            folderId: currentFolderId,
+          });
+        } catch {
+          // Error toast handled by the mutation's onError
+        }
+      }
+    },
+    [currentFolderId, uploadFile, toast]
+  );
+
   return (
-    <div
-      {...getRootProps()}
-      className={cn(
-        "relative rounded-md transition-all duration-200",
-        isDragActive && "outline-dashed outline-2 outline-primary bg-primary/5"
-      )}
-    >
-      <input {...getInputProps()} />
-      
-      {/* Full-screen upload drop target overlay */}
-      {isDragActive && (
-        <div className="absolute inset-0 flex items-center justify-center z-20 bg-primary/10 backdrop-blur-sm rounded-md">
-          <div className="bg-card p-8 rounded-lg shadow-lg text-center">
-            <div className="bg-primary/10 rounded-full p-4 mx-auto mb-4">
-              <Upload className="h-10 w-10 text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Drop files here</h3>
-            <p className="text-muted-foreground">
-              Release to upload files to {currentFolder ? `"${currentFolder.name}"` : 'root folder'}
-            </p>
-          </div>
-        </div>
-      )}
-      
-      {/* Internal drag indicator - when moving files between folders */}
-      {isDraggingOver && !isDragActive && (
-        <div className="absolute inset-0 z-10 pointer-events-none">
-          <div className="absolute top-4 right-4 bg-card p-3 rounded-lg shadow-lg text-center flex items-center space-x-2">
-            <FolderPlus className="h-5 w-5 text-primary" />
-            <span className="text-sm font-medium">Drop to move selected items</span>
-          </div>
-        </div>
-      )}
-      
-      <Card className={cn(
-        "shadow-sm w-full transition-opacity duration-200", 
-        (isDragActive || isDraggingOver) && "opacity-85"
-      )}>
-        <CardHeader className="pb-2">
-          <CardTitle>File Manager</CardTitle>
-        </CardHeader>
-        
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="browse">Browse Files</TabsTrigger>
-              <TabsTrigger value="upload">Upload Files</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="browse" className="space-y-4">
-              <Breadcrumbs />
-              <Separator />
-              <Toolbar />
-              <FileManagerContent />
-            </TabsContent>
-            
-            <TabsContent value="upload">
-              <div className="space-y-4">
-                <Breadcrumbs />
-                <Separator />
-                <FileUploader />
-              </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+    <div className="h-[calc(100vh-180px)] rounded-lg border border-border/50 overflow-hidden bg-card/30 backdrop-blur-sm">
+      <ResizablePanelGroup direction="horizontal">
+        <ResizablePanel defaultSize={22} minSize={15} maxSize={35}>
+          <FolderTreeSidebar onUploadClick={() => fileInputRef.current?.click()} />
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={78}>
+          <ContentArea />
+        </ResizablePanel>
+      </ResizablePanelGroup>
+
+      {/* Hidden file input for sidebar upload button */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          if (e.target.files?.length) {
+            handleFilesSelected(e.target.files);
+          }
+          e.target.value = '';
+        }}
+      />
     </div>
   );
-};
+}
 
-// Wrapper component that provides the context
-const FileManager: React.FC = () => {
+export default function FileManager() {
   return (
-    <DndProvider backend={HTML5Backend}>
-      <FileManagerProvider>
-        <FileManagerWithDnd />
-      </FileManagerProvider>
-    </DndProvider>
+    <AdminPageWrapper
+      title="File Manager"
+      subtitle="Organize and manage your files with drag-and-drop"
+      backUrl="/admin"
+      backLabel="Back to Dashboard"
+    >
+      <DndProvider backend={HTML5Backend}>
+        <FileManagerProvider>
+          <FileManagerInner />
+        </FileManagerProvider>
+      </DndProvider>
+    </AdminPageWrapper>
   );
-};
-
-export default FileManager;
+}

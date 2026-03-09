@@ -25,7 +25,7 @@ export function Footer() {
     <footer className="py-4 px-6 text-center text-sm border-t mt-auto relative z-10">
       <div className="container mx-auto flex flex-col items-center justify-center gap-2">
         <p className={textColor}>
-          Powered by <Link href="https://kickdeck.io" className={`font-semibold ${linkColor}`}>KickDeck</Link>
+          Powered by <Link href="https://kickdeck.xyz" className={`font-semibold ${linkColor}`}>KickDeck</Link>
         </p>
         <p className={textColor}>
           &copy; {currentYear} KickDeck. All rights reserved.

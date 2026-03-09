@@ -139,7 +139,7 @@ export function MemberSidebar() {
 
       <div className="w-full flex justify-center mb-2 relative">
         <img
-          src={settings?.logoUrl || "/uploads/KickDeck_Linear_White.png"}
+          src={settings?.logoUrl || "/kickdeckclear.png"}
           alt={settings?.name || "KickDeck"}
           className="w-full max-h-10 object-contain"
           style={{ filter: 'drop-shadow(0 0 15px rgba(124, 58, 237, 0.2))' }}

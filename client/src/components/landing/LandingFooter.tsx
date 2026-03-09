@@ -55,14 +55,14 @@ const LandingFooter = () => {
             <div className="mb-4">
               <Link href="/" className="flex items-center">
                 <img 
-                  src="/uploads/KickDeck_Linear_White.png" 
+                  src="/kickdeckclear.png" 
                   alt="KickDeck.io" 
                   className="h-10 w-auto"
                   onError={(e) => {
                     // Fallback in case the image doesn't load
                     const target = e.target as HTMLImageElement;
                     target.onerror = null; // Prevent infinite loop
-                    target.src = "https://placehold.co/200x50/1a1e36/4d79ff.png?text=KickDeck.io";
+                    target.style.display = "none";
                   }} 
                 />
               </Link>

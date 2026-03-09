@@ -70,7 +70,7 @@ export function AuthFooter() {
             whileHover="hover"
             className="inline-block"
           >
-            <Link href="https://kickdeck.io" className="font-bold text-[#3d3a98] hover:text-[#6A67FF] transition-colors">
+            <Link href="https://kickdeck.xyz" className="font-bold text-[#3d3a98] hover:text-[#6A67FF] transition-colors">
               KickDeck
             </Link>
           </motion.span>

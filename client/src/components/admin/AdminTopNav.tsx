@@ -92,7 +92,7 @@ export function AdminTopNav({
           {/* Left: Logo */}
           <div className="flex items-center gap-3 shrink-0">
             <img
-              src={logoUrl || '/uploads/KickDeck_Linear_White.png'}
+              src={logoUrl || '/kickdeckclear.png'}
               alt="KickDeck"
               className="h-7 object-contain"
               style={{ filter: 'drop-shadow(0 0 10px rgba(124, 58, 237, 0.15))' }}

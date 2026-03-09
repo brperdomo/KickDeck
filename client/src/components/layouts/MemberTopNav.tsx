@@ -58,7 +58,7 @@ export function MemberTopNav({
           {/* Left: Logo + portal label */}
           <div className="flex items-center gap-3 shrink-0">
             <img
-              src={logoUrl || '/uploads/KickDeck_Linear_White.png'}
+              src={logoUrl || '/kickdeckclear.png'}
               alt="KickDeck"
               className="h-7 object-contain"
               style={{

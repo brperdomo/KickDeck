@@ -230,7 +230,7 @@ export default function ResetPassword() {
                   <div className="flex justify-center">
                     <div className="w-64">
                       <img
-                        src="/uploads/KickDeck_Linear_White.png"
+                        src="/kickdeckclear.png"
                         alt="KickDeck Logo"
                         className="w-full h-full object-contain"
                         style={{ filter: "drop-shadow(0 0 20px rgba(124,58,237,0.3))" }}
@@ -278,7 +278,7 @@ export default function ResetPassword() {
                 <div className="flex justify-center">
                   <div className="w-64">
                     <img
-                      src="/uploads/KickDeck_Linear_White.png"
+                      src="/kickdeckclear.png"
                       alt="KickDeck Logo"
                       className="w-full h-full object-contain"
                       style={{ filter: "drop-shadow(0 0 20px rgba(124,58,237,0.3))" }}

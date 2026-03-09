@@ -102,8 +102,13 @@ export const searchFiles = async (query: string): Promise<File[]> => {
 };
 
 export const toggleFileFavorite = async (fileId: string, isFavorite: boolean): Promise<File> => {
-  const response = await axios.patch(`${API_BASE}/files/${fileId}`, { 
-    isFavorite 
+  const response = await axios.patch(`${API_BASE}/files/${fileId}`, {
+    isFavorite
   });
+  return response.data;
+};
+
+export const getFolderTree = async (): Promise<Folder[]> => {
+  const response = await axios.get(`${API_BASE}/folders/tree`);
   return response.data;
 };
