@@ -2,6 +2,51 @@ import { Request, Response } from 'express';
 import { db } from 'db';
 import { teams, games, events, eventBrackets, eventAgeGroups } from 'db/schema';
 import { eq, and, sql, desc, asc, inArray } from 'drizzle-orm';
+import { sendTemplatedEmail } from '../../services/emailService';
+
+// Map team status to the corresponding email template type
+const STATUS_EMAIL_MAP: Record<string, string> = {
+  approved: 'team_approved',
+  rejected: 'team_rejected',
+  waitlisted: 'team_waitlisted',
+  withdrawn: 'team_withdrawn',
+};
+
+/** Send a status-change email for a team (fire-and-forget). */
+async function sendTeamStatusEmail(teamId: number, newStatus: string) {
+  try {
+    const templateType = STATUS_EMAIL_MAP[newStatus];
+    if (!templateType) return; // no email for this status
+
+    const team = await db.query.teams.findFirst({ where: eq(teams.id, teamId) });
+    if (!team) return;
+
+    const event = team.eventId
+      ? await db.query.events.findFirst({ where: eq(events.id, team.eventId) })
+      : null;
+
+    const recipients = [team.submitterEmail, team.managerEmail].filter(
+      (e): e is string => !!e,
+    );
+    // Deduplicate
+    const uniqueRecipients = [...new Set(recipients)];
+
+    for (const email of uniqueRecipients) {
+      await sendTemplatedEmail(email, templateType, {
+        firstName: team.submitterName || team.managerName || 'Team Manager',
+        teamName: team.name || 'your team',
+        eventName: event?.name || 'the event',
+        notes: team.notes || '',
+        EVENT_ADMIN_EMAIL: event?.adminEmail || 'support@kickdeck.xyz',
+      });
+    }
+
+    console.log(`📧 ${templateType} email sent to ${uniqueRecipients.join(', ')} for team ${team.name}`);
+  } catch (err) {
+    console.error(`Error sending status email for team ${teamId}:`, err);
+    // Non-blocking — don't fail the status change
+  }
+}
 
 // Update game score
 export async function updateGameScore(req: Request, res: Response) {
@@ -318,6 +363,9 @@ export async function updateTeamStatus(req: Request, res: Response) {
             .where(eq(teams.id, teamId))
             .returning();
 
+          // Fire-and-forget status email
+          sendTeamStatusEmail(teamId, status);
+
           return res.json({
             success: true,
             team: updatedTeam,
@@ -337,6 +385,9 @@ export async function updateTeamStatus(req: Request, res: Response) {
             .where(eq(teams.id, teamId))
             .returning();
 
+          // Still send status email even if payment failed
+          sendTeamStatusEmail(teamId, status);
+
           return res.json({
             success: true,
             team: updatedTeam,
@@ -353,6 +404,9 @@ export async function updateTeamStatus(req: Request, res: Response) {
       .set({ status })
       .where(eq(teams.id, teamId))
       .returning();
+
+    // Fire-and-forget status email
+    sendTeamStatusEmail(teamId, status);
 
     res.json({ success: true, team: updatedTeam });
   } catch (error) {
@@ -432,6 +486,13 @@ export async function bulkApproveTeams(req: Request, res: Response) {
       }
     }
 
+    // Fire-and-forget approval emails for all successfully updated teams
+    for (const r of results) {
+      if (r.success) {
+        sendTeamStatusEmail(r.teamId, 'approved');
+      }
+    }
+
     const successful = results.filter(r => r.success).length;
     const failed = results.filter(r => !r.success).length;
     const warnings = results.filter(r => r.success && r.paymentStatus === 'failed').length;
@@ -458,6 +519,11 @@ export async function bulkRejectTeams(req: Request, res: Response) {
       status: 'rejected',
       notes: notes || 'Bulk rejection',
     }).where(inArray(teams.id, teamIds));
+
+    // Fire-and-forget rejection emails
+    for (const teamId of teamIds) {
+      sendTeamStatusEmail(teamId, 'rejected');
+    }
 
     res.json({
       summary: { successful: teamIds.length, failed: 0, warnings: 0 },

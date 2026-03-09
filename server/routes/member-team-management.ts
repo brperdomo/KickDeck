@@ -11,8 +11,7 @@ import { teams, users } from '@db/schema';
 import { eq, or, sql } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 import * as z from 'zod';
-import { sendEmail } from '../services/brevoService';
-import { getFromEmail } from '../services/emailService';
+import { sendTemplatedEmail } from '../services/emailService';
 
 const router = Router();
 
@@ -111,17 +110,11 @@ async function findOrCreateUser(email: string, name?: string): Promise<{ user: a
 
   // Send welcome email with password reset link
   try {
-    await sendEmail({
-      to: email,
-      from: `KickDeck <${await getFromEmail()}>`,
-      subject: 'Welcome to KickDeck - Team Management Account Created',
-      templateId: 'welcome_new_account', // We'll need to create this template
-      dynamicTemplateData: {
-        firstName: firstName,
-        email: email,
-        resetPasswordUrl: `${process.env.FRONTEND_URL || 'https://app.kickdeck.xyz'}/reset-password?email=${encodeURIComponent(email)}`,
-        loginUrl: `${process.env.FRONTEND_URL || 'https://app.kickdeck.xyz'}/login`,
-      },
+    await sendTemplatedEmail(email, 'welcome', {
+      firstName,
+      lastName,
+      email,
+      username: email,
     });
   } catch (emailError) {
     console.error('Failed to send welcome email:', emailError);
