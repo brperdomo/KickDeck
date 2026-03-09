@@ -3,9 +3,10 @@ import { useDrag } from 'react-dnd';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '@/components/ui/context-menu';
 import {
   FileText, Image, Video, Music, Archive, Code, File as FileIcon,
-  Download, Pencil, Trash2, Star, StarOff, Eye,
+  Download, Pencil, Trash2, Star, StarOff, Eye, Copy, Link,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 import { useFileManager } from '../FileManagerContext';
 import { useRenameFile, useDeleteFile, useToggleFavorite } from '../hooks/useFileActions';
 import { RenameDialog } from '../dialogs/RenameDialog';
@@ -40,10 +41,20 @@ export function FileCard({ file, listView }: FileCardProps) {
   const renameFile = useRenameFile();
   const deleteFile = useDeleteFile();
   const toggleFavorite = useToggleFavorite();
+  const { toast } = useToast();
 
   const [renameOpen, setRenameOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+
+  const copyFileUrl = () => {
+    const fullUrl = `${window.location.origin}${file.url}`;
+    navigator.clipboard.writeText(fullUrl).then(() => {
+      toast({ title: 'URL copied', description: fullUrl });
+    }).catch(() => {
+      toast({ title: 'Failed to copy', variant: 'destructive' });
+    });
+  };
 
   const isSelected = selectedItemIds.has(file.id);
   const { icon: TypeIcon, color: iconColor } = typeIcons[file.type] || typeIcons.other;
@@ -128,6 +139,10 @@ export function FileCard({ file, listView }: FileCardProps) {
           <ContextMenuItem onClick={() => api.downloadFile(file.id)}>
             <Download className="h-3.5 w-3.5 mr-2" />
             Download
+          </ContextMenuItem>
+          <ContextMenuItem onClick={copyFileUrl}>
+            <Link className="h-3.5 w-3.5 mr-2" />
+            Copy URL
           </ContextMenuItem>
           <ContextMenuItem onClick={() => toggleFavorite.mutate({ fileId: file.id, isFavorite: !file.isFavorite })}>
             {file.isFavorite ? <StarOff className="h-3.5 w-3.5 mr-2" /> : <Star className="h-3.5 w-3.5 mr-2" />}
