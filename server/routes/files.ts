@@ -130,8 +130,8 @@ router.get('/:id/download', async (req, res) => {
   }
 });
 
-// Upload a file
-router.post('/', validateAuth, upload.single('file'), async (req, res) => {
+// Upload handler (shared by POST / and POST /upload)
+async function handleUpload(req: any, res: any) {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file provided' });
@@ -215,7 +215,11 @@ router.post('/', validateAuth, upload.single('file'), async (req, res) => {
     console.error('Error uploading file:', error);
     res.status(500).json({ error: 'Failed to upload file' });
   }
-});
+}
+
+// Upload a file — supports both POST /api/files and POST /api/files/upload
+router.post('/upload', validateAuth, upload.single('file'), handleUpload);
+router.post('/', validateAuth, upload.single('file'), handleUpload);
 
 // Update file metadata
 router.patch('/:id', validateAuth, async (req, res) => {

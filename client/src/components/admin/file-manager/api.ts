@@ -49,7 +49,7 @@ export const uploadFile = async (file: File, folderId: string | null = null, onP
     formData.append('folderId', folderId);
   }
   
-  const response = await axios.post(`${API_BASE}/files/upload`, formData, {
+  const response = await axios.post(`${API_BASE}/files`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },

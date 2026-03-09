@@ -1,19 +1,21 @@
 import { Router } from 'express';
 import { validateAuth, isAdmin } from '../middleware/auth';
 import * as folderService from '../services/folderService';
+import * as fileService from '../services/fileService';
 
 const router = Router();
 
 // ─── Static routes MUST come before /:id to avoid being caught by the param ───
 
-// Get all root folders (no parent)
+// Get root folder contents (subfolders + files with no parent)
 router.get('/root', async (req, res) => {
   try {
-    const folders = await folderService.getFolders(null);
-    res.json(folders);
+    const subfolders = await folderService.getFolders(null);
+    const files = await fileService.getFilesByFolder(null);
+    res.json({ folder: null, subfolders, files });
   } catch (error) {
-    console.error('Error fetching root folders:', error);
-    res.status(500).json({ error: 'Failed to fetch root folders' });
+    console.error('Error fetching root folder contents:', error);
+    res.status(500).json({ error: 'Failed to fetch root folder contents' });
   }
 });
 
@@ -116,7 +118,7 @@ router.get('/:id/breadcrumbs', async (req, res) => {
   }
 });
 
-// Get folder by ID (MUST be after all static and multi-segment routes)
+// Get folder by ID with its subfolders and files
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -127,7 +129,10 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Folder not found' });
     }
 
-    res.json(folder);
+    const subfolders = await folderService.getFolders(id);
+    const files = await fileService.getFilesByFolder(id);
+
+    res.json({ folder, subfolders, files });
   } catch (error) {
     console.error(`Error fetching folder ${req.params.id}:`, error);
     res.status(500).json({ error: 'Failed to fetch folder' });
