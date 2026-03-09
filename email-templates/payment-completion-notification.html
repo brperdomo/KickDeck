@@ -83,12 +83,23 @@
 
               <!-- Divider + footer info -->
               <div style="border-top: 1px solid #e0e0e0; padding-top: 20px; margin-top: 10px;">
-                <p style="color: #6b7280; font-size: 14px; margin: 0 0 10px 0; line-height: 1.5;">
-                  If you have questions about your payment, feel free to reach out.
+                <p style="color: #6b7280; font-size: 14px; margin: 0 0 12px 0; line-height: 1.5;">
+                  Have questions? Here's how to get help:
                 </p>
-                <p style="margin: 0;">
-                  <a href="mailto:support@kickdeck.xyz" style="color: #667eea; font-size: 14px; text-decoration: none; font-weight: 600;">support@kickdeck.xyz</a>
-                </p>
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="padding: 6px 0; color: #6b7280; font-size: 13px; vertical-align: top; width: 160px;">Event inquiries:</td>
+                    <td style="padding: 6px 0;">
+                      <a href="mailto:{{ params.EVENT_ADMIN_EMAIL }}" style="color: #667eea; font-size: 14px; text-decoration: none; font-weight: 600;">{{ params.EVENT_ADMIN_EMAIL }}</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 6px 0; color: #6b7280; font-size: 13px; vertical-align: top;">Technical support:</td>
+                    <td style="padding: 6px 0;">
+                      <a href="mailto:support@kickdeck.xyz" style="color: #667eea; font-size: 14px; text-decoration: none; font-weight: 600;">support@kickdeck.xyz</a>
+                    </td>
+                  </tr>
+                </table>
               </div>
 
             </td>

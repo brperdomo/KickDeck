@@ -364,7 +364,8 @@ export async function resendPaymentConfirmation(req: Request, res: Response) {
         ageGroup: registration.ageGroup?.ageGroup || 'Unknown Age Group',
         paymentId: `TEAM-${registration.team.id}`,
         receiptNumber: `R-${registration.team.id}-${Date.now().toString().substr(-6)}`,
-        status: registration.team.status || 'pending'
+        status: registration.team.status || 'pending',
+        EVENT_ADMIN_EMAIL: registration.event?.adminEmail || 'support@kickdeck.xyz'
       }
       );
       

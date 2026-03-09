@@ -276,6 +276,7 @@ export const events = pgTable("events", {
   details: text("details"),
   agreement: text("agreement"),
   refundPolicy: text("refund_policy"),
+  adminEmail: text("admin_email").notNull().default(''), // Event organizer contact email for registration/payment inquiries
   logoUrl: text("logo_url"), // Tournament/event logo for branding
   isArchived: boolean("is_archived").default(false).notNull(),
   // Stripe Connect fields for per-tournament bank accounts

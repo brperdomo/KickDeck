@@ -1126,6 +1126,27 @@ export const EventForm = ({ mode, layout = 'tabs', defaultValues, onSubmit, isSu
 
         <FormField
           control={form.control}
+          name="adminEmail"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Event Contact Email *</FormLabel>
+              <FormControl>
+                <Input
+                  type="email"
+                  {...field}
+                  placeholder="organizer@yourevent.com"
+                />
+              </FormControl>
+              <p className="text-xs text-muted-foreground mt-1">
+                Shown in all event emails for registration, payment, and account inquiries. Technical support questions will still go to support@kickdeck.xyz.
+              </p>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="details"
           render={({ field }) => (
             <FormItem>

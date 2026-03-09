@@ -226,7 +226,14 @@ async function getEmailTemplate(type: string, throwIfNotFound = false) {
 function renderTemplate(template: string, context: TemplateContext): string {
   return template.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
     const trimmedKey = key.trim();
-    return context[trimmedKey] !== undefined ? context[trimmedKey] : match;
+    // Direct key lookup
+    if (context[trimmedKey] !== undefined) return context[trimmedKey];
+    // Handle Brevo-style "params.KEY" — strip prefix and retry
+    if (trimmedKey.startsWith('params.')) {
+      const stripped = trimmedKey.slice(7);
+      if (context[stripped] !== undefined) return context[stripped];
+    }
+    return match;
   });
 }
 
@@ -561,6 +568,7 @@ export async function sendRegistrationReceiptEmail(
   teamData: any, // Team registration data
   paymentData: any, // Payment transaction data
   eventName: string,
+  eventAdminEmail?: string,
 ): Promise<void> {
   const isDevelopment = process.env.NODE_ENV !== "production";
 
@@ -623,6 +631,7 @@ export async function sendRegistrationReceiptEmail(
       loginLink: loginLink,
       clubName: teamData.clubName || "",
       currentYear: new Date().getFullYear(),
+      EVENT_ADMIN_EMAIL: eventAdminEmail || 'support@kickdeck.xyz',
     };
 
     // Send the email using the registration_receipt template
@@ -736,6 +745,7 @@ export async function sendRegistrationConfirmationEmail(
       supportEmail: cachedFromEmail || process.env.DEFAULT_FROM_EMAIL || "support@kickdeck.io",
       organizationName: "KickDeck",
       currentYear: new Date().getFullYear(),
+      EVENT_ADMIN_EMAIL: eventData?.adminEmail || 'support@kickdeck.xyz',
     };
 
     // Send the email using the registration_confirmation template

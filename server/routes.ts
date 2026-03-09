@@ -206,6 +206,7 @@ const sendRegistrationConfirmationEmail = async (
     EVENT_NAME: eventInfo?.name || 'Tournament',
     DIVISION: division,
     SUBMITTED_DATE: submittedDate,
+    EVENT_ADMIN_EMAIL: eventInfo?.adminEmail || 'support@kickdeck.xyz',
   };
 
   if (REGISTRATION_CONFIRMATION_TEMPLATE_ID) {
@@ -248,7 +249,8 @@ const sendRegistrationConfirmationEmail = async (
               <p style="color: #2e7d32; margin: 0; font-size: 14px;">You don't need to do anything else right now. We'll notify you by email once your registration has been reviewed.</p>
             </div>
             <div style="border-top: 1px solid #e0e0e0; padding-top: 20px;">
-              <p style="color: #666; font-size: 14px;">Questions? <a href="mailto:${fromEmail}" style="color: #667eea;">${fromEmail}</a></p>
+              <p style="color: #666; font-size: 14px;">Event inquiries: <a href="mailto:${eventInfo?.adminEmail || fromEmail}" style="color: #667eea;">${eventInfo?.adminEmail || fromEmail}</a></p>
+              <p style="color: #666; font-size: 14px;">Technical support: <a href="mailto:support@kickdeck.xyz" style="color: #667eea;">support@kickdeck.xyz</a></p>
             </div>
           </div>
         </div>
@@ -262,7 +264,8 @@ const sendRegistrationReceiptEmail = async (
   toEmail: string,
   team: any,
   paymentData: any,
-  eventName: string
+  eventName: string,
+  eventAdminEmail?: string
 ) => {
   const fromEmail = await getFromEmail();
   const amount = paymentData?.amount ? (paymentData.amount / 100).toFixed(2) : '0.00';
@@ -287,7 +290,8 @@ const sendRegistrationReceiptEmail = async (
             <p style="margin: 5px 0; color: #666;"><strong>Payment Status:</strong> ${paymentData?.status || 'Processing'}</p>
           </div>
           <div style="border-top: 1px solid #e0e0e0; padding-top: 20px;">
-            <p style="color: #666; font-size: 14px;">Questions? <a href="mailto:${fromEmail}" style="color: #667eea;">${fromEmail}</a></p>
+            <p style="color: #666; font-size: 14px;">Event inquiries: <a href="mailto:${eventAdminEmail || fromEmail}" style="color: #667eea;">${eventAdminEmail || fromEmail}</a></p>
+            <p style="color: #666; font-size: 14px;">Technical support: <a href="mailto:support@kickdeck.xyz" style="color: #667eea;">support@kickdeck.xyz</a></p>
           </div>
         </div>
       </div>
@@ -989,7 +993,8 @@ export function registerRoutes(app: Express): Server {
                   paymentAmount: ((team.totalAmount || 0) / 100).toFixed(2),
                   paymentIntentId: paymentIntentId,
                   cardBrand: 'Card',
-                  cardLastFour: '****'
+                  cardLastFour: '****',
+                  EVENT_ADMIN_EMAIL: event?.adminEmail || 'support@kickdeck.xyz'
                 }
               );
               
@@ -3875,7 +3880,8 @@ export function registerRoutes(app: Express): Server {
                 result.team.submitterEmail,
                 result.team,
                 initialPaymentData,
-                eventInfo?.name || 'Event Registration'
+                eventInfo?.name || 'Event Registration',
+                eventInfo?.adminEmail
               ).catch(emailError => {
                 // Log email errors but don't fail the registration process
                 console.error('❌ ERROR sending registration receipt email:', emailError);
@@ -7538,7 +7544,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
           });
         }
 
-        const { name, startDate, endDate, timezone, applicationDeadline } = formData;
+        const { name, startDate, endDate, timezone, applicationDeadline, adminEmail } = formData;
 
         if (!name || !startDate || !endDate || !applicationDeadline) {
           return res.status(400).json({ 
@@ -7559,6 +7565,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
               endDate,
               timezone: timezone || 'America/New_York',
               applicationDeadline,
+              adminEmail: adminEmail || '',
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             })
@@ -7747,6 +7754,7 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
               endDate: eventData.endDate,
               timezone: eventData.timezone,
               applicationDeadline: eventData.applicationDeadline,
+              adminEmail: eventData.adminEmail ?? undefined,
               details: eventData.details || null,
               agreement: eventData.agreement || null,
               refundPolicy: eventData.refundPolicy || null,
@@ -11489,11 +11497,11 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
               submitterName: team.submitterName || team.managerName || 'Team Manager',
               submitterEmail: team.submitterEmail || team.managerEmail || '',
               clubName: team.clubName || '',
-              
+
               // Registration Details
               registrationDate: team.createdAt ? new Date(team.createdAt).toLocaleDateString() : new Date().toLocaleDateString(),
               approvalDate: new Date().toLocaleDateString(),
-              
+
               // Payment Information
               totalAmount: team.totalAmount ? (team.totalAmount / 100) : 0,
               paymentId: team.paymentIntentId || 'Completed',
@@ -11501,16 +11509,17 @@ app.delete('/api/admin/complexes/:id', isAdmin, async (req, res) => {
               cardBrand: team.cardBrand || 'Card',
               cardLastFour: team.cardLast4 || '****',
               transactionId: team.paymentIntentId || 'Completed',
-              
+
               // Additional context
               hasPayment: !!team.paymentIntentId,
               hasClub: !!team.clubName,
-              
+
               // Branding placeholders
               loginLink: `${process.env.FRONTEND_URL || 'https://app.kickdeck.io'}/dashboard`,
               supportEmail: 'support@kickdeck.io',
               organizationName: 'KickDeck',
-              currentYear: new Date().getFullYear().toString()
+              currentYear: new Date().getFullYear().toString(),
+              EVENT_ADMIN_EMAIL: event?.adminEmail || 'support@kickdeck.xyz'
             }
           );
         }

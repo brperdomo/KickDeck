@@ -202,7 +202,7 @@ export async function handlePaymentSuccess(
       if (existingTeam.submitterEmail) {
         // Get the event name for the email
         const [eventInfo] = await db
-          .select({ name: events.name })
+          .select({ name: events.name, adminEmail: events.adminEmail })
           .from(events)
           .where(eq(events.id, existingTeam.eventId));
 
@@ -227,6 +227,7 @@ export async function handlePaymentSuccess(
           existingTeam,
           paymentData,
           eventInfo?.name || "Tournament Registration",
+          eventInfo?.adminEmail || undefined,
         ).catch((emailError) => {
           // Log email errors but don't fail the payment processing
           console.error("Error sending payment receipt email:", emailError);
@@ -1436,6 +1437,7 @@ async function sendApprovalEmailWithPaymentDetails(
       receiptNumber: `REC-${paymentIntent.id.slice(-8).toUpperCase()}`,
       recoveryNote:
         "Payment was automatically recovered using intelligent payment recovery system",
+      EVENT_ADMIN_EMAIL: eventData?.adminEmail || 'support@kickdeck.xyz',
     };
 
     // Send to both submitter and manager

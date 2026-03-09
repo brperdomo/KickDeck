@@ -26,6 +26,7 @@ import { addCustomDomainToOrganizationSettings } from "./migrations/add_custom_d
 import { addOpenaiApiKeyToOrganizationSettings } from "./migrations/add_openai_api_key_to_organization_settings";
 import { addStripeKeysToOrganizationSettings } from "./migrations/add_stripe_keys_to_organization_settings";
 import { deduplicateAgeGroups } from "./migrations/deduplicate_age_groups";
+import { addAdminEmailToEvents } from "../db/migrations/add-admin-email";
 
 export async function createTables() {
   try {
@@ -203,6 +204,9 @@ export async function createTables() {
 
     console.log('Deduplicating age group records...');
     await deduplicateAgeGroups();
+
+    console.log('Adding admin_email column to events table...');
+    await addAdminEmailToEvents();
 
     console.log("All tables created successfully");
     return { success: true };

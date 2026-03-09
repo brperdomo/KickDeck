@@ -193,6 +193,7 @@ router.post('/send-notifications', async (req, res) => {
         submitterEmail: teams.submitterEmail,
         managerEmail: teams.managerEmail,
         eventName: events.name,
+        eventAdminEmail: events.adminEmail,
         ageGroup: eventAgeGroups.ageGroup,
         gender: eventAgeGroups.gender,
       })
@@ -292,8 +293,11 @@ router.post('/send-notifications', async (req, res) => {
                   <strong>Important:</strong> This payment link is secure and unique to your team. 
                   Please complete your payment setup within 7 days to avoid registration cancellation.
                 </p>
+                <p style="color: #666; font-size: 14px; margin: 0 0 6px 0;">
+                  Event inquiries: <a href="mailto:${team.eventAdminEmail || 'support@kickdeck.xyz'}" style="color: #667eea;">${team.eventAdminEmail || 'support@kickdeck.xyz'}</a>
+                </p>
                 <p style="color: #666; font-size: 14px; margin: 0;">
-                  Questions? Contact us at <a href="mailto:support@kickdeck.io" style="color: #667eea;">support@kickdeck.io</a>
+                  Technical support: <a href="mailto:support@kickdeck.xyz" style="color: #667eea;">support@kickdeck.xyz</a>
                 </p>
               </div>
             </div>

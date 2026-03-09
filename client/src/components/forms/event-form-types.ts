@@ -124,6 +124,7 @@ export const eventInformationSchema = z.object({
   details: z.string().optional().nullable(),
   agreement: z.string().optional().nullable(),
   refundPolicy: z.string().optional().nullable(),
+  adminEmail: z.string().min(1, "Event contact email is required").email("Must be a valid email address"),
 });
 
 export const scoringRuleSchema = z.object({
